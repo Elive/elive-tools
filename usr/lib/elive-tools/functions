@@ -114,7 +114,10 @@ el_make_environment(){ # make ready our environment (source variables and functi
         export USER
     fi
 
-    el_set_display_variables
+    # in order to avoid not-possible remote display connections, we set it only when don't have it
+    if [[ -z "${DISPLAY}" ]] ; then
+        el_set_display_variables
+    fi
 
     if [[ "$PATH" != *"$HOME/bin"* ]] ; then
         PATH="$HOME/bin:$PATH"

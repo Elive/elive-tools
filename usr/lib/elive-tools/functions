@@ -27,26 +27,36 @@ el_c_bold="\033[1m" # Bold 'color' effect
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
+    # from enlightenment values {{{
+    local display e_ipc_socket
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
+        if ls --color=none /tmp/enlightenment-${USER}@*/disp-* 1>/dev/null 2>/dev/null ; then
+            display="$( find /tmp/enlightenment-${USER}@*/disp-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
 
-       if ls --color=none /tmp/enlightenment-${USER}@*/disp-* 1>/dev/null 2>/dev/null ; then
-          DISPLAY="$( find /tmp/enlightenment-${USER}@*/disp-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
+            e_ipc_socket="${display%|*}"
 
-          E_IPC_SOCKET="${DISPLAY%|*}"
-          export E_IPC_SOCKET
+            display="${display##*disp-}"
+            display="${display%%-*}"
 
-          DISPLAY="${DISPLAY##*disp-}"
-          DISPLAY="${DISPLAY%%-*}"
-          export DISPLAY
+            if [[ -z "${DISPLAY}" ]] ; then
+                DISPLAY="${display}"
+                export DISPLAY
 
-          # FIXME: if values are not obtained we should make a kind of statistics/reports
-       fi
-   fi
+                E_IPC_SOCKET="${e_ipc_socket}"
+                export E_IPC_SOCKET
+            fi
+            # FIXME: if values are not obtained we should make a kind of statistics/reports
+        fi
 
-   if [[ -z "$XAUTHORITY" ]] ; then
-      XAUTHORITY="$HOME/.Xauthority"
-      export XAUTHORITY
-   fi
+    fi
+    # END from enlightenment values }}}
+    # xauthority {{{
+    if [[ -z "$XAUTHORITY" ]] ; then
+        XAUTHORITY="$HOME/.Xauthority"
+        export XAUTHORITY
+    fi
+
+    # END xauthority }}}
 }
 #-------------------------------------------------------------------------------
 #   Send a notification to the user
@@ -137,10 +147,7 @@ el_make_environment(){ # make ready our environment (source variables and functi
         export USER
     fi
 
-    # in order to avoid not-possible remote display connections, we set it only when don't have it
-    if [[ -z "${DISPLAY}" ]] ; then
-        el_set_display_variables
-    fi
+    el_set_display_variables
 
     if [[ "$PATH" != *"$HOME/bin"* ]] ; then
         PATH="$HOME/bin:$PATH"

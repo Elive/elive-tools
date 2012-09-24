@@ -1,6 +1,6 @@
 #!/bin/bash
 
-el_c_def="\033[0;39m" # Normal color  (orig: normal)
+el_c_n="\033[0;39m" # Normal color  (orig: normal)
 el_c_r="\033[1;31m" # Red color  (orig: red)
 el_c_r2="\033[0;31m" # Red2 color  (orig: red)
 el_c_g="\033[1;32m" # Green color  (orig: green)

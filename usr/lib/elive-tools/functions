@@ -21,6 +21,7 @@ el_c_underline="\033[4m" # Underline 'color' effect  (orig. underline)
 el_c_italic="\033[3m" # Italic 'color' effect
 el_c_bold="\033[1m" # Bold 'color' effect
 
+: ${EL_DEBUG:="0"} # debug default level
 
 
 #-------------------------------------------------------------------------------
@@ -324,6 +325,96 @@ el_check_sudo_automated(){
          return 0
      fi
 
+}
+#===  FUNCTION  ================================================================
+#          NAME:  el_explain
+#   DESCRIPTION:  function to show the process of this tool
+#    PARAMETERS:
+# verbose_level:       $1 = 1-5* from $EL_DEBUG levels
+#        spaced:       $2 = infinite,
+#       message:       $3 = can include: __hilight words__, XXsuper hilightXX
+#===============================================================================
+el_explain(){
+   # pre {{{
+   local funclevel spaced verbose_level message trace_message trace_col
+
+   verbose_level="$1"
+   spaced="$2"
+   message="$3"
+
+   funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
+
+   el_check_variables "spaced,verbose_level,message"
+   # }}}
+   # tabulate output {{{
+   while [[ $spaced -gt 0 ]] ; do
+      message="  $message"
+      spaced="$(( $spaced - 1 ))"
+   done
+
+   # }}}
+   # hilight words {{{
+   message="${message/__/${el_c_b2}}"
+   message="${message/__/${el_c_gr}}"
+   message="${message/__/${el_c_b2}}"
+   message="${message/__/${el_c_gr}}"
+   message="${message/__/${el_c_b2}}"
+   message="${message/__/${el_c_gr}}"
+   message="${message/XX/${el_c_r}}"
+   message="${message/XX/${el_c_gr}}"
+   message="${message/XX/${el_c_r}}"
+   message="${message/XX/${el_c_gr}}"
+   # }}}
+   # show {{{
+   # this is a good example of levels of colors visualization for the user's eye
+
+   # show only if we are on this verbose level
+   if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
+       case $funclevel in
+           1)
+                echo -en "    ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           2)
+                echo -en "    ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           3)
+                echo -en "    ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           4)
+                echo -en "    ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           5)
+                echo -en "    ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           6)
+                echo -en "    ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           7)
+                echo -en "    ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           8)
+                echo -en "    ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           9)
+                echo -en "    ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           10)
+                echo -en "    ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           11)
+                echo -en "    ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+           *)
+                echo -en "    ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
+                ;;
+        esac
+
+        # continuation of the message
+        echo -e "${message}${el_c_n}" 1>&2
+
+   fi
+
+   # }}}
 }
 
 

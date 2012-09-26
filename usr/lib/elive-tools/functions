@@ -463,6 +463,27 @@ el_error(){
     # }}}
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_groups_check
+#   DESCRIPTION:  check if user is already on a specific group
+#    PARAMETERS:  $1 = groupname
+#===============================================================================
+el_groups_check(){
+    # pre {{{
+    local group
+    group="${1}"
+
+    el_check_variables "group"
+
+    # }}}
+
+    if [[ " $(id -Gn "$USER") " = *" $group "* ]] ; then
+        return 0
+    else
+        return 1
+    fi
+
+}
 
 
 

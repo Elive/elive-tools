@@ -464,11 +464,11 @@ el_error(){
 }
 
 #===  FUNCTION  ================================================================
-#          NAME:  el_groups_check
+#          NAME:  el_group_check
 #   DESCRIPTION:  check if user is already on a specific group
 #    PARAMETERS:  $1 = groupname
 #===============================================================================
-el_groups_check(){
+el_group_check(){
     # pre {{{
     local group
     group="${1}"
@@ -482,8 +482,26 @@ el_groups_check(){
     else
         return 1
     fi
-
 }
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_group_add
+#   DESCRIPTION:  verify and add an user to a group
+#    PARAMETERS:  $1 = group to add
+#===============================================================================
+el_group_add(){
+    # pre {{{
+    local group
+    group="$1"
+
+    el_check_variables "group"
+
+    # }}}
+    if ! el_group_check "${group}" ; then
+        gksu "adduser ${USER} ${group}"
+    fi
+}
+
 
 
 

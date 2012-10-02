@@ -65,7 +65,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 el_notify_user(){ # notify the user (desktop || email). "title" "text"
    el_set_display_variables
 
-   notify-send -t 40000 "$@"
+   if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+       notify-send -t 20000 "$@"
+   else
+       echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
+   fi
 }
 #-------------------------------------------------------------------------------
 #   Send an important notification to the user
@@ -73,7 +77,11 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 el_notify_user_important(){ # notify the user (desktop || email). "title" "text" (no timeout mode)
    el_set_display_variables
 
-   notify-send -t 50000000 "$@"
+   if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+       notify-send -t 240000 "$@"
+   else
+       echo -e "${el_c_y}Important: ${el_c_m}$2${el_c_n}" 1>&2
+   fi
 }
 
 #-------------------------------------------------------------------------------

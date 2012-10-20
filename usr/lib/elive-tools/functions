@@ -340,16 +340,17 @@ el_check_sudo_automated(){
 #    PARAMETERS:
 # verbose_level:    $1 = any number, from $EL_DEBUG levels
 #                        levels: 0 = always, 1 = info, 2 = debug
-#        detail:    $2 = infinite, number of spaces for identify detailed info
-#       message:       $3 = can include: __hilight words__, XXsuper hilightXX
+#       message:    $2 = can include: __hilight words__, XXsuper hilightXX
 #===============================================================================
 el_explain(){
    # pre {{{
    local funclevel spaced verbose_level message trace_message trace_col
 
    verbose_level="$1"
-   spaced="$2"
-   message="$3"
+   shift
+   message="$@"
+
+   spaced="$verbose_level"
 
    funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
 

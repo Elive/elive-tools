@@ -382,40 +382,40 @@ el_explain(){
    if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
        case $funclevel in
            1)
-                echo -en "    ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            2)
-                echo -en "    ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            3)
-                echo -en "    ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            4)
-                echo -en "    ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            5)
-                echo -en "    ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            6)
-                echo -en "    ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            7)
-                echo -en "    ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            8)
-                echo -en "    ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            9)
-                echo -en "    ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            10)
-                echo -en "    ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            11)
-                echo -en "    ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
            *)
-                echo -en "    ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
+                echo -en "   ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
                 ;;
         esac
 
@@ -433,9 +433,13 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # debug {{{
+    local funclevel
+
+    funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
+
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         # level 2 is debug
-        echo -e "${el_c_gr}D: ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+        echo -e "${el_c_gr}D: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}]${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
 
     fi
 

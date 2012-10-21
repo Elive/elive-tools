@@ -439,7 +439,7 @@ el_debug(){
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         # level 2 is debug
-        echo -e "${el_c_gr}D: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}]${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+        echo -e "${el_c_gr}D: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
 
     fi
 

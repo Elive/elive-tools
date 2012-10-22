@@ -515,6 +515,58 @@ el_group_add(){
     fi
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_security_function_loop
+#   DESCRIPTION:  check for a possible infinite-loops, needs to be called as:
+#                 el_security_function_loop || return
+#                 from every function of your scripts
+#       RETURNS:  1 if found a loop, 0 if not
+#===============================================================================
+el_security_function_loop(){
+    # pre {{{
+    local funclevels funclevel count is_loop_infinite is_loop_predetected
+
+    # }}}
+    count=1
+    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+    funclevel="${funclevels}"
+
+    # walk around our parent functions
+    while [[ $funclevel -gt 0 ]] ; do
+        # ignore the last check, which is of course the same name
+        if [[ "${count}" -lt "$funclevels" ]] ; then
+            # check if we already come from our function-name in our parents
+            if [[ "${FUNCNAME[$funclevel]}" = "${FUNCNAME[1]}" ]] ; then
+                if ((is_loop_predetected)) ; then
+                    # already entered loop, we should break the loop and continue gracefully
+                    is_loop_infinite=1
+                else
+                    # give at least a chance to the infinite-loop, but we shouldn't
+                    is_loop_predetected=1
+                fi
+            fi
+        fi
+
+
+        funclevel="$(( $funclevel - 1 ))"
+        count="$(( $count + 1 ))"
+    done
+
+
+    # do action for our resulting checks
+    if ((is_loop_predetected)) ; then
+        if ((is_loop_infinite)) ; then
+            el_error "Entered in an Infinite Loop, but:"
+            el_explain 0 "Fortunately, elive-tools is more smart than humans and stopped the progress of it from this point, so we can __continue gracefully__"
+            return 1
+        else
+            el_warning "Detected a possible infinite loop"
+        fi
+    fi
+
+    return 0
+
+}
 
 
 

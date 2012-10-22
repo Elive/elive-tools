@@ -556,8 +556,9 @@ el_security_function_loop(){
     # do action for our resulting checks
     if ((is_loop_predetected)) ; then
         if ((is_loop_infinite)) ; then
-            el_error "Entered in an Infinite Loop, but:"
-            el_explain 0 "Fortunately, elive-tools is more smart than humans and stopped the progress of it from this point, so we can __continue gracefully__"
+            # note: we set it as a warning instead of error because it is really a way that solves errors making the application working, at least for "smart" applications (no linear procedure but a set of tasks and where the application is meant to know what to do)
+            el_warning "Entered in an Infinite Loop, but:"
+            el_explain 1 "Fortunately, elive-tools is more smart than humans and stopped the progress of it from this point, so we can __continue gracefully__"
             return 1
         else
             el_warning "Detected a possible infinite loop"

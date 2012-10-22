@@ -537,13 +537,19 @@ el_security_function_loop(){
         if [[ "${count}" -lt "$funclevels" ]] ; then
             # check if we already come from our function-name in our parents
             if [[ "${FUNCNAME[$funclevel]}" = "${FUNCNAME[1]}" ]] ; then
-                if ((is_loop_predetected)) ; then
-                    # already entered loop, we should break the loop and continue gracefully
-                    is_loop_infinite=1
-                else
-                    # give at least a chance to the infinite-loop, but we shouldn't
-                    is_loop_predetected=1
-                fi
+                is_loop_predetected=1
+                is_loop_infinite=1
+                break
+                # removed the option to give a second oportunity, not even humans should have them {{{
+
+                #if ((is_loop_predetected)) ; then
+                    ## already entered loop, we should break the loop and continue gracefully
+                    #is_loop_infinite=1
+                #else
+                    ## give at least a chance to the infinite-loop, but we shouldn't
+                    #is_loop_predetected=1
+                #fi
+                # }}}
             fi
         fi
 
@@ -557,11 +563,34 @@ el_security_function_loop(){
     if ((is_loop_predetected)) ; then
         if ((is_loop_infinite)) ; then
             # note: we set it as a warning instead of error because it is really a way that solves errors making the application working, at least for "smart" applications (no linear procedure but a set of tasks and where the application is meant to know what to do)
-            el_warning "Entered in an Infinite Loop, but:"
-            el_explain 1 "Fortunately, elive-tools is more smart than humans and stopped the progress of it from this point, so we can __continue gracefully__"
+            el_warning "Entered in an Infinite Loop, let's jump it"
+            el_explain 1 "__Note:__ Declarative programming requires this feature for work correctly, in short, if the application works correctly then everything is fine."
+
+            # show the array of calls
+            funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+            funclevel="${funclevels}"
+            echo -en "${el_c_b}calls:${el_c_gr}"
+            while [[ $funclevel -gt 0 ]] ; do
+                echo -en " -> ${FUNCNAME[$funclevel]}"
+                funclevel="$(( $funclevel - 1 ))"
+            done
+            echo -e "${el_c_n}"
+
             return 1
-        else
-            el_warning "Detected a possible infinite loop"
+            # deprecated second oportunity {{{
+        #else
+            #el_warning "Detected a possible infinite loop"
+
+            ## show the array of calls
+            #funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+            #funclevel="${funclevels}"
+            #echo -en "${el_c_gr}calls:"
+            #while [[ $funclevel -gt 0 ]] ; do
+                #echo -en " -> ${FUNCNAME[$funclevel]}"
+                #funclevel="$(( $funclevel - 1 ))"
+            #done
+            #echo -e "${el_c_n}"
+            # }}}
         fi
     fi
 
@@ -575,8 +604,6 @@ el_security_function_loop(){
 
 
 
-# FIXME: implement:
-# FIXME: implement:
 # FIXME: implement:
 #
 # - check same proceses

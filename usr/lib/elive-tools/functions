@@ -29,7 +29,9 @@ el_c_bold="\033[1m" # Bold 'color' effect
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # from enlightenment values {{{
-    local display e_ipc_socket
+    local display e_ipc_socket is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
         if ls --color=none /tmp/enlightenment-${USER}@*/disp-* 1>/dev/null 2>/dev/null ; then
             display="$( find /tmp/enlightenment-${USER}@*/disp-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
@@ -57,31 +59,42 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
     # END xauthority }}}
 }
 #-------------------------------------------------------------------------------
 #   Send a notification to the user
 #-------------------------------------------------------------------------------
 el_notify_user(){ # notify the user (desktop || email). "title" "text"
-   el_set_display_variables
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-       notify-send -t 20000 "$@"
-   else
-       echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
-   fi
+    el_set_display_variables
+
+    if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+        notify-send -t 20000 "$@"
+    else
+        echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 #-------------------------------------------------------------------------------
 #   Send an important notification to the user
 #-------------------------------------------------------------------------------
 el_notify_user_important(){ # notify the user (desktop || email). "title" "text" (no timeout mode)
-   el_set_display_variables
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-       notify-send -t 240000 "$@"
-   else
-       echo -e "${el_c_y}Important: ${el_c_m}$2${el_c_n}" 1>&2
-   fi
+    el_set_display_variables
+
+    if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+        notify-send -t 240000 "$@"
+    else
+        echo -e "${el_c_y}Important: ${el_c_m}$2${el_c_n}" 1>&2
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
@@ -89,7 +102,8 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned
+    local stamp_hour_prev date_hour_now date_hour_prev returned is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
     stamp_hour_prev="/tmp/.stamps/verify_internet-${USER}-last_run_hour"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
@@ -105,30 +119,42 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # exit if we have already run that before
     if [[ "${date_hour_prev}" = "$date_hour_now" ]] ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
         return 0
     fi
 
     el_set_display_variables
     if timeout 50 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
         return 0
     else
         sleep 60
         if timeout 50 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
             echo "$date_hour_now" > "$stamp_hour_prev"
+
+            ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
             return 0
         else
             sleep 120
             if timeout 50 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
+
+                ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
                 return 0
             else
                 echo -e "Connection to internet not found" 1>&2
                 echo "$date_hour_now" > "$stamp_hour_prev"
+
+                ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
                 return 1
             fi
         fi
     fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 
@@ -136,18 +162,26 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #   Speak something
 #-------------------------------------------------------------------------------
 el_speak_text(){
-   el_check_dependencies text2wave
-   local text
-   text="$( echo "$text" | iconv -f utf8 -t ISO-8859-15 )"
-   echo -e "$text" | text2wave -scale 5 > /tmp/.$$-festival-message.wav
-   mplayer -really-quiet /tmp/.$$-festival-message.wav 2>/dev/null
-   rm -f /tmp/.$$-festival-message.wav
+    local text is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
+    el_check_dependencies text2wave
+
+    text="$( echo "$text" | iconv -f utf8 -t ISO-8859-15 )"
+    echo -e "$text" | text2wave -scale 5 > /tmp/.$$-festival-message.wav
+    mplayer -really-quiet /tmp/.$$-festival-message.wav 2>/dev/null
+    rm -f /tmp/.$$-festival-message.wav
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     if [[ -z "${USER}" ]] ; then
         if [[ -z "${HOME}" ]] ; then
             export HOME="/home"
@@ -168,58 +202,77 @@ el_make_environment(){ # make ready our environment (source variables and functi
         export PS4='+ (SHELL:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
     fi
 
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
 #   Title Set: sets the title of a window
 #-------------------------------------------------------------------------------
 el_title_set(){ # set the Title on the actual Window
-   el_set_display_variables
-   echo -ne '\033]0;'$@'\007'
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
+    el_set_display_variables
+    echo -ne '\033]0;'$@'\007'
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
 #   Resolutions, get the resolution values
 #-------------------------------------------------------------------------------
 el_resolution_get(){ # show our actual resolution
-   el_check_dependencies xdpyinfo
-   el_set_display_variables
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   xdpyinfo | grep dimension | awk '{print $2}' | grep x | tail -1
+    el_check_dependencies xdpyinfo
+    el_set_display_variables
+
+    xdpyinfo | grep dimension | awk '{print $2}' | grep x | tail -1
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
 #   Dependencies Check
 #-------------------------------------------------------------------------------
 el_check_dependencies(){ # check if we have these command dependencies, if not, notify and exit
-   # example:  el_check_dependencies gmplayer,find,sed,etc
-   local check found found_no dir
-   while read -ru 3 check
-   do
-      unset found
+    # example:  el_check_dependencies gmplayer,find,sed,etc
+    local check found found_no dir is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-      for dir in $(echo ${PATH}:/usr/local/sbin:/usr/sbin:/sbin | tr ':' ' ')
-      do
-         if test -x ${dir}/$check
-         then
-            found=yes
-            break
-         fi
-      done
+    while read -ru 3 check
+    do
+        unset found
 
-      if [[ "$found" != "yes" ]] ; then
-         echo "Error: command '$check' not found" 1>&2
-         el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
-         found_no="yes"
-      fi
+        for dir in $(echo ${PATH}:/usr/local/sbin:/usr/sbin:/sbin | tr ':' ' ')
+        do
+            if test -x ${dir}/$check
+            then
+                found=yes
+                break
+            fi
+        done
 
-   done 3<<< "$( echo "$@" | tr ',' '\n' )"
+        if [[ "$found" != "yes" ]] ; then
+            echo "Error: command '$check' not found" 1>&2
+            el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
+            found_no="yes"
+        fi
 
-   if [[ "$found_no" = "yes" ]] ; then
-       return 1
-   else
-       return 0
-   fi
+    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+
+    if [[ "$found_no" = "yes" ]] ; then
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 0
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 
@@ -227,22 +280,29 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 #   Check if variable exists
 #-------------------------------------------------------------------------------
 el_check_variables(){ # check if we have set these variables, if not, notify and exit
-   # example $0 foo,bar,we
-   local found_no var
+    # example $0 foo,bar,we
+    local found_no var is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   while read -ru 3 var
-   do
-       if [[ ! -n "${!var}" ]] ; then
-           el_notify_user "E: Variable not exists" "E: the variable '$var' is not set"
-           found_no="yes"
-       fi
-   done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    while read -ru 3 var
+    do
+        if [[ ! -n "${!var}" ]] ; then
+            el_notify_user "E: Variable not exists" "E: the variable '$var' is not set"
+            found_no="yes"
+        fi
+    done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
-   if [[ "$found_no" = "yes" ]] ; then
-       return 1
-   else
-       return 0
-   fi
+    if [[ "$found_no" = "yes" ]] ; then
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 0
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 
@@ -250,26 +310,36 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 #   Check if files exists
 #-------------------------------------------------------------------------------
 el_check_files(){ # check if we have these files (and non-zero), if not, notify and exit
-   # example $0 foo,bar,we
-   local var found_no
-   if [[ -z "$1" ]] ; then
-      echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
-      return 1
-   fi
+    # example $0 foo,bar,we
+    local var found_no is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   while read -ru 3 var
-   do
-      if [[ ! -s "${var}" ]] ; then
-         el_notify_user "E: File not exists" "E: the file '$var' not exists"
-         found_no="yes"
-      fi
-   done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    if [[ -z "$1" ]] ; then
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
 
-   if [[ "$found_no" = "yes" ]] ; then
-       return 1
-   else
-       return 0
-   fi
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    fi
+
+    while read -ru 3 var
+    do
+        if [[ ! -s "${var}" ]] ; then
+            el_notify_user "E: File not exists" "E: the file '$var' not exists"
+            found_no="yes"
+        fi
+    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+
+    if [[ "$found_no" = "yes" ]] ; then
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 0
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 
@@ -277,26 +347,36 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
 #   Check if dir exists
 #-------------------------------------------------------------------------------
 el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify and exit
-   # example $0 foo,bar,we
-   local var found_no
-   if [[ -z "$1" ]] ; then
-      echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
-      return 1
-   fi
+    # example $0 foo,bar,we
+    local var found_no is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   while read -ru 3 var
-   do
-      if [[ ! -d "${var}" ]] ; then
-         el_notify_user "E: Dir not exists" "E: the dir '$var' not exist"
-         found_no="yes"
-      fi
-   done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    if [[ -z "$1" ]] ; then
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
 
-   if [[ "$found_no" = "yes" ]] ; then
-       return 1
-   else
-       return 0
-   fi
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    fi
+
+    while read -ru 3 var
+    do
+        if [[ ! -d "${var}" ]] ; then
+            el_notify_user "E: Dir not exists" "E: the dir '$var' not exist"
+            found_no="yes"
+        fi
+    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+
+    if [[ "$found_no" = "yes" ]] ; then
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 0
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 
@@ -304,35 +384,54 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 #   check if dir has files
 #-------------------------------------------------------------------------------
 el_check_dir_has_files(){
-   local dir
-   dir="$1"
-   if [[ -z "$1" ]] ; then
-      echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
-      return 1
-   fi
+    local dir is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   if [[ ! -d "$dir" ]] ; then
-      el_notify_user "Dir not exist" "$dir"
-      return 1
-   else
-      if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
-         el_notify_user "Dir has no files" "$dir"
-         return 1
-      fi
-   fi
+    dir="$1"
+
+    if [[ -z "$1" ]] ; then
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    fi
+
+    if [[ ! -d "$dir" ]] ; then
+        el_notify_user "Dir not exist" "$dir"
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 1
+    else
+        if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
+            el_notify_user "Dir has no files" "$dir"
+
+            ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+            return 1
+        fi
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #-------------------------------------------------------------------------------
 #   check if we have automatic sudo
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
-    if ! sudo -H -n echo 2>&1 ; then
-         el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
-         exit 1
-     else
-         return 0
-     fi
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
+    if ! sudo -H -n echo 2>&1 ; then
+        el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        exit 1
+    else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+        return 0
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_explain
@@ -343,78 +442,78 @@ el_check_sudo_automated(){
 #       message:    $2 = can include: __hilight words__, XXsuper hilightXX
 #===============================================================================
 el_explain(){
-   # pre {{{
-   local funclevel spaced verbose_level message trace_message trace_col
+    # pre {{{
+    local funclevel spaced verbose_level message trace_message trace_col is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-   verbose_level="$1"
-   shift
-   message="$@"
+    verbose_level="$1"
+    shift
+    message="$@"
 
-   spaced="$verbose_level"
+    spaced="$verbose_level"
+    funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
 
-   funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
+    el_check_variables "spaced,verbose_level,message"
+    # }}}
+    # tabulate output {{{
+    while [[ $spaced -gt 0 ]] ; do
+        message="  $message"
+        spaced="$(( $spaced - 1 ))"
+    done
 
-   el_check_variables "spaced,verbose_level,message"
-   # }}}
-   # tabulate output {{{
-   while [[ $spaced -gt 0 ]] ; do
-      message="  $message"
-      spaced="$(( $spaced - 1 ))"
-   done
+    # }}}
+    # hilight words {{{
+    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_gr}}"
+    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_gr}}"
+    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_gr}}"
+    message="${message/XX/${el_c_r}}"
+    message="${message/XX/${el_c_gr}}"
+    message="${message/XX/${el_c_r}}"
+    message="${message/XX/${el_c_gr}}"
+    # }}}
+    # show {{{
+    # this is a good example of levels of colors visualization for the user's eye
 
-   # }}}
-   # hilight words {{{
-   message="${message/__/${el_c_b2}}"
-   message="${message/__/${el_c_gr}}"
-   message="${message/__/${el_c_b2}}"
-   message="${message/__/${el_c_gr}}"
-   message="${message/__/${el_c_b2}}"
-   message="${message/__/${el_c_gr}}"
-   message="${message/XX/${el_c_r}}"
-   message="${message/XX/${el_c_gr}}"
-   message="${message/XX/${el_c_r}}"
-   message="${message/XX/${el_c_gr}}"
-   # }}}
-   # show {{{
-   # this is a good example of levels of colors visualization for the user's eye
-
-   # show only if we are on this verbose level
-   if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
-       case $funclevel in
-           1)
+    # show only if we are on this verbose level
+    if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
+        case $funclevel in
+            1)
                 echo -en "   ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           2)
+            2)
                 echo -en "   ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           3)
+            3)
                 echo -en "   ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           4)
+            4)
                 echo -en "   ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           5)
+            5)
                 echo -en "   ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           6)
+            6)
                 echo -en "   ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           7)
+            7)
                 echo -en "   ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           8)
+            8)
                 echo -en "   ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           9)
+            9)
                 echo -en "   ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           10)
+            10)
                 echo -en "   ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           11)
+            11)
                 echo -en "   ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
                 ;;
-           *)
+            *)
                 echo -en "   ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
                 ;;
         esac
@@ -422,9 +521,10 @@ el_explain(){
         # continuation of the message
         echo -e "${message}${el_c_n}" 1>&2
 
-   fi
+    fi
 
-   # }}}
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+    # }}}
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_debug
@@ -433,9 +533,11 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # debug {{{
-    local funclevel
+    local funclevel is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
-    funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
+    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+    funclevel="$funclevel"
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         # level 2 is debug
@@ -443,6 +545,19 @@ el_debug(){
 
     fi
 
+    # more debug, show function-call array
+    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        # show the array of calls
+        funclevel="${funclevels}"
+        echo -en "${el_c_gr}calls:"
+        while [[ $funclevel -gt 0 ]] ; do
+            echo -en " -> ${FUNCNAME[$funclevel]}"
+            funclevel="$(( $funclevel - 1 ))"
+        done
+        echo -e "${el_c_n}"
+    fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
     # }}}
 }
 
@@ -453,11 +568,14 @@ el_debug(){
 #===============================================================================
 el_warning(){
     # warning {{{
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
         echo -e "${el_c_y}Warning: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
-
     fi
 
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
     # }}}
 }
 
@@ -468,11 +586,15 @@ el_warning(){
 #===============================================================================
 el_error(){
     # error {{{
+    local is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         echo -e "${el_c_r}Error: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
 
     fi
 
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
     # }}}
 }
 
@@ -483,7 +605,9 @@ el_error(){
 #===============================================================================
 el_group_check(){
     # pre {{{
-    local group
+    local group is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     group="${1}"
 
     el_check_variables "group"
@@ -491,10 +615,16 @@ el_group_check(){
     # }}}
 
     if [[ " $(id -Gn "$USER") " = *" $group "* ]] ; then
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
         return 0
     else
+
+        ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
         return 1
     fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #===  FUNCTION  ================================================================
@@ -504,7 +634,9 @@ el_group_check(){
 #===============================================================================
 el_group_add(){
     # pre {{{
-    local group
+    local group is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
     group="$1"
 
     el_check_variables "group"
@@ -513,6 +645,8 @@ el_group_add(){
     if ! el_group_check "${group}" ; then
         gksu "adduser ${USER} ${group}"
     fi
+
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }
 
 #===  FUNCTION  ================================================================
@@ -520,15 +654,22 @@ el_group_add(){
 #   DESCRIPTION:  check for a possible infinite-loops, needs to be called as:
 #                 el_security_function_loop || return
 #                 from every function of your scripts
+#    PARAMETERS:  $1 = number of recursivity's allowed
 #       RETURNS:  1 if found a loop, 0 if not
 #===============================================================================
 el_security_function_loop(){
     # pre {{{
-    local funclevels funclevel count_recursive is_loop_infinite is_loop_predetected
+    local funclevels funclevel count_recursive is_loop_infinite is_loop_predetected is_flag_set_x
+    [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
     # }}}
-    # high value of count_recursive because we want to allow recursive calls, and infinite is infinite
-    count_recursive=3
+    # high value of count_recursive if we call a function recursively multiple times
+    if [[ -n "$1" ]] ; then
+        count_recursive="$(( 1 + $1 ))"
+    else
+        count_recursive="1"
+    fi
+
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
     funclevel="${funclevels}"
 
@@ -573,6 +714,7 @@ el_security_function_loop(){
                 echo -e "${el_c_n}"
             fi
 
+            ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
             return 1
         else
             if [[ "${EL_DEBUG}" -ge "2" ]] ; then
@@ -591,7 +733,7 @@ el_security_function_loop(){
         fi
     fi
 
-    return 0
+    ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 
 }
 

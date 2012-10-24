@@ -352,7 +352,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
     [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
     if [[ -z "$1" ]] ; then
-        echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
 
         ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
         return 1
@@ -539,9 +539,15 @@ el_debug(){
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
     funclevel="$funclevels"
 
+    # level 2 is debug
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
-        # level 2 is debug
-        echo -e "${el_c_gr}D: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+        if [[ -n "$1" ]] ; then
+            echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+        else
+            # function showing only
+            echo -e "${el_c_gr}F:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+        fi
+
 
     fi
 
@@ -549,12 +555,12 @@ el_debug(){
     if [[ "${EL_DEBUG}" -ge 3 ]] ; then
         # show the array of calls
         funclevel="${funclevels}"
-        echo -en "${el_c_gr}calls:"
+        echo -en "${el_c_gr}calls:" 1>&2
         while [[ $funclevel -gt 0 ]] ; do
-            echo -en " -> ${FUNCNAME[$funclevel]}"
+            echo -en " -> ${FUNCNAME[$funclevel]}" 1>&2
             funclevel="$(( $funclevel - 1 ))"
         done
-        echo -e "${el_c_n}"
+        echo -e "${el_c_n}" 1>&2
     fi
 
     ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
@@ -706,12 +712,12 @@ el_security_function_loop(){
                 # show the array of calls
                 funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
                 funclevel="${funclevels}"
-                echo -en "${el_c_b}calls:${el_c_gr}"
+                echo -en "${el_c_b}calls:${el_c_gr}" 1>&2
                 while [[ $funclevel -gt 0 ]] ; do
-                    echo -en " -> ${FUNCNAME[$funclevel]}"
+                    echo -en " -> ${FUNCNAME[$funclevel]}" 1>&2
                     funclevel="$(( $funclevel - 1 ))"
                 done
-                echo -e "${el_c_n}"
+                echo -e "${el_c_n}" 1>&2
             fi
 
             ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
@@ -723,12 +729,12 @@ el_security_function_loop(){
                 # show the array of calls
                 funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
                 funclevel="${funclevels}"
-                echo -en "${el_c_gr}calls:"
+                echo -en "${el_c_gr}calls:" 1>&2
                 while [[ $funclevel -gt 0 ]] ; do
-                    echo -en " -> ${FUNCNAME[$funclevel]}"
+                    echo -en " -> ${FUNCNAME[$funclevel]}" 1>&2
                     funclevel="$(( $funclevel - 1 ))"
                 done
-                echo -e "${el_c_n}"
+                echo -e "${el_c_n}" 1>&2
             fi
         fi
     fi

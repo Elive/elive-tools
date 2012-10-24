@@ -537,7 +537,7 @@ el_debug(){
     [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
-    funclevel="$funclevel"
+    funclevel="$funclevels"
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         # level 2 is debug

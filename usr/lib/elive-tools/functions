@@ -694,7 +694,18 @@ el_group_add(){
     # }}}
     if ! el_group_check "${group}" ; then
         gksu "adduser ${USER} ${group}"
+
+        # try again if not reached
+        if ! el_group_check "${group}" ; then
+            gksu "adduser ${USER} ${group}"
+        fi
+
+        # inform that a reboot is needed
+        if el_group_check "$group" ; then
+            el_notify_user "Your user is now added to the new group ${group}, please reboot your computer for use it correctly"
+        fi
     fi
+
 
     ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
 }

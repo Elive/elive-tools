@@ -545,7 +545,51 @@ el_debug(){
             echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
         else
             # function showing only
-            echo -e "${el_c_gr}F:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+    # show {{{
+
+    case $funclevel in
+        1)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        2)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        3)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        4)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        5)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        6)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        7)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        8)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        9)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        10)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        11)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+        *)
+            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
+            ;;
+    esac
+
+        # continuation of the message
+        echo -e "${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+
+    # }}}
         fi
 
 
@@ -665,19 +709,22 @@ el_group_add(){
 #===============================================================================
 el_security_function_loop(){
     # pre {{{
-    local funclevels funclevel count_recursive is_loop_infinite is_loop_predetected is_flag_set_x
+    local funclevels funclevel count_recursive recursives_allowed is_loop_infinite is_loop_predetected is_flag_set_x
     [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
 
     # }}}
     # high value of count_recursive if we call a function recursively multiple times
-    if [[ -n "$1" ]] ; then
-        count_recursive="$(( 1 + $1 ))"
+    recursives_allowed="$1"
+
+    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+    funclevel="${funclevels}"
+
+    if [[ -n "$recursives_allowed" ]] ; then
+        count_recursive="$(( 1 + $recursives_allowed ))"
     else
         count_recursive="1"
     fi
 
-    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
-    funclevel="${funclevels}"
 
     # walk around our parent functions
     while [[ $funclevel -gt 0 ]] ; do
@@ -724,7 +771,9 @@ el_security_function_loop(){
             return 1
         else
             if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-                el_warning "Detected a possible infinite loop"
+                if [[ -z "$recursives_allowed" ]] ; then
+                    el_warning "Detected a possible infinite loop"
+                fi
 
                 # show the array of calls
                 funclevels="$(( ${#FUNCNAME[*]} - 2 ))"

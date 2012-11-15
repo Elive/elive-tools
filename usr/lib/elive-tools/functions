@@ -72,7 +72,11 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-        notify-send -t 20000 "$@"
+		if el_check_dependencies notify-send ; then
+			notify-send -t 20000 "$@"
+		else
+			el_warning "notify-send not installed"
+		fi
     else
         echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
     fi
@@ -89,7 +93,11 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-        notify-send -t 240000 "$@"
+		if el_check_dependencies notify-send ; then
+			notify-send -t 240000 "$@"
+		else
+			el_warning "notify-send not installed"
+		fi
     else
         echo -e "${el_c_y}Important: ${el_c_m}$2${el_c_n}" 1>&2
     fi

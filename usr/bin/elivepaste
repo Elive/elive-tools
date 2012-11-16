@@ -1,0 +1,95 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+   # pre {{{
+   local url buffer syntax syntax_filetype max_lines user
+
+   if ! el_check_dependencies pastebinit ; then
+	   el_error "Please install the package pastebinit first"
+   fi
+
+
+   # }}}
+
+   # variables
+   max_lines="500"
+   user="$USER"
+
+   # show help if no parameters
+   if [[ -z "$1" ]] ; then
+	   el_error "Usage: $(basename $0) command to run with parameters"
+	   el_explain 0 "example: $(basename $0) cat file.c"
+	   el_explain 0 "example: $(basename $0) esu -d thunar"
+   fi
+
+   # run and save output
+   buffer="$( "$@" 2>&1 )"
+   echo "$buffer"
+
+   # set syntax {{{
+   syntax_filetype="$( echo -e "$buffer" | file - )"
+
+   case "$syntax_filetype" in
+	   *Bourne-Again*shell*script*)
+		   syntax="bash"
+		   ;;
+	   *ASCII\ C\ program*|*C\ source*)
+		   syntax="c"
+		   ;;
+	   *python\ script*)
+		   syntax="python"
+		   ;;
+	   *diff*)
+		   syntax="diff"
+		   ;;
+	   *makefile*)
+		   syntax="make"
+		   ;;
+	   *)
+		   syntax="text"
+		   ;;
+   esac
+
+   # - set syntax }}}
+
+   # checks {{{
+
+   # max lines allowed
+   if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then
+	   el_error "Output lines are bigger than 500, too long paste, ignoring..."
+	   exit 1
+   fi
+   # - checks }}}
+
+   # get url
+   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+   if ! echo "${url}" | grep -q "http://" ; then
+	   el_error "URL not get correctly: $url"
+	   exit 1
+   fi
+
+   # sent
+   if ps ux | grep -v grep | grep -q xchat ; then
+	   xchat -e -c "msg #elive $url"
+	   echo ""
+	   el_explain 0 "output sent to the #elive xchat channel"
+   else
+	   # save it to clipboard, right-click mouse ready
+	   if el_check_dependencies xclip ; then
+		   echo "$url" | xclip -i
+	   fi
+
+	   # finally show the url in the terminal
+	   echo -e ""
+	   el_explain 0 "Paste available in: __$url__"
+	   echo "$url"
+   fi
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

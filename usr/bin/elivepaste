@@ -21,6 +21,7 @@ main(){
 	   el_error "Usage: $(basename $0) command to run with parameters"
 	   el_explain 0 "example: $(basename $0) cat file.c"
 	   el_explain 0 "example: $(basename $0) esu -d thunar"
+	   exit 1
    fi
 
    # run and save output
@@ -54,6 +55,11 @@ main(){
    # - set syntax }}}
 
    # checks {{{
+
+   # empty ?
+   if [[ -z "$buffer" ]] ; then
+	   el_debug "buffer empty, ignoring..."
+   fi
 
    # max lines allowed
    if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then

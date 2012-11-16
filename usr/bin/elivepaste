@@ -3,10 +3,14 @@ source /usr/lib/elive-tools/functions
 
 main(){
    # pre {{{
-   local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command
+   local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin
 
    if ! el_check_dependencies pastebinit ; then
 	   el_error "Please install the package pastebinit first"
+   fi
+
+   if [[ ! -t 0 ]] ; then
+	   is_stdin=1
    fi
 
    unset LANG LANGUAGE LC_ALL LC_MESSAGES
@@ -20,16 +24,22 @@ main(){
    command="$@"
 
    # show help if no parameters
-   if [[ -z "$1" ]] ; then
+   if [[ -z "$1" ]] && ! ((is_stdin)) ; then
 	   el_error "Usage: $(basename $0) command to run with parameters"
 	   el_explain 0 "example: $(basename $0) cat file.c"
 	   el_explain 0 "example: $(basename $0) esu -d thunar"
+	   el_explain 0 "__note__: you can also do things like: __apui elive-tools | $(basename $0)__, this is useful if you want to run it from alias or in other ways"
 	   exit 1
    fi
 
    # run and save output
-   buffer="$( "$@" 2>&1 )"
-   echo "$buffer"
+   if ((is_stdin)) ; then
+	   buffer="$(cat)"
+	   command="(piped)"
+   else
+	   buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+	   echo "$buffer"
+   fi
 
    # set syntax {{{
    syntax_filetype="$( echo -e "$buffer" | file - )"
@@ -79,7 +89,7 @@ main(){
    # get url
    if ! ((direct_paste)) ; then
 
-	   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+	   url="$( { echo "$ $command" ; echo "${buffer}" ; } | pastebinit -a "$user" -f "${syntax}" | head -1 )"
 
 	   if ! echo "${url}" | grep -q "http://" ; then
 		   el_error "URL not get correctly: $url"
@@ -96,7 +106,7 @@ main(){
 		   xchat -e -c "msg #elive [$command] $url"
 	   fi
 	   echo ""
-	   el_explain 0 "output sent to the #elive xchat channel"
+	   el_explain 0 "output sent to the #elive channel"
    else
 	   # save it to clipboard, right-click mouse ready
 	   if el_check_dependencies xclip ; then

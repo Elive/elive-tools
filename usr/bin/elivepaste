@@ -18,7 +18,7 @@ main(){
    # }}}
 
    # variables
-   max_lines="500"
+   max_lines="1000"
    min_lines="10"
    user="$USER"
    command="$@"
@@ -78,6 +78,7 @@ main(){
    # max lines allowed
    if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then
 	   el_error "Output lines are bigger than 500, too long paste, ignoring..."
+	   el_explain 0 "please try instead: __command args | foo | bar | $(basename $0)__"
 	   exit 1
    fi
 

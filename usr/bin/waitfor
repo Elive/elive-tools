@@ -29,16 +29,16 @@ main(){
    # put a new line
    echo -e ""
 
-   while ps aux | grep -v grep | grep -v "$(basename $0)" | grep -q "${watcher}"
+   while ps aux | grep -v grep | grep -v "$$" | grep -q "${watcher}"
    do
 	   if [[ "${counter}" -gt "60" ]] ; then
 		   minutes="$(( $counter / 60 ))"
 	   fi
 
 	   if [[ -n "$minutes" ]] ; then
-		   echo -en "\rProcess ${watcher} still running, waiting... [$minutes minutes]"
+		   echo -en "\rProcess ${watcher} still running, waiting... [$minutes minutes]     "
 	   else
-		   echo -en "\rProcess ${watcher} still running, waiting... [$counter seconds]"
+		   echo -en "\rProcess ${watcher} still running, waiting... [$counter seconds]     "
 	   fi
 
 

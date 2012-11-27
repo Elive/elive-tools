@@ -431,15 +431,23 @@ el_check_dir_has_files(){
 #   check if we have automatic sudo
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
-    local is_flag_set_x
+    local is_flag_set_x  noexit
     [[ $- = *x* ]] && is_flag_set_x=1 && set +x || true
+
+	if [[ "$@" = *"noexit"* ]] ; then
+		noexit=1
+	fi
 
     if ! sudo -H -n echo 2>&1 ; then
         #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
         el_error "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it"
 
         ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
-        exit 1
+		if ((noexit)) ; then
+			return 1
+		else
+			exit 1
+		fi
     else
 
         ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
@@ -723,6 +731,27 @@ el_group_add(){
 
 
     ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_sudo
+#   DESCRIPTION:  automate the sudo requirement command
+#    PARAMETERS:  args
+#       RETURNS:  -
+#===============================================================================
+el_sudo(){
+    # pre {{{
+    el_debug
+    el_security_function_loop || return
+
+    # }}}
+    if [[ "$UID" = 0 ]] ; then
+		"$@"
+	else
+		if el_check_sudo_automated noexit ; then
+			sudo "$@"
+		fi
+	fi
 }
 
 #===  FUNCTION  ================================================================

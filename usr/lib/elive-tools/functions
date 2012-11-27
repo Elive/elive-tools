@@ -245,9 +245,7 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 
     if [[ "$found_no" = "yes" ]] ; then
 
-        #return 1
-		# depencies are something strict, we should always exit
-		exit 1
+		return 1
     else
 
         return 0
@@ -382,21 +380,12 @@ el_check_dir_has_files(){
 #   check if we have automatic sudo
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
-    local noexit
-
-	if [[ "$@" = *"noexit"* ]] ; then
-		noexit=1
-	fi
 
     if ! sudo -H -n echo 2>/dev/null 1>/dev/null ; then
         #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
         el_error "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it"
 
-		if ((noexit)) ; then
-			return 1
-		else
-			exit 1
-		fi
+		return 1
     else
 
         return 0
@@ -678,7 +667,7 @@ el_sudo(){
     if [[ "$UID" = 0 ]] ; then
 		"$@"
 	else
-		if el_check_sudo_automated noexit ; then
+		if el_check_sudo_automated ; then
 			sudo "$@"
 		fi
 	fi

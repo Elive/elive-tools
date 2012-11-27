@@ -6,7 +6,8 @@ main(){
    local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin
 
    if ! el_check_dependencies pastebinit ; then
-	   el_error "Please install the package pastebinit first"
+	   el_dependencies_install "pastebinit"
+	   #el_error "Please install the package pastebinit first"
    fi
 
    if [[ ! -t 0 ]] ; then
@@ -105,7 +106,7 @@ main(){
    fi
 
    # sent
-   if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat ; then
+   if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat 1>/dev/null 2>/dev/null ; then
 	   if ((direct_paste)) ; then
 		   xchat -e -c "msg #elive \$ $command"
 		   xchat -e -c "msg #elive $buffer"
@@ -116,7 +117,7 @@ main(){
 	   el_explain 0 "output sent to the #elive channel"
    else
 	   # save it to clipboard, right-click mouse ready
-	   if el_check_dependencies xclip ; then
+	   if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then
 		   echo "$url" | xclip -i
 	   fi
 

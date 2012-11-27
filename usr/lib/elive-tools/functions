@@ -255,6 +255,32 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 
 
 #-------------------------------------------------------------------------------
+#   Install required packages
+#-------------------------------------------------------------------------------
+el_dependencies_install(){
+	local depends temp
+	depends="$( echo "$@" | tr ',' ' ' )"
+	el_set_display_variables
+
+	# TODO: move to terminology when compatibility will be implemented
+	# TODO:  even better: use a gui tool
+	el_check_dependencies urxvt
+
+	temp="/tmp/.$(basename $0)-${USER}-$$"
+	cat > "${temp}" << EOF
+#!/bin/bash
+
+urxvt -hold -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; apt-get update ; apt-get -f install ; apt-get install $depends ; echo ; echo ; echo 'Finished, you can close the terminal...' ; read nothing "
+EOF
+
+	chmod +x "${temp}"
+	gksu "${temp}"
+	rm -f "${temp}"
+
+}
+
+
+#-------------------------------------------------------------------------------
 #   Check if variable exists
 #-------------------------------------------------------------------------------
 el_check_variables(){ # check if we have set these variables, if not, notify and exit
@@ -651,26 +677,6 @@ el_group_add(){
     fi
 
 
-}
-
-#===  FUNCTION  ================================================================
-#          NAME:  el_sudo
-#   DESCRIPTION:  automate the sudo requirement command
-#    PARAMETERS:  args
-#       RETURNS:  -
-#===============================================================================
-el_sudo(){
-    # pre {{{
-    el_security_function_loop || return
-
-    # }}}
-    if [[ "$UID" = 0 ]] ; then
-		"$@"
-	else
-		if el_check_sudo_automated ; then
-			sudo "$@"
-		fi
-	fi
 }
 
 #===  FUNCTION  ================================================================

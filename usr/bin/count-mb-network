@@ -4,11 +4,13 @@ source /usr/lib/elive-tools/functions
 main(){
 	# pre {{{
 	local input output Bi Bo
-	el_check_dependencies iptables
+	if ! el_check_dependencies iptables ; then
+		el_dependencies_install iptables
+	fi
 
 	# }}}
-	input="$( el_sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
-	output="$( el_sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
+	input="$( sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
+	output="$( sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
 
 	Bi="$( expr $input / 1048576 )"
 	Bo="$( expr $output / 1048576 )"

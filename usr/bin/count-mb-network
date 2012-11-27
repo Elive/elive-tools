@@ -1,0 +1,26 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+	# pre {{{
+	local input output Bi Bo
+	el_check_dependencies iptables
+	el_check_sudo_automated
+
+	# }}}
+	input="$( el_sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
+	output="$( el_sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
+
+	Bi="$( expr $input / 1048576 )"
+	Bo="$( expr $output / 1048576 )"
+
+	echo -e "$input Bytes downloaded ($Bi MB) \n$output Bytes uploaded ($Bo MB)"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

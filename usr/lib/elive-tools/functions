@@ -263,7 +263,7 @@ el_dependencies_install(){
 	el_set_display_variables
 
 	# TODO: move to terminology when compatibility will be implemented
-	# TODO:  even better: use a gui tool
+	# TODO:  even better: use a gui tool for install deps
 	el_check_dependencies urxvt
 
 	temp="/tmp/.$(basename $0)-${USER}-$$"

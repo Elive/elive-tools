@@ -1,0 +1,118 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+main(){
+	# pre {{{
+	local list action meter actualvalue
+
+	# }}}
+
+	# Usage
+	if [[ -z "${1}" ]] ; then
+	   echo -e "Usage: $(basename $BASH_SOURCE) args"
+	   echo -e "Examples:"
+	   echo -e "$(basename $0) defaults  # set volumes generically to optimal ones"
+	   echo -e "$(basename $0) 80%  # set the volume to the 80 % level"
+	   echo -e "$(basename $0) 10%+ # increases 10% the actual volume"
+	   echo -e "$(basename $0) mute # switch on/off mute mode"
+	   exit 1
+	fi
+
+
+	list="$( amixer scontrols )"
+	action="$@"
+
+	if [[ "${1}" = "defaults" ]] ; then
+		# Master should be always set to 100 % in order to avoid distortions
+		el_explain 2 "Master set to 100%"
+		amixer set Master,0 100% 2>/dev/null
+		amixer set Master,1 100% 2>/dev/null
+
+		# then set a default generic volume
+		el_explain 2 "Generic volumes set to 70%"
+		main 70%
+	fi
+
+
+
+	action="${action/ up/+}"
+	action="${action/ down/-}" # FIXME: e17 mouse bindings does a segfault when the action is to enter a command like "setvolumes 2%+" ? if yes, report it to E17
+
+	##################
+	# First = see if first option is available, if not, try with the next one
+	if [[ -z $meter ]] ; then
+		if echo "$list" | grep -q PCM ; then
+			meter=PCM
+			el_explain 2 "selected mode $meter"
+		fi
+	fi
+
+	##################
+	if [[ -z $meter ]] ; then
+		if echo "$list" | grep -q Front ; then
+			meter=Front
+			el_explain 2 "selected mode $meter"
+		fi
+	fi
+
+	##################
+	if [[ -z $meter ]] ; then
+		if echo "$list" | grep -q Wave ; then
+			meter=Wave
+			el_explain 2 "selected mode $meter"
+		fi
+	fi
+
+	##################
+	# Master should be everytime on Max volume or you got distortions
+	if [[ -z $meter ]] ; then
+		if echo "$list" | grep -q Master ; then
+			meter=Master
+			el_explain 2 "selected mode $meter"
+		fi
+	fi
+
+	##################
+	# Special Cards, like ice1712/Terratec_ewx24/96
+	if [[ -z $meter ]] ; then
+		if echo "$list" | grep -q DAC ; then
+			meter=DAC
+			el_explain 2 "selected mode $meter"
+		fi
+	fi
+
+	##################
+
+
+	if [[ "$action" = "mute" ]] ; then
+		actualvalue="$( amixer get $meter | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+		actualvalue="$( echo $actualvalue )"
+
+		if [[ "$actualvalue" = "on" ]] ; then
+			el_explain 2 "mute was on"
+			amixer set $meter mute
+		fi
+
+		if [[ "$actualvalue" = "off" ]] ; then
+			el_explain 2 "mute was off"
+			amixer set $meter unmute
+		fi
+		exit
+	fi
+	##################
+
+	if [[ "$meter" = "DAC" ]] ; then
+		amixer set ${meter},0 $action
+		amixer set ${meter},1 $action
+	else
+		amixer set $meter $action
+	fi
+	##################
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

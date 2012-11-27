@@ -1,0 +1,54 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+	# pre {{{
+	local list_cards number_cards selection guitool line
+
+	# }}}
+
+	# NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
+
+	guitool=zenity
+
+	list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+
+	# if our first argument is the card name to use, change the list of cards to use this one
+	if [[ -n "$1" ]] ; then
+		if echo "$list_cards" | grep -q "$1" ; then
+			list_cards="$1"
+		fi
+	fi
+
+	number_cards="$( echo -e "$list_cards" | wc -l )"
+
+	if [[ "$number_cards" -lt "2" ]] ; then
+		selection="$(echo $list_cards)"
+	else
+		# get a better list to give to the user
+		list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;   echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+		selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as Default" || echo cancel )"
+		# remove extra leading blank chars
+		read -r selection <<< "$selection"
+
+
+		if [[ "${selection}" = "cancel" ]] ; then
+		   exit 1
+		fi
+	fi
+
+	rm -f "${HOME}/.asoundrc"
+	echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+	echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+
+	$guitool --info --text=$"Your system is ready to use the '${selection}' audio card as the default one, please restart your audio applications"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

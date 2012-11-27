@@ -1,0 +1,18 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+	if ! el_check_dependencies curl ; then
+		el_dependencies_install curl
+	fi
+
+	curl -s http://www.adsl4ever.com/ip/ | grep h1 | grep span | awk '{print $1}' | sed 's/<h1>//'
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

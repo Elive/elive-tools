@@ -273,7 +273,9 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
     if [[ "$found_no" = "yes" ]] ; then
 
         ((is_flag_set_x)) && set -x && unset is_flag_set_x || true
-        return 1
+        #return 1
+		# depencies are something strict, we should always exit
+		exit 1
     else
 
         ((is_flag_set_x)) && set -x && unset is_flag_set_x || true

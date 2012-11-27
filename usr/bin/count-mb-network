@@ -5,7 +5,6 @@ main(){
 	# pre {{{
 	local input output Bi Bo
 	el_check_dependencies iptables
-	el_check_sudo_automated
 
 	# }}}
 	input="$( el_sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
@@ -14,7 +13,12 @@ main(){
 	Bi="$( expr $input / 1048576 )"
 	Bo="$( expr $output / 1048576 )"
 
-	echo -e "$input Bytes downloaded ($Bi MB) \n$output Bytes uploaded ($Bo MB)"
+	if [[ -n "$Bi" ]] && [[ -n "$Bi" ]] ; then
+		echo -e "Downloaded $Bi MB ($input bytes)"
+		echo -e "Uploaded   $Bo MB ($output bytes)"
+
+	fi
+
 
 }
 

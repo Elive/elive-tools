@@ -263,7 +263,6 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
         done
 
         if [[ "$found" != "yes" ]] ; then
-            echo "Error: command '$check' not found" 1>&2
             #el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
 			el_error "Command '$check' for $(basename $0) not found"
             found_no="yes"

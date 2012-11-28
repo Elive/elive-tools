@@ -680,6 +680,57 @@ el_group_add(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_confirm
+#   DESCRIPTION:  ask (console) for confirmation
+#    PARAMETERS:  question
+#       RETURNS:  true | false
+#===============================================================================
+el_confirm(){
+	# pre {{{
+	local reply question flag_glob
+
+	if shopt extglob | grep -q "extglob.*off" ; then
+		flag_glob=1
+	fi
+
+	shopt -s extglob
+	el_security_function_loop || return
+	question="$1"
+
+	check_variables "question"
+
+
+	# }}}
+	# return answer {{{
+	echo -en "$question [y/n]: "
+	read reply
+
+	case $reply in
+		y|Y|Yes|YES|s|S)
+			return  0
+			;;
+		n|N|no|NO|nope)
+			return  1
+			;;
+		*)
+			# repeat question until confirmation
+			if confirm "$@" ; then
+				return 0
+			else
+				return 1
+			fi
+			;;
+	esac
+
+	if ((flag_glob)) ; then
+		shopt -u extglob
+	fi
+
+	# }}}
+
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_security_function_loop
 #   DESCRIPTION:  check for a possible infinite-loops, needs to be called as:
 #                 el_security_function_loop || return
@@ -781,7 +832,6 @@ el_security_function_loop(){
 # - el_fixme_required -> report to the user that the feature is not implemented by some future userfriendly way
 # - arrays ?
 # - run web
-# - confirm (shell)
 # - trap signals (exit statuses, etc)
 # - report, something for inform the user about something important, which interfaces and cases ?
 # -

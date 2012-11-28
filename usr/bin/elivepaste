@@ -19,7 +19,7 @@ main(){
    # }}}
 
    # variables
-   max_lines="1000"
+   max_lines="10000"
    min_lines="10"
    user="$USER"
    command="$@"

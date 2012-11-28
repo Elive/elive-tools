@@ -1,5 +1,7 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+export TEXTDOMAIN="elive-tools"
+
 set -e
 
 . /etc/adduser.conf

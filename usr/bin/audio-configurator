@@ -1,5 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+export TEXTDOMAIN="elive-tools"
 
 main(){
 	# pre {{{
@@ -30,8 +31,8 @@ main(){
 		selection="$(echo $list_cards)"
 	else
 		# get a better list to give to the user
-		list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;   echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
-		selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as Default" || echo cancel )"
+		list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+		selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as default" || echo cancel )"
 		# remove extra leading blank chars
 		read -r selection <<< "$selection"
 
@@ -45,7 +46,7 @@ main(){
 	echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
 	echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
 
-	$guitool --info --text=$"Your system is ready to use the '${selection}' audio card as the default one, please restart your audio applications"
+	$guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"
 
 }
 

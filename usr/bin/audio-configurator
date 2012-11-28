@@ -5,6 +5,10 @@ main(){
 	# pre {{{
 	local list_cards number_cards selection guitool line
 
+	if ! el_check_dependencies zenity ; then
+		el_dependencies_install zenity
+	fi
+
 	# }}}
 
 	# NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one

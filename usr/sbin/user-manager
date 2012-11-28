@@ -1,0 +1,222 @@
+#!/bin/bash
+
+USERADD=useradd
+ADDUSER=adduser
+. /etc/adduser.conf
+if [ -z "$DHOME" ]; then
+	DHOME=/home
+fi
+if [ -z "$USERS_GID" ]; then
+	USERS_GID=100
+fi
+
+guitool=zenity
+temp_error="/tmp/$(basename $0)-${USER}-$$"
+
+errorexit(){
+	$guitool --error --text="$( cat "${temp_error}" )"
+
+	rm -f "${temp_error}" 2>/dev/null
+	exit 1
+}
+
+messagedone(){
+	$guitool --info --text="You have added successfully the $username user, you can use it now"
+	exit 0
+}
+
+messageuserdeleted(){
+	$guitool --info --text="You have removed successfully the $username user"
+	exit 0
+}
+
+passverify(){
+	if [[ "$userpass" != "$repeatpass" ]] ; then
+		$guitool --error --text=$"The passwords are not equals, please try again"
+		passstep
+	fi
+}
+
+passstep(){
+	userpass="$( $guitool --entry --hide-text --text=$"Insert a new password for user"" $username" || echo cancel )"
+	[[ "$userpass" = "cancel" ]] && exit 1
+
+	repeatpass="$( $guitool --entry --hide-text --text=$"Insert it again for confirmation" || echo cancel )"
+	[[ "$repeatpass" = "cancel" ]] && exit 1
+
+	#userpass="$( echo "$userpass" | sed "s|'|'\\\''|g" )"
+	#repeatpass="$( echo "$repeatpass" | sed "s|'|'\\\''|g" )"
+
+	passverify
+}
+
+addgroups(){
+	local group
+
+	for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
+	do
+		# remove extra leading blank chars
+		read -r group <<< "$group"
+
+		"$ADDUSER" "$username" "${group}"
+	done
+
+}
+
+delgroups(){
+	local group
+
+	for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
+	do
+		# remove extra leading blank chars
+		read -r group <<< "$group"
+
+		deluser "$username" "${group}"
+	done
+}
+
+#sudoersadd(){
+	#if ! grep -q "$username" /etc/sudoers ; then
+		#echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
+	#fi
+	#chmod 0440 /etc/sudoers
+#}
+
+#sudoersdel(){
+	#if grep -q $username /etc/sudoers ; then
+		#sed -i "s/^.*$username.*$//" /etc/sudoers
+	#fi
+	#sed -i '/^$/d' /etc/sudoers
+	#chmod 0440 /etc/sudoers
+#}
+
+adduserelive(){
+	username="$( $guitool --entry --text=$"Enter the name of the new user" || echo cancel )"
+	[[ "$username" = "cancel" ]] && exit 1
+
+	if [[ "$username" = "eliveuser" ]] ; then
+		$guitool --error --text=$"Username -eliveuser- is not accepted, please use a different name"
+		exit 1
+	fi
+
+	passstep
+
+	if [[ "$USERGROUPS" = "yes" ]] ; then
+		USERGROUP=$username
+		groupadd $USERGROUP 2>"${temp_error}" || errorexit
+	else
+		USERGROUP="$USERS_GID"
+	fi
+
+	$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
+	#$USERADD -m $username 2>/tmp/.errormessage || errorexit
+
+	if chpasswd -h 2>&1 | grep -iq md5 ; then
+		chpassopt="-m"
+	else
+		chpassopt=""
+	fi
+
+	echo "$username:$userpass" | chpasswd $chpassopt
+
+	elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
+
+	addgroups
+
+	chown -R "$username.$USERGROUP" "$DHOME/$username"
+
+	#$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
+
+	su -c "gpg --import /usr/share/elive-security/*.asc" "$username"
+
+	messagedone
+}
+
+deluserelive(){
+	local uid user userlist
+
+	userlist="$( while read -ru 3 line
+	do
+		uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+		user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+
+		if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+			if [[ -d "$DHOME/$user" ]] ; then
+			   echo "$user"
+			fi
+		fi
+	done 3<<< "$( cat "/etc/passwd")" )"
+
+
+
+	username="$( echo "$userlist" | $guitool --list --column=$"User" --text=$"Select an user that you want to delete" || echo cancel )"
+	[[ "$username" = "cancel" ]] && exit 1
+
+	$guitool --question --text=$"Are you sure to want to delete the user $username ?" || exit 1
+	delgroups
+
+	if $guitool --question --text=$"Do you like to remove all "$DHOME/$username" files of the $username user?" ; then
+		userdel -r "$username" 2>"${temp_error}" || errorexit
+	else
+		userdel "$username" 2>"${temp_error}" || errorexit
+	fi
+
+	#sudoersdel
+	messageuserdeleted
+}
+
+changepass(){
+	local uid user userlist
+
+	userlist="$( while read -ru 3 line
+	do
+		uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+		user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+
+		if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+			if [[ -d "$DHOME/$user" ]] ; then
+			   echo "$user"
+			fi
+		fi
+	done 3<<< "$( cat "/etc/passwd")" )"
+
+
+
+	username="$( echo "$userlist" | $guitool --list --column=$"User" --text=$"Select an user for change its password" || echo cancel )"
+	[[ "$username" = "cancel" ]] && exit 1
+
+	passstep
+	if chpasswd -h 2>&1 | grep -iq md5 ; then
+		chpassopt="-m"
+	else
+		chpassopt=""
+	fi
+
+	echo "$username:$userpass" | chpasswd $chpassopt
+
+	$guitool --info --text="New password changed"
+
+	exit
+}
+
+
+firstoption(){
+	selection="$( $guitool --list --column='' --column=$"Option" '1' 'Add a new user' '2' 'Delete an user' '3' 'Change password of a user' || echo cancel )"
+
+	[[ "$selection" = "cancel" ]] && exit 1
+	[[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }
+	[[ "$selection" = "2" ]] && { deluserelive ; exit 0 ; }
+	[[ "$selection" = "3" ]] && { changepass ; exit 0 ; }
+}
+
+
+############ main
+
+firstoption
+
+rm -f "${temp_error}"
+
+
+############################
+
+

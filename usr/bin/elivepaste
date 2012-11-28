@@ -97,7 +97,12 @@ main(){
    # get url
    if ! ((direct_paste)) ; then
 
-	   url="$( { echo "$ $command" ; echo "${buffer}" ; } | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+	   if [[ "${syntax}" = "diff" ]] ; then
+		   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+	   else
+		   url="$( { echo "$ $command" ; echo "${buffer}" ; } | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+	   fi
+
 
 	   if ! echo "${url}" | grep -q "http://" ; then
 		   el_error "URL not get correctly: $url"

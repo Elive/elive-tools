@@ -1,0 +1,16 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+git diff
+git status
+
+echo -e ""
+echo -e "Going to commit everything listed, press ^C for cancel"
+echo -e "Message?"
+read message
+
+git commit -am "$message"
+
+if el_confirm "Push ?" ; then
+	git push
+fi

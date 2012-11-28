@@ -1,8 +1,18 @@
 #!/bin/bash
+source /usr/lib/elive-tools/functions
+set -e
 
-USERADD=useradd
-ADDUSER=adduser
 . /etc/adduser.conf
+
+# TODO: adduser and debconf-utils can be removed as dependency by improving this script
+
+# passwd dep
+USERADD=useradd
+USERDEL=userdel
+# adduser dep
+ADDUSER=adduser
+DELUSER=deluser
+
 if [ -z "$DHOME" ]; then
 	DHOME=/home
 fi
@@ -10,8 +20,11 @@ if [ -z "$USERS_GID" ]; then
 	USERS_GID=100
 fi
 
+
 guitool=zenity
 temp_error="/tmp/$(basename $0)-${USER}-$$"
+
+el_check_dependencies "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},${USERDEL}"
 
 errorexit(){
 	$guitool --error --text="$( cat "${temp_error}" )"
@@ -71,7 +84,7 @@ delgroups(){
 		# remove extra leading blank chars
 		read -r group <<< "$group"
 
-		deluser "$username" "${group}"
+		$DELUSER "$username" "${group}"
 	done
 }
 
@@ -156,9 +169,9 @@ deluserelive(){
 	delgroups
 
 	if $guitool --question --text=$"Do you like to remove all "$DHOME/$username" files of the $username user?" ; then
-		userdel -r "$username" 2>"${temp_error}" || errorexit
+		$USERDEL -r "$username" 2>"${temp_error}" || errorexit
 	else
-		userdel "$username" 2>"${temp_error}" || errorexit
+		$USERDEL "$username" 2>"${temp_error}" || errorexit
 	fi
 
 	#sudoersdel

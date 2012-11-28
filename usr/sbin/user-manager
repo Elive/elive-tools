@@ -36,12 +36,12 @@ errorexit(){
 }
 
 messagedone(){
-	$guitool --info --text="You have added successfully the $username user, you can use it now"
+	$guitool --info --text=$"You have added successfully the $username user, you can use it now"
 	exit 0
 }
 
 messageuserdeleted(){
-	$guitool --info --text="You have removed successfully the $username user"
+	$guitool --info --text=$"You have removed successfully the $username user"
 	exit 0
 }
 
@@ -209,14 +209,14 @@ changepass(){
 
 	echo "$username:$userpass" | chpasswd $chpassopt
 
-	$guitool --info --text="New password changed"
+	$guitool --info --text=$"New password changed"
 
 	exit
 }
 
 
 firstoption(){
-	selection="$( $guitool --list --column='' --column=$"Option" '1' 'Add a new user' '2' 'Delete an user' '3' 'Change password of a user' || echo cancel )"
+	selection="$( $guitool --list --text=$"Selection an option" --column='' --column=$"Option" '1' $"Add a new user" '2' $"Delete an user" '3' $"Change the password of an user" || echo cancel )"
 
 	[[ "$selection" = "cancel" ]] && exit 1
 	[[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }

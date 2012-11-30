@@ -697,7 +697,7 @@ el_confirm(){
 	el_security_function_loop || return
 	question="$1"
 
-	check_variables "question"
+	el_check_variables "question"
 
 
 	# }}}

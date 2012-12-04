@@ -58,6 +58,10 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
+	if [[ -z "${DISPLAY}" ]] || [[ -z "${XAUTHORITY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
+		el_speak_text "problem trying to set the graphical system variables from elive tools functions, please report the problem"
+	fi
+
     # END xauthority }}}
 }
 #-------------------------------------------------------------------------------
@@ -156,6 +160,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #-------------------------------------------------------------------------------
 el_speak_text(){
     local text
+	text="$1"
 
     el_check_dependencies text2wave
 
@@ -170,14 +175,9 @@ el_speak_text(){
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
-
-    if [[ -z "${USER}" ]] ; then
-        if [[ -z "${HOME}" ]] ; then
-            export HOME="/home"
-        fi
-        USER="$(basename $HOME)"
-        export USER
-    fi
+	if [[ -f "/etc/adduser.conf" ]] ; then
+		source /etc/adduser.conf
+	fi
 
     el_set_display_variables
 

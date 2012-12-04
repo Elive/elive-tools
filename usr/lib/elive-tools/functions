@@ -181,6 +181,24 @@ el_make_environment(){ # make ready our environment (source variables and functi
 		source /etc/adduser.conf
 	fi
 
+	# set user
+	if [[ -z "${USER}" ]] ; then
+		USER="$(whoami)"
+		export USER
+	fi
+
+	# set home
+	if [[ -z "${HOME}" ]] ; then
+		if [[ -n "${DHOME}" ]] ; then
+			HOME="${DHOME}/$USER"
+			export HOME
+		else
+			HOME="/home/$USER"
+			export HOME
+		fi
+	fi
+
+	# give display access
     el_set_display_variables
 
     if [[ "$PATH" != *"$HOME/bin"* ]] ; then

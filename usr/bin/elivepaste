@@ -52,7 +52,7 @@ main(){
    syntax_filetype="$( echo -e "$buffer" | file - )"
 
    case "$syntax_filetype" in
-	   *Bourne-Again*shell*script*)
+	   *shell*script*)
 		   syntax="bash"
 		   ;;
 	   *ASCII\ C\ program*|*C\ source*)
@@ -97,10 +97,10 @@ main(){
    # get url
    if ! ((direct_paste)) ; then
 
-	   if [[ "${syntax}" = "diff" ]] ; then
-		   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
-	   else
+	   if [[ "${syntax}" = "text" ]] ; then
 		   url="$( { echo "$ $command" ; echo "${buffer}" ; } | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+	   else
+		   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
 	   fi
 
 

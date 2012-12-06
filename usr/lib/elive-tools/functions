@@ -163,6 +163,9 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 el_speak_text(){
     local text
 	text="$1"
+	if [[ -z "$text" ]] ; then
+	   return
+	fi
 
     el_check_dependencies "text2wave,play,sox"
 

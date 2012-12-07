@@ -189,7 +189,7 @@ el_speak_text(){
 
 	#rm -f /tmp/.$$-festival-message.wav
 
-	cd -
+	cd - 1>/dev/null
 	rm -rf /tmp/.$(basename $0)-$USER-$$
 
 }

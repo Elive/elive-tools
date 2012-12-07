@@ -3,7 +3,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
    # pre {{{
-   local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin
+   local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
 
    if ! el_check_dependencies pastebinit ; then
 	   el_dependencies_install "pastebinit"
@@ -24,9 +24,17 @@ main(){
    user="$USER"
    command="$@"
 
+   conf="${HOME}/.config/elive/elivepaste/config.sh"
+
+   # get confs
+   mkdir -p "${conf%/*}"
+   source "${conf}"
+
+
    # show help if no parameters
    if [[ -z "$1" ]] && ! ((is_stdin)) ; then
-	   el_explain 0 "__$(basename $0)__ to help doing pastes, examples:"
+	   el_explain 0 "__$(basename $0)__ to help doing pastes:"
+	   el_explain 0 "options: -c channel -m message"
 	   el_explain 0 "example: $(basename $0) file.c"
 	   el_explain 0 "example: $(basename $0) esu -d thunar"
 	   el_explain 0 "example: command args | tail | $(basename $0)"
@@ -34,11 +42,28 @@ main(){
 	   exit 1
    fi
 
+   for arg in $@
+   do
+	   case "$arg" in
+		   -c)
+			   channel="$2"
+			   shift 2
+			   ;;
+		   -m)
+			   message="$2"
+			   shift 2
+			   ;;
+	   esac
+   done
+
+   : ${channel:="elive"}
+
    # run and save output
    if ((is_stdin)) ; then
 	   buffer="$(cat)"
 	   command="(piped)"
    else
+
 	   if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_check_dependencies "$1" 2>/dev/null 1>/dev/null ; then
 		   # $1 is a file, not a command
 		   buffer="$( cat "${1}" )"
@@ -89,6 +114,7 @@ main(){
 	   exit 1
    fi
 
+   # few lines = paste directly in the channel
    if [[ "$(echo -e "${buffer}" | wc -l)" -le "$min_lines" ]] ; then
 	   direct_paste=1
    fi
@@ -97,29 +123,32 @@ main(){
    # get url
    if ! ((direct_paste)) ; then
 
-	   if [[ "${syntax}" = "text" ]] ; then
-		   url="$( { echo "$ $command" ; echo "${buffer}" ; } | pastebinit -a "$user" -f "${syntax}" | head -1 )"
-	   else
-		   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
-	   fi
+	   # paste it
+	   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
 
-
+	   # checks
 	   if ! echo "${url}" | grep -q "http://" ; then
 		   el_error "URL not get correctly: $url"
 		   exit 1
 	   fi
    fi
 
-   # sent
+   # send to channel
    if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat 1>/dev/null 2>/dev/null ; then
-	   if ((direct_paste)) ; then
-		   xchat -e -c "msg #elive \$ $command"
-		   xchat -e -c "msg #elive $buffer"
-	   else
-		   xchat -e -c "msg #elive [$command] $url"
+	   # send first a message
+	   if [[ -n "$message" ]] ; then
+		   xchat -e -c "msg #$channel $message"
 	   fi
+
+	   if ((direct_paste)) ; then
+		   xchat -e -c "msg #$channel \$ $command"
+		   xchat -e -c "msg #$channel $buffer"
+	   else
+		   xchat -e -c "msg #$channel [$command] $url"
+	   fi
+
 	   echo ""
-	   el_explain 0 "output sent to the #elive channel"
+	   el_explain 0 "output sent to the #$channel channel"
    else
 	   # save it to clipboard, right-click mouse ready
 	   if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then

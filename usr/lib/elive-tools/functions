@@ -38,13 +38,13 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             e_ipc_socket="${display%|*}"
 
             #display="${display##*disp-}"
-			display="$( basename ${display} )"
-			display="${display%-*}"
+            display="$( basename ${display} )"
+            display="${display%-*}"
 
             if [[ -z "${DISPLAY}" ]] ; then
                 DISPLAY="${display}"
                 export DISPLAY
-			fi
+            fi
 
             if [[ -z "${E_IPC_SOCKET}" ]] ; then
                 E_IPC_SOCKET="${e_ipc_socket}"
@@ -60,9 +60,9 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
-	if [[ -z "${DISPLAY}" ]] || [[ -z "${XAUTHORITY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
-		el_speak_text "problem trying to set the graphical system variables from elive tools functions, please report the problem"
-	fi
+    if [[ -z "${DISPLAY}" ]] || [[ -z "${XAUTHORITY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
+        el_speak_text "problem trying to set the graphical system variables from elive tools functions, please report the problem"
+    fi
 
     # END xauthority }}}
 }
@@ -74,11 +74,11 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-		if el_check_dependencies notify-send ; then
-			notify-send -t 20000 "$@"
-		else
-			el_warning "notify-send not installed"
-		fi
+        if el_check_dependencies notify-send ; then
+            notify-send -t 20000 "$@"
+        else
+            el_warning "notify-send not installed"
+        fi
     else
         echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
     fi
@@ -92,11 +92,11 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-		if el_check_dependencies notify-send ; then
-			notify-send -t 240000 "$@"
-		else
-			el_warning "notify-send not installed"
-		fi
+        if el_check_dependencies notify-send ; then
+            notify-send -t 240000 "$@"
+        else
+            el_warning "notify-send not installed"
+        fi
     else
         echo -e "${el_c_y}Important: ${el_c_m}$2${el_c_n}" 1>&2
     fi
@@ -161,36 +161,40 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #   Speak something
 #-------------------------------------------------------------------------------
 el_speak_text(){
+    { el_speak_text_bg "$@" & disown ; } 2>/dev/null
+}
+
+el_speak_text_bg(){
     local text
-	text="$1"
-	if [[ -z "$text" ]] ; then
-	   return
-	fi
+    text="$1"
+    if [[ -z "$text" ]] ; then
+        return
+    fi
 
     el_check_dependencies "text2wave,play,sox,iconv"
 
-	# this trick is required because an ugly tmp.lab file is created in the home
-	mkdir -p /tmp/.$(basename $0)-$USER-$$
-	cd /tmp/.$(basename $0)-$USER-$$
+    # this trick is required because an ugly tmp.lab file is created in the home
+    mkdir -p /tmp/.$(basename $0)-$USER-$$
+    cd /tmp/.$(basename $0)-$USER-$$
 
-	# default
-	#echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 phaser 0.9 0.85 4 0.23 1.3 -s reverb 45 50 100 100 69 3 norm
-	# futuristic
-	#echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 60 50 100 100 69 3 norm
-	# futuristic + less echo + more chorus in background
-	echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 40 50 100 100 75 3 norm 2  2>/dev/null
+    # default
+    #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 phaser 0.9 0.85 4 0.23 1.3 -s reverb 45 50 100 100 69 3 norm
+    # futuristic
+    #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 60 50 100 100 69 3 norm
+    # futuristic + less echo + more chorus in background
+    echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 40 50 100 100 75 3 norm 2  2>/dev/null
 
-	#mplayer -identify -really-quiet -vo null /tmp/.$$-festival-message.wav 2>/dev/null
-	#play /tmp/.$$-festival-message.wav pad 0 4 phaser reverb 40 50 100 100 69 3 norm -2
-	#play -q /tmp/.$$-festival-message.wav pad 0 4 phaser 0.9 0.85 4 0.23 1.3 -s reverb 40 50 100 100 69 3 norm -2
-	#play /tmp/.$$-festival-message.wav pad 0 4 flanger reverb norm
-	#play /tmp/.$$-festival-message.wav pad 0 3 flanger reverb 40 50 100 100 69 3 norm
-	#play /tmp/.$$-festival-message.wav norm
+    #mplayer -identify -really-quiet -vo null /tmp/.$$-festival-message.wav 2>/dev/null
+    #play /tmp/.$$-festival-message.wav pad 0 4 phaser reverb 40 50 100 100 69 3 norm -2
+    #play -q /tmp/.$$-festival-message.wav pad 0 4 phaser 0.9 0.85 4 0.23 1.3 -s reverb 40 50 100 100 69 3 norm -2
+    #play /tmp/.$$-festival-message.wav pad 0 4 flanger reverb norm
+    #play /tmp/.$$-festival-message.wav pad 0 3 flanger reverb 40 50 100 100 69 3 norm
+    #play /tmp/.$$-festival-message.wav norm
 
-	#rm -f /tmp/.$$-festival-message.wav
+    #rm -f /tmp/.$$-festival-message.wav
 
-	cd - 1>/dev/null
-	rm -rf /tmp/.$(basename $0)-$USER-$$
+    cd - 1>/dev/null
+    rm -rf /tmp/.$(basename $0)-$USER-$$
 
 }
 
@@ -198,28 +202,28 @@ el_speak_text(){
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
-	if [[ -f "/etc/adduser.conf" ]] ; then
-		source /etc/adduser.conf
-	fi
+    if [[ -f "/etc/adduser.conf" ]] ; then
+        source /etc/adduser.conf
+    fi
 
-	# set user
-	if [[ -z "${USER}" ]] ; then
-		USER="$(whoami)"
-		export USER
-	fi
+    # set user
+    if [[ -z "${USER}" ]] ; then
+        USER="$(whoami)"
+        export USER
+    fi
 
-	# set home
-	if [[ -z "${HOME}" ]] ; then
-		if [[ -n "${DHOME}" ]] ; then
-			HOME="${DHOME}/$USER"
-			export HOME
-		else
-			HOME="/home/$USER"
-			export HOME
-		fi
-	fi
+    # set home
+    if [[ -z "${HOME}" ]] ; then
+        if [[ -n "${DHOME}" ]] ; then
+            HOME="${DHOME}/$USER"
+            export HOME
+        else
+            HOME="/home/$USER"
+            export HOME
+        fi
+    fi
 
-	# give display access
+    # give display access
     el_set_display_variables
 
     if [[ "$PATH" != *"$HOME/bin"* ]] ; then
@@ -278,7 +282,7 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 
         if [[ "$found" != "yes" ]] ; then
             #el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
-			el_error "Command '$check' for $(basename $0) not found"
+            el_error "Command '$check' for $(basename $0) not found"
             found_no="yes"
         fi
 
@@ -286,7 +290,7 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 
     if [[ "$found_no" = "yes" ]] ; then
 
-		return 1
+        return 1
     else
 
         return 0
@@ -299,24 +303,24 @@ el_check_dependencies(){ # check if we have these command dependencies, if not, 
 #   Install required packages
 #-------------------------------------------------------------------------------
 el_dependencies_install(){
-	local depends temp
-	depends="$( echo "$@" | tr ',' ' ' )"
-	el_set_display_variables
+    local depends temp
+    depends="$( echo "$@" | tr ',' ' ' )"
+    el_set_display_variables
 
-	# TODO: move to terminology when compatibility will be implemented
-	# TODO:  even better: use a gui tool for install deps
-	el_check_dependencies urxvt
+    # TODO: move to terminology when compatibility will be implemented
+    # TODO:  even better: use a gui tool for install deps
+    el_check_dependencies urxvt
 
-	temp="/tmp/.$(basename $0)-${USER}-$$"
-	cat > "${temp}" << EOF
+    temp="/tmp/.$(basename $0)-${USER}-$$"
+    cat > "${temp}" << EOF
 #!/bin/bash
 
 urxvt -hold -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; apt-get update ; apt-get -f install ; apt-get install $depends ; echo ; echo ; echo 'Finished, you can close the terminal...' ; read nothing "
 EOF
 
-	chmod +x "${temp}"
-	gksu "${temp}"
-	rm -f "${temp}"
+    chmod +x "${temp}"
+    gksu "${temp}"
+    rm -f "${temp}"
 
 }
 
@@ -332,7 +336,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
     do
         if [[ ! -n "${!var}" ]] ; then
             #el_notify_user "E: Variable not exists" "E: the variable '$var' is not set"
-			el_error "Variable '$var' is not set"
+            el_error "Variable '$var' is not set"
             found_no="yes"
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
@@ -365,7 +369,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
     do
         if [[ ! -s "${var}" ]] ; then
             #el_notify_user "E: File not exists" "E: the file '$var' not exists"
-			el_error "File '$var' not exist"
+            el_error "File '$var' not exist"
             found_no="yes"
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
@@ -398,7 +402,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
     do
         if [[ ! -d "${var}" ]] ; then
             #el_notify_user "E: Dir not exists" "E: the dir '$var' not exist"
-			el_error "Directory '$var' not exist"
+            el_error "Directory '$var' not exist"
             found_no="yes"
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
@@ -430,12 +434,12 @@ el_check_dir_has_files(){
 
     if [[ ! -d "$dir" ]] ; then
         #el_notify_user "Dir not exist" "$dir"
-		el_error "Directory '$dir' not exist"
+        el_error "Directory '$dir' not exist"
 
         return 1
     else
         if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
-			el_error "Directory '$dir' doesn't contain any file"
+            el_error "Directory '$dir' doesn't contain any file"
 
             return 1
         fi
@@ -452,7 +456,7 @@ el_check_sudo_automated(){
         #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
         el_error "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it"
 
-		return 1
+        return 1
     else
 
         return 0
@@ -568,51 +572,51 @@ el_debug(){
             echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
         else
             # function showing only
-    # show {{{
+            # show {{{
 
-    case $funclevel in
-        1)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        2)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        3)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        4)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        5)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        6)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        7)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        8)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        9)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        10)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        11)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-        *)
-            echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
-            ;;
-    esac
+            case $funclevel in
+                1)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                2)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                3)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                4)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                5)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                6)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                7)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                8)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                9)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                10)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                11)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+                *)
+                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
+                    ;;
+            esac
 
-        # continuation of the message
-        echo -e "${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
+            # continuation of the message
+            echo -e "${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
 
-    # }}}
+            # }}}
         fi
 
 
@@ -727,47 +731,47 @@ el_group_add(){
 #       RETURNS:  true | false
 #===============================================================================
 el_confirm(){
-	# pre {{{
-	local reply question flag_glob
+    # pre {{{
+    local reply question flag_glob
 
-	if shopt extglob | grep -q "extglob.*off" ; then
-		flag_glob=1
-	fi
+    if shopt extglob | grep -q "extglob.*off" ; then
+        flag_glob=1
+    fi
 
-	shopt -s extglob
-	el_security_function_loop || return
-	question="$1"
+    shopt -s extglob
+    el_security_function_loop || return
+    question="$1"
 
-	el_check_variables "question"
+    el_check_variables "question"
 
 
-	# }}}
-	# return answer {{{
-	echo -en "$question [y/n]: "
-	read reply
+    # }}}
+    # return answer {{{
+    echo -en "$question [y/n]: "
+    read reply
 
-	case $reply in
-		y|Y|Yes|YES|s|S)
-			return  0
-			;;
-		n|N|no|NO|nope)
-			return  1
-			;;
-		*)
-			# repeat question until confirmation
-			if confirm "$@" ; then
-				return 0
-			else
-				return 1
-			fi
-			;;
-	esac
+    case $reply in
+        y|Y|Yes|YES|s|S)
+            return  0
+            ;;
+        n|N|no|NO|nope)
+            return  1
+            ;;
+        *)
+            # repeat question until confirmation
+            if confirm "$@" ; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+    esac
 
-	if ((flag_glob)) ; then
-		shopt -u extglob
-	fi
+    if ((flag_glob)) ; then
+        shopt -u extglob
+    fi
 
-	# }}}
+    # }}}
 
 }
 

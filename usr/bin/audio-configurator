@@ -2,52 +2,108 @@
 source /usr/lib/elive-tools/functions
 export TEXTDOMAIN="elive-tools"
 
+select_card_multiple(){
+    list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+    selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as default" || echo cancel )"
+    # remove extra leading blank chars
+    read -r selection <<< "$selection"
+
+
+    if [[ "${selection}" = "cancel" ]] ; then
+        exit 1
+    fi
+}
+
 main(){
-	# pre {{{
-	local list_cards number_cards selection guitool line
+    # pre {{{
+    local list_cards number_cards selection guitool line
 
-	if ! el_check_dependencies zenity ; then
-		el_dependencies_install zenity
-	fi
+    if ! el_check_dependencies zenity ; then
+        el_dependencies_install zenity
+    fi
 
-	# }}}
+    # }}}
 
-	# NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
+    # NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
 
-	guitool=zenity
+    guitool=zenity
 
-	list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+    list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
 
-	# if our first argument is the card name to use, change the list of cards to use this one
-	if [[ -n "$1" ]] ; then
-		if echo "$list_cards" | grep -q "$1" ; then
-			list_cards="$1"
-		fi
-	fi
+    # if our first argument is the card name to use, change the list of cards to use this one
+    if [[ -n "$1" ]] ; then
+        if echo "$list_cards" | grep -q "$1" ; then
+            list_cards="$1"
+        fi
+    fi
 
-	number_cards="$( echo -e "$list_cards" | wc -l )"
+    number_cards="$( echo -e "$list_cards" | wc -l )"
 
-	if [[ "$number_cards" -lt "2" ]] ; then
-		selection="$(echo $list_cards)"
-	else
-		# get a better list to give to the user
-		list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
-		selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as default" || echo cancel )"
-		# remove extra leading blank chars
-		read -r selection <<< "$selection"
+    if [[ "$number_cards" -lt "2" ]] ; then
+        selection="$(echo $list_cards)"
+    else
+        is_multiple_cards=1
+        # get a better list to give to the user
+        #list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+        #selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as default" || echo cancel )"
+        ## remove extra leading blank chars
+        #read -r selection <<< "$selection"
 
 
-		if [[ "${selection}" = "cancel" ]] ; then
-		   exit 1
-		fi
-	fi
+        #if [[ "${selection}" = "cancel" ]] ; then
+        #exit 1
+        #fi
 
-	rm -f "${HOME}/.asoundrc"
-	echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
-	echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+        select_card_multiple
+    fi
 
-	$guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"
+    # cleanup, new conf
+    rm -f "${HOME}/.asoundrc"
 
+    echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+    echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+
+
+    # set microphone default
+    if zenity --question --text=$"Configure microphone?" ; then
+        if ((is_multiple_cards)) ; then
+            if zenity --question --text=$"Do you want to use another card as default for your microphone?" ; then
+                select_card_multiple
+
+                cat >> "${HOME}/.asoundrc" << EOF
+
+pcm.mic
+{
+    type hw
+    card ${selection}
+}
+
+pcm.!default
+{
+    type asym
+    playback.pcm
+    {
+        type plug
+        slave.pcm "dmix"
+    }
+    capture.pcm
+    {
+        type plug
+        slave.pcm "mic"
+    }
+}
+EOF
+
+            else
+                zenity --info --text=$"Using default card ${selection} for your microphone"
+            fi
+
+        fi
+
+        zenity --info --text=$"If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings"
+    fi
+
+    $guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"
 }
 
 #

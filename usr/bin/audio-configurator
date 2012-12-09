@@ -100,6 +100,7 @@ EOF
 
         fi
 
+        # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
         zenity --info --text=$"If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings"
     fi
 

@@ -65,12 +65,11 @@ main(){
 
 
     # set microphone default
-    if zenity --question --text=$"Configure microphone?" ; then
-        if ((is_multiple_cards)) ; then
-            if zenity --question --text=$"Do you want to use another card as default for your microphone?" ; then
-                select_card_multiple
+    if ((is_multiple_cards)) ; then
+        if zenity --question --text=$"Do you want to use another card as default for your microphone?" ; then
+            select_card_multiple
 
-                cat >> "${HOME}/.asoundrc" << EOF
+            cat >> "${HOME}/.asoundrc" << EOF
 
 pcm.mic
 {
@@ -94,14 +93,13 @@ pcm.!default
 }
 EOF
 
-            else
-                zenity --info --text=$"Using default card ${selection} for your microphone"
-            fi
-
+        else
+            zenity --info --text=$"Using default card ${selection} for your microphone"
         fi
 
         # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
         zenity --info --text=$"If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings"
+
     fi
 
     $guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"

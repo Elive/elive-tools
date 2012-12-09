@@ -4,59 +4,59 @@ source /usr/lib/elive-tools/functions
 # this tool does caching "to ram" of application/executable and its required libs, can be also used for tracing
 
 main(){
-	# pre {{{
-	local i j k trace cached_arr
+    # pre {{{
+    local i j k trace cached_arr
 
-	if [[ "${1}" = "trace" ]] ; then
-		trace=1
-		shift
-	fi
+    if [[ "${1}" = "trace" ]] ; then
+        trace=1
+        shift
+    fi
 
 
-	# }}}
-	for i in "$@"
-	do
-		if ! [[ -f "$i" ]] ; then
-			i="$(which "$i")"
-		fi
+    # }}}
+    for i in "$@"
+    do
+        if ! [[ -f "$i" ]] ; then
+            i="$(which "$i")"
+        fi
 
-		for j in $(ldd "${i}" 2>/dev/null | sed -e '
-			/\//!d;
-			/linux-gate/d;
-			/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};
-			s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' 2>/dev/null)
-		do
-			if [[ -e "$j" ]] ; then
-				for k in "${cached_arr[@]}"
-				do
-					if [[ "${k}" = "$j" ]] ; then
-						#if ! ((trace)) ; then
-							#el_explain 2 "already cached: __${j##*/}__"
-						#fi
-						continue 2
-					fi
-				done
+        for j in $(ldd "${i}" 2>/dev/null | sed -e '
+            /\//!d;
+            /linux-gate/d;
+            /=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};
+            s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' 2>/dev/null)
+        do
+            if [[ -e "$j" ]] ; then
+                for k in "${cached_arr[@]}"
+                do
+                    if [[ "${k}" = "$j" ]] ; then
+                        #if ! ((trace)) ; then
+                        #el_explain 2 "already cached: __${j##*/}__"
+                        #fi
+                        continue 2
+                    fi
+                done
 
-				if ((trace)) ; then
-					echo "$j"
-				else
-					el_explain 2 "caching __${j##*/}__"
-					cat "$j" > /dev/null 2>&1
-					cached_arr+=("$j")
-				fi
-			fi
+                if ((trace)) ; then
+                    echo "$j"
+                else
+                    el_explain 2 "caching __${j##*/}__"
+                    cat "$j" > /dev/null 2>&1
+                    cached_arr+=("$j")
+                fi
+            fi
 
-		done
+        done
 
-		if [[ -e "$i" ]] ; then
-			if ((trace)) ; then
-				echo "$i"
-			else
-				cat "$i" > /dev/null 2>&1
-				el_explain 2 "finished cache for __${i##*/}__"
-			fi
-		fi
-	done
+        if [[ -e "$i" ]] ; then
+            if ((trace)) ; then
+                echo "$i"
+            else
+                cat "$i" > /dev/null 2>&1
+                el_explain 2 "finished cache for __${i##*/}__"
+            fi
+        fi
+    done
 
 }
 

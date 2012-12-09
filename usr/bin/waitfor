@@ -2,53 +2,53 @@
 source /usr/lib/elive-tools/functions
 
 main(){
-   # pre {{{
-   local  watcher seconds check_delay minutes
+    # pre {{{
+    local  watcher seconds check_delay minutes
 
-   if [[ ! -t 0 ]] ; then
-	   is_stdin=1
-   fi
+    if [[ ! -t 0 ]] ; then
+        is_stdin=1
+    fi
 
-   # }}}
-   # show help if no parameters
-   if [[ -z "$2" ]] && ! ((is_stdin)) ; then
-	   el_explain 0 "Usage: __$(basename $0)__ XXwatchingXX command-to-run and parameters"
-	   el_explain 0 "Waits for a process that finishes before to run a command, examples:"
-	   el_explain 0 "Details: only one word should be given as process to watch, the process needs to match a simple __ps aux__"
-	   el_explain 0 "When the unison process has finished (and the application closed), it runs your command tool with your specified parameters"
-	   exit 1
-   fi
+    # }}}
+    # show help if no parameters
+    if [[ -z "$2" ]] && ! ((is_stdin)) ; then
+        el_explain 0 "Usage: __$(basename $0)__ XXwatchingXX command-to-run and parameters"
+        el_explain 0 "Waits for a process that finishes before to run a command, examples:"
+        el_explain 0 "Details: only one word should be given as process to watch, the process needs to match a simple __ps aux__"
+        el_explain 0 "When the unison process has finished (and the application closed), it runs your command tool with your specified parameters"
+        exit 1
+    fi
 
-   # variables
-   watcher="$1"
-   shift
-   check_delay="4"
+    # variables
+    watcher="$1"
+    shift
+    check_delay="4"
 
-   counter=0
+    counter=0
 
-   # put a new line
-   echo -e ""
+    # put a new line
+    echo -e ""
 
-   # watcher of the command, with space after the command, of course
-   while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vi|vim|gvim|emacs|scite|geany) $watcher" | grep -qE "(${watcher} |${watcher}$)"
-   do
-	   if [[ "${counter}" -gt "60" ]] ; then
-		   minutes="$(( $counter / 60 ))"
-	   fi
+    # watcher of the command, with space after the command, of course
+    while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vi|vim|gvim|emacs|scite|geany) $watcher" | grep -qE "(${watcher} |${watcher}$)"
+    do
+        if [[ "${counter}" -gt "60" ]] ; then
+            minutes="$(( $counter / 60 ))"
+        fi
 
-	   if [[ -n "$minutes" ]] ; then
-		   echo -en "\rProcess ${watcher} still running, waiting... [$minutes minutes]     "
-	   else
-		   echo -en "\rProcess ${watcher} still running, waiting... [$counter seconds]     "
-	   fi
+        if [[ -n "$minutes" ]] ; then
+            echo -en "\rProcess ${watcher} still running, waiting... [$minutes minutes]     "
+        else
+            echo -en "\rProcess ${watcher} still running, waiting... [$counter seconds]     "
+        fi
 
 
-	   sleep ${check_delay}
-	   counter="$(( $counter + ${check_delay} ))"
-   done
+        sleep ${check_delay}
+        counter="$(( $counter + ${check_delay} ))"
+    done
 
-   # run our command
-   "$@"
+    # run our command
+    "$@"
 
 }
 

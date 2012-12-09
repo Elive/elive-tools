@@ -2,26 +2,24 @@
 source /usr/lib/elive-tools/functions
 
 main(){
-	# pre {{{
-	local input output Bi Bo
-	if ! el_check_dependencies iptables ; then
-		el_dependencies_install iptables
-	fi
+    # pre {{{
+    local input output Bi Bo
+    if ! el_check_dependencies iptables ; then
+        el_dependencies_install iptables
+    fi
 
-	# }}}
-	input="$( sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
-	output="$( sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
+    # }}}
+    input="$( sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
+    output="$( sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
 
-	Bi="$( expr $input / 1048576 )"
-	Bo="$( expr $output / 1048576 )"
+    Bi="$( expr $input / 1048576 )"
+    Bo="$( expr $output / 1048576 )"
 
-	if [[ -n "$Bi" ]] && [[ -n "$Bi" ]] ; then
-		echo -e "Downloaded $Bi MB ($input bytes)"
-		echo -e "Uploaded   $Bo MB ($output bytes)"
+    if [[ -n "$Bi" ]] && [[ -n "$Bi" ]] ; then
+        echo -e "Downloaded $Bi MB ($input bytes)"
+        echo -e "Uploaded   $Bo MB ($output bytes)"
 
-	fi
-
-
+    fi
 }
 
 #

@@ -2,164 +2,164 @@
 source /usr/lib/elive-tools/functions
 
 main(){
-   # pre {{{
-   local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
+    # pre {{{
+    local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
 
-   if ! el_check_dependencies pastebinit ; then
-	   el_dependencies_install "pastebinit"
-	   #el_error "Please install the package pastebinit first"
-   fi
+    if ! el_check_dependencies pastebinit ; then
+        el_dependencies_install "pastebinit"
+        #el_error "Please install the package pastebinit first"
+    fi
 
-   if [[ ! -t 0 ]] ; then
-	   is_stdin=1
-   fi
+    if [[ ! -t 0 ]] ; then
+        is_stdin=1
+    fi
 
-   unset LANG LANGUAGE LC_ALL LC_MESSAGES
+    unset LANG LANGUAGE LC_ALL LC_MESSAGES
 
-   # }}}
+    # }}}
 
-   # variables
-   max_lines="10000"
-   min_lines="10"
-   user="$USER"
-   command="$@"
+    # variables
+    max_lines="10000"
+    min_lines="10"
+    user="$USER"
+    command="$@"
 
-   conf="${HOME}/.config/elive/elivepaste/config.sh"
+    conf="${HOME}/.config/elive/elivepaste/config.sh"
 
-   # get confs
-   mkdir -p "${conf%/*}"
-   source "${conf}"
+    # get confs
+    mkdir -p "${conf%/*}"
+    source "${conf}"
 
 
-   # show help if no parameters
-   if [[ -z "$1" ]] && ! ((is_stdin)) ; then
-	   el_explain 0 "__$(basename $0)__ to help doing pastes:"
-	   el_explain 0 "options: -c channel -m message"
-	   el_explain 0 "example: $(basename $0) file.c"
-	   el_explain 0 "example: $(basename $0) esu -d thunar"
-	   el_explain 0 "example: command args | tail | $(basename $0)"
-	   el_explain 0 "__note__: the last one is useful if you want to run it from alias or in other ways"
-	   exit 1
-   fi
+    # show help if no parameters
+    if [[ -z "$1" ]] && ! ((is_stdin)) ; then
+        el_explain 0 "__$(basename $0)__ to help doing pastes:"
+        el_explain 0 "options: -c channel -m message"
+        el_explain 0 "example: $(basename $0) file.c"
+        el_explain 0 "example: $(basename $0) esu -d thunar"
+        el_explain 0 "example: command args | tail | $(basename $0)"
+        el_explain 0 "__note__: the last one is useful if you want to run it from alias or in other ways"
+        exit 1
+    fi
 
-   for arg in $@
-   do
-	   case "$arg" in
-		   -c)
-			   channel="$2"
-			   shift 2
-			   ;;
-		   -m)
-			   message="$2"
-			   shift 2
-			   ;;
-	   esac
-   done
+    for arg in $@
+    do
+        case "$arg" in
+            -c)
+                channel="$2"
+                shift 2
+                ;;
+            -m)
+                message="$2"
+                shift 2
+                ;;
+        esac
+    done
 
-   : ${channel:="elive"}
+    : ${channel:="elive"}
 
-   # run and save output
-   if ((is_stdin)) ; then
-	   buffer="$(cat)"
-	   command="(piped)"
-   else
+    # run and save output
+    if ((is_stdin)) ; then
+        buffer="$(cat)"
+        command="(piped)"
+    else
 
-	   if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_check_dependencies "$1" 2>/dev/null 1>/dev/null ; then
-		   # $1 is a file, not a command
-		   buffer="$( cat "${1}" )"
-	   else
-		   buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
-		   echo "$buffer"
-	   fi
-   fi
+        if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_check_dependencies "$1" 2>/dev/null 1>/dev/null ; then
+            # $1 is a file, not a command
+            buffer="$( cat "${1}" )"
+        else
+            buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+            echo "$buffer"
+        fi
+    fi
 
-   # set syntax {{{
-   syntax_filetype="$( echo -e "$buffer" | file - )"
+    # set syntax {{{
+    syntax_filetype="$( echo -e "$buffer" | file - )"
 
-   case "$syntax_filetype" in
-	   *shell*script*)
-		   syntax="bash"
-		   ;;
-	   *ASCII\ C\ program*|*C\ source*)
-		   syntax="c"
-		   ;;
-	   *python\ script*)
-		   syntax="python"
-		   ;;
-	   *diff*)
-		   syntax="diff"
-		   ;;
-	   *makefile*)
-		   syntax="make"
-		   ;;
-	   *)
-		   syntax="text"
-		   ;;
-   esac
+    case "$syntax_filetype" in
+        *shell*script*)
+            syntax="bash"
+            ;;
+        *ASCII\ C\ program*|*C\ source*)
+            syntax="c"
+            ;;
+        *python\ script*)
+            syntax="python"
+            ;;
+        *diff*)
+            syntax="diff"
+            ;;
+        *makefile*)
+            syntax="make"
+            ;;
+        *)
+            syntax="text"
+            ;;
+    esac
 
-   # - set syntax }}}
+    # - set syntax }}}
 
-   # checks {{{
+    # checks {{{
 
-   # empty ?
-   if [[ -z "$buffer" ]] ; then
-	   el_debug "buffer empty, ignoring..."
-	   exit 1
-   fi
+    # empty ?
+    if [[ -z "$buffer" ]] ; then
+        el_debug "buffer empty, ignoring..."
+        exit 1
+    fi
 
-   # max lines allowed
-   if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then
-	   el_error "Output lines are bigger than 500, too long paste, ignoring..."
-	   el_explain 0 "please try instead: __command args | foo | bar | $(basename $0)__"
-	   exit 1
-   fi
+    # max lines allowed
+    if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then
+        el_error "Output lines are bigger than 500, too long paste, ignoring..."
+        el_explain 0 "please try instead: __command args | foo | bar | $(basename $0)__"
+        exit 1
+    fi
 
-   # few lines = paste directly in the channel
-   if [[ "$(echo -e "${buffer}" | wc -l)" -le "$min_lines" ]] ; then
-	   direct_paste=1
-   fi
-   # - checks }}}
+    # few lines = paste directly in the channel
+    if [[ "$(echo -e "${buffer}" | wc -l)" -le "$min_lines" ]] ; then
+        direct_paste=1
+    fi
+    # - checks }}}
 
-   # get url
-   if ! ((direct_paste)) ; then
+    # get url
+    if ! ((direct_paste)) ; then
 
-	   # paste it
-	   url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+        # paste it
+        url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
 
-	   # checks
-	   if ! echo "${url}" | grep -q "http://" ; then
-		   el_error "URL not get correctly: $url"
-		   exit 1
-	   fi
-   fi
+        # checks
+        if ! echo "${url}" | grep -q "http://" ; then
+            el_error "URL not get correctly: $url"
+            exit 1
+        fi
+    fi
 
-   # send to channel
-   if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat 1>/dev/null 2>/dev/null ; then
-	   # send first a message
-	   if [[ -n "$message" ]] ; then
-		   xchat -e -c "msg #$channel $message"
-	   fi
+    # send to channel
+    if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat 1>/dev/null 2>/dev/null ; then
+        # send first a message
+        if [[ -n "$message" ]] ; then
+            xchat -e -c "msg #$channel $message"
+        fi
 
-	   if ((direct_paste)) ; then
-		   xchat -e -c "msg #$channel \$ $command"
-		   xchat -e -c "msg #$channel $buffer"
-	   else
-		   xchat -e -c "msg #$channel [$command] $url"
-	   fi
+        if ((direct_paste)) ; then
+            xchat -e -c "msg #$channel \$ $command"
+            xchat -e -c "msg #$channel $buffer"
+        else
+            xchat -e -c "msg #$channel [$command] $url"
+        fi
 
-	   echo ""
-	   el_explain 0 "output sent to the #$channel channel"
-   else
-	   # save it to clipboard, right-click mouse ready
-	   if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then
-		   echo "$url" | xclip -i
-	   fi
+        echo ""
+        el_explain 0 "output sent to the #$channel channel"
+    else
+        # save it to clipboard, right-click mouse ready
+        if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then
+            echo "$url" | xclip -i
+        fi
 
-	   # finally show the url in the terminal
-	   echo -e ""
-	   el_explain 0 "Paste available in: __$url__"
-	   echo "$url"
-   fi
+        # finally show the url in the terminal
+        echo -e ""
+        el_explain 0 "Paste available in: __$url__"
+        echo "$url"
+    fi
 }
 
 #

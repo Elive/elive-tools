@@ -158,47 +158,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
 #-------------------------------------------------------------------------------
-#   Speak something
-#-------------------------------------------------------------------------------
-el_speak_text(){
-    { el_speak_text_bg "$@" & disown ; } 2>/dev/null
-}
-
-el_speak_text_bg(){
-    local text
-    text="$1"
-    if [[ -z "$text" ]] ; then
-        return
-    fi
-
-    el_check_dependencies "text2wave,play,sox,iconv"
-
-    # this trick is required because an ugly tmp.lab file is created in the home
-    mkdir -p /tmp/.$(basename $0)-$USER-$$
-    cd /tmp/.$(basename $0)-$USER-$$
-
-    # default
-    #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 phaser 0.9 0.85 4 0.23 1.3 -s reverb 45 50 100 100 69 3 norm
-    # futuristic
-    #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 60 50 100 100 69 3 norm
-    # futuristic + less echo + more chorus in background
-    echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 40 50 100 100 75 3 norm 2  2>/dev/null
-
-    #mplayer -identify -really-quiet -vo null /tmp/.$$-festival-message.wav 2>/dev/null
-    #play /tmp/.$$-festival-message.wav pad 0 4 phaser reverb 40 50 100 100 69 3 norm -2
-    #play -q /tmp/.$$-festival-message.wav pad 0 4 phaser 0.9 0.85 4 0.23 1.3 -s reverb 40 50 100 100 69 3 norm -2
-    #play /tmp/.$$-festival-message.wav pad 0 4 flanger reverb norm
-    #play /tmp/.$$-festival-message.wav pad 0 3 flanger reverb 40 50 100 100 69 3 norm
-    #play /tmp/.$$-festival-message.wav norm
-
-    #rm -f /tmp/.$$-festival-message.wav
-
-    cd - 1>/dev/null
-    rm -rf /tmp/.$(basename $0)-$USER-$$
-
-}
-
-#-------------------------------------------------------------------------------
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)

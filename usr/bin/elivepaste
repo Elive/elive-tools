@@ -67,7 +67,7 @@ main(){
 
         if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_check_dependencies "$1" 2>/dev/null 1>/dev/null ; then
             # $1 is a file, not a command
-            buffer="$( cat "${1}" )"
+            buffer="$( cat "${1}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
         else
             if [[ -e "$1" ]] ; then
             buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"

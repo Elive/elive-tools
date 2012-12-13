@@ -718,7 +718,7 @@ el_confirm(){
             ;;
         *)
             # repeat question until confirmation
-            if confirm "$@" ; then
+            if el_confirm "$@" ; then
                 return 0
             else
                 return 1

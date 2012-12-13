@@ -43,7 +43,7 @@ main(){
 #
 #  MAIN
 #
-#{ main "$@" & disown ; } 2>/dev/null
-main "$@"
+{ main "$@" & disown ; } 2>/dev/null
+#main "$@"
 # vim: set foldmethod=marker :
 

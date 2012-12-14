@@ -698,7 +698,6 @@ el_confirm(){
     fi
 
     shopt -s extglob
-    el_security_function_loop || return
     question="$1"
 
     el_check_variables "question"

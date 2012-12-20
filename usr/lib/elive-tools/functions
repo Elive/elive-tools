@@ -381,7 +381,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 #   check if dir has files
 #-------------------------------------------------------------------------------
 el_check_dir_has_files(){
-    local dir
+    local dir f
 
     dir="$1"
 
@@ -397,7 +397,8 @@ el_check_dir_has_files(){
 
         return 1
     else
-        if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
+        #if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
+        if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
             el_error "Directory '$dir' doesn't contain any file"
 
             return 1

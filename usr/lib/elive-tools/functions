@@ -391,7 +391,7 @@ el_check_dir_has_files(){
         return 1
     fi
 
-    if [[ ! -d "$dir" ]] ; then
+    if [[ ! -d "$dir" ]] || [[ ! -L "$dir" ]] ; then
         #el_notify_user "Dir not exist" "$dir"
         el_error "Directory '$dir' not exist"
 

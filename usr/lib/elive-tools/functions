@@ -825,6 +825,28 @@ el_security_function_loop(){
 
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_array_check
+#   DESCRIPTION:  check if an element exists in an array
+#    PARAMETERS:  $1 = match, $2 = array (list of words)
+#       RETURNS:  true if found, false if not
+#===============================================================================
+el_array_check(){
+    local match list i
+    match="$1"
+    shift
+    list=("$@")
+
+    for i in "${!list[@]}"
+    do
+        if [[ "${list[i]}" = "$match" ]] ; then
+            return 0
+        fi
+    done
+
+    return 1
+
+}
 
 
 

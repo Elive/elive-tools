@@ -864,6 +864,8 @@ el_array_member_unset(){
         fi
     done
 
+    # note: this is a bit hacky but it works until newer versions of bash, the common alternative is: for i in "${!list_requires_update[@]}"; do [[ ${list_requires_update[i]} = "$package" ]] && unset 'list_requires_update[i]'; done
+
 
 }
 

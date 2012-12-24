@@ -826,12 +826,12 @@ el_security_function_loop(){
 }
 
 #===  FUNCTION  ================================================================
-#          NAME:  el_array_check
+#          NAME:  el_array_member_check
 #   DESCRIPTION:  check if an element exists in an array
 #    PARAMETERS:  $1 = match, $2 = array (list of words)
 #       RETURNS:  true if found, false if not
 #===============================================================================
-el_array_check(){
+el_array_member_check(){
     local match list i
     match="$1"
     shift
@@ -845,6 +845,31 @@ el_array_check(){
     done
 
     return 1
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_array_member_unset
+#   DESCRIPTION:  unset members in an array
+#    PARAMETERS:  $1 = match, $2 = array-name, $3 = array contents
+#                 XXX needs to be used later with!:  arr=("${_out[@]}")
+#===============================================================================
+el_array_member_unset(){
+    _out=()
+    local i item=$1 arrname=$2
+    shift 2
+
+    for i in "$@"; do
+        if [[ $item != "$i" ]]; then
+            _out+=("$i")
+        fi
+    done
+
+    # needs to be done after the copy of the arrary, see comments
+    # important verification because is a hack
+    #if el_array_member_check "$item" "${arrname[@]}" ; then
+        #el_error "function $FUNCNAME doesn't works anymore, it was a hack for bash, fix it"
+        #return 1
+    #fi
 
 }
 

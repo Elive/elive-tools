@@ -35,6 +35,7 @@ main(){
     #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 3 flanger reverb 40 50 100 100 75 3 norm 2  2>/dev/null
 
     echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+    echo "$text" >> /tmp/.$(basename $0)-${USER}-log.txt
 
     cd - 1>/dev/null
     rm -rf /tmp/.$(basename $0)-$USER-$$

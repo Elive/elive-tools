@@ -1,0 +1,312 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+el_make_environment
+#TEXTDOMAIN=""
+#export TEXTDOMAIN
+
+
+set -e
+
+do_work(){
+    # this feature does a temporal copy of the directory for work from it,
+    # everything is erased after the logout
+    local dir tmpdir
+
+    dir="$(pwd)"
+    tmpdir="/tmp/.$(basename $0)-work"
+
+    rm -rf "${tmpdir}"
+    mkdir -p "${tmpdir}"
+
+    cp -a "${dir}" "${tmpdir}/"
+
+    cd "${tmpdir}/$(basename "${dir}")"
+    echo -e "Warning: your changes will be removed after to logout from this new shell\n"
+
+    # entering in new shell
+    $SHELL
+
+    rm -rf "${tmpdir}"
+
+}
+
+do_purge_olds(){
+    local others_list_num
+
+    others_list_num="$( ls -1 "${bkpdir_main}" 2>/dev/null | wc -l )"
+
+    if [[ -d "${bkpdir_main}" ]] ; then
+        sudo rm -rf "${bkpdir_main}/%"*
+    fi
+
+    echo -e "${el_c_y}All backups removed${el_c_n}  [${others_list_num}]"
+}
+
+
+do_save(){
+    local version others_list_num ref
+
+    # show old existing backups
+    others_list_num="$( ls -1 "${bkpdir_main}" 2>/dev/null | grep "\.rdiff$" | wc -l )"
+    if [[ "$others_list_num" -gt 5 ]] ; then
+        echo -e "Warning: other backups found:"
+        while read -ru 3 line
+        do
+           ref="${line//%//}"
+           ref="${ref%.rdiff*}"
+           if [[ -d "${ref}" ]] ; then
+               echo -e " * ref: ${el_c_c}${ref}${el_c_n}"
+           else
+               echo -e " * ref: ${el_c_r2}${ref}${el_c_n}"
+           fi
+
+        done 3<<< "$( ls -1 "${bkpdir_main}" | grep "\.rdiff$" )"
+
+        echo -e ""
+        echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}forget${el_c_n}"
+        echo -e "You can remove ALL in one shot with: ${el_c_g}$(basename $0) ${el_c_y}purge${el_c_n}\n"
+    fi
+
+    if ! [[ -d "$bkpdir" ]] ; then
+        mkdir -p "$bkpdir"
+    fi
+
+    echo -ne "Saving..."
+
+    #      rsync -av --delete "${target}/" "${bkpdir}/"
+    sudo rdiff-backup "${1}/" "${2}/"
+
+    version="$( sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
+
+    echo -e "\r${el_c_g}Saved${el_c_n}  [${version}]"
+    #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
+
+}
+
+
+do_get(){
+    local version history_num
+
+    if ! [[ -d "$bkpdir" ]] ; then
+        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+        exit 1
+    fi
+
+    if [[ -n "$3" ]] ; then
+        history_num="$3"
+    else
+        history_num="1"
+    fi
+
+    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+
+    el_check_variables "version"
+
+    sudo rm -rf "${1}.get"
+    sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+
+    sudo rsync -av --delete "${1}.get/" "${2}/"
+
+    cd "${2}"
+
+}
+
+
+do_list(){
+    sudo rdiff-backup -l "${1}"
+    echo ""
+    sudo rdiff-backup --parsable-output -l "${1}"
+}
+
+
+do_meld(){
+    local version history_num
+
+    if ! [[ -d "$bkpdir" ]] ; then
+        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    fi
+
+    if [[ -n "$3" ]] ; then
+        history_num="$3"
+    else
+        history_num="1"
+    fi
+
+    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+
+    el_check_variables "version"
+
+    sudo rm -rf "${1}.differ"
+    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+
+    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+
+    sudo meld "${1}.differ/" "${2}/"
+
+    sudo rm -rf "${1}.differ"
+
+    cd "${2}"
+}
+
+
+do_diff(){
+    local version history_num
+
+    if ! [[ -d "$bkpdir" ]] ; then
+        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    fi
+
+    if [[ -n "$3" ]] ; then
+        history_num="$3"
+    else
+        history_num="1"
+    fi
+
+    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+
+    el_check_variables "version"
+
+    sudo rm -rf "${1}.differ"
+    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+
+    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+
+    diff -Naur "${1}.differ/" "${2}/" | strings | colordiff
+
+    echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
+    diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+
+    sudo rm -rf "${1}.differ"
+
+    cd "${2}"
+}
+
+
+do_diff_reverse(){
+    local version history_num
+
+    if ! [[ -d "$bkpdir" ]] ; then
+        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    fi
+
+    if [[ -n "$3" ]] ; then
+        history_num="$3"
+    else
+        history_num="1"
+    fi
+
+    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+
+    el_check_variables "version"
+
+    sudo rm -rf "${1}.differ"
+    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+
+    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+
+    diff -Naur "${2}/" "${1}.differ/" | strings | colordiff
+
+    echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
+    diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+
+    sudo rm -rf "${1}.differ"
+
+    cd "${2}"
+}
+
+
+do_forget(){
+    if [[ -d "${1}" ]] ; then
+        sudo rm -rf "${1}"
+        sudo rm -rf "${1}."*
+
+        echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
+    else
+        echo -e "${el_c_r}E: ${el_c_n}Already removed ?"
+    fi
+}
+
+
+
+main(){
+    # pre {{{
+    local tool namedir bkpdir target history_num
+
+    tool="$(basename $0)"
+    namedir="${PWD//\//%}"
+    bkpdir_main="${HOME}/.${tool}.backups"
+    bkpdir="${bkpdir_main}/${namedir}.rdiff"
+    target="$PWD"
+
+    if [[ -L "$target" ]] ; then
+        target="$( readlink -f "$target" )"
+    fi
+
+    # This command requires a non-password mode of sudo, because sometimes we need to backup a directory that contains files owned by root (like debian-packaging directories)
+    if ! el_check_sudo_automated ; then
+        el_error "This tool requires an automated sudo (without password)"
+        # configure it yourself if you need this tool, use it at your own risk
+        exit
+    fi
+
+    if ! el_check_dependencies "rsync,rdiff-backup,diff,colordiff" ; then
+        el_dependencies_install "rsync,rdiff-backup,diff,colordiff"
+    fi
+
+    el_check_variables "tool,namedir,bkpdir,target"
+    el_check_dirs      "${target}"
+
+
+    # }}}
+
+    case $1 in
+        work|w|-w)
+            do_work
+            ;;
+        save|s|-s|--save)
+            do_save "${target}" "${bkpdir}"
+            ;;
+        get|g|-g|--get)
+            history_num="$2"
+            do_get "${bkpdir}" "${target}" "$history_num"
+            ;;
+        list|l|-l|--list)
+            do_list "${bkpdir}"
+            ;;
+        diff)
+            do_diff "${bkpdir}" "${target}" "${history_num}"
+            ;;
+        diff-reverse)
+            do_diff_reverse "${bkpdir}" "${target}" "${history_num}"
+            ;;
+        meld)
+            do_meld "${bkpdir}" "${target}" "${history_num}"
+            ;;
+        forget)
+            do_forget "${bkpdir}"
+            ;;
+        purge)
+            do_purge_olds "${bkpdir_main}"
+            ;;
+    esac
+
+
+
+}
+
+# Usage
+if [[ -z "${1}" ]] ; then
+    echo -e "Usage: $(basename $BASH_SOURCE) save | get {n} | list | diff {n} | meld {n} | forget | purge | work"
+    echo -e "               extra options: diff-reverse {n}"
+    echo -e "  where [n] is the number of previously historied backup"
+    exit 1
+fi
+
+
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

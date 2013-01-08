@@ -23,6 +23,9 @@ main(){
     if [[ -f "/etc/adduser.conf" ]] ; then
         source /etc/adduser.conf
     fi
+    if [[ -z "$LANG" ]] ; then
+        LANG="$(grep -s 'LANG=' /etc/default/locale | sed s/'LANG='// | tr -d '"' )"  # stupid syntax requires: '
+    fi
 
 
     # }}}

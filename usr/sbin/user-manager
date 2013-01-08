@@ -142,7 +142,8 @@ adduserelive(){
 
 	#$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
 
-	su -c "gpg --import /usr/share/elive-security/*.asc" "$username"
+        /usr/share/elive-user/hooks/newuser-static.sh "$username"
+        /usr/share/elive-user/hooks/newuser-dynamic.sh "$username"
 
 	messagedone
 }

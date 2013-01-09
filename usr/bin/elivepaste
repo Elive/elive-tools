@@ -154,6 +154,7 @@ main(){
 
         echo ""
         el_explain 0 "output sent to the #$channel channel"
+        el_explain 0 "Paste available in: __$url__"
     else
         # save it to clipboard, right-click mouse ready
         if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then

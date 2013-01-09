@@ -28,8 +28,10 @@ main(){
     conf="${HOME}/.config/elive/elivepaste/config.sh"
 
     # get confs
-    mkdir -p "${conf%/*}"
-    source "${conf}"
+    if [[ -f "$conf" ]] ; then
+        source "${conf}"
+    fi
+
 
 
     # show help if no parameters

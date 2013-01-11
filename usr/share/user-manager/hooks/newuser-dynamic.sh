@@ -3,7 +3,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local NUMBERRANDOM
+    local NUMBERRANDOM file
 
     # checks
     if [[ "$USER" = root ]] ; then
@@ -34,6 +34,16 @@ main(){
         sed -i "s/irc_nick3\ =\ Elive_user3/irc_nick3\ =\ Elive_user${NUMBERRANDOM}_${LANG:0:2}/"  "${HOME}/.xchat2/xchat.conf"
     fi
 
+
+    # }}}
+
+    # run hooks from packages {{{
+    if [[ -d "/etc/user-manager/hooks/post-create.d" ]] ; then
+        for file in /etc/user-manager/hooks/post-create.d/*
+        do
+            "$file"
+        done
+    fi
 
     # }}}
 

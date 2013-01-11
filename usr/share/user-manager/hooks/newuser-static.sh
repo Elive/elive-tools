@@ -3,25 +3,11 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local NUMBERRANDOM username
-
-    # input
-    username="$1"
-
-    # Usage
-    if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) username"
-        exit 1
-    fi
+    local NUMBERRANDOM
 
     # checks
-    if ! el_check_variables "username" ; then
+    if [[ "$USER" = root ]] ; then
         exit 1
-    fi
-
-    # variables
-    if [[ -f "/etc/adduser.conf" ]] ; then
-        source /etc/adduser.conf
     fi
 
 
@@ -29,7 +15,9 @@ main(){
 
     # add elive gpg key {{{
     if [[ -d "/usr/share/elive-security" ]] ; then
-        su -c "gpg --import /usr/share/elive-security/*.asc" "$username"
+        if el_check_dependencies gpg ; then
+            gpg --import /usr/share/elive-security/*.asc
+        fi
     fi
 
     # }}}

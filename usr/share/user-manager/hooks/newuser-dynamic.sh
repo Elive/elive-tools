@@ -39,8 +39,10 @@ main(){
 
     # configure audio and volume for user {{{
     audio-configurator --auto
+    amixer set Headphone 100%
+    amixer set Speaker 100%
     setvolume defaults
-    setvolume 75%
+    setvolume 90%
 
     # }}}
 

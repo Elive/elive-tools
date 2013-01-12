@@ -1,0 +1,539 @@
+#!/usr/bin/awk -f
+
+# This script is completely POSIX compliant.
+
+# usage: psort -- [OPTIONS] [FILE ...]
+#
+# The '--' is required, so AWK itself doesn't read the options
+#
+# Sort FILE, or the standard input if FILE is not provided or if a single
+# hyphen (-) is given as a filename, according to the following rules:
+#
+#  - In the following rules, the term REGEX refers to POSIX Extended Regular
+#    Expressions valid for your version of awk, provided to this program with
+#    the -p option.
+#  - Only one KEY may be provided, meaning that you can not sort on multiple
+#    fields like you can with sort(1). This option will be added in the future.
+#  - When sorting, values matching a REGEX will take priority over any other
+#    values.
+#  - Each REGEX will have priority in ascending order, according to the order
+#    in which they were given as arguments. The first REGEX will have priority
+#    over the second and third, etc.
+#  - Values both matching the same REGEX will be sorted against each other as
+#    strings, as usual.
+#  - All other values will be sorted as strings, in ascending order.
+#  - Uses the quicksort algorithm.
+#  - Prints the result to the standard output.
+#
+#  Options:
+#   -p, --patt REGEX   Sort values matching REGEX higher than other values,
+#                      according to the rules above. Can be supplied multiple
+#                      times. The first supplied will have higher priority than
+#                      the second, etc.
+#   -f, --file FILE    Obtain REGEXs from FILE, one per line.
+#   -n, --numeric      Sort according to string numeric value.
+#   -r, --reverse      Reverse the result of comparisons.
+#   -t, --sep SEP      Use SEP for the field separator, instead of non-blank to
+#                      blank transitions. SEP follows the same rules as FS for
+#                      your version of awk.
+#   -k, --key KEY      Sort via a key; KEY is a field number with origin 1,
+#                      according to SEP (or non-blank to blank transitions if
+#                      not provided).
+#   -i, --ignore-case  Do a case-insensitive sort. Also makes pattern matching
+#                      against REGEXs case-insensitive.
+#   -s, --stable       Stabilize sort by disabling last-resort comparison.
+#   -h, --help         Display this help and exit.
+#
+# Example Usage:
+#  psort -- -p '^foo' -p '^bar' myfile.txt
+#    This will sort 'myfile.txt', with all values matching '^foo' first,
+#    followed by all values matching '^bar', followed by everything else.
+#
+# Note:
+#  The algorithm used requires a large amount of memory, so this may not be the
+#  best tool to use on very large inputs.
+
+# TODO:
+#   allow KEYs similar to sort(1)
+#   add -z
+
+
+
+# base comparison function
+# compares "a" and "b", returning 0 for false and 1 for true,  according to the
+# global "reverse" variable
+# see the __pcompare() and psort() descriptions for more detail
+function __bcompare(a, b) {
+  # force numeric comparison
+  if (numeric) {
+    return +a < +b;
+
+  # force string comparison
+  } else {
+    return "a" a < "a" b;
+  }
+}
+
+# comparison function
+# compares "a" and "b" based on "patts", returning 0 for false and 1 for true
+# compares according to the global "numeric", "reverse", and "icase" variables
+# see the psort() description for more detail
+function __pcompare(a, b, patts, plen,    p) {
+  if (icase) {
+    a = tolower(a);
+    b = tolower(b);
+  }
+
+  # loop over each regex in order, and check if either value matches
+  for (p=1; p<=plen; p++) {
+    # if the first matches...
+    if (a ~ patts[p]) {
+      # check if the second also matches. if so, do a normal comparison
+      if (b ~ patts[p]) {
+        return reverse ? !__bcompare(a, b) : __bcompare(a, b);
+
+      # second doesn't match, the first sorts higher
+      } else {
+        return !reverse;
+      }
+
+    # if the second matches here, the first didn't, so the second sorts higher
+    } else if (b ~ patts[p]) {
+      return reverse;
+    }
+  }
+
+  # no regex matched, do a normal comparison
+  return reverse ? !__bcompare(a, b) : __bcompare(a, b);
+}
+
+# actual sorting function
+# sorts the values in "array" in-place, from indices "left" to "right", based
+# on an array of regular expressions (see the psort() description)
+function __pquicksort(array, left, right, patts, plen,    piv, mid, tmp) {
+  # return if array contains one element or less
+  if ((right - left) <= 0) {
+    return;
+  }
+
+  # choose random pivot
+  piv = int(rand() * (right - left + 1)) + left;
+
+  # swap left and pivot
+  tmp = array[piv];
+  array[piv] = array[left];
+  array[left] = tmp;
+  
+  mid = left;
+  # iterate over each element from the second to the last, and compare
+  for (piv=left+1; piv<=right; piv++) {
+    # if the comparison based on "how" is true...
+    if (__pcompare(array[piv], array[left], patts, plen)) {
+      # increment mid
+      mid++;
+
+      # swap mid and pivot
+      tmp = array[piv];
+      array[piv] = array[mid];
+      array[mid] = tmp;
+    }
+  }
+
+  # swap left and mid
+  tmp = array[mid];
+  array[mid] = array[left];
+  array[left] = tmp;
+  
+  # recursively sort the two halves
+  __pquicksort(array, left, mid - 1, patts, plen);
+  __pquicksort(array, mid + 1, right, patts, plen);
+}
+
+## usage: getopts(optstring [, longopt_array ])
+## Parses options, and deletes them from ARGV. "optstring" is of the form
+## "ab:c". Each letter is a possible option. If the letter is followed by a
+## colon (:), then the option requires an argument. If an argument is not
+## provided, or an invalid option is given, getopts will print the appropriate
+## error message and return "?". Returns each option as it's read, and -1 when
+## no options are left. "optind" will be set to the index of the next
+## non-option argument when finished. "optarg" will be set to the option's
+## argument, when provided. If not provided, "optarg" will be empty. "optname"
+## will be set to the current option, as provided. Getopts will delete each
+## option and argument that it successfully reads, so awk will be able to treat
+## whatever's left as filenames/assignments, as usual. If provided,
+## "longopt_array" is the name of an associative array that maps long options to
+## the appropriate short option (do not include the hyphens on either).
+## Sample usage can be found in the examples dir, with gawk extensions, or in
+## the ogrep script for a POSIX example: https://github.com/e36freak/ogrep
+function getopts(optstring, longarr,    opt, trimmed, hasarg, repeat) {
+  hasarg = repeat = 0;
+  optarg = "";
+  # increment optind
+  optind++;
+
+  # return -1 if the current arg is not an option or there are no args left
+  if (ARGV[optind] !~ /^-/ || optind >= ARGC) {
+    return -1;
+  }
+
+  # if option is "--" (end of options), delete arg and return -1
+  if (ARGV[optind] == "--") {
+    for (i=1; i<=optind; i++) {
+      delete ARGV[i];
+    }
+    return -1;
+  }
+
+  # if the option is a long argument...
+  if (ARGV[optind] ~ /^--/) {
+    # trim hyphens
+    trimmed = substr(ARGV[optind], 3);
+    # if of the format --foo=bar, split the two. assign "bar" to optarg and
+    # set hasarg to 1
+    if (trimmed ~ /.*=.*/) {
+      optarg = trimmed;
+      sub(/=.*/, "", trimmed); sub(/^[^=]*=/, "", optarg);
+      hasarg = 1;
+    }
+    
+    # invalid long opt
+    if (!(trimmed in longarr)) {
+      printf("unrecognized option -- '%s'\n", ARGV[optind]) > "/dev/stderr";
+      return "?";
+    }
+
+    opt = longarr[trimmed];
+    # set optname by prepending dashes to the trimmed argument
+    optname = "--" trimmed;
+
+  # otherwise, it is a short option
+  } else {
+    # remove the hyphen, and get just the option letter
+    opt = substr(ARGV[optind], 2, 1);
+    # set trimmed to whatevers left
+    trimmed = substr(ARGV[optind], 3);
+
+    # invalid option
+    if (!index(optstring, opt)) {
+      printf("invalid option -- '%s'\n", opt) > "/dev/stderr";
+      return "?";
+    }
+
+    # if there is more to the argument than just -o
+    if (length(trimmed)) {
+      # if option requires an argument, set the rest to optarg and hasarg to 1
+      if (index(optstring, opt ":")) {
+        optarg = trimmed;
+        hasarg = 1;
+
+      # otherwise, prepend a hyphen to the rest and set repeat to 1, so the
+      # same arg is processed again without the first option
+      } else {
+        ARGV[optind] = "-" trimmed;
+        repeat = 1;
+      }
+    }
+
+    # set optname by prepending a hypen to opt
+    optname = "-" opt;
+  }
+
+  # if the option requires an arg and hasarg is 0
+  if (index(optstring, opt ":") && !hasarg) {
+    # increment optind, check if no arguments are left
+    if (++optind >= ARGC) {
+      printf("option requires an argument -- '%s'\n", optname) > "/dev/stderr";
+      return "?";
+    }
+
+    # set optarg
+    optarg = ARGV[optind];
+
+  # if repeat is set, decrement optind so we process the same arg again
+  # mutually exclusive to needing an argument, otherwise hasarg would be set
+  } else if (repeat) {
+    optind--;
+  }
+
+  # delete all arguments up to this point, just to make sure
+  for (i=1; i<=optind; i++) {
+    delete ARGV[i];
+  }
+
+  # return the option letter
+  return opt;
+}
+
+# usage: psorti(s, p, len)
+# Sorts the indices of the array "s" in place, based on the rules below. When
+# finished, the array is indexed numerically starting with 1, and the values
+# are those of the original indices. "p" is a compact (non-sparse) 1-indexed
+# array containing regular expressions. "len" is the length of the "p" array.
+# Returns the length of the "s" array. Uses the quicksort algorithm, with a
+# random pivot to help avoid worst-case behavior on already sorted arrays.
+# Requires the __pcompare() and __pquicksort() functions.
+#
+#  Sorting rules:
+#  - When sorting, values matching an expression in the "p" array will take
+#    priority over any other values.
+#  - Each expression in the "p" array will have priority in ascending order
+#    by index. "p[1]" will have priority over "p[2]" and "p[3]", etc.
+#  - Values both matching the same regex will be compared to each other as
+#    strings, as usual.
+#  - All other values will be compared as strings.
+#
+# For example:
+#  patts[1] = "^foo"; patts[2] = "^bar"; len = psort(arr, patts);
+#   This will sort the indices of "arr" in place, with all values matching
+#   '^foo' first, followed by all values matching '^bar', followed by everything
+#   else.
+function psorti(array, patts, plen,    tmp, count, i) {
+  # loop over each index, and generate a new array with the original indices
+  # mapped to new numeric ones
+  count = 0;
+  for (i in array) {
+    tmp[++count] = i;
+    delete array[i];
+  }
+
+  # copy tmp back over the original array
+  for (i=1; i<=count; i++) {
+    array[i] = tmp[i];
+    delete tmp[i];
+  }
+
+  # seed the random number generator
+  srand();
+
+  # actually sort
+  __pquicksort(array, 1, count, patts, plen);
+
+  # return the length
+  return count;
+}
+
+# usage: shell_esc(STRING)
+# returns STRING, safely quoted for use in system() and other shell commands
+function shell_esc(str) {
+  gsub(/'/, "'\\''", str);
+
+  return "'" str "'";
+}
+
+# Display usage information
+function usage() {
+  printf("%s\n\n%s\n\n%s\n%s\n\n",
+"usage: psort -- [OPTIONS] [FILE ...]",
+"The '--' is required, so AWK itself doesn't read the options",
+"Sort FILE, or the standard input if FILE is not provided or if a single",
+"hyphen (-) is given as a filename, according to the following rules:" \
+) > "/dev/stderr";
+  printf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n",
+" - In the following rules, the term REGEX refers to POSIX Extended Regular",
+"   Expressions valid for your version of awk, provided to this program with",
+"   the -p option.",
+" - Only one KEY may be provided, meaning that you can not sort on multiple",
+"   fields like you can with sort(1). This option will be added in the future.",
+" - When sorting, values matching a REGEX will take priority over any other",
+"   values.",
+" - Each REGEX will have priority in ascending order, according to the order",
+"   in which they were given as arguments. The first REGEX will have priority",
+"   over the second and third, etc.",
+" - Values both matching the same REGEX will be sorted against each other as",
+"   strings, as usual.",
+" - All other values will be sorted as strings, in ascending order.",
+" - Uses the quicksort algorithm.",
+" - Prints the result to the standard output." \
+) > "/dev/stderr";
+  printf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+" Options:",
+"  -p, --patt REGEX   Sort values matching REGEX higher than other values,",
+"                     according to the rules above. Can be supplied multiple",
+"                     times. The first supplied will have higher priority than",
+"                     the second, etc.",
+"  -f, --file FILE    Obtain REGEXs from FILE, one per line.",
+"  -n, --numeric      Sort according to string numeric value.",
+"  -r, --reverse      Reverse the result of comparisons." \
+) > "/dev/stderr";
+  printf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n",
+"  -t, --sep SEP      Use SEP for the field separator, instead of non-blank to",
+"                     blank transitions. SEP follows the same ruls as FS for",
+"                     your version of awk.",
+"  -k, --key KEY      Sort via a key; KEY is a field number with origin 1,",
+"                     according to SEP (or non-blank to blank transitions if",
+"                     not provided).",
+"  -i, --ignore-case  Do a case-insensitive sort. Also makes pattern matching",
+"                     against REGEXs case-insensitive.",
+"  -s, --stable       Stabilize sort by disabling last-resort comparison.",
+"  -h, --help         Display this help and exit." \
+) > "/dev/stderr";
+  printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n",
+"Example Usage:",
+" psort -- -p '^foo' -p '^bar' myfile.txt",
+"   This will sort 'myfile.txt', with all values matching '^foo' first,",
+"   followed by all values matching '^bar', followed by everything else.",
+"Note:",
+" The algorithm used requires a large amount of memory, so this may not be the",
+" best tool to use on very large inputs." \
+) > "/dev/stderr";
+}
+
+BEGIN {
+  # initialize default variables
+  toexit = err = 0;
+  p = numeric = reverse = key = icase = stable = 0;
+
+  # map long options to the appropriate short ones
+  longopts["patt"]        = "p";
+  longopts["file"]        = "f";
+  longopts["numeric"]     = "n";
+  longopts["reverse"]     = "r";
+  longopts["sep"]         = "t";
+  longopts["key"]         = "k";
+  longopts["ignore-case"] = "i";
+  longopts["stable"]      = "s";
+  longopts["help"]        = "h";
+
+  # read and parse the options. can't use switch(), remaining POSIX compliant
+  while ((opt = getopts("p:f:nrt:k:ish", longopts)) != -1) {
+    # -p, --patt REGEX
+    if (opt == "p") {
+      patts[++p] = optarg;
+
+    # -f, --file FILE
+    } else if (opt == "f") {
+      # check to make sure FILE exists, is readable, or is stdin
+      if (optarg == "-" || optarg == "/dev/stdin") {
+        file = "/dev/stdin";
+      } else {
+        f = shell_esc(optarg);
+
+        if ((system("test -f " f) && system("test -p " f)) ||
+             system("test -r " f)) {
+          printf("%s: Permission denied\n", optarg) > "/dev/stderr";
+          err = toexit = 1; exit;
+        }
+
+        file = optarg;
+      }
+
+      # read each line from FILE, add to patterns
+      while ((getline patts[++p] < file) > 0);
+      # decrement "p", getline still set it during the last call
+      p--;
+
+    # -n, --numeric
+    } else if (opt == "n") {
+      numeric = 1;
+
+    # -r, --reverse
+    } else if (opt == "r") {
+      reverse = 1;
+
+    # -t, --sep SEP
+    } else if (opt == "t") {
+      FS = optarg;
+
+    # -k, --key KEY
+    } else if (opt == "k") {
+      # check to make sure KEY is a valid integer
+      if (optarg !~ /^[0-9]+$/) {
+        printf("%s: invalid KEY\n", optarg) > "/dev/stderr";
+        err = toexit = 1; exit;
+      }
+      key = optarg;
+
+    # -i, --ignore-case
+    } else if (opt == "i") {
+      icase = 1;
+
+    # -s, --stable
+    } else if (opt == "s") {
+      stable = 1;
+
+    # -h, --help
+    } else if (opt == "h") {
+      usage();
+      toexit = 1; exit;
+
+    # error
+    } else {
+      err = toexit = 1; exit;
+    }
+  }
+
+  # if case is to be ignored, convert all REGEXs to lowercase
+  if (icase) {
+    for (i=1; i<=p; i++) {
+      patts[i] = tolower(patts[i])
+    }
+  }
+}
+
+# read each line into the needed arrays
+{
+  tosort[$key];
+  lines[$key,++counts[$key]] = $0;
+}
+
+END {
+  # do not process any further if toexit is set (exit was called)
+  if (toexit) {
+    exit err;
+  }
+
+  # sort the keys
+  outlen = psorti(tosort, patts, p);
+
+  # loop over each sorted key
+  for (i=1; i<=outlen; i++) {
+    # if it's a stable sort, print all lines for the key in the order they were
+    # originally in
+    if (stable) {
+      for (j=1; j<=counts[tosort[i]]; j++) {
+        print lines[tosort[i],j];
+      }
+
+    # otherwise, it's not stable
+    } else {
+      # empty temp array
+      split("", tosort_tmp);
+
+      # create temp array for the current key's lines
+      for (j=1; j<=counts[tosort[i]]; j++) {
+        tosort_tmp[lines[tosort[i],j]];
+      }
+
+      # sort temp array
+      outlen_tmp = psorti(tosort_tmp, patts, p);
+
+      # dump sorted lines
+      for (j=1; j<=outlen_tmp; j++) {
+        print tosort_tmp[j];
+      }
+    }
+  }
+}
+
+
+
+# Copyright Daniel Mills <dm@e36freak.com>
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+

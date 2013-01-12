@@ -47,7 +47,7 @@ main(){
     else
         if ((is_auto_mode)) ; then
             el_check_dependencies "psort"
-            list_cards="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^NVidia" -p "midi" -p "MIDI" -p "^HDMI" -p "system" -p "^DAC" -p "usb" -p "^Intel" | tail -1 )"
+            list_cards="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "^DAC" -p "usb" -p "USB" -p "^Intel" -p "^V8" -p "^Bt" | tail -1 )"
         else
             is_multiple_cards=1
             select_card_multiple

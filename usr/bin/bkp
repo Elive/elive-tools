@@ -169,9 +169,9 @@ do_diff(){
     sudo rm -rf "${1}.differ"
     sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
-    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+    #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur "${1}.differ/" "${2}/" | strings | colordiff
+    diff -Naur "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
 
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
     diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
@@ -202,9 +202,9 @@ do_diff_reverse(){
     sudo rm -rf "${1}.differ"
     sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
-    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+    #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur "${2}/" "${1}.differ/" | strings | colordiff
+    diff -Naur "${2}/" "${1}.differ/" | strings | sed -e "s|+++ ${1}.differ|+++ a|g" -e "s|--- ${2}|--- b|g" | colordiff
 
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
     diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'

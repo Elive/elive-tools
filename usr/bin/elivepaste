@@ -63,7 +63,7 @@ main(){
 
     # run and save output
     if ((is_stdin)) ; then
-        buffer="$(cat)"
+        buffer="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
         command="(piped)"
     else
 

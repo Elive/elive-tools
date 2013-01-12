@@ -37,6 +37,13 @@ main(){
 
     # }}}
 
+    # configure audio and volume for user {{{
+    audio-configurator --auto
+    setvolume defaults
+    setvolume 75%
+
+    # }}}
+
     # run hooks from packages {{{
     if [[ -d "/etc/user-manager/hooks/post-create.d" ]] ; then
         for file in /etc/user-manager/hooks/post-create.d/*

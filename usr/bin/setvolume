@@ -24,6 +24,7 @@ main(){
     if [[ "${1}" = "defaults" ]] ; then
         # Master should be always set to 100 % in order to avoid distortions
         el_explain 2 "Master set to 100%"
+        amixer set Master unmute 2>/dev/null
         amixer set Master,0 100% 2>/dev/null
         amixer set Master,1 100% 2>/dev/null
 

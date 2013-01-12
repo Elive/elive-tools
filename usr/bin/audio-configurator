@@ -36,25 +36,23 @@ main(){
             list_cards="$1"
         fi
     fi
+    if [[ "$1" = "--auto" ]] ; then
+        is_auto_mode=1
+    fi
 
     number_cards="$( echo -e "$list_cards" | wc -l )"
 
     if [[ "$number_cards" -lt "2" ]] ; then
         selection="$(echo $list_cards)"
     else
-        is_multiple_cards=1
-        # get a better list to give to the user
-        #list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
-        #selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column=$"Description" --text=$"Select the desired audio card that you want to use as default" || echo cancel )"
-        ## remove extra leading blank chars
-        #read -r selection <<< "$selection"
+        if ((is_auto_mode)) ; then
+            el_check_dependencies "psort"
+            list_cards="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^NVidia" -p "midi" -p "MIDI" -p "^HDMI" -p "system" -p "^DAC" -p "usb" -p "^Intel" | tail -1 )"
+        else
+            is_multiple_cards=1
+            select_card_multiple
+        fi
 
-
-        #if [[ "${selection}" = "cancel" ]] ; then
-        #exit 1
-        #fi
-
-        select_card_multiple
     fi
 
     # cleanup, new conf
@@ -65,11 +63,12 @@ main(){
 
 
     # set microphone default
-    if ((is_multiple_cards)) ; then
-        if zenity --question --text=$"Do you want to use another card as default for your microphone?" ; then
-            select_card_multiple
+    if ! ((is_auto_mode)) ; then
+        if ((is_multiple_cards)) ; then
+            if $guitool --question --text=$"Do you want to use another card as default for your microphone?" ; then
+                select_card_multiple
 
-            cat >> "${HOME}/.asoundrc" << EOF
+                cat >> "${HOME}/.asoundrc" << EOF
 
 pcm.mic
 {
@@ -93,16 +92,18 @@ pcm.!default
 }
 EOF
 
-        else
-            zenity --info --text=$"Using default card ${selection} for your microphone"
+            else
+                $guitool --info --text=$"Using default card ${selection} for your microphone"
+            fi
+
+            # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
+            $guitool --info --text=$"If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings"
+
         fi
 
-        # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
-        zenity --info --text=$"If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings"
+        $guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"
 
     fi
-
-    $guitool --info --text=$"Your system is ready to use your audio card, please restart your audio applications"
 }
 
 #

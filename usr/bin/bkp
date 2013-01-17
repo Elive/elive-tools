@@ -250,7 +250,7 @@ main(){
     fi
 
     if ! el_check_dependencies "rsync,rdiff-backup,diff,colordiff" ; then
-        el_dependencies_install "rsync,rdiff-backup,diff,colordiff"
+        el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff"
     fi
 
     el_check_variables "tool,namedir,bkpdir,target"

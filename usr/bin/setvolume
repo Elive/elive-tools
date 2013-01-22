@@ -22,15 +22,31 @@ main(){
     action="$@"
 
     if [[ "${1}" = "defaults" ]] ; then
+        # unmute channels
+        amixer -q set Master unmute
+        amixer -q set PCM    unmute 2>/dev/null
+        amixer -q set Front  unmute 2>/dev/null
+        amixer -q set Wave   unmute 2>/dev/null
+        amixer -q set DAC    unmute 2>/dev/null
+
         # Master should be always set to 100 % in order to avoid distortions
         el_explain 2 "Master set to 100%"
-        amixer set Master unmute 2>/dev/null
-        amixer set Master,0 100% 2>/dev/null
-        amixer set Master,1 100% 2>/dev/null
+        amixer -q set Master,0 100  2>/dev/null
+        amixer -q set Master,1 100  2>/dev/null
+
+        # Mic configurations
+        amixer -q set Capture 80% unmute
+        amixer -q set Mic 70% unmute
+        # capture mode
+        amixer -q sset Mic cap
+        amixer -q sset Capture cap
+        # mute playback of mic, very annoying
+        amixer -q sset Mic Playback mute
+
 
         # then set a default generic volume
-        el_explain 2 "Generic volumes set to 70%"
-        main 70%
+        el_explain 2 "Generic volumes set to 85%"
+        main 85% 1>/dev/null
     fi
 
 
@@ -59,6 +75,14 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q Wave ; then
             meter=Wave
+            el_explain 2 "selected mode $meter"
+        fi
+    fi
+
+    ##################
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q Center ; then
+            meter=Center
             el_explain 2 "selected mode $meter"
         fi
     fi
@@ -102,10 +126,10 @@ main(){
     ##################
 
     if [[ "$meter" = "DAC" ]] ; then
-        amixer set ${meter},0 $action
-        amixer set ${meter},1 $action
+        amixer -q set ${meter},0 $action
+        amixer -q set ${meter},1 $action
     else
-        amixer set $meter $action
+        amixer -q set $meter $action
     fi
     ##################
 

@@ -63,7 +63,7 @@ do_save(){
         done 3<<< "$( ls -1 "${bkpdir_main}" | grep "\.rdiff$" )"
 
         echo -e ""
-        echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}forget${el_c_n}"
+        echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}remove${el_c_n}"
         echo -e "You can remove ALL in one shot with: ${el_c_g}$(basename $0) ${el_c_y}purge${el_c_n}\n"
     fi
 
@@ -215,7 +215,7 @@ do_diff_reverse(){
 }
 
 
-do_forget(){
+do_remove(){
     if [[ -d "${1}" ]] ; then
         sudo rm -rf "${1}"
         sudo rm -rf "${1}."*
@@ -282,8 +282,12 @@ main(){
         meld)
             do_meld "${bkpdir}" "${target}" "${history_num}"
             ;;
+        remove|-r)
+            do_remove "${bkpdir}"
+            ;;
         forget)
-            do_forget "${bkpdir}"
+            el_error "did you mean remove?"
+            exit 1
             ;;
         purge)
             do_purge_olds "${bkpdir_main}"
@@ -296,7 +300,7 @@ main(){
 
 # Usage
 if [[ -z "${1}" ]] ; then
-    echo -e "Usage: $(basename $BASH_SOURCE) save | get {n} | list | diff {n} | meld {n} | forget | purge | work"
+    echo -e "Usage: $(basename $BASH_SOURCE) save | get {n} | list | diff {n} | meld {n} | remove | purge | work"
     echo -e "               extra options: diff-reverse {n}"
     echo -e "  where [n] is the number of previously historied backup"
     exit 1

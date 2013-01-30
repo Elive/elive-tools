@@ -863,10 +863,33 @@ el_array_member_unset(){
     done
 
     # note: this is a bit hacky but it works until newer versions of bash, the common alternative is: for i in "${!list_requires_update[@]}"; do [[ ${list_requires_update[i]} = "$package" ]] && unset 'list_requires_update[i]'; done
-
-
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_step_requires_fixme
+#   DESCRIPTION:  temporal "step" to put in experimental/development code, only
+#    PARAMETERS:  $1 = dir to login (optional)
+#===============================================================================
+el_step_requires_fixme(){
+    # pre {{{
+    local dir prev_dir
+
+    dir="$1"
+    prev_dir="$(pwd)"
+
+    : ${dir:="$prev_dir"}
+
+    # }}}
+    el_check_dirs "${dir}"
+    cd "$dir"
+
+    echo -e "\n\nExperimental / uncomplete code: we have set a breakpoint here, if you are not an elive developer, please report this message: ${FUNCNAME} for $BASH - ${FUNCNAME[1]} - $LINENO"
+    echo -e "Press ^D or type 'logout' for continue\n"
+    $SHELL
+
+    cd "${prev_dir}"
+
+}
 
 
 

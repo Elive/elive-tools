@@ -13,21 +13,34 @@ do_work(){
     local dir tmpdir
 
     dir="$(pwd)"
-    tmpdir="/tmp/.$(basename $0)-work"
-
+    tmpdir="${bkpdir_works}/${namedir}"
 
     rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
 
     cp -a "${dir}" "${tmpdir}/"
 
-    cd "${tmpdir}/$(basename "${dir}")"
-    echo -e "Warning: your changes will be removed after to logout from this new shell\n"
+    cd "${tmpdir}"
+
+    echo -e "You are now in a safe place where modify your sources"
+    echo -e "Your modifications will be merged or erased after you finish"
+    el_explain 0 "Please logout from the shell for finish your working state"
 
     # entering in new shell
     $SHELL
+    # go back
+    cd "$target"
 
-    rm -rf "${tmpdir}"
+    if el_confirm "Do you want to run a meld with the original directory?" ; then
+        if ! el_dependencies_check meld ; then
+            el_dependencies_install meld
+        fi
+        meld "${tmpdir}" .
+    fi
+
+    if el_confirm "Delete the working state?" ; then
+        rm -rf "${tmpdir}"
+    fi
 
 }
 
@@ -36,11 +49,17 @@ do_purge_olds(){
 
     others_list_num="$( ls -1 "${bkpdir_backups}" 2>/dev/null | wc -l )"
 
+    # remove backups
     if [[ -d "${bkpdir_backups}" ]] ; then
         sudo rm -rf "${bkpdir_backups}/%"*
     fi
+    # remove working states
+    if [[ -d "${bkpdir_works}" ]] ; then
+        sudo rm -rf "${bkpdir_works}/%"*
+    fi
 
-    echo -e "${el_c_y}All backups removed${el_c_n}  [${others_list_num}]"
+
+    echo -e "${el_c_y}All backups and workstates removed${el_c_n}  [${others_list_num}]"
 }
 
 
@@ -239,6 +258,7 @@ main(){
     namedir="${PWD//\//%}"
     bkpdir_main="${HOME}/.${tool}"
     bkpdir_backups="${bkpdir_main}/backups"
+    bkpdir_works="${bkpdir_main}/working"
     bkpdir_id="${bkpdir_backups}/${namedir}.rdiff"
     target="$PWD"
 

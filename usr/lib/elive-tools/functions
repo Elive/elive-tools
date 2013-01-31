@@ -220,7 +220,12 @@ el_resolution_get(){ # show our actual resolution
 #-------------------------------------------------------------------------------
 #   Dependencies Check
 #-------------------------------------------------------------------------------
-el_check_dependencies(){ # check if we have these command dependencies, if not, notify and exit
+el_check_dependencies(){
+    # compatibility
+    el_warning "$FUNCNAME is deprecated, update this code (full compatibility still working, don't worry)"
+    el_dependencies_check "$@"
+}
+el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
     # example:  el_check_dependencies gmplayer,find,sed,etc
     local check found found_no dir
 
@@ -883,7 +888,7 @@ el_step_requires_fixme(){
     el_check_dirs "${dir}"
     cd "$dir"
 
-    echo -e "\n\nExperimental / uncomplete code: we have set a breakpoint here, if you are not an elive developer, please report this message: ${FUNCNAME} for $BASH - ${FUNCNAME[1]} - $LINENO"
+    echo -e "\n\nExperimental / uncomplete code: we have set a breakpoint here, if you are not an elive developer, please report this message: ${FUNCNAME} for $BASH - ${FUNCNAME[1]} - $LINENO # $@"
     echo -e "Press ^D or type 'logout' for continue\n"
     $SHELL
 

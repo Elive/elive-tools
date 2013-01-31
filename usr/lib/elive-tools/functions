@@ -888,13 +888,29 @@ el_step_requires_fixme(){
     el_check_dirs "${dir}"
     cd "$dir"
 
-    echo -e "\n\nExperimental / uncomplete code: we have set a breakpoint here, if you are not an elive developer, please report this message: ${FUNCNAME} for $BASH - ${FUNCNAME[1]} - $LINENO # $@"
-    echo -e "Press ^D or type 'logout' for continue\n"
+    echo -e "\n"
+    el_warning "Experimental or uncomplete code:"
+    echo -e "We have set a breakpoint here, please report to Elive this message:"
+    echo -e "${FUNCNAME} for $0"
+    echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
+    echo -e "$@"
+    el_explain 0 "Press ^D or type 'logout' for continue...\n"
     $SHELL
 
     cd "${prev_dir}"
 
 }
+
+
+###################################################################
+#  Always run:
+###################################################################
+# Generic checks
+if [[ "${EL_DEBUG}" -ge "2" ]] ; then
+    if grep -q el_step_requires_fixme "$0" ; then
+        el_warning "Missing features, please report this to Elive"
+    fi
+fi
 
 
 

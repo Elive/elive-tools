@@ -17,8 +17,9 @@ do_work(){
 
     rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
+    rmdir "${tmpdir}" # remove last dir in order to really-copy here
 
-    cp -a "${dir}" "${tmpdir}/"
+    cp -a "${dir}" "${tmpdir}"
 
     cd "${tmpdir}"
 

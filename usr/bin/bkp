@@ -34,10 +34,10 @@ do_work(){
 do_purge_olds(){
     local others_list_num
 
-    others_list_num="$( ls -1 "${bkpdir_main}" 2>/dev/null | wc -l )"
+    others_list_num="$( ls -1 "${bkpdir_backups}" 2>/dev/null | wc -l )"
 
-    if [[ -d "${bkpdir_main}" ]] ; then
-        sudo rm -rf "${bkpdir_main}/%"*
+    if [[ -d "${bkpdir_backups}" ]] ; then
+        sudo rm -rf "${bkpdir_backups}/%"*
     fi
 
     echo -e "${el_c_y}All backups removed${el_c_n}  [${others_list_num}]"
@@ -47,10 +47,10 @@ do_purge_olds(){
 do_save(){
     local version others_list_num ref
 
-    mkdir -p "${bkpdir_main}"
+    mkdir -p "${bkpdir_backups}"
 
     # show old existing backups
-    others_list_num="$( ls -1 "${bkpdir_main}" 2>/dev/null | grep "\.rdiff$" | wc -l )"
+    others_list_num="$( ls -1 "${bkpdir_backups}" 2>/dev/null | grep "\.rdiff$" | wc -l )"
     if [[ "$others_list_num" -gt 5 ]] ; then
         echo -e "Warning: other backups found:"
         while read -ru 3 line
@@ -63,20 +63,20 @@ do_save(){
                echo -e " * ref: ${el_c_r2}${ref}${el_c_n}"
            fi
 
-        done 3<<< "$( ls -1 "${bkpdir_main}" | grep "\.rdiff$" )"
+        done 3<<< "$( ls -1 "${bkpdir_backups}" | grep "\.rdiff$" )"
 
         echo -e ""
         echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}remove${el_c_n}"
         echo -e "You can remove ALL in one shot with: ${el_c_g}$(basename $0) ${el_c_y}purge${el_c_n}\n"
     fi
 
-    if ! [[ -d "$bkpdir" ]] ; then
-        mkdir -p "$bkpdir"
+    if ! [[ -d "$bkpdir_id" ]] ; then
+        mkdir -p "$bkpdir_id"
     fi
 
     echo -ne "Saving..."
 
-    #      rsync -av --delete "${target}/" "${bkpdir}/"
+    #      rsync -av --delete "${target}/" "${bkpdir_id}/"
     sudo rdiff-backup "${1}/" "${2}/"
 
     version="$( sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
@@ -90,8 +90,8 @@ do_save(){
 do_get(){
     local version history_num
 
-    if ! [[ -d "$bkpdir" ]] ; then
-        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    if ! [[ -d "$bkpdir_id" ]] ; then
+        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
         exit 1
     fi
 
@@ -125,8 +125,8 @@ do_list(){
 do_meld(){
     local version history_num
 
-    if ! [[ -d "$bkpdir" ]] ; then
-        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    if ! [[ -d "$bkpdir_id" ]] ; then
+        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
     fi
 
     if [[ -n "$3" ]] ; then
@@ -155,8 +155,8 @@ do_meld(){
 do_diff(){
     local version history_num
 
-    if ! [[ -d "$bkpdir" ]] ; then
-        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    if ! [[ -d "$bkpdir_id" ]] ; then
+        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
     fi
 
     if [[ -n "$3" ]] ; then
@@ -188,8 +188,8 @@ do_diff(){
 do_diff_reverse(){
     local version history_num
 
-    if ! [[ -d "$bkpdir" ]] ; then
-        echo -e "E: dir $bkpdir not exists, not backup saved yet ?"
+    if ! [[ -d "$bkpdir_id" ]] ; then
+        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
     fi
 
     if [[ -n "$3" ]] ; then
@@ -233,17 +233,20 @@ do_remove(){
 
 main(){
     # pre {{{
-    local tool namedir bkpdir target history_num
+    local tool namedir bkpdir_id target history_num
 
     tool="$(basename $0)"
     namedir="${PWD//\//%}"
-    bkpdir_main="${HOME}/.${tool}/backups"
+    bkpdir_main="${HOME}/.${tool}"
+    bkpdir_backups="${bkpdir_main}/backups"
+    bkpdir_id="${bkpdir_backups}/${namedir}.rdiff"
+    target="$PWD"
+
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
         el_warning "you still having the old dir for backups, please remove it entirely: ${HOME}/.${tool}.backups"
     fi
-    bkpdir="${bkpdir_main}/${namedir}.rdiff"
-    target="$PWD"
+
 
     if [[ -L "$target" ]] ; then
         target="$( readlink -f "$target" )"
@@ -260,7 +263,7 @@ main(){
         el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff"
     fi
 
-    el_check_variables "tool,namedir,bkpdir,target"
+    el_check_variables "tool,namedir,bkpdir_id,target"
     el_check_dirs      "${target}"
 
 
@@ -271,33 +274,33 @@ main(){
             do_work
             ;;
         save|s|-s|--save)
-            do_save "${target}" "${bkpdir}"
+            do_save "${target}" "${bkpdir_id}"
             ;;
         get|g|-g|--get)
             history_num="$2"
-            do_get "${bkpdir}" "${target}" "$history_num"
+            do_get "${bkpdir_id}" "${target}" "$history_num"
             ;;
         list|l|-l|--list)
-            do_list "${bkpdir}"
+            do_list "${bkpdir_id}"
             ;;
         diff)
-            do_diff "${bkpdir}" "${target}" "${history_num}"
+            do_diff "${bkpdir_id}" "${target}" "${history_num}"
             ;;
         diff-reverse)
-            do_diff_reverse "${bkpdir}" "${target}" "${history_num}"
+            do_diff_reverse "${bkpdir_id}" "${target}" "${history_num}"
             ;;
         meld)
-            do_meld "${bkpdir}" "${target}" "${history_num}"
+            do_meld "${bkpdir_id}" "${target}" "${history_num}"
             ;;
         remove|-r)
-            do_remove "${bkpdir}"
+            do_remove "${bkpdir_id}"
             ;;
         forget)
             el_error "did you mean remove?"
             exit 1
             ;;
         purge)
-            do_purge_olds "${bkpdir_main}"
+            do_purge_olds "${bkpdir_backups}"
             ;;
     esac
 

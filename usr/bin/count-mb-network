@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 main(){
     # pre {{{
     local input output Bi Bo
-    if ! el_check_dependencies iptables ; then
+    if ! el_dependencies_check iptables ; then
         el_dependencies_install iptables
     fi
 

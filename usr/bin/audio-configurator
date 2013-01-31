@@ -18,7 +18,7 @@ main(){
     # pre {{{
     local list_cards number_cards selection guitool line
 
-    if ! el_check_dependencies zenity ; then
+    if ! el_dependencies_check zenity ; then
         el_dependencies_install zenity
     fi
 
@@ -47,7 +47,7 @@ main(){
         selection="$(echo $list_cards)"
     else
         if ((is_auto_mode)) ; then
-            el_check_dependencies "psort"
+            el_dependencies_check "psort"
             selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" | tail -1 )"
         else
             is_multiple_cards=1

@@ -4,7 +4,7 @@ main(){
     # pre {{{
     local list action meter actualvalue
 
-    el_check_dependencies amixer
+    el_dependencies_check amixer
 
     # }}}
 

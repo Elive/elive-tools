@@ -2,7 +2,7 @@
 source /usr/lib/elive-tools/functions
 
 main(){
-    if ! el_check_dependencies curl ; then
+    if ! el_dependencies_check curl ; then
         el_dependencies_install curl
     fi
 

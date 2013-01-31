@@ -26,7 +26,7 @@ fi
 guitool=zenity
 temp_error="/tmp/$(basename $0)-${USER}-$$"
 
-el_check_dependencies "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},${USERDEL}"
+el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},${USERDEL}"
 
 errorexit(){
 	$guitool --error --text="$( cat "${temp_error}" )"

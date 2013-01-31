@@ -74,7 +74,7 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-        if el_check_dependencies notify-send ; then
+        if el_dependencies_check notify-send ; then
             notify-send -t 20000 "$@"
         else
             el_warning "notify-send not installed"
@@ -92,7 +92,7 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
-        if el_check_dependencies notify-send ; then
+        if el_dependencies_check notify-send ; then
             notify-send -t 240000 "$@"
         else
             el_warning "notify-send not installed"
@@ -210,7 +210,7 @@ el_title_set(){ # set the Title on the actual Window
 #-------------------------------------------------------------------------------
 el_resolution_get(){ # show our actual resolution
 
-    el_check_dependencies xdpyinfo
+    el_dependencies_check xdpyinfo
     el_set_display_variables
 
     xdpyinfo | grep dimension | awk '{print $2}' | grep x | tail -1
@@ -222,11 +222,11 @@ el_resolution_get(){ # show our actual resolution
 #-------------------------------------------------------------------------------
 el_check_dependencies(){
     # compatibility
-    el_warning "$FUNCNAME is deprecated, update this code (full compatibility still working, don't worry)"
+    el_warning "$FUNCNAME is moved to 'el_dependencies_check', please update or report this code (full compatibility still working, don't worry)"
     el_dependencies_check "$@"
 }
 el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
-    # example:  el_check_dependencies gmplayer,find,sed,etc
+    # example:  el_dependencies_check gmplayer,find,sed,etc
     local check found found_no dir
 
     while read -ru 3 check
@@ -271,7 +271,7 @@ el_dependencies_install(){
 
     # TODO: move to terminology when compatibility will be implemented
     # TODO:  even better: use a gui tool for install deps
-    el_check_dependencies urxvt
+    el_dependencies_check urxvt
 
     temp="/tmp/.$(basename $0)-${USER}-$$"
     cat > "${temp}" << EOF

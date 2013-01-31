@@ -15,7 +15,7 @@ main(){
 
     # }}}
 
-    el_check_dependencies "text2wave,play,sox,iconv"
+    el_dependencies_check "text2wave,play,sox,iconv"
 
     # this trick is required because an ugly tmp.lab file is created in the home
     mkdir -p /tmp/.$(basename $0)-$USER-$$

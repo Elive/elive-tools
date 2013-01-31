@@ -15,7 +15,7 @@ main(){
 
     # add elive gpg key {{{
     if [[ -d "/usr/share/elive-security" ]] ; then
-        if el_check_dependencies gpg ; then
+        if el_dependencies_check gpg ; then
             gpg --import /usr/share/elive-security/*.asc
         fi
     fi

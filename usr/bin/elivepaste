@@ -6,7 +6,7 @@ main(){
     # pre {{{
     local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
 
-    if ! el_check_dependencies pastebinit ; then
+    if ! el_dependencies_check pastebinit ; then
         el_dependencies_install "pastebinit"
         #el_error "Please install the package pastebinit first"
     fi
@@ -67,7 +67,7 @@ main(){
         command="(piped)"
     else
 
-        if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_check_dependencies "$1" 2>/dev/null 1>/dev/null ; then
+        if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_dependencies_check "$1" 2>/dev/null 1>/dev/null ; then
             # $1 is a file, not a command
             buffer="$( cat "${1}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
         else
@@ -141,7 +141,7 @@ main(){
     fi
 
     # send to channel
-    if ps ux | grep -v grep | grep -q xchat && el_check_dependencies xchat 1>/dev/null 2>/dev/null ; then
+    if ps ux | grep -v grep | grep -q xchat && el_dependencies_check xchat 1>/dev/null 2>/dev/null ; then
         # send first a message
         if [[ -n "$message" ]] ; then
             xchat -e -c "msg #$channel $message"
@@ -159,7 +159,7 @@ main(){
         el_explain 0 "Paste available in: __$url__"
     else
         # save it to clipboard, right-click mouse ready
-        if el_check_dependencies xclip 2>/dev/null 1>/dev/null ; then
+        if el_dependencies_check xclip 2>/dev/null 1>/dev/null ; then
             echo "$url" | xclip -i
         fi
 

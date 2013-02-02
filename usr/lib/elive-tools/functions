@@ -907,7 +907,7 @@ el_step_requires_fixme(){
 ###################################################################
 # Generic checks
 if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-    if grep -q el_step_requires_fixme "$0" ; then
+    if [[ "$@" != "bash" ]] && [[ -e "$@" ]] && grep -q el_step_requires_fixme "$0" ; then
         el_warning "Missing features, please report this to Elive"
     fi
 fi

@@ -7,10 +7,22 @@ source /usr/lib/elive-tools/functions
 main(){
     # pre {{{
 
-    local text process
+    local text process hour
     text="$1"
     if [[ -z "$text" ]] ; then
         return
+    fi
+    if ((NOVOICE)) || ((SILENT)) ; then
+        #el_explain 2 "ignoring reproduction of voice because of an environment variable"
+        exit
+    fi
+
+    # check if we are at night
+    hour="$(date +%H)"
+
+    if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
+        #el_explain 2 "ignoring reproduction of voice because we may be sleeping at this hour"
+        exit
     fi
 
     # }}}

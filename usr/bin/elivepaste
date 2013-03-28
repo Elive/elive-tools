@@ -159,14 +159,14 @@ main(){
         el_explain 0 "Paste available in: __${url}__"
     else
         # save it to clipboard, right-click mouse ready
-        if el_dependencies_check xclip 2>/dev/null 1>/dev/null ; then
+        if el_dependencies_check xclip 2>/dev/null 1>/dev/null && [[ -n "$DISPLAY" ]] ; then
             echo "$url" | xclip -i
         fi
 
         # finally show the url in the terminal
         echo -e ""
         el_explain 0 "Paste available in: __${url}__"
-        echo "$url"
+        #echo "$url"
     fi
 }
 

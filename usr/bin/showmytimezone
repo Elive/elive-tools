@@ -37,7 +37,7 @@ main(){
     fi
 
 
-    result="$( curl -s -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" )"
+    result="$( curl -k -s -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" )"
 
     if ! echo "$result" | grep -q "status.*OK" ; then
         el_error "no status correct returned"

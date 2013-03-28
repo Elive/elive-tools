@@ -1,0 +1,18 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+
+    curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
+    # }}}
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

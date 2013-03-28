@@ -2,11 +2,37 @@
 source /usr/lib/elive-tools/functions
 
 main(){
+    local result
+
     if ! el_dependencies_check curl ; then
         el_dependencies_install curl
     fi
 
-    curl -s http://www.adsl4ever.com/ip/ | grep h1 | grep span | awk '{print $1}' | sed 's/<h1>//'
+    if ! el_verify_internet ; then
+        el_error "no internet connection found"
+        exit 1
+    fi
+
+    result="$( curl -A "Mozilla" -s http://www.showmyip.co.uk | grep "[[:digit:]].[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+    # remove extra leading blank chars
+    read -r result <<< "$result"
+
+    # check and try from another if is wrong
+    if [[ "$result" = "192.168"* ]] ; then
+        result="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        # remove extra leading blank chars
+        read -r result <<< "$result"
+    fi
+    #curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g'
+
+
+    if [[ -n "$result" ]] ; then
+        echo "$result"
+    else
+        el_error "Not IP found"
+        exit 1
+    fi
+
 }
 
 #

@@ -18,19 +18,18 @@ main(){
     read -r result <<< "$result"
 
     # check and try from another if is wrong
-    if [[ "$result" = "192.168."* ]] || [[ "$result" = "10."* ]] || [[ "$result" = "172.16.0."* ]] [[ "$result" = "172.31.255."* ]] ; then
+    if [[ -z "$result" ]] || [[ "$result" = "192.168."* ]] || [[ "$result" = "10."* ]] || { dpkg --compare-versions "$result" ge "172.16" && dpkg --compare-versions "$result" le "172.32" ; } ; then
         result="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r result <<< "$result"
     fi
     #curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g'
 
-
-    if [[ -n "$result" ]] ; then
-        echo "$result"
-    else
-        el_error "Not IP found"
+    if [[ -z "$result" ]] || [[ "$result" = "192.168."* ]] || [[ "$result" = "10."* ]] || { dpkg --compare-versions "$result" ge "172.16" && dpkg --compare-versions "$result" le "172.32" ; } ; then
+        el_error "Not correct external IP get"
         exit 1
+    else
+        echo "$result"
     fi
 
 }

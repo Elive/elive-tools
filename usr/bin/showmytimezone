@@ -1,0 +1,58 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local result location latitude longitude
+
+    if ! el_dependencies_check curl ; then
+        el_dependencies_install curl
+    fi
+
+    if ! el_verify_internet ; then
+        el_error "no internet connection found"
+        exit 1
+    fi
+
+    # }}}
+
+    location="$( showmylocation )"
+
+    if ! echo "$location" | grep -q "Latitude" ; then
+        el_error "Cannot get latitude info right now"
+        exit 1
+    fi
+
+    latitude="$( echo "$location" | grep "<Latitude>.*[[:digit:]]" | sed -e 's|^.*<Latitude>||g' -e 's|</Latitude.*$||g' )"
+    # remove extra leading blank chars
+    read -r latitude <<< "$latitude"
+
+    longitude="$( echo "$location" | grep "<Longitude>.*[[:digit:]]" | sed -e 's|^.*<Longitude>||g' -e 's|</Longitude.*$||g' )"
+    # remove extra leading blank chars
+    read -r longitude <<< "$longitude"
+
+    if [[ -z "$latitude" ]] || [[ -z "$longitude" ]] ; then
+        el_error "not latitude or longitude get"
+        exit 1
+    fi
+
+
+    result="$( curl -s -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=1331161200&sensor=false" )"
+
+    if ! echo "$result" | grep -q "status.*OK" ; then
+        el_error "no status correct returned"
+        exit 1
+    fi
+
+    echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g'
+
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

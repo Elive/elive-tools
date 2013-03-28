@@ -18,7 +18,7 @@ main(){
     read -r result <<< "$result"
 
     # check and try from another if is wrong
-    if [[ "$result" = "192.168"* ]] ; then
+    if [[ "$result" = "192.168."* ]] || [[ "$result" = "10."* ]] || [[ "$result" = "172.16.0."* ]] [[ "$result" = "172.31.255."* ]] ; then
         result="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r result <<< "$result"

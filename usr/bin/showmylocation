@@ -4,9 +4,18 @@ source /usr/lib/elive-tools/functions
 main(){
     # pre {{{
 
-    curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
+    if ! el_dependencies_check curl ; then
+        el_dependencies_install curl
+    fi
+
+    if ! el_verify_internet ; then
+        el_error "no internet connection found"
+        exit 1
+    fi
+
     # }}}
 
+    curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
 
 }
 

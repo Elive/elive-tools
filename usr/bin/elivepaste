@@ -121,10 +121,10 @@ main(){
         exit 1
     fi
 
-    # few lines = paste directly in the channel
-    if [[ "$(echo -e "${buffer}" | wc -l)" -le "$min_lines" ]] ; then
-        direct_paste=1
-    fi
+    # few lines = paste directly in the channel | disabled, because is not a good thing to have
+    #if [[ "$(echo -e "${buffer}" | wc -l)" -le "$min_lines" ]] ; then
+        #direct_paste=1
+    #fi
     # - checks }}}
 
     # get url

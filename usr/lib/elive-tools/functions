@@ -134,13 +134,20 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
         return 0
     else
-        sleep 60
+        # fast check ? directly return
+        if [[ "$1" = "fast" ]] ; then
+            return 1
+        fi
+
+        el_warning "no connection to internet found, waiting 30 seconds"
+        sleep 30
         if timeout 50 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
             echo "$date_hour_now" > "$stamp_hour_prev"
 
             return 0
         else
-            sleep 120
+            el_warning "no connection to internet found, waiting 90 seconds"
+            sleep 90
             if timeout 50 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
 

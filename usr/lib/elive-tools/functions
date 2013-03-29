@@ -108,7 +108,7 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i
 
     stamp_hour_prev="/tmp/.stamps/verify_internet-${USER}-last_run_hour"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
@@ -122,9 +122,17 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # }}}
 
     # Test for network carrier first, and exit if we don't have it at all
-    for interface in $(ls /sys/class/net/ | grep -v lo);
+    for i in 1 2 3 4
     do
-        if [[ $(cat /sys/class/net/$interface/carrier) = 1 ]]; then OnLine=1; fi
+        for interface in $(ls /sys/class/net/ | grep -v lo);
+        do
+            if [[ $(cat /sys/class/net/$interface/carrier) = 1 ]]; then
+                OnLine=1;
+                break 2
+            fi
+        done
+
+        sleep 1
     done
 
     if ! [ $OnLine ]; then

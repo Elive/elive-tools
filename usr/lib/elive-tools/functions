@@ -122,7 +122,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # }}}
 
     # Test for network carrier first, and exit if we don't have it at all
-    for i in 1 2 3 4
+    for i in 1 2 3 4 5
     do
         for interface in $(ls /sys/class/net/ | grep -v lo);
         do

@@ -17,13 +17,13 @@ main(){
         exit
     fi
 
-    # check if we are at night
-    hour="$(date +%H)"
+    # check if we are at night | actually disabled: we need a better way to configure this (from desktop)
+    #hour="$(date +%H)"
 
-    if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
-        #el_explain 2 "ignoring reproduction of voice because we may be sleeping at this hour"
-        exit
-    fi
+    #if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
+        ##el_explain 2 "ignoring reproduction of voice because we may be sleeping at this hour"
+        #exit
+    #fi
 
     # }}}
 

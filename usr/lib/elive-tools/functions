@@ -126,7 +126,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     do
         for interface in $(ls /sys/class/net/ | grep -v lo);
         do
-            if [[ $(cat /sys/class/net/$interface/carrier) = 1 ]]; then
+            if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
                 OnLine=1;
                 break 2
             fi

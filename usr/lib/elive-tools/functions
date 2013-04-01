@@ -896,6 +896,32 @@ el_array_member_unset(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_array_member_add
+#   DESCRIPTION:  add a member in the array if not exist
+#    PARAMETERS:  $1 = element, $2 = array contents
+#                 XXX needs to be used later with!:  arr=("${_out[@]}")
+#===============================================================================
+el_array_member_add(){
+    _out=()
+    local i item=$1 match
+    shift
+
+
+    for i in "$@"; do
+        if [[ $item = "$i" ]]; then
+            match=1
+        fi
+
+        # add elements to the new array
+        _out+=("$i")
+    done
+
+    if ! ((match)) ; then
+        _out+=("$item")
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_step_requires_fixme
 #   DESCRIPTION:  temporal "step" to put in experimental/development code, only
 #    PARAMETERS:  $1 = dir to login (optional)

@@ -13,13 +13,13 @@ main(){
         exit 1
     fi
 
-    result="$( curl -A "Mozilla" -s http://www.showmyip.co.uk | grep "[[:digit:]].[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+    result="$( curl -A "Mozilla" -s http://www.showmyip.co.uk | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
     # remove extra leading blank chars
     read -r result <<< "$result"
 
     # check and try from another if is wrong
     if [[ -z "$result" ]] || [[ "$result" = "192.168."* ]] || [[ "$result" = "10."* ]] || { dpkg --compare-versions "$result" ge "172.16" && dpkg --compare-versions "$result" le "172.32" ; } ; then
-        result="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*[[:digit:]].[[:digit:]].[[:digit:]]" | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        result="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r result <<< "$result"
     fi

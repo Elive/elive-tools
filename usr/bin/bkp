@@ -15,7 +15,7 @@ do_work(){
     dir="$(pwd)"
     tmpdir="${bkpdir_works}/${namedir}"
 
-    rm -rf "${tmpdir}"
+    sudo rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
     rmdir "${tmpdir}" # remove last dir in order to really-copy here
 
@@ -40,7 +40,7 @@ do_work(){
     fi
 
     if el_confirm "Delete the working state?" ; then
-        rm -rf "${tmpdir}"
+        sudo rm -rf "${tmpdir}"
     fi
 
 }

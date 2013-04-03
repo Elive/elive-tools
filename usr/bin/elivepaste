@@ -37,7 +37,7 @@ main(){
     # show help if no parameters
     if [[ -z "$1" ]] && ! ((is_stdin)) ; then
         el_explain 0 "__$(basename $0)__ to help doing pastes:"
-        el_explain 0 "options: -c channel -m message"
+	el_explain 0 "options: -c channel -m message -d (direct paste)"
         el_explain 0 "example: $(basename $0) file.c"
         el_explain 0 "example: $(basename $0) esu -d thunar"
         el_explain 0 "example: command args | tail | $(basename $0)"
@@ -56,6 +56,9 @@ main(){
                 message="$2"
                 shift 2
                 ;;
+	    -d)
+		direct_paste=1
+		;;
         esac
     done
 

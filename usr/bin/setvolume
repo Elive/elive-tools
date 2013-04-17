@@ -24,8 +24,11 @@ main(){
     action="$@"
 
     if [[ "${1}" = "defaults" ]] ; then
+	# extra volumes up
+	amixer -q set Headphone 100% 2>/dev/null
+	amixer -q set Speaker 100% 2>/dev/null
         # unmute channels
-        amixer -q set Master unmute
+        amixer -q set Master unmute 2>/dev/null
         amixer -q set PCM    unmute 2>/dev/null
         amixer -q set Front  unmute 2>/dev/null
         amixer -q set Wave   unmute 2>/dev/null
@@ -129,22 +132,22 @@ main(){
 
         if [[ "$actualvalue" = "on" ]] ; then
             el_explain 2 "mute was on"
-            amixer set $meter mute
+            amixer -q set $meter mute 2>/dev/null
         fi
 
         if [[ "$actualvalue" = "off" ]] ; then
             el_explain 2 "mute was off"
-            amixer set $meter unmute
+            amixer -q set $meter unmute 2>/dev/null
         fi
         exit
     fi
     ##################
 
     if [[ "$meter" = "DAC" ]] ; then
-        amixer -q set ${meter},0 $action
-        amixer -q set ${meter},1 $action
+        amixer -q set ${meter},0 $action 2>/dev/null
+        amixer -q set ${meter},1 $action 2>/dev/null
     else
-        amixer -q set $meter $action
+        amixer -q set $meter $action 2>/dev/null
     fi
     ##################
 

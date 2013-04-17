@@ -75,7 +75,7 @@ main(){
     ##################
     # First = see if first option is available, if not, try with the next one
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q PCM ; then
+        if echo "$list" | grep -q "'PCM'" ; then
             meter=PCM
             el_explain 2 "selected mode $meter"
         fi
@@ -83,7 +83,7 @@ main(){
 
     ##################
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q Front ; then
+        if echo "$list" | grep -q "'Front'" ; then
             meter=Front
             el_explain 2 "selected mode $meter"
         fi
@@ -91,7 +91,7 @@ main(){
 
     ##################
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q Wave ; then
+        if echo "$list" | grep -q "'Wave'" ; then
             meter=Wave
             el_explain 2 "selected mode $meter"
         fi
@@ -99,7 +99,7 @@ main(){
 
     ##################
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q Center ; then
+        if echo "$list" | grep -q "'Center'" ; then
             meter=Center
             el_explain 2 "selected mode $meter"
         fi
@@ -108,7 +108,7 @@ main(){
     ##################
     # Master should be everytime on Max volume or you got distortions
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q Master ; then
+        if echo "$list" | grep -q "'Master'" ; then
             meter=Master
             el_explain 2 "selected mode $meter"
         fi
@@ -117,7 +117,7 @@ main(){
     ##################
     # Special Cards, like ice1712/Terratec_ewx24/96
     if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q DAC ; then
+        if echo "$list" | grep -q "'DAC'" ; then
             meter=DAC
             el_explain 2 "selected mode $meter"
         fi
@@ -143,7 +143,7 @@ main(){
     fi
     ##################
 
-    if [[ "$meter" = "DAC" ]] ; then
+    if echo "$list" | grep -q "'$meter',1" ; then
         amixer -q set ${meter},0 $action 2>/dev/null
         amixer -q set ${meter},1 $action 2>/dev/null
     else

@@ -70,17 +70,17 @@ main(){
         command="(piped)"
     else
 
-        if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_dependencies_check "$1" 2>/dev/null 1>/dev/null ; then
+        #if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_dependencies_check "$1" 2>/dev/null 1>/dev/null ; then
             # $1 is a file, not a command
             buffer="$( cat "${1}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
-        else
-            if [[ -e "$1" ]] ; then
-            buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
-            echo "$buffer"
-            else
-                exit 1
-            fi
-        fi
+        #else
+            #if [[ -e "$1" ]] ; then
+            #buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+            #echo "$buffer"
+            #else
+                #exit 1
+            #fi
+        #fi
     fi
 
     # set syntax {{{

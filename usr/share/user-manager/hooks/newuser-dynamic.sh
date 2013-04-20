@@ -14,6 +14,9 @@ main(){
     if [[ -z "$LANG" ]] ; then
         LANG="$(grep -s 'LANG=' /etc/default/locale | sed s/'LANG='// | tr -d '"' )"  # stupid syntax requires: '
     fi
+    if [[ -z "$LANG" ]] ; then
+        LANG="en_US.UTF-8" 
+    fi
 
 
     # }}}

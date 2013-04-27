@@ -6,8 +6,8 @@ main(){
     # pre {{{
     local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
 
-    if ! el_dependencies_check pastebinit ; then
-        el_dependencies_install "pastebinit"
+    if ! el_dependencies_check "pastebinit,file" ; then
+        el_dependencies_install "pastebinit,file"
         #el_error "Please install the package pastebinit first"
     fi
 

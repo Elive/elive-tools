@@ -125,6 +125,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # Test for network carrier first, and exit if we don't have it at all
     # we should have "something" connected somewhere
+    unset OnLine
     for i in 1 2 3 4 5 6 7
     do
         for interface in $(ls /sys/class/net/ | grep -v lo);
@@ -135,9 +136,11 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             fi
         done
 
-        if [[ "$1" = "delayed" ]] ; then
-	    sleep 1
+        if [[ "$1" != "delayed" ]] ; then
+	    return 1
         fi
+
+	sleep 1
     done
 
     if ! [ $OnLine ]; then
@@ -155,19 +158,24 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check if gateway correctly set
-    if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
-        # fast check ? directly return
-        if [[ "$1" != "delayed" ]] ; then
-            return 1
-        fi
-
-	sleep 2
-	if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
-	    sleep 6
-	    if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+    unset OnLine
+    for i in 1 2 3 4
+    do
+	if /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+	    OnLine=1
+	    break
+	else
+	    # fast check ? directly return
+	    if [[ "$1" != "delayed" ]] ; then
 		return 1
 	    fi
+
+	    sleep 1
 	fi
+    done
+
+    if ! [ $OnLine ]; then
+        return 1
     fi
 
 

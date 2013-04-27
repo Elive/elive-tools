@@ -110,7 +110,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # pre {{{
     local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i
 
-    stamp_hour_prev="/tmp/.stamps/verify_internet-${USER}-last_run_hour"
+    stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
 
     date_hour_now="$( date +%F-%H )"
@@ -151,7 +151,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # exit correctly if we have already run that before
     if [[ "${date_hour_prev}" = "$date_hour_now" ]] ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
-	chmod a+rw "${stamp_hour_prev}"
 
         return 0
     fi
@@ -183,7 +182,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     el_set_display_variables
     if timeout 20 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
-	chmod a+rw "${stamp_hour_prev}"
 
         return 0
     else
@@ -196,7 +194,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         sleep 3
         if timeout 20 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
             echo "$date_hour_now" > "$stamp_hour_prev"
-	    chmod a+rw "${stamp_hour_prev}"
 
             return 0
         else
@@ -204,13 +201,11 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             sleep 9
             if timeout 30 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
-		chmod a+rw "${stamp_hour_prev}"
 
                 return 0
             else
                 echo -e "Connection to internet not found" 1>&2
                 echo "$date_hour_now" > "$stamp_hour_prev"
-		chmod a+rw "${stamp_hour_prev}"
 
                 return 1
             fi

@@ -155,16 +155,16 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check if gateway correctly set
-    if ! route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+    if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
         # fast check ? directly return
         if [[ "$1" != "delayed" ]] ; then
             return 1
         fi
 
 	sleep 2
-	if ! route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+	if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
 	    sleep 6
-	    if ! route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+	    if ! /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
 		return 1
 	    fi
 	fi

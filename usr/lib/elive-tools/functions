@@ -119,7 +119,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # remove extra leading blank chars
     read -r date_hour_prev <<< "$date_hour_prev"
 
-    el_check_dependencies "curl,route"
+    el_dependencies_check "curl,route"
 
     # }}}
 
@@ -135,7 +135,9 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             fi
         done
 
-        sleep 1
+        if [[ "$1" = "delayed" ]] ; then
+	    sleep 1
+        fi
     done
 
     if ! [ $OnLine ]; then
@@ -155,7 +157,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # check if gateway correctly set
     if ! route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
         # fast check ? directly return
-        if [[ "$1" = "fast" ]] ; then
+        if [[ "$1" != "delayed" ]] ; then
             return 1
         fi
 
@@ -178,7 +180,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         return 0
     else
         # fast check ? directly return
-        if [[ "$1" = "fast" ]] ; then
+        if [[ "$1" != "delayed" ]] ; then
             return 1
         fi
 

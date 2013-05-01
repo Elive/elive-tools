@@ -34,7 +34,7 @@ main(){
     echo -e ""
 
     # watcher of the command, with space after the command, of course
-    while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vi|vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "(${watcher} |${watcher}$)"
+    while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vi|vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "([[:digit:]] ${watcher} |[[:digit:]] ${watcher}$|[[:digit:]] .*bin/${watcher} |[[:digit:]] .*bin/${watcher}$)"
     do
         if [[ "${counter}" -gt "60" ]] ; then
             minutes="$(( $counter / 60 ))"

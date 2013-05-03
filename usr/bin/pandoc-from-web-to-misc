@@ -1,0 +1,130 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local url file http
+
+    # }}}
+
+    tmpdir="/tmp/pandoc-${USER}"
+    url="$1"
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) weburl"
+        exit 1
+    fi
+
+    el_dependencies_check "pandoc,wget,sed"
+
+    if [[ "${url}" = "https"* ]] ; then
+        http="https"
+    else
+        http="http"
+    fi
+
+
+    # first get a better identifier for parse:
+    baseurl="$( echo "$url" | sed -e "s|${http}://||g" -e 's|/.*$||g' -e 's|^.*\.|.|g' )"
+    baseurl="$( echo "$url" | sed -e "s|${baseurl}/.*$|${baseurl}|g" )"
+
+    rm -rf "${tmpdir}"
+    mkdir -p "${tmpdir}"
+    cd "${tmpdir}"
+
+    wget "$url" -O downloaded-original.html
+
+    cat downloaded-original.html | iconv -f ISO-8859-15 -t utf8 | pandoc -s -r html - -o downloaded-original_utf8.text
+
+    cat downloaded-original.html | pandoc -s -r html - -o downloaded-original.text
+
+    cp downloaded-original.text downloaded.text
+    cp downloaded-original_utf8.text downloaded_utf8.text
+
+    mkdir -p files
+
+    el_explain 0 "Downloading files:"
+
+    while read -ru 3 line
+    do
+	if [[ "${line}" = /* ]] ; then
+	    line="${baseurl}${line}"
+	fi
+
+	cd files
+
+	dirfile="${line%/*}"
+	dirfile="${dirfile#*://}"
+	dirfile="${dirfile#*/}"
+	filename="${line##*/}"
+
+	wget -q "$line"
+
+	mkdir -p "$dirfile"
+	mv "${filename}" "$dirfile" 2>/dev/null || mv *."${filename##*.}" "$dirfile"
+
+	cd ../
+	echo "$line"
+
+	# change the location of the files to here
+	sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded.text
+	sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded_utf8.text
+
+	# fix broken links for images
+	sed -i "/${filename}/s|](/|](files/|g" downloaded.text
+	sed -i "/${filename}/s|](/|](files/|g" downloaded_utf8.text
+
+
+    done 3<<< "$( cat "downloaded-original.text" | tr '(' '\n' | tr ')' '\n' | grep -Ei "(\.gif|\.jpg|\.png|\.bmp)" | sed -e 's|).*$||g' -e 's|^.*(||g' )"
+
+    # put back any link to the correct path
+    sed -i "s|](/|](${baseurl}/|g" downloaded.text
+    sed -i "s|](/|](${baseurl}/|g" downloaded_utf8.text
+
+    if el_confirm "\nDo you want to modify the document? useful for remove useless contents" ; then
+	if [[ -z "$EDITOR" ]] ; then
+	    EDITOR="$( which mousepad geany gvim vim | grep -v "not found" | head -1 )"
+	fi
+
+	$EDITOR downloaded.text
+    fi
+
+
+    title="$( head -30 downloaded.text | grep "^% [[:alpha:]]" | head -1 | sed -e 's|^% ||g' )"
+    if [[ -z "$title" ]] ; then
+       title="Book"
+    fi
+
+    el_explain 0 "Converting to different formats:"
+
+
+    # convert in all the formats !
+    for format in epub html pdf docx odt txt
+    do
+	if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
+	    if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
+		el_explain 0 "converted to __${format}__"
+	    fi
+	else
+	    el_explain 0 "converted to __${format}__"
+	fi
+    done
+
+
+    mkdir -p files/originals
+    mv downloaded*text files/originals
+
+    echo -e "\n\nDone"
+    el_explain 0 "\n__Documents generated at__ XX$(pwd)XX\n"
+
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

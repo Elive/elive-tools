@@ -27,8 +27,6 @@ main(){
 
     # }}}
 
-    el_dependencies_check "text2wave,play,sox,iconv"
-
     # this trick is required because an ugly tmp.lab file is created in the home
     mkdir -p /tmp/.$(basename $0)-$USER-$$
     cd /tmp/.$(basename $0)-$USER-$$
@@ -56,6 +54,8 @@ main(){
 #
 #  MAIN
 #
+el_dependencies_check "text2wave,play,sox,iconv"
+
 { main "$@" & disown ; } 2>/dev/null
 #main "$@"
 # vim: set foldmethod=marker :

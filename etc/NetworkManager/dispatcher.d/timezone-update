@@ -36,8 +36,9 @@ main(){
     # draft:    00:02:6f:5c:1a:40:::Europe/Madrid
     #	        last:::Europe/Madrid
 
-    # let's connect to internet first, or arp -a will not work
+    # let's connect to internet first, and do at least one ping somewhere! or arp -a will not work
     el_verify_internet delayed 2>/dev/null 1>/dev/null
+    timeout 40 ping -c 2 google.com
     sleep 1
 
     # get our connected MAC

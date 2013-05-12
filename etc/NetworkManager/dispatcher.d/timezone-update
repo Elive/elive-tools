@@ -10,7 +10,7 @@ main(){
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
     el_dependencies_check "ip,arp,showmytimezone,dig,ping"
-    el_check_variables "iface,state"
+    #el_check_variables "iface,state"
 
     if [[ ! -e "$conf" ]] ; then
 	if [[ "${conf}" = */* ]] ; then

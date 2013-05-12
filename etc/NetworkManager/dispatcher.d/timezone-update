@@ -36,6 +36,10 @@ main(){
     # draft:    00:02:6f:5c:1a:40:::Europe/Madrid
     #	        last:::Europe/Madrid
 
+    # let's connect to internet first, or arp -a will not work
+    el_verify_internet delayed 2>/dev/null 1>/dev/null
+    sleep 1
+
     # get our connected MAC
     connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
     connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"

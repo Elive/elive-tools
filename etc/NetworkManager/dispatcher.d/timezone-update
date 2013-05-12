@@ -9,7 +9,7 @@ main(){
     state="$2"
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
-    el_dependencies_check "ip,arp,showmytimezone"
+    el_dependencies_check "ip,arp,showmytimezone,dig,ping"
     el_check_variables "iface,state"
 
     if [[ ! -e "$conf" ]] ; then
@@ -38,7 +38,8 @@ main(){
 
     # let's connect to internet first, and do at least one ping somewhere! or arp -a will not work
     el_verify_internet delayed 2>/dev/null 1>/dev/null
-    timeout 40 ping -c 2 google.com
+    timeout 20 ping -c 1 google.com
+    timeout 20 dig NS google.com
     sleep 1
 
     # get our connected MAC

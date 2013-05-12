@@ -329,7 +329,7 @@ convert_timezone()
 
 main(){
     # pre {{{
-    local result location latitude longitude
+    local result location latitude longitude time_delay time_hwclock time_date
 
     if ! el_dependencies_check curl ; then
         el_dependencies_install curl
@@ -345,8 +345,7 @@ main(){
     location="$( showmylocation )"
 
     if ! echo "$location" | grep -q "Latitude" ; then
-        el_error "Cannot get latitude info right now"
-        exit 1
+        el_warning "Cannot get latitude info from internet right now"
     fi
 
     latitude="$( echo "$location" | grep "<Latitude>.*[[:digit:]]" | sed -e 's|^.*<Latitude>||g' -e 's|</Latitude.*$||g' )"
@@ -358,30 +357,50 @@ main(){
     read -r longitude <<< "$longitude"
 
     if [[ -z "$latitude" ]] || [[ -z "$longitude" ]] ; then
-        el_error "not latitude or longitude get"
-        exit 1
+        el_warning "Cannot get latitude or longitude info from internet right now"
     fi
 
-
+    # get our timezone
     result="$( curl -k -s -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" )"
-
     if ! echo "$result" | grep -q "status.*OK" ; then
-        el_error "no status correct returned"
-        exit 1
+	el_warning "Unkown timezone location, using a smart method..."
     fi
 
+
+    # validate and parse
     timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' | grep -E "[[:alpha:]]" )"
 
-    if [[ -z "$timezone" ]] ; then
-        timezone="Etc/UTC"
-    else
+    if [[ -n "$timezone" ]] ; then
+	# translate to a useful value
 	timezone="$( convert_timezone $timezone )"
+    else
+	# get the value from the clock
+	# search for the configured delay
+	if [[ "$UID" = 0 ]] ; then
+	    time_hwclock="$( hwclock -u | tr ' ' '\n' | grep "[[:digit:]]*:[[:digit:]]*:[[:digit:]]" | sed -e 's|:.*$||g' -e 's|^0||g' )"
+	    time_date="$( date +%k )"
+	    # remove extra leading blank chars
+	    read -r time_date <<< "$time_date"
+
+	    if [[ "${time_hwclock}" = "${time_date}" ]] ; then
+		timezone="Etc/UTC"
+	    else
+		time_delay="$(( ${time_date} - ${time_hwclock} ))"
+		if echo "$time_delay" | grep "^[[:digit:]]" ; then
+		    # add positive value if we have not
+		    time_delay="+${time_delay}"
+		fi
+		timezone="Etc/GMT${time_delay}"
+	    fi
+	else
+	    el_warning "The result will be improved if you run it by root instead of user"
+	    timezone="Etc/UTC"
+	fi
     fi
 
 
     # return the final value
     echo "$timezone"
-
 
 }
 

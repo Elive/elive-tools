@@ -19,17 +19,35 @@ main(){
         touch "$conf"
     fi
 
-
-    case $state in
-	up)
-	    true
+    case "$iface" in
+	-f|--force)
+	    is_force=1
 	    ;;
+	-c|--clean)
+	    mode_clean=1
+	    ;;
+	wlan*|ath*|ra*)
+	    is_wifi=1
+	    ;;
+    esac
+
+
+    case "$state" in
 	down)
 	    # nothing useful to do when we disconnect
 	    exit
 	    ;;
+	up|*)
+	    true
+	    ;;
     esac
 
+
+    if ((mode_clean)) ; then
+	rm -f "${conf}"
+	el_explain 0 "Conf file cleaned"
+	exit
+    fi
 
 
     # }}}
@@ -58,12 +76,19 @@ main(){
     # get the location of our actual connection
     connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
 
+    # get the ssid identifier
+    connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | tr ' ' '\n' | grep ESSID | sed -e 's|ESSID:"||g' -e 's|".*$||g' | head -1 )"
+
     # get the actual timezone
     if [[ -n "$connected_timezone" ]] ; then
 	timezone="${connected_timezone}"
     else
 	timezone="$(showmytimezone)"
-        echo "${connected_mac}:::${timezone}" >> "${conf}"
+	if [[ -n "$connected_ssid" ]] ; then
+	    echo "${connected_mac}:::${timezone}:::${connected_ssid}" >> "${conf}"
+	else
+	    echo "${connected_mac}:::${timezone}" >> "${conf}"
+	fi
     fi
 
     # check
@@ -75,8 +100,10 @@ main(){
 
     # compare our last location with our actual one
     if [[ "${timezone}" = "${timezone_last}" ]] ; then
-	# nothing more to do, everything is fine
-	exit
+	if ! ((is_force)) ; then
+	    # nothing more to do, everything is fine
+	    exit
+	fi
     fi
 
     #
@@ -114,7 +141,11 @@ EOF
     if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
 	if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
 	    if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-		el_warning "can't set time from ntp servers"
+		if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+		    if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+			el_warning "can't set time from ntp servers"
+		    fi
+		fi
 	    fi
 	fi
     fi

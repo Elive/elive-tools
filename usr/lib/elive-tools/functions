@@ -179,7 +179,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet
-    el_set_display_variables
     if timeout 20 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 

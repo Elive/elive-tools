@@ -61,7 +61,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     if [[ -z "${DISPLAY}" ]] || [[ -z "${XAUTHORITY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
-        el_speak_text "problem trying to set the graphical system variables from elive tools functions, please report the problem"
+	el_explain 2 "we don't have access to the graphical system from this user, ignoring..."
     fi
 
     # END xauthority }}}

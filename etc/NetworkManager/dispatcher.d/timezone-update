@@ -1,0 +1,129 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local iface state conf timezone_last timezone connected_gateway connected_mac
+
+    iface="$1"
+    state="$2"
+    conf="/etc/elive-tools/geolocation/timezones.conf"
+
+    el_dependencies_check "ip,arp,showmytimezone"
+    el_check_variables "iface,state"
+
+    if [[ ! -e "$conf" ]] ; then
+	if [[ "${conf}" = */* ]] ; then
+	    mkdir -p "${conf%/*}"
+	fi
+        touch "$conf"
+    fi
+
+
+    case $state in
+	up)
+	    true
+	    ;;
+	down)
+	    # nothing useful to do when we disconnect
+	    exit
+	    ;;
+    esac
+
+
+
+    # }}}
+    # draft:    00:02:6f:5c:1a:40:::Europe/Madrid
+    #	        last:::Europe/Madrid
+
+    # get our connected MAC
+    connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
+    connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
+
+    # make sure that we have a mac
+    if [[ -z "$connected_mac" ]] ; then
+	el_error "MAC '${connected_mac}' of where we are connected not found"
+	exit
+    fi
+
+    # get the last location
+    timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
+
+    # get the location of our actual connection
+    connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+
+    # get the actual timezone
+    if [[ -n "$connected_timezone" ]] ; then
+	timezone="${connected_timezone}"
+    else
+	timezone="$(showmytimezone)"
+        echo "${connected_mac}:::${timezone}" >> "${conf}"
+    fi
+
+    # check
+    if [[ -z "$timezone" ]] ; then
+        el_error "We have not found a timezone '${timezone}', exiting..."
+	exit
+    fi
+
+
+    # compare our last location with our actual one
+    if [[ "${timezone}" = "${timezone_last}" ]] ; then
+	# nothing more to do, everything is fine
+	exit
+    fi
+
+    #
+    # We changed our location
+    #
+
+    # update times
+    if [[ -z "$timezone_last" ]] ; then
+	echo "last:::${timezone}" >> "${conf}"
+    fi
+
+    if [ -n "${timezone}" ]
+    then
+	_AREA="$(echo "${timezone}" | cut -f1 -d '/')"
+	_ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
+    else
+	_AREA="Etc"
+	_ZONE="UTC"
+    fi
+
+
+    # call tzdata and update things
+    # debconf set configurations
+    cat > "/tmp/debconf.$(basename $0)" << EOF
+tzdata tzdata/Areas select ${_AREA}
+tzdata tzdata/Zones/${_AREA} select ${_ZONE}
+EOF
+    debconf-set-selections < "/tmp/debconf.$(basename $0)"
+    rm -f "/tmp/debconf.$(basename $0)"
+
+
+    cp -f "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+    echo "$_AREA/$_ZONE" > /etc/timezone
+
+    # finally, save the time to hwclock
+    hwclock -s --localtime
+
+
+    # say something
+    el_explain 0 "Changed Timezone to __${timezone}__, we are now at:"
+    date
+
+
+    # update to our last location
+    sed -i '/^last:::.*$/d' "${conf}"
+    echo "last:::${timezone}" >> "${conf}"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

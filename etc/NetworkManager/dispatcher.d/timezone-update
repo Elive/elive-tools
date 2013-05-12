@@ -38,8 +38,8 @@ main(){
 
     # let's connect to internet first, and do at least one ping somewhere! or arp -a will not work
     el_verify_internet delayed 2>/dev/null 1>/dev/null
-    timeout 20 ping -c 1 google.com
-    timeout 20 dig NS google.com
+    timeout 20 ping -c 1 google.com 1>/dev/null 2>/dev/null
+    timeout 20 dig NS google.com 1>/dev/null 2>/dev/null
     sleep 1
 
     # get our connected MAC
@@ -98,6 +98,10 @@ main(){
     fi
 
 
+    rm -f /etc/localtime
+    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+    echo "$_AREA/$_ZONE" > /etc/timezone
+
     # call tzdata and update things
     # debconf set configurations
     cat > "/tmp/debconf.$(basename $0)" << EOF
@@ -107,9 +111,13 @@ EOF
     debconf-set-selections < "/tmp/debconf.$(basename $0)"
     rm -f "/tmp/debconf.$(basename $0)"
 
-
-    cp -f "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
-    echo "$_AREA/$_ZONE" > /etc/timezone
+    if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+	if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+	    if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+		el_warning "can't set time from ntp servers"
+	    fi
+	fi
+    fi
 
     # finally, save the time to hwclock
     hwclock -s --localtime

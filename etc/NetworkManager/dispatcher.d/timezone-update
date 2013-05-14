@@ -84,10 +84,14 @@ main(){
 	timezone="${connected_timezone}"
     else
 	timezone="$(showmytimezone)"
-	if [[ -n "$connected_ssid" ]] ; then
-	    echo "${connected_mac}:::${timezone}:::${connected_ssid}" >> "${conf}"
-	else
-	    echo "${connected_mac}:::${timezone}" >> "${conf}"
+	if [[ "${timezone}" = "Etc/UTC" ]] ; then
+	    if [[ -n "${timezone_last}" ]] ; then
+		el_warning "we have not detected the timezone correctly, switching to last"
+		timezone="${timezone_last}"
+	    else
+		el_error "timezone not detected correctly"
+		exit
+	    fi
 	fi
     fi
 
@@ -160,6 +164,14 @@ EOF
 
 
     # update to our last location
+    if ! grep -q "^${connected_mac}:::" "${conf}" ; then
+	if [[ -n "$connected_ssid" ]] ; then
+	    echo "${connected_mac}:::${timezone}:::${connected_ssid}" >> "${conf}"
+	else
+	    echo "${connected_mac}:::${timezone}" >> "${conf}"
+	fi
+    fi
+
     sed -i '/^last:::.*$/d' "${conf}"
     echo "last:::${timezone}" >> "${conf}"
 

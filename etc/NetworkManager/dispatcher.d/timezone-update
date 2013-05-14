@@ -167,10 +167,14 @@ EOF
 
     # update to our last location
     if ! grep -q "^${connected_mac}:::" "${conf}" ; then
-	if [[ -n "$connected_ssid" ]] ; then
-	    echo "${connected_mac}:::${timezone}:::${iface}:::${connected_ssid}" >> "${conf}"
-	else
-	    echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
+	# but remember it only if we have an interface
+	# TODO mobile connections should be never saved, since they moves!
+	if [[ -n "$iface" ]] ; then
+	    if [[ -n "$connected_ssid" ]] ; then
+		echo "${connected_mac}:::${timezone}:::${iface}:::${connected_ssid}" >> "${conf}"
+	    else
+		echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
+	    fi
 	fi
     fi
 

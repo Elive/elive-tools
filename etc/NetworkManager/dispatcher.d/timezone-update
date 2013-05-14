@@ -22,9 +22,11 @@ main(){
     case "$iface" in
 	-f|--force)
 	    is_force=1
+	    unset iface
 	    ;;
 	-c|--clean)
 	    mode_clean=1
+	    unset iface
 	    ;;
 	wlan*|ath*|ra*)
 	    is_wifi=1
@@ -166,9 +168,9 @@ EOF
     # update to our last location
     if ! grep -q "^${connected_mac}:::" "${conf}" ; then
 	if [[ -n "$connected_ssid" ]] ; then
-	    echo "${connected_mac}:::${timezone}:::${connected_ssid}" >> "${conf}"
+	    echo "${connected_mac}:::${timezone}:::${iface}:::${connected_ssid}" >> "${conf}"
 	else
-	    echo "${connected_mac}:::${timezone}" >> "${conf}"
+	    echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
 	fi
     fi
 

@@ -16,6 +16,7 @@ main(){
         echo -e "$(basename $0) 80%  # set the volume to the 80 % level"
         echo -e "$(basename $0) 10%+ # increases 10% the actual volume"
         echo -e "$(basename $0) mute # switch on/off mute mode"
+        echo -e "$(basename $0) unmute # switch off mute mode"
         exit 1
     fi
 
@@ -140,6 +141,10 @@ main(){
             amixer -q set $meter unmute 2>/dev/null
         fi
         exit
+    fi
+
+    if [[ "$action" = "unmute" ]] ; then
+	amixer -q set $meter unmute 2>/dev/null
     fi
     ##################
 

@@ -157,7 +157,7 @@ EOF
     fi
 
     # finally, save the time to hwclock
-    hwclock -s --localtime
+    hwclock -s
 
 
     # say something

@@ -48,6 +48,8 @@ main(){
 
     while read -ru 3 line
     do
+	[[ -z "$line" ]] && continue
+
 	if [[ "${line}" = /* ]] ; then
 	    line="${baseurl}${line}"
 	fi

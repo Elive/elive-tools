@@ -334,7 +334,8 @@ el_dependencies_install(){
     cat > "${temp}" << EOF
 #!/bin/bash
 
-urxvt -hold -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; apt-get update ; apt-get -f install ; apt-get install $depends ; echo ; echo ; echo 'Finished, you can close the terminal...' ; read nothing "
+urxvt -hold -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; apt-get update ; apt-get -f install ; apt-get install $depends ; echo ; echo ; echo 'Finished, you can close the terminal...' ; sleep 20 "
+
 EOF
 
     chmod +x "${temp}"

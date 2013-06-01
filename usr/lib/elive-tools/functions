@@ -343,6 +343,29 @@ EOF
 
 }
 
+#-------------------------------------------------------------------------------
+#   Check if a newer version of a package exists
+#-------------------------------------------------------------------------------
+el_package_newer_check(){
+    local package installed candidate
+
+    package="$1"
+
+    if [[ -z "$package" ]] ; then
+        return 2
+    fi
+
+    installed="$( LC_ALL=C apt-cache policy "$package" | head -3 | tail -n +2 | sed 's|^[[:blank:]]*.*: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    candidate="$( LC_ALL=C apt-cache policy "$package" | head -3 | tail -n +2 | sed 's|^[[:blank:]]*.*: ||g' | tail -1 | grep -E "^[[:digit:]]*" )"
+
+    if [[ -n "$installed" ]] && [[ -n "$candidate" ]] ; then
+	if dpkg --compare-versions "${candidate}" gt "${installed}" ; then
+	    return 0
+	else
+	    return 1
+	fi
+    fi
+}
 
 #-------------------------------------------------------------------------------
 #   Check if variable exists

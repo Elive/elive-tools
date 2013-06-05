@@ -387,7 +387,7 @@ main(){
 	    else
 		#time_delay="$(( ${time_date} - ${time_hwclock} ))"
 		time_delay="$(( ${time_hwclock} - ${time_date} ))"
-		if echo "$time_delay" | grep "^[[:digit:]]" ; then
+		if echo "$time_delay" | grep -q "^[[:digit:]]" ; then
 		    # add positive value if we have not
 		    time_delay="+${time_delay}"
 		fi

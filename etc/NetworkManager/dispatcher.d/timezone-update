@@ -103,7 +103,7 @@ main(){
 	timezone="${connected_timezone}"
     else
 	timezone="$(showmytimezone)"
-	if [[ "${timezone}" = "Etc/UTC" ]] ; then
+	if [[ "${timezone}" = "Etc/UTC" ]] || [[ "${timezone}" = "Etc/GMT"* ]] ; then
 	    if [[ -n "${timezone_last}" ]] ; then
 		el_warning "we have not detected the timezone correctly, switching to last"
 		timezone="${timezone_last}"

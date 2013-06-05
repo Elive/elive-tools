@@ -1,6 +1,8 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# This tool is called as:   command eth1 up
+
 main(){
     # pre {{{
     local iface state conf timezone_last timezone connected_gateway connected_mac
@@ -73,6 +75,7 @@ main(){
     # get the last location
     timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
 
+
     # get the location of our actual connection
     connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
 
@@ -99,6 +102,137 @@ main(){
     if [[ -z "$timezone" ]] ; then
         el_error "We have not found a timezone '${timezone}', exiting..."
 	exit
+    fi
+
+    # first time, need to determine if use utc or not
+    if [[ -z "$timezone_last" ]] ; then
+	el_explain 0 "first time, determine if we use UTC or localtime"
+
+
+	if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
+	    mode_bios="UTC"
+	else
+	    mode_bios="LOCAL"
+	fi
+
+
+
+
+
+
+	## temporal set to utc
+	#_AREA="Etc"
+	#_ZONE="UTC"
+
+	#rm -f /etc/localtime
+	#ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+	#echo "$_AREA/$_ZONE" > /etc/timezone
+
+	## call tzdata and update things
+	## debconf set configurations
+	#cat > "/tmp/debconf.$(basename $0)" << EOF
+#tzdata tzdata/Areas select ${_AREA}
+#tzdata tzdata/Zones/${_AREA} select ${_ZONE}
+#EOF
+	#debconf-set-selections < "/tmp/debconf.$(basename $0)"
+	#rm -f "/tmp/debconf.$(basename $0)"
+
+	#if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+	    #if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+			    #el_warning "can't set time from ntp servers"
+	    #fi
+	#fi
+
+	## know the real time for UTC
+	#TZBase=$(LC_ALL=C TZ=UTC0 date)
+	#UTdate=$(LC_ALL=C TZ=UTC0 date -d "$TZBase" +%H )
+
+	## unpredictable bugs can happen all the time, seems like is not a good time to get the hour value
+	#if [[ "$(date +%M)" = "59" ]] ; then
+	    #el_explain 0 "waiting 1 minute"
+	    #sleep 70
+	    #TZBase=$(LC_ALL=C TZ=UTC0 date)
+	    #UTdate=$(LC_ALL=C TZ=UTC0 date -d "$TZBase" +%H )
+	#fi
+
+	## save the real utc time to use later
+	#UTC_time="$UTdate"
+	#el_explain 0 "real UTC time is __${UTC_time}__"
+
+
+	## try in localtime mode
+	#hwclock -s --localtime
+
+	#TZBase=$(LC_ALL=C TZ=UTC0 date)
+	#UTdate=$(LC_ALL=C TZ=UTC0 date -d "$TZBase" +%H )
+
+	## save it to compare later
+	#UTC_bios_1="$UTdate"
+
+
+
+	## Now try to change to a different GMT
+	#_AREA="Etc"
+	#_ZONE="GMT+6"
+
+	#rm -f /etc/localtime
+	#ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+	#echo "$_AREA/$_ZONE" > /etc/timezone
+
+	## call tzdata and update things
+	## debconf set configurations
+	#cat > "/tmp/debconf.$(basename $0)" << EOF
+#tzdata tzdata/Areas select ${_AREA}
+#tzdata tzdata/Zones/${_AREA} select ${_ZONE}
+#EOF
+	#debconf-set-selections < "/tmp/debconf.$(basename $0)"
+	#rm -f "/tmp/debconf.$(basename $0)"
+
+	#if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+	    #if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+		#el_warning "can't set time from ntp servers"
+    #fi
+	#fi
+
+	## know the real time for UTC
+	#TZBase=$(LC_ALL=C TZ=UTC0 date)
+	#UTdate=$(LC_ALL=C TZ=UTC0 date -d "$TZBase" +%H )
+
+
+	## try in localtime mode
+	#hwclock -s --localtime
+
+	#TZBase=$(LC_ALL=C TZ=UTC0 date)
+	#UTdate=$(LC_ALL=C TZ=UTC0 date -d "$TZBase" +%H )
+
+	#UTC_bios_2="$UTdate"
+
+
+
+	#if [[ "${UTC_bios_1}" = "$UTC_bios_2" ]] ; then
+	    #el_explain 2 "bios clock uses localtime (doesn't change)"
+	    #mode_bios="LOCAL"
+	#else
+	    #el_explain 2 "bios clock uses utc (changes)"
+	    #mode_bios="UTC"
+	#fi
+
+	# save the mode to use
+	if [[ -n "$mode_bios" ]] ; then
+	    echo "bios mode:::$mode_bios" >> "${conf}"
+
+	    ed -s /etc/adjtime << EOF
+3d
+a
+$mode_bios
+.
+w
+EOF
+
+	    # update things
+	    dpkg-reconfigure -fnoninteractive util-linux 2>/dev/null 1>/dev/null
+	fi
+
     fi
 
 
@@ -154,8 +288,24 @@ EOF
 	fi
     fi
 
-    # finally, save the time to hwclock
-    hwclock -s
+
+
+
+    # which mode of bios we have? utc or localtime?
+    mode_bios="$(head -3 /etc/adjtime  | tail -1)"
+
+    # finally, save the time to hwclock if needed
+    case $mode_bios in
+	UTC)
+	    hwclock -w --utc
+	    ;;
+	LOCAL)
+	    hwclock -w --localtime
+	    ;;
+	*)
+	    el_explain 2 "not saving time with hwclock since we don't know which mode to use"
+	    ;;
+    esac
 
 
     # say something

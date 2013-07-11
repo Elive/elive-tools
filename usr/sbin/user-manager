@@ -18,10 +18,10 @@ ADDUSER=adduser
 DELUSER=deluser
 
 if [ -z "$DHOME" ]; then
-	DHOME=/home
+    DHOME=/home
 fi
 if [ -z "$USERS_GID" ]; then
-	USERS_GID=100
+    USERS_GID=100
 fi
 
 
@@ -30,13 +30,15 @@ temp_error="/tmp/$(basename $0)-${USER}-$$"
 
 el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},${USERDEL}"
 
+###########################################################################
 errorexit(){
-	$guitool --error --text="$( cat "${temp_error}" )"
+    $guitool --error --text="$( cat "${temp_error}" )"
 
-	rm -f "${temp_error}" 2>/dev/null
-	exit 1
+    rm -f "${temp_error}" 2>/dev/null
+    exit 1
 }
 
+###########################################################################
 messagedone(){
 
     local translated_message
@@ -44,9 +46,10 @@ messagedone(){
 
     $guitool --info --text="$translated_message"
 
-	exit 0
+    exit 0
 }
 
+###########################################################################
 messageuserdeleted(){
 
     local translated_message
@@ -54,16 +57,18 @@ messageuserdeleted(){
 
     $guitool --info --text="$translated_message"
 
-	exit 0
+    exit 0
 }
 
+###########################################################################
 passverify(){
-	if [[ "$userpass" != "$repeatpass" ]] ; then
-	    $guitool --error --text="$( eval_gettext "The passwords are not equals, please try again" )"
-	    passstep
-	fi
+    if [[ "$userpass" != "$repeatpass" ]] ; then
+	$guitool --error --text="$( eval_gettext "The passwords are not equals, please try again" )"
+	passstep
+    fi
 }
 
+###########################################################################
 passstep(){
 
     local translated_message
@@ -71,184 +76,185 @@ passstep(){
 
     userpass="$( $guitool --entry --hide-text --text="$translated_message" || echo cancel )"
 
-	[[ "$userpass" = "cancel" ]] && exit 1
+    [[ "$userpass" = "cancel" ]] && exit 1
 
-	repeatpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert it again for confirmation" )" || echo cancel )"
-	[[ "$repeatpass" = "cancel" ]] && exit 1
+    repeatpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert it again for confirmation" )" || echo cancel )"
+    [[ "$repeatpass" = "cancel" ]] && exit 1
 
-	#userpass="$( echo "$userpass" | sed "s|'|'\\\''|g" )"
-	#repeatpass="$( echo "$repeatpass" | sed "s|'|'\\\''|g" )"
+    #userpass="$( echo "$userpass" | sed "s|'|'\\\''|g" )"
+    #repeatpass="$( echo "$repeatpass" | sed "s|'|'\\\''|g" )"
 
-	passverify
+    passverify
 }
 
+###########################################################################
 addgroups(){
-	local group
+    local group
 
-	for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
-	do
-		# remove extra leading blank chars
-		read -r group <<< "$group"
+    for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
+    do
+	# remove extra leading blank chars
+	read -r group <<< "$group"
 
-		"$ADDUSER" "$username" "${group}"
-	done
+	"$ADDUSER" "$username" "${group}"
+    done
 
 }
 
+###########################################################################
 delgroups(){
-	local group
+    local group
 
-	for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
-	do
-		# remove extra leading blank chars
-		read -r group <<< "$group"
+    for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
+    do
+	# remove extra leading blank chars
+	read -r group <<< "$group"
 
-		$DELUSER "$username" "${group}"
-	done
+	$DELUSER "$username" "${group}"
+    done
 }
 
 #sudoersadd(){
-	#if ! grep -q "$username" /etc/sudoers ; then
-		#echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
-	#fi
-	#chmod 0440 /etc/sudoers
+#if ! grep -q "$username" /etc/sudoers ; then
+#echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
+#fi
+#chmod 0440 /etc/sudoers
 #}
 
 #sudoersdel(){
-	#if grep -q $username /etc/sudoers ; then
-		#sed -i "s/^.*$username.*$//" /etc/sudoers
-	#fi
-	#sed -i '/^$/d' /etc/sudoers
-	#chmod 0440 /etc/sudoers
+#if grep -q $username /etc/sudoers ; then
+#sed -i "s/^.*$username.*$//" /etc/sudoers
+#fi
+#sed -i '/^$/d' /etc/sudoers
+#chmod 0440 /etc/sudoers
 #}
 
+###########################################################################
 adduserelive(){
     username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
-	[[ "$username" = "cancel" ]] && exit 1
+    [[ "$username" = "cancel" ]] && exit 1
 
-	if [[ "$username" = "eliveuser" ]] ; then
-	    $guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
-		exit 1
-	fi
+    if [[ "$username" = "eliveuser" ]] ; then
+	$guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
+	exit 1
+    fi
 
-	passstep
+    passstep
 
-	if [[ "$USERGROUPS" = "yes" ]] ; then
-		USERGROUP=$username
-		groupadd $USERGROUP 2>"${temp_error}" || errorexit
-	else
-		USERGROUP="$USERS_GID"
-	fi
+    if [[ "$USERGROUPS" = "yes" ]] ; then
+	USERGROUP=$username
+	groupadd $USERGROUP 2>"${temp_error}" || errorexit
+    else
+	USERGROUP="$USERS_GID"
+    fi
 
-	$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
-	#$USERADD -m $username 2>/tmp/.errormessage || errorexit
+    $USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
+    #$USERADD -m $username 2>/tmp/.errormessage || errorexit
 
-	if chpasswd -h 2>&1 | grep -iq md5 ; then
-		chpassopt="-m"
-	else
-		chpassopt=""
-	fi
+    if chpasswd -h 2>&1 | grep -iq md5 ; then
+	chpassopt="-m"
+    else
+	chpassopt=""
+    fi
 
-	echo "$username:$userpass" | chpasswd $chpassopt
+    echo "$username:$userpass" | chpasswd $chpassopt
 
-	elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
+    elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
 
-	addgroups
+    addgroups
 
-	chown -R "$username.$USERGROUP" "$DHOME/$username"
+    chown -R "$username.$USERGROUP" "$DHOME/$username"
 
-	#$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
+    #$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
 
-        su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
-        su -c "/usr/share/user-manager/hooks/newuser-dynamic.sh" "$username"
+    su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
+    su -c "/usr/share/user-manager/hooks/newuser-dynamic.sh" "$username"
 
-	messagedone
+    messagedone
 }
 
+###########################################################################
 deluserelive(){
-	local uid user userlist
+    local uid user userlist
 
-	userlist="$( while read -ru 3 line
-	do
-		uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
-		user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+    userlist="$( while read -ru 3 line do uid="$( echo "$line" | awk -v FS=":" '{print $3}' )" user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-		if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
-			if [[ -d "$DHOME/$user" ]] ; then
-			   echo "$user"
-			fi
-		fi
-	done 3<<< "$( cat "/etc/passwd")" )"
-
-
-
-	username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
-	[[ "$username" = "cancel" ]] && exit 1
-
-
-	local translated_message
-	translated_message="$( printf "$( eval_gettext "Are you sure to want to delete the user %$ ?" )" "$username" )"
-
-	$guitool --question --text="$translated_message" || exit 1
-
-	delgroups
-
-
-	local translated_message
-	translated_message="$( printf "$( eval_gettext "Do you like to remove all %s files of the %s user?" )" "$DHOME/$username" "$username" )"
-
-	if $guitool --question --text="$translated_message" ; then
-		$USERDEL -r "$username" 2>"${temp_error}" || errorexit
-	else
-		$USERDEL "$username" 2>"${temp_error}" || errorexit
+	if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+	    if [[ -d "$DHOME/$user" ]] ; then
+		echo "$user"
+	    fi
 	fi
+    done 3<<< "$( cat "/etc/passwd")" )"
 
-	#sudoersdel
-	messageuserdeleted
+    username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
+    [[ "$username" = "cancel" ]] && exit 1
+
+
+    local translated_message
+    translated_message="$( printf "$( eval_gettext "Are you sure to want to delete the user %$ ?" )" "$username" )"
+
+    $guitool --question --text="$translated_message" || exit 1
+
+    delgroups
+
+
+    local translated_message
+    translated_message="$( printf "$( eval_gettext "Do you like to remove all %s files of the %s user?" )" "$DHOME/$username" "$username" )"
+
+    if $guitool --question --text="$translated_message" ; then
+	$USERDEL -r "$username" 2>"${temp_error}" || errorexit
+    else
+	$USERDEL "$username" 2>"${temp_error}" || errorexit
+    fi
+
+    #sudoersdel
+    messageuserdeleted
 }
 
+###########################################################################
 changepass(){
-	local uid user userlist
+    local uid user userlist
 
-	userlist="$( while read -ru 3 line
-	do
-		uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
-		user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+    userlist="$( while read -ru 3 line
+    do
+	uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+	user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-		if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
-			if [[ -d "$DHOME/$user" ]] ; then
-			   echo "$user"
-			fi
-		fi
-	done 3<<< "$( cat "/etc/passwd")" )"
-
-
-
-	username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user for change its password" )" || echo cancel )"
-	[[ "$username" = "cancel" ]] && exit 1
-
-	passstep
-	if chpasswd -h 2>&1 | grep -iq md5 ; then
-		chpassopt="-m"
-	else
-		chpassopt=""
+	if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+	    if [[ -d "$DHOME/$user" ]] ; then
+		echo "$user"
+	    fi
 	fi
+    done 3<<< "$( cat "/etc/passwd")" )"
 
-	echo "$username:$userpass" | chpasswd $chpassopt
 
-	$guitool --info --text="$( eval_gettext "New password changed" )"
 
-	exit
+    username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user for change its password" )" || echo cancel )"
+    [[ "$username" = "cancel" ]] && exit 1
+
+    passstep
+    if chpasswd -h 2>&1 | grep -iq md5 ; then
+	chpassopt="-m"
+    else
+	chpassopt=""
+    fi
+
+    echo "$username:$userpass" | chpasswd $chpassopt
+
+    $guitool --info --text="$( eval_gettext "New password changed" )"
+
+    exit
 }
 
 
+###########################################################################
 firstoption(){
     selection="$( $guitool --list --text="$( eval_gettext "Selection an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" || echo cancel )"
 
-	[[ "$selection" = "cancel" ]] && exit 1
-	[[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }
-	[[ "$selection" = "2" ]] && { deluserelive ; exit 0 ; }
-	[[ "$selection" = "3" ]] && { changepass ; exit 0 ; }
+    [[ "$selection" = "cancel" ]] && exit 1
+    [[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }
+    [[ "$selection" = "2" ]] && { deluserelive ; exit 0 ; }
+    [[ "$selection" = "3" ]] && { changepass ; exit 0 ; }
 }
 
 

@@ -1,8 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
-is_motivated="0"
-
 
 loop_work_and_brainstorm(){
 
@@ -60,13 +58,10 @@ loop_work_and_brainstorm(){
 main(){
     # pre {{{
     local timeout guitool
+    export LC_NUMERIC=C
 
     guitool="zenity"
-
-    export LC_NUMERIC=C
-    #timeout="660" # 660 seconds = 11 minutes
-    #progress_steps="1" # seconds to wait for each loop
-    #amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+    is_motivated="0"
 
 
     # }}}

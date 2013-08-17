@@ -1,0 +1,143 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+is_motivated="0"
+
+
+loop_work_and_brainstorm(){
+
+    # screen lock
+    if $guitool --question --text="Time to take a break, you have $timeout_minutes minutes, get out of the computer and walk around your house if you want, but don't do other activities at all" --cancel-label="I'm focused now" ; then
+
+	timeout_minutes="11"
+	timeout="$(( $timeout_minutes * 60 ))"
+	progress_steps="15" # seconds to wait for each loop
+	amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+
+	count=0
+	while [[ "${count%.*}" -lt 100 ]]
+	do
+	    # lock in a loop, if user wants to go back to desktop, do not allow him :P
+	    enlightenment_remote -desktop-lock
+	    sleep $progress_steps
+
+	    count="$( echo "$count + $amount_steps" | bc -l )"
+	done
+
+	# warn the user via voice, since he don't see anything
+	el_speak_text "welcome back $USER, you are granted for another 11 minutes"
+
+    else
+	is_motivated="$(( $is_motivated + 1 ))"
+    fi
+
+    # we are enough motivated?
+    if [[ "${is_motivated}" -gt "2" ]] ; then
+	# user is motivated, we are done, do not annoy him anymore
+        exit
+    fi
+
+
+    # let the user come back
+    sleep 20
+
+    # allow to work
+    timeout_minutes="11"
+    timeout="$(( $timeout_minutes * 60 ))"
+    progress_steps="5" # seconds to wait for each loop
+    amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+    { sleep 1 ; echo 1 ; count=0 ; while [[ "${count%.*}" -lt 100 ]] ; do sleep $progress_steps ; count="$( echo "$count + $amount_steps" | bc -l )" ; echo "${count%.*}" ; done ; } | \
+	$guitool --progress --auto-close --text="You have $timeout_minutes minutes" --cancel-label="I can't do it"
+
+
+    # loop
+    $FUNCNAME
+
+}
+# ==============================================================
+
+
+main(){
+    # pre {{{
+    local timeout guitool
+
+    guitool="zenity"
+
+    export LC_NUMERIC=C
+    #timeout="660" # 660 seconds = 11 minutes
+    #progress_steps="1" # seconds to wait for each loop
+    #amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+
+
+    # }}}
+
+    # Step 1: Remove tabs and windows, computer clean
+    timeout_minutes="4"
+    timeout="$(( $timeout_minutes * 60 ))"
+    progress_steps="3" # seconds to wait for each loop
+    amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+    { sleep 1 ; echo 1 ; count=0 ; while [[ "${count%.*}" -lt 100 ]] ; do sleep $progress_steps ; count="$( echo "$count + $amount_steps" | bc -l )" ; echo "${count%.*}" ; done ; } | \
+	$guitool --progress --auto-close --text="First, close all the distracting windows and leave your desktop entirely clean.\n\nDo it in less than $timeout_minutes minutes" --cancel-label="I'm ready"
+
+
+    # Step 2: Room cleanups
+    timeout_minutes="9"
+    timeout="$(( $timeout_minutes * 60 ))"
+    progress_steps="3" # seconds to wait for each loop
+    amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+    { sleep 1 ; echo 1 ; count=0 ; while [[ "${count%.*}" -lt 100 ]] ; do sleep $progress_steps ; count="$( echo "$count + $amount_steps" | bc -l )" ; echo "${count%.*}" ; done ; } | \
+	$guitool --progress --auto-close --text="Now, clean your workplace, put correct music for work,\ntell everybody that do not disturb you, remove extra\nlights in the room and sunlight, close the door\nand remove distractions.\n\nDo it in less than $timeout_minutes minutes" --cancel-label="I'm ready"
+
+
+
+    # Step 3: Timeout brainstorming
+    timeout_minutes="11"
+    timeout="$(( $timeout_minutes * 60 ))"
+    progress_steps="15" # seconds to wait for each loop
+    amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+
+    $guitool --info --text="Now you will sit in front of the computer during $timeout_minutes minutes doing NOTHING until the timeout finishes, this can sound like a tedious and boring step but in fact is the <b>key of the success</b> of this helper tool, just focus on your today's work while you enjoy your music, ready?" --ok-label="Ready!"
+
+    count=0
+    while [[ "${count%.*}" -lt 100 ]]
+    do
+	# lock in a loop, if user wants to go back to desktop, do not allow him :P
+	enlightenment_remote -desktop-lock
+	sleep $progress_steps
+
+	count="$( echo "$count + $amount_steps" | bc -l )"
+    done
+
+    # warn the user via voice, since he don't see anything
+    el_speak_text "welcome back $USER, please unlock and login in $(hostname) system"
+
+
+
+    # Step 4: Start working
+    # let the user come back
+    sleep 20
+
+    timeout_minutes="11"
+    $guitool --info --text="You are allowed to use $timeout_minutes minutes for begin the activity, is not needed to start really working on it but just to begin with the activity, you have no more than $timeout_minutes allowed for do it, after that you will have a break" --ok-label="Let's try it!"
+
+
+    timeout_minutes="11"
+    timeout="$(( $timeout_minutes * 60 ))"
+    progress_steps="3" # seconds to wait for each loop
+    amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
+    { sleep 1 ; echo 1 ; count=0 ; while [[ "${count%.*}" -lt 100 ]] ; do sleep $progress_steps ; count="$( echo "$count + $amount_steps" | bc -l )" ; echo "${count%.*}" ; done ; } | \
+	$guitool --progress --auto-close --text="Begin your activity, you have only $timeout_minutes minutes" --cancel-label="I can't do it"
+
+
+    # now loop in the same thing
+    loop_work_and_brainstorm
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

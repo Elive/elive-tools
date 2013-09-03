@@ -220,6 +220,39 @@ el_check_variables(){
     # }}}
 }
 #-------------------------------------------------------------------------------
+#   Check if dir exists
+#-------------------------------------------------------------------------------
+el_check_dirs(){
+    # check if we have these dirs (and non-zero), if not, notify and exit {{{
+    # example $0 foo,bar,we
+    local var found_no
+
+    if [[ -z "$1" ]] ; then
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
+
+        return 1
+    fi
+
+    while read -ru 3 var
+    do
+        if [[ ! -d "${var}" ]] ; then
+            #el_notify_user "E: Dir not exists" "E: the dir '$var' not exist"
+            el_error "Directory '$var' not exist"
+            found_no="yes"
+        fi
+    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+
+    if [[ "$found_no" = "yes" ]] ; then
+
+        return 1
+    else
+
+        return 0
+    fi
+
+    # }}}
+}
+#-------------------------------------------------------------------------------
 #   Dependencies Check
 #	example:  el_dependencies_check gmplayer,find,sed,etc
 #-------------------------------------------------------------------------------

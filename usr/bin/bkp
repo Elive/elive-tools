@@ -369,7 +369,9 @@ do_work(){
 
     if el_confirm "Do you want to run a meld with the original directory?" ; then
         if ! el_dependencies_check meld ; then
-            el_dependencies_install meld
+            if ! el_dependencies_install meld ; then
+		el_error "Please install required dependencies"
+	    fi
         fi
         meld "${tmpdir}" .
     fi
@@ -618,7 +620,9 @@ main(){
 
 
     if ! el_dependencies_check "rsync,rdiff-backup,diff,colordiff" ; then
-        el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff"
+        if ! el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff" ; then
+	    el_error "Please install required dependencies"
+	fi
     fi
 
     el_check_variables "tool,namedir,bkpdir_id,target"

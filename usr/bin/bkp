@@ -3,8 +3,6 @@ source /usr/lib/elive-tools/functions
 el_make_environment
 #TEXTDOMAIN=""
 #export TEXTDOMAIN
-
-
 set -e
 
 do_work(){
@@ -15,7 +13,7 @@ do_work(){
     dir="$(pwd)"
     tmpdir="${bkpdir_works}/${namedir}"
 
-    sudo rm -rf "${tmpdir}"
+    $SUDO_MODE rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
     rmdir "${tmpdir}" # remove last dir in order to really-copy here
 
@@ -40,7 +38,7 @@ do_work(){
     fi
 
     if el_confirm "Delete the working state?" ; then
-        sudo rm -rf "${tmpdir}"
+        $SUDO_MODE rm -rf "${tmpdir}"
     fi
 
 }
@@ -52,11 +50,11 @@ do_purge_olds(){
 
     # remove backups
     if [[ -d "${bkpdir_backups}" ]] ; then
-        sudo rm -rf "${bkpdir_backups}/%"*
+        $SUDO_MODE rm -rf "${bkpdir_backups}/%"*
     fi
     # remove working states
     if [[ -d "${bkpdir_works}" ]] ; then
-        sudo rm -rf "${bkpdir_works}/%"*
+        $SUDO_MODE rm -rf "${bkpdir_works}/%"*
     fi
 
 
@@ -97,9 +95,9 @@ do_save(){
     echo -ne "Saving..."
 
     #      rsync -av --delete "${target}/" "${bkpdir_id}/"
-    sudo rdiff-backup "${1}/" "${2}/"
+    $SUDO_MODE rdiff-backup "${1}/" "${2}/"
 
-    version="$( sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
+    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$2" | wc -l )"
 
     echo -e "\r${el_c_g}Saved${el_c_n}  [${version}]"
     #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
@@ -121,14 +119,14 @@ do_get(){
         history_num="1"
     fi
 
-    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    sudo rm -rf "${1}.get"
-    sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+    $SUDO_MODE rm -rf "${1}.get"
+    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.get/"
 
-    sudo rsync -av --delete "${1}.get/" "${2}/"
+    $SUDO_MODE rsync -av --delete "${1}.get/" "${2}/"
 
     cd "${2}"
 
@@ -136,9 +134,9 @@ do_get(){
 
 
 do_list(){
-    sudo rdiff-backup -l "${1}"
+    $SUDO_MODE rdiff-backup -l "${1}"
     echo ""
-    sudo rdiff-backup --parsable-output -l "${1}"
+    $SUDO_MODE rdiff-backup --parsable-output -l "${1}"
 }
 
 
@@ -155,18 +153,18 @@ do_meld(){
         history_num="1"
     fi
 
-    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    sudo rm -rf "${1}.differ"
-    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    $SUDO_MODE rm -rf "${1}.differ"
+    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    sudo meld "${1}.differ/" "${2}/"
+    $SUDO_MODE meld "${1}.differ/" "${2}/"
 
-    sudo rm -rf "${1}.differ"
+    $SUDO_MODE rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -185,12 +183,12 @@ do_diff(){
         history_num="1"
     fi
 
-    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    sudo rm -rf "${1}.differ"
-    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    $SUDO_MODE rm -rf "${1}.differ"
+    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -199,7 +197,7 @@ do_diff(){
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
     diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
 
-    sudo rm -rf "${1}.differ"
+    $SUDO_MODE rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -218,12 +216,12 @@ do_diff_reverse(){
         history_num="1"
     fi
 
-    version="$( sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    sudo rm -rf "${1}.differ"
-    sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    $SUDO_MODE rm -rf "${1}.differ"
+    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -232,7 +230,7 @@ do_diff_reverse(){
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
     diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
 
-    sudo rm -rf "${1}.differ"
+    $SUDO_MODE rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -240,8 +238,8 @@ do_diff_reverse(){
 
 do_remove(){
     if [[ -d "${1}" ]] ; then
-        sudo rm -rf "${1}"
-        sudo rm -rf "${1}."*
+        $SUDO_MODE rm -rf "${1}"
+        $SUDO_MODE rm -rf "${1}."*
 
         echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
     else
@@ -273,12 +271,14 @@ main(){
         target="$( readlink -f "$target" )"
     fi
 
-    # This command requires a non-password mode of sudo, because sometimes we need to backup a directory that contains files owned by root (like debian-packaging directories)
-    if ! el_check_sudo_automated ; then
-        el_error "This tool requires an automated sudo (without password)"
-        # configure it yourself if you need this tool, use it at your own risk
-        exit
+    # do we have automated access to sudo ? use sudo
+    if el_check_sudo_automated ; then
+	SUDO_MODE="sudo"
+    else
+	SUDO_MODE=""
     fi
+
+
 
     if ! el_dependencies_check "rsync,rdiff-backup,diff,colordiff" ; then
         el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff"

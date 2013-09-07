@@ -35,6 +35,9 @@ main(){
 
     wget "$url" -O downloaded-original.html
 
+    # fix double // for downloads
+    sed -i "s|=\"//|=\"/|g" downloaded-original.html
+
     cat downloaded-original.html | iconv -f ISO-8859-15 -t utf8 | pandoc -s -r html - -o downloaded-original_utf8.text
 
     cat downloaded-original.html | pandoc -s -r html - -o downloaded-original.text

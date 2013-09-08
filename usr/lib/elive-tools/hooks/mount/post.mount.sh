@@ -1,6 +1,5 @@
 #!/bin/bash
 #source /usr/lib/elive-tools/functions
-set -x
 
 main(){
     # pre {{{

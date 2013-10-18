@@ -45,7 +45,7 @@ loop_work_and_brainstorm(){
     progress_steps="5" # seconds to wait for each loop
     amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
     { sleep 1 ; echo 1 ; count=0 ; while [[ "${count%.*}" -lt 100 ]] ; do sleep $progress_steps ; count="$( echo "$count + $amount_steps" | bc -l )" ; echo "${count%.*}" ; done ; } | \
-	$guitool --progress --auto-close --text="You have $timeout_minutes minutes" --cancel-label="I can't do it"
+	$guitool --progress --auto-close --text="You have $timeout_minutes minutes for work" --cancel-label="I can't do it"
 
 
     # loop

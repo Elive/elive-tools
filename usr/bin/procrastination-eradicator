@@ -86,12 +86,12 @@ main(){
 
 
     # Step 3: Timeout brainstorming
-    timeout_minutes="11"
+    timeout_minutes="6"
     timeout="$(( $timeout_minutes * 60 ))"
     progress_steps="15" # seconds to wait for each loop
     amount_steps="$( echo "( 100 / $timeout ) * $progress_steps" | bc -l )" # increase factor for each loop
 
-    $guitool --info --text="Now you will sit in front of the computer during $timeout_minutes minutes doing NOTHING until the timeout finishes, this can sound like a tedious and boring step but in fact is the <b>key of the success</b> of this helper tool, just focus on your today's work while you enjoy your music, ready?" --ok-label="Ready!"
+    $guitool --info --text="Now you will sit in front of the computer during $timeout_minutes minutes doing <b>nothing</b> more than thinking in your today's task and generate a mental map of it, do this until the timeout finishes, this can sound like a tedious and boring step but in fact is the <b>key of the success</b> of this helper tool, just focus on your today's work while you enjoy your music, ready?" --ok-label="Ready!"
 
     count=0
     while [[ "${count%.*}" -lt 100 ]]

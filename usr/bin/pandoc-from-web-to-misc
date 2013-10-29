@@ -109,9 +109,11 @@ main(){
     do
 	if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
 	    if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
+		echo "command used:  pandoc downloaded_utf8.text -o \"${title}.${format}\"" 1>&2
 		el_explain 0 "converted to __${format}__"
 	    fi
 	else
+	    echo "command used:  pandoc downloaded.text -o \"${title}.${format}\"" 1>&2
 	    el_explain 0 "converted to __${format}__"
 	fi
     done

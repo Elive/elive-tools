@@ -3,7 +3,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local url file http
+    local url file http options
 
     # }}}
 
@@ -107,6 +107,16 @@ main(){
     # convert in all the formats !
     for format in epub html pdf docx odt txt
     do
+	options=""
+
+	case $format in
+	    pdf) options="-V geometry:margin=1in" ; ;;
+	    *) options="" ; ;;
+	esac
+
+
+	# convert
+
 	if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
 	    if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
 		echo "command used:  pandoc downloaded_utf8.text -o \"${title}.${format}\"" 1>&2
@@ -116,6 +126,7 @@ main(){
 	    echo "command used:  pandoc downloaded.text -o \"${title}.${format}\"" 1>&2
 	    el_explain 0 "converted to __${format}__"
 	fi
+
     done
 
 

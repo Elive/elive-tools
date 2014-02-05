@@ -1,5 +1,11 @@
-#!/bin/bash
-
+if [[ $SHELL = *zsh ]] ; then
+    setopt nonomatch
+    alias shopt=':'
+    alias _expand=_bash_expand
+    alias _complete=_bash_comp
+    #emulate -L sh
+    #setopt kshglob noshglob braceexpand
+fi
 el_c_n="\033[0;39m" # Normal color  (orig: normal)
 el_c_r="\033[1;31m" # Red color  (orig: red)
 el_c_r2="\033[0;31m" # Red2 color  (orig: red)
@@ -32,8 +38,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     local display e_ipc_socket
 
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
-        if ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
+        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
 
             e_ipc_socket="${display%|*}"
 
@@ -75,7 +81,7 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
         if el_dependencies_check notify-send ; then
-            notify-send -t 20000 "$@"
+            command notify-send -t 20000 "$@"
         else
             el_warning "notify-send not installed"
         fi
@@ -93,7 +99,7 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 
     if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
         if el_dependencies_check notify-send ; then
-            notify-send -t 240000 "$@"
+            command notify-send -t 240000 "$@"
         else
             el_warning "notify-send not installed"
         fi
@@ -377,10 +383,16 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 
     while read -ru 3 var
     do
-        if [[ ! -n "${!var}" ]] ; then
-            #el_notify_user "E: Variable not exists" "E: the variable '$var' is not set"
-            el_error "Variable '$var' is not set"
-            found_no="yes"
+	if [[ $SHELL = *zsh ]] ; then
+	    if [[ ! -n "${(P)var}" ]] ; then
+		el_error "Variable '$var' is not set"
+		found_no="yes"
+	    fi
+	else
+	    if [[ ! -n "${!var}" ]] ; then
+		el_error "Variable '$var' is not set"
+		found_no="yes"
+	    fi
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
@@ -481,11 +493,18 @@ el_check_dir_has_files(){
 
             return 1
         else
-            #if ! ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
-            if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
-                el_error "Directory '$dir' doesn't contain any file"
+	    if [[ $SHELL = *bash ]] ; then
+		if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
+		    el_error "Directory '$dir' doesn't contain any file"
 
-                return 1
+		    return 1
+		fi
+	    else
+		if ! command ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
+		    el_error "Directory '$dir' doesn't contain any file"
+
+		    return 1
+		fi
             fi
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
@@ -921,12 +940,21 @@ el_array_member_check(){
     shift
     list=("$@")
 
-    for i in "${!list[@]}"
-    do
-        if [[ "${list[i]}" = "$match" ]] ; then
-            return 0
-        fi
-    done
+    if [[ $SHELL = *zsh ]] ; then
+	for i in "${(P)list[@]}"
+	do
+	    if [[ "${list[i]}" = "$match" ]] ; then
+		return 0
+	    fi
+	done
+    else
+	for i in "${!list[@]}"
+	do
+	    if [[ "${list[i]}" = "$match" ]] ; then
+		return 0
+	    fi
+	done
+    fi
 
     return 1
 }
@@ -1039,5 +1067,5 @@ fi
 # -
 
 
-# vim: set foldmethod=marker :
+# vim: set foldmethod=marker filetype=sh :
 

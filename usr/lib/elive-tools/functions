@@ -1,4 +1,6 @@
-if [[ $SHELL = *zsh ]] ; then
+#!/bin/bash
+
+if [[ -n $ZSH_VERSION ]] ; then
     setopt nonomatch
     alias shopt=':'
     alias _expand=_bash_expand
@@ -383,7 +385,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 
     while read -ru 3 var
     do
-	if [[ $SHELL = *zsh ]] ; then
+	if [[ -n $ZSH_VERSION ]] ; then
 	    if [[ ! -n "${(P)var}" ]] ; then
 		el_error "Variable '$var' is not set"
 		found_no="yes"
@@ -940,7 +942,7 @@ el_array_member_check(){
     shift
     list=("$@")
 
-    if [[ $SHELL = *zsh ]] ; then
+    if [[ -n $ZSH_VERSION ]] ; then
 	for i in "${(P)list[@]}"
 	do
 	    if [[ "${list[i]}" = "$match" ]] ; then

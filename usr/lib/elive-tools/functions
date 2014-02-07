@@ -813,7 +813,7 @@ el_confirm(){
     # }}}
     # return answer {{{
     echo -en "$question [y/n]: "
-    read reply
+    read -e reply
 
     case $reply in
         y|Y|Yes|YES|s|S)

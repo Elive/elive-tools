@@ -187,7 +187,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet
-    if timeout 20 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
+    if timeout 10 curl --connect-timeout 3 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 
         return 0
@@ -197,16 +197,16 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             return 1
         fi
 
-        el_warning "no connection to internet found, waiting 3 seconds"
-        sleep 3
-        if timeout 20 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
+        #el_warning "no connection to internet found, waiting 3 seconds"
+        #sleep 3
+        if timeout 20 curl --connect-timeout 6 www.google.com 2>/dev/null | grep -qi 'html' ; then
             echo "$date_hour_now" > "$stamp_hour_prev"
 
             return 0
         else
-            el_warning "no connection to internet found, waiting 9 seconds"
-            sleep 9
-            if timeout 30 curl www.google.com 2>/dev/null | grep -qi 'html' ; then
+            el_warning "no connection to internet found, waiting 10 seconds"
+            sleep 10
+            if timeout 30 curl --conect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
 
                 return 0

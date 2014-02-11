@@ -622,7 +622,7 @@ el_explain(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_debug
-#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 1
+#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 2
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_debug(){
@@ -1047,11 +1047,12 @@ el_step_requires_fixme(){
 el_flag(){
     # pre {{{
     local action name
-    el_debug
     el_security_function_loop || return
 
     action="${1}"
     name="${2}"
+
+    el_debug "$action - $name"
 
     flags_d="${flags_d:-"/tmp/.$(basename $0)-flags-$USER"}"
 

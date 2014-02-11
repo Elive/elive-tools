@@ -1046,7 +1046,7 @@ el_step_requires_fixme(){
 #===============================================================================
 el_flag(){
     # pre {{{
-    local action name flags_d
+    local action name
     el_debug
     el_security_function_loop || return
 

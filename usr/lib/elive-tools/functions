@@ -1038,6 +1038,51 @@ el_step_requires_fixme(){
 
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_flag
+#   DESCRIPTION:  control states with marks and locks
+#    PARAMETERS:  $2 = action (add|del|check), $3 = name
+#       RETURNS:  true or false for check actions
+#===============================================================================
+el_flag(){
+    # pre {{{
+    local action name flags_d
+    el_debug
+    el_security_function_loop || return
+
+    action="${1}"
+    name="${2}"
+
+    flags_d="${flags_d:-"/tmp/.$(basename $0)-flags-$USER"}"
+
+    if [[ ! -d "${flags_d}" ]] ; then
+	mkdir -p "$flags_d"
+    fi
+
+    el_check_variables "action,name"
+
+    # }}}
+    case $action in
+	add|set|put)
+	    touch "${flags_d}/$name"
+	    ;;
+	del|remove|delete|rm)
+	    rm -f "${flags_d}/$name"
+	    ;;
+	check|test|verify)
+	    if [[ -e "${flags_d}/$name" ]]; then
+		return 0
+	    else
+		return 1
+	    fi
+	    ;;
+	*)
+	    el_error "unkown action $action"
+	    ;;
+    esac
+
+}
+
 
 ###################################################################
 #  Always run:

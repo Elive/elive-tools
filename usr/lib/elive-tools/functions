@@ -1036,7 +1036,8 @@ el_step_requires_fixme(){
     echo -e "${FUNCNAME} for $0"
     echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
     if [[ -n "$message" ]] ; then
-	el_explain 0 "__${message}__"
+	el_explain 0 "message: XX${message}XX"
+	echo -e ""
     fi
     #echo -e "$@"
     el_explain 0 "Press ^D or type 'logout' for continue...\n"

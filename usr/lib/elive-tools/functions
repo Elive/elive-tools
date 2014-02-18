@@ -1011,12 +1011,17 @@ el_array_member_add(){
 #          NAME:  el_step_requires_fixme
 #   DESCRIPTION:  temporal "step" to put in experimental/development code, only
 #    PARAMETERS:  $1 = dir to login (optional)
+#		  $2 = message (optional)
 #===============================================================================
 el_step_requires_fixme(){
     # pre {{{
     local dir prev_dir
 
     dir="$1"
+    shift
+    message="$1"
+    shift
+
     prev_dir="$(pwd)"
 
     : ${dir:="$prev_dir"}
@@ -1030,7 +1035,10 @@ el_step_requires_fixme(){
     echo -e "We have set a breakpoint here, please report to Elive this message:"
     echo -e "${FUNCNAME} for $0"
     echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
-    echo -e "$@"
+    if [[ -n "$message" ]] ; then
+	el_explain 0 "__${message}__"
+    fi
+    #echo -e "$@"
     el_explain 0 "Press ^D or type 'logout' for continue...\n"
     $SHELL
 

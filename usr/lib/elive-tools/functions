@@ -1097,6 +1097,36 @@ el_flag(){
 
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_add_on_exit
+#   DESCRIPTION:  add commands that will be run on exit of the application
+#    PARAMETERS:  command to run
+#       RETURNS:  -
+#===============================================================================
+el_add_on_exit(){
+    local n=${#on_exit_items[*]}
+    on_exit_items[$n]="$*"
+
+    # add the trap if is not added
+    if [[ $n -eq 0 ]]; then
+	#echo "Setting trap"
+	trap on_exit EXIT
+    fi
+}
+on_exit(){
+    # create empty variable of array type if not exist
+    if [[ -z "$on_exit_items" ]] ; then
+	declare -a on_exit_items
+    fi
+
+    # run each appended command
+    for i in "${on_exit_items[@]}"
+    do
+	#echo "on_exit: $i"
+	eval $i
+    done
+}
+
 
 ###################################################################
 #  Always run:

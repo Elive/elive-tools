@@ -1,0 +1,105 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local packagename
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) packagename"
+        exit 1
+    fi
+
+    packagename="${1}"
+    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+
+    # check internet
+    if ! el_verify_internet ; then
+	el_explain 1 "No internet found, ignoring checking of newer packages available"
+	exit 1
+    fi
+
+    # check repo url
+    if ! el_check_variables "url_repository" ; then
+	el_error "no url found for ${packagename} package, ignoring check in $(basename $0)"
+	exit
+    fi
+
+    if ! el_check_dependencies "apt-get,apt-cache,zenity,dpkg" ; then
+	exit 1
+    fi
+
+
+
+    # }}}
+
+    package_version_installed="$( LC_ALL=C  apt-cache policy "${packagename}" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 )"
+
+    # first pass, check if we can have a possible candidate (fuzzy mode) {{{
+    while read -ru 3 line
+    do
+	url_package_dir="${url_repository%/}/${line%/*}/"
+
+	# compare all teh versions found with a simple curl with the installed version
+	while read -ru 3 version
+	do
+	    # cleanup var and url-decode it
+	    read -r version <<< "$version"
+	    #version="$( hURL -us --nocolor "$version" )"
+	    version="$( printf "$( echo "$version" | sed -e 's|%|\\x|g' )" )"
+
+	    if dpkg --compare-versions "${version}" gt "${package_version_installed}" 2>/dev/null ; then
+		package_version_newer_found_maybe=1
+	    fi
+	done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep "\.deb$" | cut -d'_' -f2 | sort -u )"
+
+    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+
+
+
+    # - first pass, check if we can have a possible candidate (fuzzy mode) }}}
+    # checking results and deciding {{{
+    # nothing found in a first shot?
+    if ! ((package_version_newer_found_maybe)) ; then
+	exit
+    fi
+
+    if [[ -z "$DISPLAY" ]] ; then
+	el_error "Cannot access to graphical system, skipping $(basename $0)"
+	exit
+    fi
+
+
+    # - checking results and deciding }}}
+    # second pass, let apt manage candidates {{{
+    if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 7200 ]] ; then
+	# only run update if we have not updated already 2 hours ago
+	apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="Updating list of packages"
+	# FIXME: move these things to elive-tools to reciclate
+	# FIXME: add update-notifier-common dependency
+    fi
+
+    package_version_candidate="$( apt-cache madison "${packagename}" | head -1 | awk 'BEGIN{FS="|"} {print $2}' )"
+    # remove extra leading blank chars
+    read -r package_version_candidate <<< "$package_version_candidate"
+
+
+    # second pass, let apt manage candidates }}}
+
+    # install new package if found
+    if dpkg --compare-versions "${package_version_candidate}" gt "${package_version_installed}" 2>/dev/null ; then
+	if zenity --question --text="Update found for ${packagename}, we suggest to update it before to continue." ; then
+	    foo
+	fi
+    fi
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

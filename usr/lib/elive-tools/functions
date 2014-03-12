@@ -379,7 +379,6 @@ el_aptget_update(){
 	else
 	    apt-get update
 	fi
-	# FIXME: add update-notifier-common dependency
     else
 	el_explain 2 "Packages lists already updated at least 2 hours ago, skipping update"
     fi

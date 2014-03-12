@@ -8,7 +8,8 @@ export TEXTDOMAIN="elive-tools"
 
 main(){
     # pre {{{
-    local packagename
+    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version
+
 
     # Usage
     if [[ -z "${1}" ]] ; then
@@ -92,7 +93,7 @@ main(){
 	    fi
 	else
 	    if el_confirm "$message_upgrade_please" ; then
-		apt-get install "$packagename"
+		su -c "apt-get install $packagename" root
 	    fi
 	fi
     fi

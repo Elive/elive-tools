@@ -32,7 +32,7 @@ main(){
 	exit
     fi
 
-    if ! el_check_dependencies "apt-get,apt-cache,zenity,dpkg" ; then
+    if ! el_dependencies_check "apt-get,apt-cache,zenity,dpkg" ; then
 	exit 1
     fi
 
@@ -68,11 +68,6 @@ main(){
     # checking results and deciding {{{
     # nothing found in a first shot?
     if ! ((package_version_newer_found_maybe)) ; then
-	exit
-    fi
-
-    if [[ -n "$DISPLAY" ]] ; then
-	el_error "Cannot access to graphical system, skipping $(basename $0)"
 	exit
     fi
 

@@ -374,7 +374,11 @@ el_aptget_update(){
 	want_update=1
     fi
 
-    if [[ -e /var/lib/apt/periodic/update-success-stamp ]] && [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 7200 ]] ; then
+    if [[ -e /var/lib/apt/periodic/update-success-stamp ]] ; then
+	if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 7200 ]] ; then
+	    want_update=1
+	fi
+    else
 	want_update=1
     fi
 

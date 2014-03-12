@@ -68,7 +68,8 @@ main(){
     # checking results and deciding {{{
     # nothing found in a first shot?
     if ! ((package_version_newer_found_maybe)) ; then
-	exit
+	# return false if we have not updated or found anything
+	exit 1
     fi
 
 
@@ -91,6 +92,8 @@ main(){
 		su -c "apt-get install $packagename" root
 	    fi
 	fi
+    else
+	exit 1
     fi
 
 

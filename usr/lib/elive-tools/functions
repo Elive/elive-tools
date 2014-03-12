@@ -353,6 +353,38 @@ EOF
 }
 
 #-------------------------------------------------------------------------------
+#   Run apt-get update
+#-------------------------------------------------------------------------------
+el_aptget_update(){
+    local message_updating force want_update
+    force="$1"
+
+    el_set_display_variables
+
+
+    if [[ "$force" = "force" ]] ; then
+	want_update=1
+    fi
+
+    if [[ -e /var/lib/apt/periodic/update-success-stamp ]] && [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 7200 ]] ; then
+	want_update=1
+    fi
+
+    if ((want_update)) ; then
+	# only run update if we have not updated already 2 hours ago
+	message_updating="$( printf "$( eval_gettext "Updating list of packages" )" )"
+
+	if [[ -n "$DISPLAY" ]] ; then
+	    apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+	else
+	    apt-get update
+	fi
+	# FIXME: add update-notifier-common dependency
+    else
+	el_explain 2 "Packages lists already updated at least 2 hours ago, skipping update"
+    fi
+}
+#-------------------------------------------------------------------------------
 #   Check if a newer version of a package exists
 #-------------------------------------------------------------------------------
 el_package_newer_check(){
@@ -364,8 +396,12 @@ el_package_newer_check(){
         return 2
     fi
 
-    installed="$( LC_ALL=C apt-cache policy "$package" | head -3 | tail -n +2 | sed 's|^[[:blank:]]*.*: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
-    candidate="$( LC_ALL=C apt-cache policy "$package" | head -3 | tail -n +2 | sed 's|^[[:blank:]]*.*: ||g' | tail -1 | grep -E "^[[:digit:]]*" )"
+    installed="$( LC_ALL=C apt-cache policy "$package" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    read -r installed <<< "$installed"
+
+    candidate="$( LC_ALL=C apt-cache policy "$package" | grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    read -r candidate <<< "$candidate"
+
 
     if [[ -n "$installed" ]] && [[ -n "$candidate" ]] ; then
 	if dpkg --compare-versions "${candidate}" gt "${installed}" ; then
@@ -373,6 +409,9 @@ el_package_newer_check(){
 	else
 	    return 1
 	fi
+    else
+	el_error "no versions get correctly for package ${package}, installed is '${installed}', candidate is '${candidate}'"
+	return 1
     fi
 }
 

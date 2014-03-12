@@ -77,30 +77,12 @@ main(){
 
 
     # - checking results and deciding }}}
-    # second pass, let apt manage candidates {{{
-    if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 7200 ]] ; then
-	# only run update if we have not updated already 2 hours ago
-	local message_updating
-	message_updating="$( printf "$( eval_gettext "Updating list of packages" )" )"
 
-	if [[ -n "$DISPLAY" ]] ; then
-	    apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-	else
-	    apt-get update
-	fi
-	# FIXME: move these things to elive-tools to reciclate
-	# FIXME: add update-notifier-common dependency
-    fi
-
-    package_version_candidate="$( apt-cache madison "${packagename}" | head -1 | awk 'BEGIN{FS="|"} {print $2}' )"
-    # remove extra leading blank chars
-    read -r package_version_candidate <<< "$package_version_candidate"
-
-
-    # second pass, let apt manage candidates }}}
+    el_aptget_update
 
     # install new package if found
-    if dpkg --compare-versions "${package_version_candidate}" gt "${package_version_installed}" 2>/dev/null ; then
+    if el_package_newer_check "${packagename}" ; then
+
 	local message_upgrade_please
 	message_upgrade_please="$( printf "$( eval_gettext "Update found for %s, please update it." )" "$packagename" )"
 

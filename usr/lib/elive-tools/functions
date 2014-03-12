@@ -386,11 +386,28 @@ el_aptget_update(){
 	# only run update if we have not updated already 2 hours ago
 	message_updating="$( printf "$( eval_gettext "Updating list of packages" )" )"
 
-	if [[ -n "$DISPLAY" ]] ; then
-	    apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+	if [[ "$UID" = 0 ]] ; then
+	    if [[ -n "$DISPLAY" ]] ; then
+		apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+	    else
+		apt-get update
+	    fi
 	else
-	    apt-get update
+	    if el_check_sudo_automated ; then
+		if [[ -n "$DISPLAY" ]] ; then
+		    sudo apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+		else
+		    sudo apt-get update
+		fi
+	    else
+		if [[ -n "$DISPLAY" ]] ; then
+		    gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+		else
+		    su -c "apt-get update" root
+		fi
+	    fi
 	fi
+
     else
 	el_explain 2 "Packages lists already updated at least 2 hours ago, skipping update"
     fi

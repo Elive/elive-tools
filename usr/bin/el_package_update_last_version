@@ -58,7 +58,7 @@ main(){
 	    if dpkg --compare-versions "${version}" gt "${package_version_installed}" 2>/dev/null ; then
 		package_version_newer_found_maybe=1
 	    fi
-	done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep "\.deb$" | cut -d'_' -f2 | sort -u )"
+	done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep '\.deb$' | cut -d'_' -f2 | sort -u )"
 
     done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
 

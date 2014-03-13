@@ -81,7 +81,7 @@ main(){
     if el_package_newer_check "${packagename}" ; then
 
 	local message_upgrade_please
-	message_upgrade_please="$( printf "$( eval_gettext "Update found for %s, please update it." )" "$packagename" )"
+	message_upgrade_please="$( printf "$( eval_gettext "Newer version found for %s, we suggest to update it, continue?" )" "$packagename" )"
 
 	if [[ -n "$DISPLAY" ]] ; then
 	    if zenity --question --text="$message_upgrade_please" ; then

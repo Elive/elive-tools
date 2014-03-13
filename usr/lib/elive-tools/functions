@@ -89,16 +89,17 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 
     el_set_display_variables
 
-    if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+    if [[ "${DISPLAY}" = ":0.0" ]] ; then
         if el_dependencies_check notify-send ; then
             command notify-send -t 20000 "$@"
         else
             el_warning "notify-send not installed"
         fi
-    else
-        echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
     fi
 
+    if [[ -n "${TERM}" ]] ; then
+        echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
+    fi
 }
 #-------------------------------------------------------------------------------
 #   Send an important notification to the user
@@ -597,15 +598,14 @@ el_check_sudo_automated(){
 
 }
 #===  FUNCTION  ================================================================
-#          NAME:  el_check_translations_required
+#          NAME:  el_check_translations_required_notify
 #   DESCRIPTION:  check the amount of translations made for actual application,
-#		  returning true or false if they needs improvings
+#		  telling the user that he can help improving them
 #    PARAMETERS:  -
-#       RETURNS:  true if is needed better translations, false if is good
 #===============================================================================
-el_check_translations_required(){
+el_check_translations_required_notify(){
     # pre {{{
-    local textdomaindir stat percentage_untranslated
+    local textdomaindir stat percentage_untranslated is_translation_required
 
 
     if [[ -n "$TEXTDOMAINDIR" ]] ; then
@@ -620,7 +620,7 @@ el_check_translations_required(){
     if [[ -n "$TEXTDOMAIN" ]] ; then
 	# we already said it ?
 	if el_flag check "translation_required_${TEXTDOMAIN}" ; then
-	    return 1
+	    is_translation_required=0
 	fi
 	el_flag add "translation_required_${TEXTDOMAIN}"
 
@@ -630,16 +630,16 @@ el_check_translations_required(){
 	    percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
 
 	    if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
-		return 0
+		is_translation_required=1
 	    else
-		return 1
+		is_translation_required=0
 	    fi
 	fi
     fi
 
-
-    # return false in any of the failed cases
-    return 1
+    if ((is_translation_required)) ; then
+	el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application. Thank you"
+    fi
 
 }
 #===  FUNCTION  ================================================================

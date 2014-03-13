@@ -8,13 +8,17 @@ export TEXTDOMAIN="elive-tools"
 
 main(){
     # pre {{{
-    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version
+    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version is_mode_force
 
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) packagename"
-        exit 1
+	echo -e "Usage: $(basename $BASH_SOURCE) packagename [--force]"
+	exit 1
+    fi
+
+    if [[ "$2" = "--force" ]] ; then
+	is_mode_force=1
     fi
 
     packagename="${1}"
@@ -80,18 +84,34 @@ main(){
     # install new package if found
     if el_package_newer_check "${packagename}" ; then
 
-	local message_upgrade_please
+	local message_upgrade_please message_upgrade_force
 	message_upgrade_please="$( printf "$( eval_gettext "Newer version found for %s, we suggest to update it, continue?" )" "$packagename" )"
 
+	message_upgrade_force="$( printf "$( eval_gettext "The package %s needs to be updated before to continue." )" "$packagename" )"
+
 	if [[ -n "$DISPLAY" ]] ; then
-	    if zenity --question --text="$message_upgrade_please" ; then
+	    if ((is_mode_force)) ; then
+		zenity --info --text="$message_upgrade_force"
 		el_dependencies_install "$packagename"
 		exit 0
+	    else
+		if zenity --question --text="$message_upgrade_please" ; then
+		    el_dependencies_install "$packagename"
+		    exit 0
+		fi
 	    fi
+
 	else
-	    if el_confirm "$message_upgrade_please" ; then
+	    if ((is_mode_force)) ; then
+		echo -e "The package $packagename needs to be updated.\nPlease insert root/admin password:"
 		su -c "apt-get install $packagename" root
 		exit 0
+	    else
+		if el_confirm "$message_upgrade_please" ; then
+		    echo -e "Please insert root/admin password:"
+		    su -c "apt-get install $packagename" root
+		    exit 0
+		fi
 	    fi
 	fi
     else

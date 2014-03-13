@@ -615,7 +615,7 @@ el_check_translations_required_notify(){
     fi
 
     # dont annoy users in the stable released
-    if [[ "$(grep stable-release /etc/elive-version | awk '{print $2}')" = "yes" ]] ; then
+    if [[ -e /etc/elive-version ]] && [[ "$(grep stable-release /etc/elive-version | awk '{print $2}')" = "yes" ]] ; then
 	return
     fi
 

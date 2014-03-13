@@ -614,13 +614,17 @@ el_check_translations_required_notify(){
 	textdomaindir="/usr/share/locale"
     fi
 
+    # dont annoy users in the stable released
+    if [[ "$(grep stable-release /etc/elive-version | awk '{print $2}')" = "yes" ]] ; then
+	return
+    fi
 
     # }}}
 
     if [[ -n "$TEXTDOMAIN" ]] ; then
 	# we already said it ?
 	if el_flag check "translation_required_${TEXTDOMAIN}" ; then
-	    is_translation_required=0
+	    return
 	fi
 	el_flag add "translation_required_${TEXTDOMAIN}"
 
@@ -632,7 +636,7 @@ el_check_translations_required_notify(){
 	    if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
 		is_translation_required=1
 	    else
-		is_translation_required=0
+		return
 	    fi
 	fi
     fi

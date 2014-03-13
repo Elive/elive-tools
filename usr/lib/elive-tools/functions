@@ -597,6 +597,52 @@ el_check_sudo_automated(){
 
 }
 #===  FUNCTION  ================================================================
+#          NAME:  el_check_translations_required
+#   DESCRIPTION:  check the amount of translations made for actual application,
+#		  returning true or false if they needs improvings
+#    PARAMETERS:  -
+#       RETURNS:  true if is needed better translations, false if is good
+#===============================================================================
+el_check_translations_required(){
+    # pre {{{
+    local textdomaindir stat percentage_untranslated
+
+
+    if [[ -n "$TEXTDOMAINDIR" ]] ; then
+        textdomaindir="$TEXTDOMAINDIR"
+    else
+	textdomaindir="/usr/share/locale"
+    fi
+
+
+    # }}}
+
+    if [[ -n "$TEXTDOMAIN" ]] ; then
+	# we already said it ?
+	if el_flag check "translation_required_${TEXTDOMAIN}" ; then
+	    return 1
+	fi
+	el_flag add "translation_required_${TEXTDOMAIN}"
+
+	stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
+
+	if [[ -s "${stat}" ]] ; then
+	    percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
+
+	    if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
+		return 0
+	    else
+		return 1
+	    fi
+	fi
+    fi
+
+
+    # return false in any of the failed cases
+    return 1
+
+}
+#===  FUNCTION  ================================================================
 #          NAME:  el_explain
 #   DESCRIPTION:  function to show the progress of the application
 #    PARAMETERS:
@@ -700,7 +746,7 @@ el_debug(){
     funclevel="$funclevels"
 
     # level 2 is debug
-    if [[ "${EL_DEBUG}" -ge 2 ]] ; then
+    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if [[ -n "$1" ]] ; then
             echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
         else
@@ -1141,6 +1187,7 @@ el_flag(){
     # }}}
     case $action in
 	add|set|put)
+	    el_explain 2 "added $name flag"
 	    touch "${flags_d}/$name"
 	    ;;
 	del|remove|delete|rm)

@@ -91,7 +91,7 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
         if el_dependencies_check notify-send ; then
-            command notify-send -t 60000 "$@"
+            command notify-send -t 25000 "$@"
         else
             el_warning "notify-send not installed"
         fi

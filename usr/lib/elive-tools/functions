@@ -642,7 +642,7 @@ el_check_translations_required_notify(){
     fi
 
     if ((is_translation_required)) ; then
-	el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application. Thank you"
+	el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application.\n\nThank you"
     fi
 
 }

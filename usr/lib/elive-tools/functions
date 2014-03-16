@@ -259,9 +259,9 @@ el_make_environment(){ # make ready our environment (source variables and functi
     # give display access
     el_set_display_variables
 
-    if [[ "$PATH" != *"$HOME/bin"* ]] ; then
-        PATH="$HOME/bin:$PATH"
-    fi
+    #if [[ "$PATH" != *"$HOME/bin"* ]] ; then
+        #PATH="$HOME/bin:$PATH"
+    #fi
 
     if [[ -n "${BASH_SOURCE}" ]] ; then
         export PS4='+ ($(basename ${BASH_SOURCE}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
@@ -651,7 +651,7 @@ el_check_translations_required_notify(){
 #   DESCRIPTION:  function to show the progress of the application
 #    PARAMETERS:
 # verbose_level:    $1 = any number, from $EL_DEBUG levels
-#                        levels: 0 = always, 1 = info, 2 = debug
+#                        levels: 0 = always|error, 1 = warning, 2 = info, 3 = debug
 #       message:    $2 = can include: __hilight words__, XXsuper hilightXX
 #===============================================================================
 el_explain(){
@@ -739,7 +739,7 @@ el_explain(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_debug
-#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 2
+#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 3
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_debug(){
@@ -749,7 +749,7 @@ el_debug(){
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
     funclevel="$funclevels"
 
-    # level 2 is debug
+    # level 3 is debug
     if [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if [[ -n "$1" ]] ; then
             echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2

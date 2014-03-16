@@ -992,7 +992,9 @@ el_security_function_loop(){
 
     # }}}
     # high value of count_recursive if we call a function recursively multiple times
-    recursives_allowed="$1"
+    if [[ -n "$1" ]] ; then
+	recursives_allowed="$1"
+    fi
 
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
     funclevel="${funclevels}"
@@ -1242,7 +1244,11 @@ el_flag(){
 #    PARAMETERS:  command to run
 #       RETURNS:  -
 #===============================================================================
+set -o nounset
 el_add_on_exit(){
+    if [[ -z "$1" ]] ; then
+	return
+    fi
     local n=${#on_exit_items[*]}
     on_exit_items[$n]="$*"
 

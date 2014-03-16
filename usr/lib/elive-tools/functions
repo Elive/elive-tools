@@ -1244,7 +1244,6 @@ el_flag(){
 #    PARAMETERS:  command to run
 #       RETURNS:  -
 #===============================================================================
-set -o nounset
 el_add_on_exit(){
     if [[ -z "$1" ]] ; then
 	return

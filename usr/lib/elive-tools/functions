@@ -1288,7 +1288,7 @@ el_request_report_bug(){
     if [[ -n "$DISPLAY" ]] ; then
 	if el_check_version_development ; then
 	    local message_report_bug
-	    message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved. Can you please tell us now about your recent problem found? More details: %s" )" "$message" )"
+	    message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved.\n\nImportant details to tell us: %s\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
 
 	    if zenity --question --text="$message_report_bug" ; then
 		if [[ -x /usr/bin/firefox ]] ; then

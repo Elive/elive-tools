@@ -385,7 +385,7 @@ el_aptget_update(){
 
     if ((want_update)) ; then
 	# only run update if we have not updated already 4 hours ago
-	message_updating="$( printf "$( eval_gettext "Updating list of packages" )" )"
+	message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
 
 	if [[ "$UID" = 0 ]] ; then
 	    if [[ -n "$DISPLAY" ]] ; then
@@ -646,6 +646,26 @@ el_check_translations_required_notify(){
     fi
 
 }
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_version_development
+#   DESCRIPTION:  checks if we are in a development version
+#    PARAMETERS:  -
+#       RETURNS:  true if we are development state, false if we are stable
+#===============================================================================
+el_check_version_development(){
+    if [[ -e "/etc/elive-version" ]] ; then
+	if [[ "$( grep stable-release /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
+	    return 1
+	else
+	    return 0
+	fi
+    else
+	el_error "File /etc/elive-version not found"
+	return 0
+    fi
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  el_explain
 #   DESCRIPTION:  function to show the progress of the application
@@ -1243,6 +1263,45 @@ on_exit(){
 	#echo "on_exit: $i"
 	eval $i
     done
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_request_report_bug
+#   DESCRIPTION:  Request the user to report a bug
+#    PARAMETERS:  Message to tell to the user
+#       RETURNS:  -
+#===============================================================================
+el_request_report_bug(){
+    # pre {{{
+    local message browser
+    el_debug
+    el_security_function_loop || return
+
+    message="$1"
+    el_check_variables "message"
+
+    el_set_display_variables
+
+    # }}}
+
+    if [[ -n "$DISPLAY" ]] ; then
+	if el_check_version_development ; then
+	    local message_report_bug
+	    message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved. Can you please tell us about your recent problem (if any) found now?" )" )"
+
+	    if zenity --question --text="$message_report_bug" ; then
+		if [[ -x /usr/bin/firefox ]] ; then
+		    browser="command firefox"
+		fi
+		if [[ -x /usr/bin/chromium ]] ; then
+		    browser="command chromium --temp-profile"
+		fi
+
+		$browser http://bugs.elivecd.org
+	    fi
+	fi
+    fi
+
 }
 
 

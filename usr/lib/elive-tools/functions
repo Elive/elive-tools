@@ -1166,22 +1166,26 @@ el_step_requires_fixme(){
 
     : ${dir:="$prev_dir"}
 
+    el_set_display_variables
+
     # }}}
     el_check_dirs "${dir}"
     cd "$dir"
 
-    echo -e "\n"
-    el_warning "Experimental or uncomplete code:"
-    echo -e "We have set a breakpoint here, please report to Elive this message:"
-    echo -e "${FUNCNAME} for $0"
-    echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
-    if [[ -n "$message" ]] ; then
-	el_explain 0 "message: XX${message}XX"
-	echo -e ""
+    if [[ -n "$TERM" ]] ; then
+	echo -e "\n"
+	el_warning "Experimental or uncomplete code:"
+	echo -e "We have set a breakpoint here, please report to Elive this message:"
+	echo -e "${FUNCNAME} for $0"
+	echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
+	if [[ -n "$message" ]] ; then
+	    el_explain 0 "message: XX${message}XX"
+	    echo -e ""
+	fi
+	#echo -e "$@"
+	el_explain 0 "Press ^D or type 'logout' for continue...\n"
+	$SHELL
     fi
-    #echo -e "$@"
-    el_explain 0 "Press ^D or type 'logout' for continue...\n"
-    $SHELL
 
     cd "${prev_dir}"
 

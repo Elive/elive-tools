@@ -131,7 +131,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
 
-    date_hour_now="$( date +%F-%H )"
+    date_hour_now="$( date +%s )"
     date_hour_prev="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
 
     # remove extra leading blank chars
@@ -161,16 +161,23 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 	sleep 1
     done
 
-    if ! [ $OnLine ]; then
-        return 1
-    fi
-
 
     # exit correctly if we have already run that before
-    if [[ "${date_hour_prev}" = "$date_hour_now" ]] ; then
-        echo "$date_hour_now" > "$stamp_hour_prev"
+    # 1200 sec == 20 min
+    if [[ -e "$stamp_hour_prev" ]] ; then
+	if [[ -n "$OnLine" ]] ; then
+	    if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
+		echo "$date_hour_now" > "$stamp_hour_prev"
 
-        return 0
+		return 0
+	    fi
+	fi
+
+    fi
+
+    # we never had internet before and we are not online, return false without delaying more
+    if [[ ! -e "$stamp_hour_prev" ]] && [[ -z "$OnLine" ]] ; then
+	return 1
     fi
 
 
@@ -197,26 +204,26 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet
-    if timeout 10 curl --connect-timeout 3 www.google.com 2>/dev/null | grep -qi 'html' ; then
+    if timeout 10 curl --connect-timeout 5 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 
         return 0
     else
         # fast check ? directly return
-        if [[ "$1" != "delayed" ]] ; then
+	if [[ "$1" != "delayed" ]] || [[ "$1" != "force" ]] || [[ "$1" != "-f" ]] ; then
             return 1
         fi
 
         #el_warning "no connection to internet found, waiting 3 seconds"
         #sleep 3
-        if timeout 20 curl --connect-timeout 6 www.google.com 2>/dev/null | grep -qi 'html' ; then
+        if timeout 20 curl --connect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
             echo "$date_hour_now" > "$stamp_hour_prev"
 
             return 0
         else
             el_warning "no connection to internet found, waiting 10 seconds"
             sleep 10
-            if timeout 30 curl --conect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
+            if timeout 30 curl --conect-timeout 20 www.google.com 2>/dev/null | grep -qi 'html' ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
 
                 return 0

@@ -767,7 +767,7 @@ el_explain(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_debug
-#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 3
+#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 3|4
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_debug(){
@@ -834,7 +834,7 @@ el_debug(){
     fi
 
     # more debug, show function-call array
-    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ "${EL_DEBUG}" -ge 4 ]] ; then
         # show the array of calls
         funclevel="${funclevels}"
         echo -en "${el_c_gr}calls:" 1>&2

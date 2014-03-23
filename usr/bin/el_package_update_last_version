@@ -98,6 +98,8 @@ main(){
 		if zenity --question --text="$message_upgrade_please" ; then
 		    el_dependencies_install "$packagename"
 		    exit 0
+		else
+		    exit 1
 		fi
 	    fi
 
@@ -111,6 +113,8 @@ main(){
 		    echo -e "Please insert root/admin password:"
 		    su -c "apt-get install $packagename" root
 		    exit 0
+		else
+		    exit 1
 		fi
 	    fi
 	fi

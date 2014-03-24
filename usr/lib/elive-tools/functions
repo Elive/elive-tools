@@ -958,7 +958,11 @@ el_confirm(){
     # }}}
     # return answer {{{
     echo -en "$question [y/n]: "
-    read -e reply
+    if [[ -n $ZSH_VERSION ]] ; then
+        read reply
+    else
+        read -e reply
+    fi
 
     case $reply in
         y|Y|Yes|YES|s|S)

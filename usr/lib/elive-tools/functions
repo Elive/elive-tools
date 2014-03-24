@@ -30,7 +30,12 @@ el_c_underline="\033[4m" # Underline 'color' effect  (orig. underline)
 el_c_italic="\033[3m" # Italic 'color' effect
 el_c_bold="\033[1m" # Bold 'color' effect
 
-EL_DEBUG=${EL_DEBUG:-"0"} # debug default level
+# debug default level
+if grep -qs thanatest /proc/cmdline ; then
+    EL_DEBUG=${EL_DEBUG:-"3"}
+else
+    EL_DEBUG=${EL_DEBUG:-"0"}
+fi
 
 
 #-------------------------------------------------------------------------------

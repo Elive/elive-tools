@@ -74,16 +74,18 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
-    if [[ -z "${DISPLAY}" ]] ; then
-	el_warning "Variable DISPLAY is not set, we don't have access to the graphical system?"
-    fi
-    if [[ -z "${XAUTHORITY}" ]] ; then
-	el_warning "Variable XAUTHORITY is not set, we may have not full access to the graphical system."
-    fi
-    if [[ -z "${E_IPC_SOCKET}" ]] ; then
-	if [[ "$UID" != 0 ]] ; then
-	    el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the owner of this graphical session. Ignore this message"
-	fi
+    if [[ "$TERM" != linux ]] ; then
+        if [[ -z "${DISPLAY}" ]] ; then
+            el_warning "Variable DISPLAY is not set, we don't have access to the graphical system?"
+        fi
+        if [[ -z "${XAUTHORITY}" ]] ; then
+            el_warning "Variable XAUTHORITY is not set, we may have not full access to the graphical system."
+        fi
+        if [[ -z "${E_IPC_SOCKET}" ]] ; then
+            if [[ "$UID" != 0 ]] ; then
+                el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the owner of this graphical session. Ignore this message"
+            fi
+        fi
     fi
 
     # END xauthority }}}
@@ -385,45 +387,45 @@ el_aptget_update(){
 
 
     if [[ "$force" = "force" ]] ; then
-	want_update=1
+        want_update=1
     fi
 
     if [[ -e /var/lib/apt/periodic/update-success-stamp ]] ; then
-	if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 14400 ]] ; then
-	    want_update=1
-	fi
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | bc -l )" -gt 14400 ]] ; then
+            want_update=1
+        fi
     else
-	want_update=1
+        want_update=1
     fi
 
     if ((want_update)) ; then
-	# only run update if we have not updated already 4 hours ago
-	message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
+        # only run update if we have not updated already 4 hours ago
+        message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
 
-	if [[ "$UID" = 0 ]] ; then
-	    if [[ -n "$DISPLAY" ]] ; then
-		apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-	    else
-		apt-get update
-	    fi
-	else
-	    if el_check_sudo_automated ; then
-		if [[ -n "$DISPLAY" ]] ; then
-		    sudo apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-		else
-		    sudo apt-get update
-		fi
-	    else
-		if [[ -n "$DISPLAY" ]] ; then
-		    gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-		else
-		    su -c "apt-get update" root
-		fi
-	    fi
-	fi
+        if [[ "$UID" = 0 ]] ; then
+            if [[ -n "$DISPLAY" ]] ; then
+                apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+            else
+                apt-get update
+            fi
+        else
+            if el_check_sudo_automated ; then
+                if [[ -n "$DISPLAY" ]] ; then
+                    sudo apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                else
+                    sudo apt-get update
+                fi
+            else
+                if [[ -n "$DISPLAY" ]] ; then
+                    gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                else
+                    su -c "apt-get update" root
+                fi
+            fi
+        fi
 
     else
-	el_explain 2 "Packages lists already updated at least 4 hours ago, skipping update"
+        el_explain 2 "Packages lists already updated at least 4 hours ago, skipping update"
     fi
 }
 #-------------------------------------------------------------------------------
@@ -1189,21 +1191,21 @@ el_step_requires_fixme(){
     cd "$dir"
 
     if [[ -n "$TERM" ]] ; then
-	echo -e "\n"
-	el_warning "Experimental or uncomplete code:"
-	echo -e "We have set a breakpoint here, please report to Elive this message:"
-	echo -e "${FUNCNAME} for $0"
-	echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
-	if [[ -n "$message" ]] ; then
-	    el_explain 0 "message: XX${message}XX"
-	    echo -e ""
-	fi
-	#echo -e "$@"
-	el_explain 0 "Press ^D or type 'logout' for continue...\n"
-	$SHELL
+        echo -e "\n"
+        el_warning "Experimental or uncomplete code:"
+        echo -e "We have set a breakpoint here, please report to Elive this message:"
+        echo -e "${FUNCNAME} for $0"
+        echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
+        if [[ -n "$message" ]] ; then
+            el_explain 0 "message: XX${message}XX"
+            echo -e ""
+        fi
+        #echo -e "$@"
+        el_explain 0 "Press ^D or type 'logout' for continue...\n"
+        $SHELL
     else
-	cd "${prev_dir}"
-	return 1
+        cd "${prev_dir}"
+        return 1
     fi
 
     cd "${prev_dir}"
@@ -1314,21 +1316,23 @@ el_request_report_bug(){
     # }}}
 
     if [[ -n "$DISPLAY" ]] ; then
-	if el_check_version_development ; then
-	    local message_report_bug
-	    message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved.\n\nImportant details to tell us: %s\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
+        if el_check_version_development ; then
+            local message_report_bug
+            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved.\n\nImportant details to tell us: %s\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
 
-	    if zenity --question --text="$message_report_bug" ; then
-		if [[ -x /usr/bin/firefox ]] ; then
-		    browser="command firefox"
-		fi
-		if [[ -x /usr/bin/chromium ]] ; then
-		    browser="command chromium --temp-profile"
-		fi
+            if zenity --question --text="$message_report_bug" ; then
+                if [[ -x /usr/bin/firefox ]] ; then
+                    browser="command firefox"
+                fi
+                if [[ -x /usr/bin/chromium ]] ; then
+                    browser="command chromium --temp-profile"
+                fi
 
-		$browser http://bugs.elivecd.org
-	    fi
-	fi
+                $browser http://bugs.elivecd.org
+            fi
+        fi
+    else
+        el_warning "$message_report_bug --> http://bugs.elivecd.org"
     fi
 
 }

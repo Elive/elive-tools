@@ -1324,6 +1324,9 @@ el_request_report_bug(){
                 if [[ -x /usr/bin/firefox ]] ; then
                     browser="command firefox"
                 fi
+                if [[ -x /usr/bin/iceweasel ]] ; then
+                    browser="command iceweasel"
+                fi
                 if [[ -x /usr/bin/chromium ]] ; then
                     browser="command chromium --temp-profile"
                 fi

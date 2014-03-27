@@ -736,9 +736,9 @@ el_check_version_development_is_days_recent(){
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
 
     if [[ "$days_difference" -le "$days_required" ]] ; then
-        return 1
-    else
         return 0
+    else
+        return 1
     fi
 }
 

@@ -1,0 +1,461 @@
+#!/bin/bash
+
+
+
+main(){
+    # pre {{{
+    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_soft_raid partitions_lvm2_lv partitions_raw
+
+    # ways to get partitions:
+    # lsblk -f
+    # /proc/partitions
+    # sfdisk | fdisk
+    # fdisk -l /dev/[sh]d?
+
+    # more info (size, fs, etc)
+    # parted /dev/sda print
+
+    # show uuid|label:
+    # blkid
+    # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
+
+
+
+
+    # }}}
+
+    case $1 in
+       --show-all)
+	  source /usr/lib/elive-tools/functions
+    # get a normal list of partitions {{{
+    for i in /dev/[sh]d[a-z][0-9]*
+    do
+	if [[ -b "$i" ]] ; then
+	    el_array_member_add "${i}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+	fi
+    done
+    # debug:
+    el_debug "Partitions get in traditional mode as from /dev/[sh]d[a-z][0-9]*: ${partitions_raw[@]}"
+
+    # }}}
+    # LVM support {{{
+    if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay | grep -q "logical volume.*active" ) ; then
+	# loop between the partitions that are used for a LVM (physical volume)
+	for pvname in $( LC_ALL=C pvdisplay | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
+	do
+	    # remove extra leading blank chars
+	    read -r pvname <<< "$pvname"
+	    [[ ! -b "${pvname}" ]] && continue || true
+	    # remove partition from our list if is part of a group
+	    el_array_member_unset "${pvname}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+	    el_debug "Removed ${pvname} from our list of partitions because it is part of a Physical Volume (LVM2) set"
+	done
+
+	# any logical volume (real partition inside lvm2 setup) to add?
+	for lvname in $( LC_ALL=C lvdisplay | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
+	do
+	    # remove extra leading blank chars
+	    read -r lvname <<< "$lvname"
+	    [[ ! -b "${lvname}" ]] && continue || true
+	    el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
+	    el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
+	done
+	unset lvname pvname
+    fi
+
+    # }}}
+    # RAID support (software) {{{
+    if [[ -x /sbin/mdadm ]] && ( cat /proc/mdstat | grep -q " : active.*raid" ) ; then
+	for raid in $(cat /proc/mdstat | grep " : active.*raid" | sed -e 's|: active.*$||g' )
+	do
+	    # remove extra leading blank chars
+	    read -r raid <<< "$raid"
+
+	    # remove elements that composes raids
+	    #for dev in $( cat /proc/mdstat | grep "^${raid} :" | tr ' ' '\n' | grep "\[[[:digit:]]\]" | sed 's|\[.*$||g' )
+	    for dev in $( LC_ALL=C mdadm --detail "/dev/${raid}"  | grep "active sync.*/dev/" | sed -e 's|^.*/dev/|/dev/|g' )
+	    do
+		[[ ! -b "${dev}" ]] && continue || true
+		el_array_member_unset "${dev}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+		el_debug "Removed ${dev} from our list of partitions because it is part of a (software) RAID set [unit]"
+		unset dev
+	    done
+
+	    # remove the raid item too
+	    [[ ! -b "/dev/${raid}" ]] && continue || true
+	    el_array_member_unset "/dev/${raid}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+	    el_debug "Removed /dev/${raid} from our list of partitions because it is part of a (software) RAID set [set]"
+
+	    # scan the raid set for get names
+	    raidname="$( mdadm --detail "/dev/${raid}" | grep -E "\s+Name : " | sed -e 's|\s*Name : ||g' | head -1 )"
+
+	    for part in /dev/md/${raidname}p*
+	    do
+		[[ ! -b "${part}" ]] && continue || true
+		el_array_member_add "${part}" "${partitions_soft_raid[@]}" ; partitions_soft_raid=("${_out[@]}")
+		el_debug "Adding (soft-RAID) $part to our partitions list"
+	    done
+
+
+	done
+	unset dev raid
+    fi
+
+    # }}}
+    # RAID support (fake-raid - bios featured)) {{{
+    if ( test -x /sbin/dmraid ) && ( test -d /dev/mapper ) ; then
+       # TODO: deleteme, betatesting
+       if dmraid -r 1>/dev/null 2>/dev/null ; then
+	  el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"
+       fi
+
+       bios_raid_list="$(dmraid -r | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
+       echo "$bios_raid_list" > /tmp/.bios_raid_list
+       while read -r bios_raid_disk
+       do
+	  # RESULTS:
+	  # /dev/sdb jmicron_GRAID
+	  # /dev/sda jmicron_GRAID
+	  for bios_raid_partition in "$bios_raid_disk"
+	  do
+	     bios_raid_partition_id="$( echo "$bios_raid_partition" | awk '{print $2}' )"
+	     for bios_raid_partition_real in /dev/mapper/${bios_raid_partition_id}*
+	     do
+		if test -b ${bios_raid_partition_real}
+		then
+		   unset mounted
+		   bios_raid_partition_remove="$( echo "$bios_raid_partition" | awk '{print $1}' )"
+		   bios_raid_partition_add="${bios_raid_partition_real}"
+		   for bios_raid_partition_remove_number in ${bios_raid_partition_remove}*
+		   do
+		      [[ "$bios_raid_partition_remove_number" = "${bios_raid_partition_remove}" ]] && continue || true
+		      [[ ! -b ${bios_raid_partition_remove_number} ]] && continue || true
+		      mkdir -p /tmp/.mount_tests_$$
+		      if [[ ! "$mounted" = "yes" ]] ; then
+			 mount $bios_raid_partition_add /tmp/.mount_tests_$$ 2>/dev/null && mounted=yes
+		      fi
+		      umount /tmp/.mount_tests_$$ 2>/dev/null
+		      rmdir /tmp/.mount_tests_$$
+		      if [[ "$mounted" = "yes" ]] ; then
+			 listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove_number}||g" )"
+		      else
+			 break
+		      fi
+		   done
+		   [[ ! "$mounted" = "yes" ]] && break
+		   listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove}||g" )"
+		   if ! echo -e "${listpartitions}" | grep -q "${bios_raid_partition_add}"
+		   then
+		      listpartitions="${listpartitions} ${bios_raid_partition_add}"
+		   fi
+		fi
+	     done
+	     unset bios_raid_partition_remove bios_raid_partition_add
+	  done
+	  unset bios_raid_partition
+       done < /tmp/.bios_raid_list
+       rm -f /tmp/.bios_raid_list
+       listpartitions="$( echo ${listpartitions} | sed "s|/dev/mapper/${bios_raid_partition_id} ||g" )"
+       unset bios_raid_list bios_raid_partition_id
+    fi
+    # put the original list on our array list
+    for item in ${listpartitions}
+    do
+       [[ -b "$item" ]] && el_array_member_add "$item" "${[@]}" ; partitions=("${_out[@]}")
+    done
+
+
+    # }}}
+       ;;
+       --show-only)
+	  shift
+	  source /usr/lib/elive-tools/functions
+	  el_array_member_add "$1" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+	  shift
+	  ;;
+       *)
+	  echo -e "Usage: $(basename $0) [option]" 1>&2
+	  echo -e "--show-all" 1>&2
+	  echo -e "--show-only /dev/partition - to obtain data from a partition" 1>&2
+    esac
+
+    # get extra data for each partition {{{
+    for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
+    #for item in "${partitions_raw[@]}"
+    do
+	# debug
+	#echo -e "D: $item"
+
+	while read -ru 3 line
+	do
+	    # normal partitions
+	    if [[ "${line}" = *"ID_FS_USAGE=filesystem" ]] ; then
+	        item_is_usable=1
+		item_type="filesystem"
+	    fi
+	    # swap partitions
+	    if [[ "${line}" = *"ID_FS_TYPE=swap" ]] ; then
+	        item_is_usable=1
+		item_type="swap"
+		item_filesystem="swap"
+		item_human_label="(swap)"
+	    fi
+	    # special partitions
+	    if [[ "${line}" = *"ID_FS_TYPE=crypto_"* ]] ; then
+	        item_is_usable=1
+	    fi
+
+	    # get label
+	    if [[ "${line}" = *"ID_FS_LABEL="* ]] ; then
+		item_label="$(echo "$line" | sed -e 's|^.*ID_FS_LABEL=||g' )"
+		item_human_label="$item_label"
+	    fi
+	    # get FS
+	    if [[ "${line}" = *"ID_FS_TYPE="* ]] ; then
+		item_filesystem="$(echo "$line" | sed -e 's|^.*ID_FS_TYPE=||g' )"
+	    fi
+	    # get UUID
+	    if [[ "${line}" = *"ID_FS_UUID="* ]] ; then
+		item_uuid="$(echo "$line" | sed -e 's|^.*ID_FS_UUID=||g' )"
+		if ! [[ -b "/dev/disk/by-uuid/$item_uuid" ]] ; then
+		    el_debug "detected uuid ${item_uuid} for ${item} but it doesn't exist in /dev, removing uuid from list"
+		    unset item_uuid
+		fi
+	    fi
+
+	    # get sizes
+	    if [[ "${line}" = *"UDISKS_PARTITION_SIZE="* ]] ; then
+		item_size="$(echo "$line" | sed -e 's|^.*UDISKS_PARTITION_SIZE=||g' )"
+		item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
+		if [[ "$item_human_size" = .* ]] ; then
+		    item_human_size="${item_human_size#.} MB"
+		else
+		    item_human_size="${item_human_size:0:-2} GB"
+		fi
+		item_human_size="${item_human_size#0}"
+		item_human_size="${item_human_size#0}"
+	    fi
+
+
+	    # raid (soft) ones
+	    if [[ "${line}" = *"MD_LEVEL=raid"* ]] ; then
+		item_type="$(echo "$line" | sed -e 's|^.*MD_LEVEL=||g' )"
+	    fi
+	    if [[ "${line}" = *"MD_NAME="* ]] ; then
+		item_label="$(echo "$line" | sed -e 's|^.*MD_NAME=||g' )"
+		item_human_label="(${item_type}) ${item_label}"
+	    fi
+
+	    # LVM2 ones:
+	    if [[ "${line}" = *"DM_LV_NAME="* ]] ; then
+		item_label="$(echo "$line" | sed -e 's|^.*DM_LV_NAME=||g' )"
+	    fi
+	    # vg_name comes after vl_name in the output
+	    if [[ "${line}" = *"DM_NAME="* ]] ; then
+		item_dm_name="$(echo "$line" | sed -e 's|^.*DM_NAME=||g' )"
+		# now we have item_vg_name var
+		item_human_label="(LVM2) ${item_dm_name}"
+	    fi
+
+
+	    # END checks
+	    # suspended device?
+	    if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
+		item_is_usable=0
+		el_warning "seems like the device $item is in suspension, make it running if you want to use it"
+	    fi
+	    # some lvm devices are considered usable if they are not detected as devtype=disk, in any case, its not a partition
+	    if [[ "${line}" = "DEVTYPE=disk" ]] ; then
+	        item_is_usable=0
+		el_debug "ignoring partition ${item} because is considered a disk"
+	    fi
+
+	done 3<<< "$( LC_ALL=C udevadm info --query=all --name="$item" )"
+
+
+	# re- fixes
+	if [[ -z "$item_human_size" ]] ; then
+	    item_human_size="$(lsblk -lnr -o size "${item}" )"
+	fi
+	if [[ -z "$item_human_label" ]] ; then
+	    item_human_label="(no name)"
+	fi
+	if [[ -z "$item_filesystem" ]] ; then
+	    item_filesystem="$(get_filesystem "$item" )"
+	    if [[ -n "$item_filesystem" ]] ; then
+		item_is_usable=1
+
+		if [[ "${item_filesystem}" = "swap" ]] ; then
+		    item_type="swap"
+		    item_filesystem="swap"
+		    item_human_label="(swap)"
+		fi
+	    fi
+	fi
+	# do not use next one, since not everytime item_type is empty, we should just search fro crypt*
+	#if [[ -z "$item_type" ]] && [[ "$item_filesystem" = crypt* ]] ; then
+	    #item_type="locked"
+	#fi
+	if [[ -z "$item_type" ]] && [[ -z "$item_uuid" ]] && [[ -z "$item_label" ]] && [[ -z "$item_filesystem" ]] ; then
+	    item_human_label="(empty partition)"
+	fi
+
+	# extended partitions
+	if [[ "$item_filesystem" = "extended" ]] ; then
+	    unset item_filesystem
+	    item_type="extended"
+	    item_is_usable=0
+	    el_debug "marking ${item} as unusable because is an extended partition"
+	fi
+
+	# add it to our list
+	if ((item_is_usable)) ; then
+	    el_array_member_add "${item}::${item_type}::${item_filesystem}::${item_label}::${item_human_label}::${item_size}::${item_human_size}::${item_uuid}" "${partitions[@]}" ; partitions=("${_out[@]}")
+	else
+	    el_debug "$item is NOT usable, not including it in the list"
+	fi
+
+	# next loop
+	unset item item_is_usable item_type item_filesystem item_label item_human_label item_size item_vg_name item_dm_name item_human_size item_uuid
+    done
+    # - get extra data for each partition }}}
+
+    # Results
+    #for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
+    echo -e "\nStructure:\ndevice :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
+
+    # XXX: note: these are special cases:
+    # filesystem: LVM2_member : its a (real) partition but meant to be used for a lvm
+    # filesystem: crypto_LUKS : its a (real) encrypted partition, must be mounted first
+
+    for item in "${partitions[@]}"
+    do
+	echo -e "$item"
+	##echo -en "\t" ; file -Ls "$item"
+    done
+
+    #echo -en "\nTotal: "
+    #for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
+    #do
+	#echo -e "Partition: $item"
+    #done | wc -l
+
+}
+
+get_filesystem(){
+    local fs dev
+    dev="$1"
+    # make sure that we get the filesystem
+
+    # use hal
+    fs="$(get_filesystem_hal "$dev" )"
+    if [[ -n "$fs" ]] ; then
+        echo "$fs"
+	return 0
+    fi
+
+    # use "file"
+    fs="$(get_filesystem_file "$dev" )"
+    if [[ -n "$fs" ]] ; then
+        echo "$fs"
+	return 0
+    fi
+
+    # use "id"
+    fs="$(get_filesystem_id "$dev" )"
+    if [[ -n "$fs" ]] ; then
+        echo "$fs"
+	return 0
+    fi
+
+    # we have not get it?
+    return 1
+}
+
+get_filesystem_hal(){
+   local udi
+   #actually the only used
+   #/etc/init.d/dbus restart 1>/dev/null 2>&1
+   #/etc/init.d/hal restart 1>/dev/null 2>&1
+   udi=$( LC_ALL=C hal-find-by-property --key "block.device" --string "$1" 2>/dev/null )
+   hal-get-property --udi "$udi" --key "volume.fstype" 2>/dev/null
+}
+
+get_filesystem_file(){
+    local ret
+    ret="$(file -Ls "$1" )"
+
+    case $ret in
+	*HFS*|*hfs*)
+	    echo "hfsplus"
+	    ;;
+	*extended*)
+	    echo "extended"
+	    ;;
+	*ext3*)
+	    echo "ext3"
+	    ;;
+	*ext2*)
+	    echo "ext2"
+	    ;;
+	*"ReiserFS V3"*)
+	    echo "reiserfs"
+	    ;;
+	*XFS*)
+	    echo "xfs"
+	    ;;
+	*ntfs*|*NTFS*|ntfs-3g)
+	    echo "ntfs-3g"
+	    ;;
+	*vfat*|*FAT*)
+	    echo "vfat"
+	    ;;
+	*swap*)
+	    echo "swap"
+	    ;;
+	*btrfs*|*BTRFS*)
+	    echo "btrfs"
+	    ;;
+	#*)
+	    #echo "auto"
+	    #;;
+    esac
+}
+
+get_filesystem_id(){
+    local ret
+    ret="$(sfdisk --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+    [[ -z "$ret" ]] && ret="$(sfdisk --force --print-id "$( echo "$1" | sed 's/[0-9]/ &/')" 2>/dev/null )" || true
+
+    #   if [ "$?" != "0" ]; then
+    #      echo "auto"
+    #         return
+    #      fi
+
+    case "$ret" in
+	1|4|6|b|c|e|14|16|1b|1c|1e)
+	    echo "vfat"
+	    ;;
+	7|17|86|87)
+	    echo "ntfs-3g"
+	    ;;
+	#5|f|85|ee|ef|fd)
+	    #echo "blacklisted"
+	    #;;
+	af)
+	    echo "hfsplus"
+	    ;;
+	#*)
+	    #echo "auto"
+	    #;;
+    esac
+}
+
+
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

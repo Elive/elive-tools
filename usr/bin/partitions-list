@@ -177,6 +177,7 @@ main(){
 	  echo -e "Usage: $(basename $0) [option]" 1>&2
 	  echo -e "--show-all" 1>&2
 	  echo -e "--show-only /dev/partition - to obtain data from a partition" 1>&2
+	  echo -e "\nStructure:\ndevice :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
     esac
 
     # get extra data for each partition {{{
@@ -322,7 +323,6 @@ main(){
 
     # Results
     #for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
-    echo -e "\nStructure:\ndevice :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
 
     # XXX: note: these are special cases:
     # filesystem: LVM2_member : its a (real) partition but meant to be used for a lvm

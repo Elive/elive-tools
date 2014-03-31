@@ -1287,7 +1287,7 @@ el_flag(){
     action="${1}"
     name="${2}"
 
-    el_debug "$action - $name"
+    #el_debug "$action - $name"
 
     flags_d="${flags_d:-"/tmp/.$(basename $0)-flags-$USER"}"
 
@@ -1309,11 +1309,14 @@ el_flag(){
 	    if ! el_check_dir_has_files "${flags_d}" ; then
 		rmdir "${flags_d}"
 	    fi
+            el_debug "removed flag $name"
 	    ;;
 	check|test|verify)
 	    if [[ -e "${flags_d}/$name" ]]; then
+                el_debug "$action $name -> [true]"
 		return 0
 	    else
+                el_debug "$action $name -> [false]"
 		return 1
 	    fi
 	    ;;

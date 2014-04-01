@@ -19,7 +19,14 @@ main(){
     # blkid
     # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
 
+    if [[ "$UID" != "0" ]] ; then
+       el_error "root please: $(basename $0)"
+       exit 1
+    fi
 
+    if ! el_dependencies_check "udevadm" ; then
+       el_dependencies_install udev
+    fi
 
 
     # }}}
@@ -103,7 +110,7 @@ main(){
 
     # }}}
     # RAID support (fake-raid - bios featured)) {{{
-    if ( test -x /sbin/dmraid ) && ( test -d /dev/mapper ) ; then
+    if [[ -x /sbin/dmraid ]] && [[ -d /dev/mapper ]] ; then
        # TODO: deleteme, betatesting
        if dmraid -r 1>/dev/null 2>/dev/null ; then
 	  el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"

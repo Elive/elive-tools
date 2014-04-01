@@ -345,12 +345,14 @@ main(){
 	   fi
 	   # btrfs
 	   if echo "$item_filesystem" | grep -qsiE "^(btrfs)$" ; then
-	      if ! grep -qs "btrfs" /proc/filesystems ; then
-		 modprobe btrfs 2>/dev/null
-		 if ! grep -qs "btrfs" /proc/filesystems ; then
-		    item_is_usable=0
-		 fi
-	      fi
+	      # actually they are very unstable, not useful, and we cannot even mount them so... don't list them for our tools
+	      item_is_usable=0
+	      #if ! grep -qs "btrfs" /proc/filesystems ; then
+		 #modprobe btrfs 2>/dev/null
+		 #if ! grep -qs "btrfs" /proc/filesystems ; then
+		    #item_is_usable=0
+		 #fi
+	      #fi
 	   fi
 	fi
 

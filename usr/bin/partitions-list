@@ -327,7 +327,7 @@ main(){
 	# only show mountable partitions ? {{{
 	if ((only_mountable)) ; then
 	   # common not mountable partitions
-	   if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crytpo_LUKS)$" ; then
+	   if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
 	      item_is_usable=0
 	   fi
 	   # never consider macosx partitions mountable in our tools, the are useless for us

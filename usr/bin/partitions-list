@@ -1,4 +1,5 @@
 #!/bin/bash
+source /usr/lib/elive-tools/functions
 
 
 
@@ -33,7 +34,6 @@ main(){
 
     case $1 in
        --show-all)
-	  source /usr/lib/elive-tools/functions
     # get a normal list of partitions {{{
     for i in /dev/[sh]d[a-z][0-9]*
     do
@@ -176,7 +176,6 @@ main(){
        ;;
        --show-only)
 	  shift
-	  source /usr/lib/elive-tools/functions
 	  el_array_member_add "$1" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
 	  shift
 	  ;;

@@ -2,38 +2,7 @@
 source /usr/lib/elive-tools/functions
 
 
-
-main(){
-    # pre {{{
-    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_soft_raid partitions_lvm2_lv partitions_raw
-
-    # ways to get partitions:
-    # lsblk -f
-    # /proc/partitions
-    # sfdisk | fdisk
-    # fdisk -l /dev/[sh]d?
-
-    # more info (size, fs, etc)
-    # parted /dev/sda print
-
-    # show uuid|label:
-    # blkid
-    # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
-
-    if [[ "$UID" != "0" ]] ; then
-       el_error "root please: $(basename $0)"
-       exit 1
-    fi
-
-    if ! el_dependencies_check "udevadm" ; then
-       el_dependencies_install udev
-    fi
-
-
-    # }}}
-
-    case $1 in
-       --show-all)
+get_all_partitions_list(){
     # get a normal list of partitions {{{
     for i in /dev/[sh]d[a-z][0-9]*
     do
@@ -168,11 +137,50 @@ main(){
     # put the original list on our array list
     for item in ${listpartitions}
     do
-       [[ -b "$item" ]] && el_array_member_add "$item" "${[@]}" ; partitions=("${_out[@]}")
+       [[ -b "$item" ]] && el_array_member_add "${item}" "${partitions_fake_raid[@]}" ; partitions_fake_raid=("${_out[@]}")
     done
 
 
     # }}}
+}
+
+main(){
+    # pre {{{
+    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_fake_raid partitions_soft_raid partitions_lvm2_lv partitions_raw
+    #local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line disk
+
+    # ways to get partitions:
+    # lsblk -f
+    # /proc/partitions
+    # sfdisk | fdisk
+    # fdisk -l /dev/[sh]d?
+
+    # more info (size, fs, etc)
+    # parted /dev/sda print
+
+    # show uuid|label:
+    # blkid
+    # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
+
+    if [[ "$UID" != "0" ]] ; then
+       el_error "root please: $(basename $0)"
+       exit 1
+    fi
+
+    if ! el_dependencies_check "udevadm" ; then
+       el_dependencies_install udev
+    fi
+
+
+    # }}}
+
+    case $1 in
+       --show-all)
+	  get_all_partitions_list
+       ;;
+       --show-all-mountable)
+	  only_mountable=1
+	  get_all_partitions_list
        ;;
        --show-only)
 	  shift
@@ -182,12 +190,13 @@ main(){
        *)
 	  echo -e "Usage: $(basename $0) [option]" 1>&2
 	  echo -e "--show-all" 1>&2
+	  echo -e "--show-all-mountable" 1>&2
 	  echo -e "--show-only /dev/partition - to obtain data from a partition" 1>&2
 	  echo -e "\nStructure:\ndevice :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
     esac
 
     # get extra data for each partition {{{
-    for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
+    for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}" "${partitions_fake_raid[@]}"
     #for item in "${partitions_raw[@]}"
     do
 	# debug
@@ -315,6 +324,38 @@ main(){
 	    el_debug "marking ${item} as unusable because is an extended partition"
 	fi
 
+	# only show mountable partitions ? {{{
+	if ((only_mountable)) ; then
+	   # common not mountable partitions
+	   if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crytpo_LUKS)$" ; then
+	      item_is_usable=0
+	   fi
+	   # never consider macosx partitions mountable in our tools, the are useless for us
+	   if echo "$item_filesystem" | grep -qsiE "^(hfs|hfsplus)$" ; then
+	      item_is_usable=0
+	   fi
+	   # reiser 4
+	   if echo "$item_filesystem" | grep -qsiE "^(reiser4)$" ; then
+	      if ! grep -qs "reiser4" /proc/filesystems ; then
+		 modprobe reiser4 2>/dev/null
+		 if ! grep -qs "reiser4" /proc/filesystems ; then
+		    item_is_usable=0
+		 fi
+	      fi
+	   fi
+	   # btrfs
+	   if echo "$item_filesystem" | grep -qsiE "^(btrfs)$" ; then
+	      if ! grep -qs "btrfs" /proc/filesystems ; then
+		 modprobe btrfs 2>/dev/null
+		 if ! grep -qs "btrfs" /proc/filesystems ; then
+		    item_is_usable=0
+		 fi
+	      fi
+	   fi
+	fi
+
+	# }}}
+
 	# add it to our list
 	if ((item_is_usable)) ; then
 	    el_array_member_add "${item}::${item_type}::${item_filesystem}::${item_label}::${item_human_label}::${item_size}::${item_human_size}::${item_uuid}" "${partitions[@]}" ; partitions=("${_out[@]}")
@@ -328,7 +369,6 @@ main(){
     # - get extra data for each partition }}}
 
     # Results
-    #for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
 
     # XXX: note: these are special cases:
     # filesystem: LVM2_member : its a (real) partition but meant to be used for a lvm
@@ -339,12 +379,6 @@ main(){
 	echo -e "$item"
 	##echo -en "\t" ; file -Ls "$item"
     done
-
-    #echo -en "\nTotal: "
-    #for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}"
-    #do
-	#echo -e "Partition: $item"
-    #done | wc -l
 
 }
 

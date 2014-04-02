@@ -150,7 +150,7 @@ chroot_layer_umount(){
     fi
 
     # devpts
-    if check_is_mounted "$dir/dev/pts" ; then
+    if check_is_mounted "$dir/dev/pts" 1>/dev/null ; then
         if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
             umount "$dir/dev/pts"
         else
@@ -159,7 +159,7 @@ chroot_layer_umount(){
     fi
 
     # proc
-    if check_is_mounted "$dir/proc" ; then
+    if check_is_mounted "$dir/proc" 1>/dev/null ; then
         if [[ -e "${dir}/proc/sys/fs/binfmt_misc/status" ]] ; then
             umount "$dir/proc/sys/fs/binfmt_misc"
         fi
@@ -169,12 +169,12 @@ chroot_layer_umount(){
     fi
 
     # selinux
-    if check_is_mounted "$dir/selinux" || [[ -e "$dir/selinux/enforce" ]] ; then
+    if check_is_mounted "$dir/selinux" 1>/dev/null || [[ -e "$dir/selinux/enforce" ]] ; then
         umount "$dir/selinux"
     fi
 
     # sysfs
-    if check_is_mounted "$dir/sys" ; then
+    if check_is_mounted "$dir/sys" 1>/dev/null ; then
         umount "$dir/sys"
     fi
 
@@ -268,13 +268,13 @@ get_mountpoint(){
     read -r mountpoint <<< "$mountpoint"
 
     # not mounted ? mount it first
-    if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" ; then
+    if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 1>/dev/null ; then
         #if LC_ALL=C udisks --show-info "$dev" | grep -qs "is mounted:.*0" ; then
 
         #udisks --mount "$dev" 1>/dev/null
         #sync
         # TODO: if i use el_mount here it fails by some strange reason, why ? get_mountpoint not gets the mountpoint correctly?
-        if el_mount "$dev" ; then
+        if el_mount "$dev" 1>/dev/null ; then
 
             # get data again
             mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
@@ -282,7 +282,7 @@ get_mountpoint(){
             read -r mountpoint <<< "$mountpoint"
             # umount it
             if [[ -n "$mountpoint" ]] ; then
-                el_umount "$mountpoint"
+                el_umount "$mountpoint" 1>/dev/null
             fi
         fi
     fi
@@ -386,14 +386,14 @@ el_umount(){
         fi
 
 
-        if ((is_mountpoint)) && ! check_is_mounted "$mountpoint" ; then
+        if ((is_mountpoint)) && ! check_is_mounted "$mountpoint" 1>/dev/null ; then
             # if we are not mounted, nothing more to do
             return 0
         fi
 
         if ((is_device)) ; then
             # if we are not mounted, nothing more to do
-            if ! check_is_mounted "$device" ; then
+            if ! check_is_mounted "$device" 1>/dev/null ; then
                 return 0
             fi
 
@@ -410,7 +410,7 @@ el_umount(){
 
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
         gvfs-mount -u "$mountpoint"
-        if check_is_mounted "$mountpoint" ; then
+        if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
         else
             return 0
@@ -418,14 +418,14 @@ el_umount(){
 
         # try with udisks maybe
         udisks --unmount "$mountpoint"
-        if check_is_mounted "$mountpoint" ; then
+        if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
         else
             return 0
         fi
 
         command umount "$mountpoint" || command umount "$device"
-        if check_is_mounted "$mountpoint" ; then
+        if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (umount) $dev from ${mountpoint}, so hum... let me think"
         else
             return 0
@@ -440,7 +440,7 @@ el_umount(){
             el_processes_using_mountpoint "$mountpoint" kill
 
             gvfs-mount -u "$mountpoint"
-            if check_is_mounted "$mountpoint" ; then
+            if check_is_mounted "$mountpoint" 1>/dev/null ; then
                 el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
             else
                 return 0
@@ -448,7 +448,7 @@ el_umount(){
 
             # try with udisks maybe
             udisks --unmount "$mountpoint"
-            if check_is_mounted "$mountpoint" ; then
+            if check_is_mounted "$mountpoint" 1>/dev/null ; then
                 el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
             else
                 return 0
@@ -456,7 +456,7 @@ el_umount(){
 
             command umount "$mountpoint" || command umount "$device"
 
-            if check_is_mounted "$mountpoint" ; then
+            if check_is_mounted "$mountpoint" 1>/dev/null ; then
                 el_warning "ok, bruteforce time"
                 # supercow powers
                 command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
@@ -465,7 +465,7 @@ el_umount(){
             fi
         fi
 
-        if check_is_mounted "$mountpoint" ; then
+        if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
             return 1
         else
@@ -499,7 +499,7 @@ el_mount(){
     timeout 60 udisks --mount "$dev" 1>/dev/null
     sync
 
-    if check_is_mounted "$dev" ; then
+    if check_is_mounted "$dev" 1>/dev/null ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
     else

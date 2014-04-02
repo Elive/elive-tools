@@ -411,7 +411,7 @@ el_umount(){
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
         gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
-            el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
+            el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
         else
             return 0
         fi
@@ -419,14 +419,14 @@ el_umount(){
         # try with udisks maybe
         udisks --unmount "$mountpoint" 2>/dev/null 1>&2
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
-            el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
+            el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
         else
             return 0
         fi
 
         command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
-            el_warning "unable to umount (umount) $dev from ${mountpoint}, so hum... let me think"
+            el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
         else
             return 0
         fi
@@ -437,11 +437,11 @@ el_umount(){
         # force ? we should never do this
         if ((is_forced)) ; then
             # kill all the children processes used on this mountpoint:
-            el_processes_using_mountpoint "$mountpoint" kill
+            el_processes_using_mountpoint "$mountpoint" kill 1>/dev/null
 
             gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
             if check_is_mounted "$mountpoint" 1>/dev/null ; then
-                el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
+                el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
                 return 0
             fi
@@ -449,7 +449,7 @@ el_umount(){
             # try with udisks maybe
             udisks --unmount "$mountpoint" 2>/dev/null 1>&2
             if check_is_mounted "$mountpoint" 1>/dev/null ; then
-                el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
+                el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
                 return 0
             fi
@@ -466,7 +466,7 @@ el_umount(){
         fi
 
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
-            el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
+            el_error "unable to umount $dev for ${mountpoint}, I'm upset now"
             return 1
         else
             el_warning "well, finally umounted"

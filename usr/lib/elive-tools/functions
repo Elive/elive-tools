@@ -1429,7 +1429,7 @@ el_processes_using_mountpoint(){
         pid="${pid//[^[:digit:]]}"
         commands="$( ps axo pid,comm 2>/dev/null | awk -v pid="$pid" '{if ($1 == pid) { $1="" ; print $0 }}' | sed 's| $||g' )"
         if [[ -n "$commands" ]] ; then
-            echo "Used by process $pid: $commands"
+            echo "Mountpoint busy by process $pid: $commands"
             el_array_member_add "$pid" "${pids_mountpoint[@]}" ; pids_mountpoint=("${_out[@]}")
         fi
     done

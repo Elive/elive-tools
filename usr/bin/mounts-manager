@@ -405,7 +405,7 @@ el_umount(){
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
         gvfs-mount -u "$mountpoint"
         if check_is_mounted "$mountpoint" ; then
-            el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with another method..."
+            el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
         else
             return 0
         fi
@@ -413,14 +413,14 @@ el_umount(){
         # try with udisks maybe
         udisks --unmount "$mountpoint"
         if check_is_mounted "$mountpoint" ; then
-            el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with another method..."
+            el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
         else
             return 0
         fi
 
         command umount "$mountpoint" || command umount "$device"
         if check_is_mounted "$mountpoint" ; then
-            el_warning "unable to umount (umount) $dev from ${mountpoint}, trying with another method..."
+            el_warning "unable to umount (umount) $dev from ${mountpoint}, trying with lazy umount (-l)"
         else
             return 0
         fi
@@ -429,15 +429,22 @@ el_umount(){
         for i in $( fuser -m "$mountpoint" | grep -v "$$" )
         do
             i="${i//[^[:digit:]]}"
-            el_warning "Possible cause of the difficult to umount: $(ps aux | awk "{if ($2 == "$i") print $0}")"
+            el_warning "Possible cause of the difficult to umount: $(ps aux | awk "{if (\$2 == "$i") print \$0}")"
         done
 
-        command umount -l "$mountpoint" || command umount -l "$device"
-        if check_is_mounted "$mountpoint" ; then
-            el_error "unable to umount (bruteforce umount) $dev from ${mountpoint}, I'm upset now"
-            return 1
+        # force ? we should never do this
+        if ((is_forced)) ; then
+            command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
+            if check_is_mounted "$mountpoint" ; then
+                el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
+                return 1
+            else
+                el_warning "$dev was umounted in lazy or forced mode, so it will be not really umounted until all the tasks finishes on it"
+                return 0
+            fi
         else
-            return 0
+            el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
+            return 1
         fi
     done
 }
@@ -487,6 +494,7 @@ main(){
         echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
         echo -e "--mount dev  : mount a device"
         echo -e "--umount [dev|mountpoint]  : umounts a device|mountpoint"
+        echo -e "--umount-force [dev|mountpoint]  : umounts a device|mountpoint in a forced mode, NEVER do this"
         echo -e ""
         echo -e "Chroots related:"
         echo -e "--chroot-layers-mount directory idname  : mount the layers needed for a full-working chroot (proc, sysfs, etc)"
@@ -505,6 +513,10 @@ main(){
             el_mount "$2"
             ;;
         --umount)
+            el_umount "$2"
+            ;;
+        --umount-force)
+            is_forced=1
             el_umount "$2"
             ;;
         --chroot-layers-mount)

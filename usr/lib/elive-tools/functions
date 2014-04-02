@@ -1404,6 +1404,50 @@ el_request_report_bug(){
 
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_processes_using_mountpoint
+#   DESCRIPTION:  show the name of the processes that is using a mountpoint
+#    PARAMETERS:  $1 mountpoint-dir, $2 mode [kill]
+#       RETURNS:  -
+#===============================================================================
+el_processes_using_mountpoint(){
+    # pre {{{
+    local dir mode pid commands pids_mountpoint
+    el_debug
+    el_security_function_loop || return
+
+    dir="$1"
+    mode="$2"
+
+    el_check_variables "dir"
+    el_check_dirs "$dir"
+
+    # }}}
+
+    for pid in $( fuser -m "$dir" 2>/dev/null | tr ' ' '\n' | grep -v "$dir" | grep -v "$$" )
+    do
+        pid="${pid//[^[:digit:]]}"
+        commands="$( ps axo pid,comm 2>/dev/null | awk -v pid="$pid" '{if ($1 == pid) { $1="" ; print $0 }}' | sed 's| $||g' )"
+        if [[ -n "$commands" ]] ; then
+            echo "Used by process $pid: $commands"
+            el_array_member_add "$pid" "${pids_mountpoint[@]}" ; pids_mountpoint=("${_out[@]}")
+        fi
+    done
+
+    if [[ "${mode}" = "kill" ]] ; then
+        el_debug "Killing processes in reverse mode until the mountpoints is freed"
+        # reverse loop of array
+        for (( pid=${#pids_mountpoint[@]}-1 ; pid>=0 ; pid-- ))
+        do
+            el_debug "Killing process: ${pids_mountpoint[pid]}"
+            kill "${pids_mountpoint[pid]}" || kill -9 "${pids_mountpoint[pid]}"
+            sleep 1
+        done
+    fi
+
+    unset pids_mountpoint
+}
+
 
 ###################################################################
 #  Always run:

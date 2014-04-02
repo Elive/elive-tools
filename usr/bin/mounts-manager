@@ -426,7 +426,7 @@ el_umount(){
 
         command umount "$mountpoint" || command umount "$device"
         if check_is_mounted "$mountpoint" ; then
-            el_warning "unable to umount (umount) $dev from ${mountpoint}, trying with lazy umount (-l)"
+            el_warning "unable to umount (umount) $dev from ${mountpoint}, so hum... let me think"
         else
             return 0
         fi
@@ -435,22 +435,46 @@ el_umount(){
         for i in $( fuser -m "$mountpoint" | grep -v "$$" )
         do
             i="${i//[^[:digit:]]}"
-            el_warning "Possible cause of the difficult to umount: $(ps aux | awk "{if (\$2 == "$i") print \$0}")"
+            el_warning "Possible cause of the difficult to umount: $(ps aux | awk -v pid="$i" '{if ($2 == pid) print $0}')"
         done
 
         # force ? we should never do this
         if ((is_forced)) ; then
-            command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
+            # kill all the children processes used on this mountpoint:
+            el_processes_using_mountpoint "$mountpoint" kill
+
+            gvfs-mount -u "$mountpoint"
             if check_is_mounted "$mountpoint" ; then
-                el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
-                return 1
+                el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with udisks..."
             else
-                el_warning "$dev was umounted in lazy or forced mode, so it will be not really umounted until all the tasks finishes on it"
                 return 0
             fi
-        else
+
+            # try with udisks maybe
+            udisks --unmount "$mountpoint"
+            if check_is_mounted "$mountpoint" ; then
+                el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with umount..."
+            else
+                return 0
+            fi
+
+            command umount "$mountpoint" || command umount "$device"
+
+            if check_is_mounted "$mountpoint" ; then
+                el_warning "ok, bruteforce time"
+                # supercow powers
+                command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
+            else
+                return 0
+            fi
+        fi
+
+        if check_is_mounted "$mountpoint" ; then
             el_error "unable to umount $dev from ${mountpoint}, I'm upset now"
             return 1
+        else
+            el_warning "well, finally umounted"
+            return 0
         fi
     done
 }

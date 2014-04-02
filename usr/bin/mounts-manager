@@ -113,6 +113,7 @@ chroot_layers_mount(){
         chmod 755 "$dir/bin/hostname"
     fi
 
+    echo "Layers for chroot $dir are now ready"
 
     # add a flag
     el_flag add "chroot_layer_prepared"
@@ -232,6 +233,7 @@ chroot_layer_umount(){
         chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
     fi
 
+    echo "Layers for chroot $dir are umounted"
 
     # remove the flag
     el_flag del "chroot_layer_prepared"
@@ -294,7 +296,7 @@ get_mountpoint(){
         fi
 
         # and so, show the result
-        el_debug "mountpoint of $dev is $mountpoint"
+        echo "$dev is mounted in: $mountpoint"
         echo "$mountpoint"
     else
         # nothing get, return an error
@@ -332,9 +334,11 @@ check_is_mounted(){
     if ((is_mountpoint)) ; then
         if LC_ALL=C mount | grep -qs "on ${mountpoint} type" ; then
             el_debug "Mountpoint $mountpoint mounted"
+            echo "Mounted"
             return 0
         else
             el_debug "Mountpoint $mountpoint not mounted"
+            echo "Not mounted"
             return 1
         fi
     fi
@@ -342,9 +346,11 @@ check_is_mounted(){
     if ((is_device)) ; then
         if LC_ALL=C udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
             el_debug "Device $device mounted"
+            echo "Mounted"
             return 0
         else
             el_debug "Device $device not mounted"
+            echo "Not mounted"
             return 1
         fi
     fi
@@ -474,6 +480,7 @@ el_mount(){
     sync
 
     if check_is_mounted "$dev" ; then
+        echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
     else
         return 1

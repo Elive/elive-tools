@@ -432,11 +432,7 @@ el_umount(){
         fi
 
         # try to know why we cannot umount it
-        for i in $( fuser -m "$mountpoint" | grep -v "$$" )
-        do
-            i="${i//[^[:digit:]]}"
-            el_warning "Possible cause of the difficult to umount: $(ps aux | awk -v pid="$i" '{if ($2 == pid) print $0}')"
-        done
+        el_processes_using_mountpoint "$mountpoint"
 
         # force ? we should never do this
         if ((is_forced)) ; then

@@ -18,6 +18,9 @@ chroot_layers_mount(){
     el_check_variables "dir,name"
     el_check_dirs "$dir"
 
+    if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
+        el_error "must require root privileges"
+    fi
 
     # }}}
 
@@ -131,6 +134,12 @@ chroot_layer_umount(){
     dir="$1"
     id="$2"
     el_check_variables "dir"
+    el_check_dirs "$dir"
+
+    if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
+        el_error "must require root privileges"
+    fi
+
 
     # }}}
 
@@ -477,11 +486,11 @@ main(){
         echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
         echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
         echo -e "--mount dev  : mount a device"
-        echo -e "--umount [dev|mountpoint]  : umount a device|mountpoint"
+        echo -e "--umount [dev|mountpoint]  : umounts a device|mountpoint"
         echo -e ""
         echo -e "Chroots related:"
         echo -e "--chroot-layers-mount directory idname  : mount the layers needed for a full-working chroot (proc, sysfs, etc)"
-        echo -e "--chroot-layers-umount directory idname  : umount the layers"
+        echo -e "--chroot-layers-umount directory [idname]  : umount the layers"
         exit 1
     fi
 
@@ -496,7 +505,13 @@ main(){
             el_mount "$2"
             ;;
         --umount)
-            el_umount "$3"
+            el_umount "$2"
+            ;;
+        --chroot-layers-mount)
+            chroot_layers_mount "$2" "$3"
+            ;;
+        --chroot-layers-umount)
+            chroot_layers_umount "$2" "$3"
             ;;
     esac
 

@@ -296,8 +296,8 @@ get_mountpoint(){
         fi
 
         # and so, show the result
-        echo "$dev is mounted in: $mountpoint"
         echo "$mountpoint"
+        return 0
     else
         # nothing get, return an error
         el_warning "unable to get mountpoint for $dev"

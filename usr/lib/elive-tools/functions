@@ -1289,10 +1289,10 @@ el_flag(){
 
     #el_debug "$action - $name"
 
-    flags_d="${flags_d:-"/tmp/.$(basename $0)-flags-$USER"}"
+    TMP_FLAGS_d="${TMP_FLAGS_d:-"/tmp/.$(basename $0)-flags-$USER"}"
 
-    if [[ ! -d "${flags_d}" ]] ; then
-	mkdir -p "$flags_d"
+    if [[ ! -d "${TMP_FLAGS_d}" ]] ; then
+	mkdir -p "$TMP_FLAGS_d"
     fi
 
     el_check_variables "action,name"
@@ -1301,18 +1301,18 @@ el_flag(){
     case $action in
 	add|set|put)
 	    el_explain 2 "added $name flag"
-	    touch "${flags_d}/$name"
+	    touch "${TMP_FLAGS_d}/$name"
 	    ;;
 	del|remove|delete|rm)
-	    rm -f "${flags_d}/$name"
+	    rm -f "${TMP_FLAGS_d}/$name"
 
-	    if ! el_check_dir_has_files "${flags_d}" ; then
-		rmdir "${flags_d}"
+	    if ! el_check_dir_has_files "${TMP_FLAGS_d}" ; then
+		rmdir "${TMP_FLAGS_d}"
 	    fi
             el_debug "removed flag $name"
 	    ;;
 	check|test|verify)
-	    if [[ -e "${flags_d}/$name" ]]; then
+	    if [[ -e "${TMP_FLAGS_d}/$name" ]]; then
                 el_debug "$action $name -> [true]"
 		return 0
 	    else

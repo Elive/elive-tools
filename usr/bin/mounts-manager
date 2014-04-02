@@ -1,0 +1,511 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+#===  FUNCTION  ================================================================
+#          NAME:  chroot_layers_mount
+#   DESCRIPTION:  mount the layers needed for a working chroot
+#    PARAMETERS:  $1 directory, $2 name-id-to-use
+#       RETURNS:  -
+#===============================================================================
+chroot_layers_mount(){
+    # pre {{{
+    local dir name
+    el_debug
+    el_security_function_loop || return
+
+    dir="$1"
+    id="$2"
+    el_check_variables "dir,name"
+    el_check_dirs "$dir"
+
+
+    # }}}
+
+    if el_flag check "chroot_layer_prepared" ; then
+        el_explain 0 "chroot layers already mounted"
+        return
+    fi
+
+    # devpts
+    mkdir -p "$dir/dev/pts"
+    mount devpts-$id -t devpts "${dir}/dev/pts" || true
+
+    # proc
+    mkdir -p "$dir/proc"
+    mount proc-$id -t proc "${dir}/proc" || true
+
+    # selinux
+    if [[ -e "/selinux/enforce" ]] && [[ "$(cat /selinux/enforce)" = "1" ]] ; then
+        mkdir -p "$dir/selinux"
+        mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+    fi
+
+    # sysfs
+    mkdir -p "$dir/sys"
+    mount sysfs-$id -t sysfs "${dir}/sys" || true
+
+    # debian chroot mark
+    mkdir -p "$dir/etc"
+    echo "live" > "${dir}/etc/debian_chroot"
+
+    # custom start-stop-daemon
+    if [[ -e "$dir/sbin/start-stop-daemon" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --add /sbin/start-stop-daemon
+        echo -e "#!/bin/sh\nexit 0" > "${dir}/sbin/start-stop-daemon"
+        chmod 755 "${dir}/sbin/start-stop-daemon"
+    fi
+
+    # disable dpkg syncin
+    mkdir -p "$dir/etc/dpkg/dpkg.cfg.d"
+    echo -e "force-unsafe-io" > "${dir}/etc/dpkg/dpkg.cfg.d/live-build"
+
+    # flash-kernel
+    if [[ -e "$dir/usr/sbin/flash-kernel" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --add /usr/sbin/flash-kernel
+        ln -s /bin/true "${dir}/usr/sbin/flash-kernel"
+    fi
+
+    # sysv-rc
+    mkdir -p "$dir/usr/sbin"
+    if [[ -e "$dir/usr/sbin/policy-rc.d" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --add /usr/sbin/policy-rc.d
+        echo -e "#!/bin/sh\necho 'All runlevel operations denied by policy, made by elive modifications' >&2 \nexit 101" > "${dir}/usr/sbin/policy-rc.d"
+        chmod 0755 "${dir}/usr/sbin/policy-rc.d"
+    fi
+
+    # upstart
+    if [[ -e "$dir/sbin/initctl" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --add /sbin/initctl
+        echo -e "#!/bin/sh\necho 'All runlevel operations denied by policy, made by elive modifications' >&2 \nexit 101" > "${dir}/sbin/initctl"
+        chmod 0755 "${dir}/sbin/initctl"
+    fi
+
+    # hosts file
+    mkdir -p "$dir/etc"
+    if [[ -f "$dir/etc/hosts" ]] ; then
+        mv "$dir/etc/hosts" "$dir/etc/hosts.orig"
+    fi
+    echo -e "127.0.0.1\tlocalhost localhost.localdomain\n127.0.1.1\tdebian" > "$dir/etc/hosts"
+    cat /etc/hosts >> "$dir/etc/hosts"
+
+    # resolv.conf
+    mkdir -p "$dir/etc"
+    if [[ -e "$dir/etc/resolv.conf" ]] ; then
+        mv "$dir/etc/resolv.conf" "$dir/etc/resolv.conf.orig"
+        : > "$dir/etc/resolv.conf"
+    elif [[ -L "$dir/etc/resolv.conf" ]] ; then
+        mv "$dir/etc/resolv.conf" "$dir/etc/resolv.conf.orig"
+    fi
+    cp /etc/resolv.conf "$dir/etc/resolv.conf"
+
+    # hostname
+    mkdir -p "$dir/etc" "$dir/bin"
+    if [[ -e "$dir/etc/hostname" ]] ; then
+        mv "$dir/etc/hostname" "$dir/etc/hostname.orig"
+    fi
+    echo "localhost.localdomain" > "$dir/etc/hostname"
+    if [[ -x "$dir/usr/bin/dpkg-divert" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --add /bin/hostname
+        echo -e "#!/bin/sh\necho 'localhost.localdomain'" > "$dir/bin/hostname"
+        chmod 755 "$dir/bin/hostname"
+    fi
+
+
+    # add a flag
+    el_flag add "chroot_layer_prepared"
+
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  chroot_layer_umount
+#   DESCRIPTION:  umount the layers of a chroot
+#    PARAMETERS:  $1 dir , $2 name-id-to-use
+#       RETURNS:  -
+#===============================================================================
+chroot_layer_umount(){
+    # pre {{{
+    local dir id
+    el_debug
+    el_security_function_loop || return
+
+    dir="$1"
+    id="$2"
+    el_check_variables "dir"
+
+    # }}}
+
+    if ! el_flag check "chroot_layer_prepared" ; then
+        el_explain 0 "chroot layers already umounted"
+        return
+    fi
+
+    # devpts
+    if check_is_mounted "$dir/dev/pts" ; then
+        if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
+            umount "$dir/dev/pts"
+        else
+            umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
+        fi
+    fi
+
+    # proc
+    if check_is_mounted "$dir/proc" ; then
+        if [[ -e "${dir}/proc/sys/fs/binfmt_misc/status" ]] ; then
+            umount "$dir/proc/sys/fs/binfmt_misc"
+        fi
+        if [[ -e "${dir}/proc/version" ]] ; then
+            umount "$dir/proc"
+        fi
+    fi
+
+    # selinux
+    if check_is_mounted "$dir/selinux" || [[ -e "$dir/selinux/enforce" ]] ; then
+        umount "$dir/selinux"
+    fi
+
+    # sysfs
+    if check_is_mounted "$dir/sys" ; then
+        umount "$dir/sys"
+    fi
+
+    # debian chroot mark
+    rm -f "${dir}/etc/debian_chroot"
+
+    # flash-kernel
+    rm -f "${dir}/usr/sbin/flash-kernel"
+    if [[ -e "$dir/usr/sbin/flash-kernel.distrib" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/flash-kernel
+    fi
+    # custom start-stop-daemon
+    rm -f "${dir}/sbin/start-stop-daemon"
+    if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/start-stop-daemon
+    fi
+    # disable dpkg syncin
+    rm -f "${dir}/etc/dpkg/dpkg.cfg.d/live-build"
+
+    # sysv-rc
+    rm -f "${dir}/usr/sbin/policy-rc.d"
+    if [[ -e "$dir/usr/sbin/policy-rc.d.distrib" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/policy-rc.d
+    fi
+
+    # upstart
+    rm -f "${dir}/sbin/initctl"
+    if [[ -e "$dir/sbin/initctl.distrib" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/initctl
+    fi
+
+    # hosts file
+    if [[ -f "$dir/etc/hosts.orig" ]] ; then
+        mv "$dir/etc/hosts.orig" "$dir/etc/hosts"
+    else
+        : > "$dir/etc/hosts"
+    fi
+
+    # resolv.conf
+    if [[ -f "$dir/etc/resolv.conf.orig" ]] ; then
+        mv "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf"
+    else
+        : > "$dir/etc/resolv.conf"
+    fi
+    if [[ -e "$dir/etc/resolv.conf.d" ]] ; then
+        rm -f "$dir/etc/resolv.conf.d/original"
+        rm -f "$dir/etc/resolv.conf.d/tail"
+    fi
+
+    # hostname
+    rm -f "$dir/etc/hostname"
+    if [[ -e "$dir/etc/hostname.orig" ]] ; then
+        mv "$dir/etc/hostname.orig" "$dir/etc/hostname"
+    fi
+    if [[ -e "$dir/bin/hostname.distrib" ]] ; then
+        chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
+    fi
+
+
+    # remove the flag
+    el_flag del "chroot_layer_prepared"
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  get_mountpoint
+#   DESCRIPTION:  get the mountpoint of a device
+#    PARAMETERS:  $1 = device
+#       RETURNS:  -
+#===============================================================================
+get_mountpoint(){
+    # pre {{{
+    local dev is_mounted mountpoint is_temporally_mounted
+    el_debug
+    el_security_function_loop 10 || return
+
+    dev="$1"
+    el_check_variables "dev"
+    el_dependencies_check "udisks"
+
+    # }}}
+
+    if [[ ! -b "$dev" ]] ; then
+        el_explain 1 "$dev is not a device, skipping"
+        return 1
+    fi
+
+
+    mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    read -r mountpoint <<< "$mountpoint"
+
+    # not mounted ? mount it first
+    if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" ; then
+        #if LC_ALL=C udisks --show-info "$dev" | grep -qs "is mounted:.*0" ; then
+
+        #udisks --mount "$dev" 1>/dev/null
+        #sync
+        # TODO: if i use el_mount here it fails by some strange reason, why ? get_mountpoint not gets the mountpoint correctly?
+        if el_mount "$dev" ; then
+
+            # get data again
+            mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+            # remove extra leading blank chars
+            read -r mountpoint <<< "$mountpoint"
+            # umount it
+            if [[ -n "$mountpoint" ]] ; then
+                el_umount "$mountpoint"
+            fi
+        fi
+    fi
+
+
+    # get the mountpoint
+    if [[ -n "$mountpoint" ]] ; then
+        if [[ "$(echo "$mountpoint" | wc -w )" -gt 1 ]] ; then
+            el_warning "More than one mountpoint assigned to ${dev}: ${mountpoint}, using the last one"
+            mountpoint="$(echo "$mountpoint" |tr ' ' '\n' | tail -1)"
+        fi
+
+        # and so, show the result
+        el_debug "mountpoint of $dev is $mountpoint"
+        echo "$mountpoint"
+    else
+        # nothing get, return an error
+        el_warning "unable to get mountpoint for $dev"
+        return 1
+    fi
+}
+#===  FUNCTION  ================================================================
+#          NAME:  check_is_mounted
+#   DESCRIPTION:  returns true if a device or mountpoint is mounted
+#    PARAMETERS:  $1 dev or mountpoint
+#       RETURNS:  true if is mounted, false if not
+#===============================================================================
+check_is_mounted(){
+    # pre {{{
+    local arg device mountpoint is_device is_mountpoint
+    el_security_function_loop || return
+
+    arg="$1"
+    el_check_variables "arg"
+
+    # }}}
+
+    sync
+
+    if [[ "$arg" = /dev/* ]] ; then
+        is_device=1
+        device="$arg"
+    else
+        is_mountpoint=1
+        mountpoint="${arg%/}"
+    fi
+
+
+    if ((is_mountpoint)) ; then
+        if LC_ALL=C mount | grep -qs "on ${mountpoint} type" ; then
+            el_debug "Mountpoint $mountpoint mounted"
+            return 0
+        else
+            el_debug "Mountpoint $mountpoint not mounted"
+            return 1
+        fi
+    fi
+
+    if ((is_device)) ; then
+        if LC_ALL=C udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
+            el_debug "Device $device mounted"
+            return 0
+        else
+            el_debug "Device $device not mounted"
+            return 1
+        fi
+    fi
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  el_umount
+#   DESCRIPTION:  overwrite layer for a real umount feature
+#    PARAMETERS:  $1 dev or mountpoint that we want to umount
+#       RETURNS:  true if successfull, false if not
+#===============================================================================
+el_umount(){
+    # pre {{{
+    local arg device mountpoint is_device is_mountpoint
+    el_debug "Umounting: $@"
+    el_security_function_loop 10 || return
+
+    # }}}
+    for arg in "$@"
+    do
+        sync
+
+        unset device mountpoint is_device is_mountpoint
+        if [[ ! -b "$arg" ]] && [[ ! -d "$arg" ]] && [[ ! -L "$arg" ]] && [[ ! -e "$arg" ]] ; then
+            el_warning "What $arg is ? skipping.."
+        fi
+        if [[ "$arg" = /dev/* ]] ; then
+            is_device=1
+            device="$arg"
+        else
+            is_mountpoint=1
+            mountpoint="${arg%/}"
+        fi
+
+
+        if ((is_mountpoint)) && ! check_is_mounted "$mountpoint" ; then
+            # if we are not mounted, nothing more to do
+            return 0
+        fi
+
+        if ((is_device)) ; then
+            # if we are not mounted, nothing more to do
+            if ! check_is_mounted "$device" ; then
+                return 0
+            fi
+
+            #otherwise get the needed data
+            mountpoint="$( get_mountpoint "$device" )"
+
+            if [[ -z "$mountpoint" ]] ; then
+                el_warning "unable to get mountpoint for $device, which means that is not mounted, although this function should have not been called, everything is fine, continuing..."
+                # return that is not mounted
+                return 0
+            fi
+        fi
+
+
+        # try with gvfs-mount first, since seems like it is unable to umount with the other ones
+        gvfs-mount -u "$mountpoint"
+        if check_is_mounted "$mountpoint" ; then
+            el_warning "unable to umount (gvfs-mount) $dev from ${mountpoint}, trying with another method..."
+        else
+            return 0
+        fi
+
+        # try with udisks maybe
+        udisks --unmount "$mountpoint"
+        if check_is_mounted "$mountpoint" ; then
+            el_warning "unable to umount (udisks) $dev from ${mountpoint}, trying with another method..."
+        else
+            return 0
+        fi
+
+        command umount "$mountpoint" || command umount "$device"
+        if check_is_mounted "$mountpoint" ; then
+            el_warning "unable to umount (umount) $dev from ${mountpoint}, trying with another method..."
+        else
+            return 0
+        fi
+
+        # try to know why we cannot umount it
+        for i in $( fuser -m "$mountpoint" | grep -v "$$" )
+        do
+            i="${i//[^[:digit:]]}"
+            el_warning "Possible cause of the difficult to umount: $(ps aux | awk "{if ($2 == "$i") print $0}")"
+        done
+
+        command umount -l "$mountpoint" || command umount -l "$device"
+        if check_is_mounted "$mountpoint" ; then
+            el_error "unable to umount (bruteforce umount) $dev from ${mountpoint}, I'm upset now"
+            return 1
+        else
+            return 0
+        fi
+    done
+}
+#===  FUNCTION  ================================================================
+#          NAME:  el_mount
+#   DESCRIPTION:  overwrite layer for a real mount feature
+#    PARAMETERS:  $1 = device
+#       RETURNS:  true if success, false if not
+#===============================================================================
+el_mount(){
+    # pre {{{
+    local dev
+    el_debug
+    el_security_function_loop || return
+
+    dev="$1"
+    el_check_variables "dev"
+
+    # }}}
+
+    if [[ "$dev" != /dev/* ]] ; then
+        el_error "Argument passed to $FUNCNAME is not a device: $dev"
+        return 1
+    fi
+
+    timeout 60 udisks --mount "$dev" 1>/dev/null
+    sync
+
+    if check_is_mounted "$dev" ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+main(){
+    # pre {{{
+    local arg
+
+    # }}}
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) options:"
+        echo -e "Basic partitions / mountpoins features:"
+        echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
+        echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
+        echo -e "--mount dev  : mount a device"
+        echo -e "--umount [dev|mountpoint]  : umount a device|mountpoint"
+        echo -e ""
+        echo -e "Chroots related:"
+        echo -e "--chroot-layers-mount directory idname  : mount the layers needed for a full-working chroot (proc, sysfs, etc)"
+        echo -e "--chroot-layers-umount directory idname  : umount the layers"
+        exit 1
+    fi
+
+    case "$1" in
+        --get-mountpoint)
+            get_mountpoint "$2"
+            ;;
+        --check-is-mounted)
+            check_is_mounted "$2"
+            ;;
+        --mount)
+            el_mount "$2"
+            ;;
+        --umount)
+            el_umount "$3"
+            ;;
+    esac
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

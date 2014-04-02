@@ -162,11 +162,6 @@ main(){
     # blkid
     # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
 
-    if [[ "$UID" != "0" ]] ; then
-       el_error "root please: $(basename $0)"
-       exit 1
-    fi
-
     if ! el_dependencies_check "udevadm" ; then
        el_dependencies_install udev
     fi
@@ -291,7 +286,7 @@ main(){
 		el_debug "ignoring partition ${item} because is considered a disk"
 	    fi
 
-	done 3<<< "$( LC_ALL=C udevadm info --query=all --name="$item" )"
+	done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" )"
 
 
 	# re- fixes

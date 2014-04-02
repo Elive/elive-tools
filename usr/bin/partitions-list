@@ -182,6 +182,10 @@ main(){
 	  only_mountable=1
 	  get_all_partitions_list
        ;;
+       --show-all-umountable)
+	  only_umountable=1
+	  get_all_partitions_list
+       ;;
        --show-only)
 	  shift
 	  el_array_member_add "$1" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
@@ -191,6 +195,7 @@ main(){
 	  echo -e "Usage: $(basename $0) [option]" 1>&2
 	  echo -e "--show-all" 1>&2
 	  echo -e "--show-all-mountable" 1>&2
+	  echo -e "--show-all-umountable" 1>&2
 	  echo -e "--show-only /dev/partition - to obtain data from a partition" 1>&2
 	  echo -e "\nStructure:\ndevice :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
     esac
@@ -324,6 +329,15 @@ main(){
 	    el_debug "marking ${item} as unusable because is an extended partition"
 	fi
 
+	# only show umountable partitions ? {{{
+	if ((only_umountable)) ; then
+	   # common not umountable partitions
+	   if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
+	      item_is_usable=0
+	   fi
+	fi
+
+	# }}}
 	# only show mountable partitions ? {{{
 	if ((only_mountable)) ; then
 	   # common not mountable partitions

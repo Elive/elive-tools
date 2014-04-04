@@ -1,8 +1,12 @@
-if [[ -n "$SSH2_IP" ]] ; then
-    SSH_REMOTE_IP="${SSH2_IP%% *}"
+if [[ -n "$SSH_CLIENT" ]] ; then
+    SSH_REMOTE_IP="${SSH_CLIENT%% *}"
 fi
-if [[ -n "$SSH_IP" ]] ; then
+if [[ -z "$SSH_REMOTE_IP" ]] && [[ -n "$SSH_IP" ]] ; then
     SSH_REMOTE_IP="${SSH_IP%% *}"
+fi
+
+if [[ -z "$SSH_REMOTE_IP" ]] && [[ -n "$SSH2_IP" ]] ; then
+    SSH_REMOTE_IP="${SSH2_IP%% *}"
 fi
 
 

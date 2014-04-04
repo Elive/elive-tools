@@ -1,14 +1,3 @@
-LOCKFILE="/tmp/.inform-ssh-remote-${USER}-$(basename $0).lock"
-[[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
-if (ps -p $PROCESS) >/dev/null 2>&1
-then
-    # already running
-    return
-else
-    rm -f $LOCKFILE
-    echo $$ > $LOCKFILE
-fi
-
 # which remote ip?
 if [[ -n "$SSH_CLIENT" ]] ; then
     SSH_REMOTE_IP="${SSH_CLIENT%% *}"
@@ -26,8 +15,20 @@ fi
 #SSH_REMOTE_IP=14.139.237.50
 
 if [[ -n "$SSH_REMOTE_IP" ]] ; then
+    # set a lock here, just because sometimes we are logged in recursive mode and so we only want to run this one time
+    LOCKFILE="/tmp/.inform-ssh-remote-${USER}-$(basename $0).lock"
+    [[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
+    if (ps -p $PROCESS) >/dev/null 2>&1
+    then
+        # already running
+        return
+    else
+        rm -f $LOCKFILE
+        echo $$ > $LOCKFILE
+    fi
+
     # skip local connections, we don't want to inform about them
-    if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$ip" = "10."* ]] ; then
+    if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$SSH_REMOTE_IP" = "10."* ]] ; then
         return
     fi
     if dpkg --compare-versions "$SSH_REMOTE_IP" ge "172.16" && dpkg --compare-versions "$SSH_REMOTE_IP" le "172.32" ; then

@@ -15,7 +15,11 @@ main(){
 
     # }}}
 
-    curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
+    if [[ -n "$1" ]] ; then
+        curl -s -A "Mozilla" "http://freegeoip.net/xml/$1"
+    else
+        curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
+    fi
 
 }
 

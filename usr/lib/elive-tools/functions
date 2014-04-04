@@ -74,7 +74,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
-    if [[ "$TERM" != linux ]] || [[ "$UID" != 0 ]] ; then
+    if [[ "$TERM" != linux ]] && [[ "$UID" != 0 ]] ; then
         if [[ -z "${DISPLAY}" ]] ; then
             el_explain 1 "Variable DISPLAY is not set, so we will not have access to the graphical system"
         fi

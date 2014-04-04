@@ -482,11 +482,14 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev
+    local dev args
     el_debug
     el_security_function_loop || return
 
     dev="$1"
+    shift
+    args="$@"
+
     el_check_variables "dev"
 
     # }}}
@@ -496,7 +499,7 @@ el_mount(){
         return 1
     fi
 
-    timeout 60 udisks --mount "$dev" 1>/dev/null
+    timeout 60 udisks --mount "$dev" "$args" 1>/dev/null
     sync
 
     if check_is_mounted "$dev" 1>/dev/null ; then
@@ -519,7 +522,8 @@ main(){
         echo -e "Basic partitions / mountpoins features:"
         echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
         echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
-        echo -e "--mount dev  : mount a device"
+        echo -e "--mount dev [args]  : mount a device, args must be in udisks format:"
+        echo -e "                    (--mount-fstype reiserX --mount-options foo,bar)"
         echo -e "--umount [dev|mountpoint]  : umounts a device|mountpoint"
         echo -e "--umount-force [dev|mountpoint]  : umounts a device|mountpoint in a forced mode, NEVER do this"
         echo -e ""
@@ -537,7 +541,8 @@ main(){
             check_is_mounted "$2"
             ;;
         --mount)
-            el_mount "$2"
+            shift
+            el_mount "$@"
             ;;
         --umount)
             el_umount "$2"

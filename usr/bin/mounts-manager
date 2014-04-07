@@ -318,16 +318,17 @@ check_is_mounted(){
     arg="$1"
     el_check_variables "arg"
 
-    # }}}
-
     sync
+    # }}}
 
     if [[ "$arg" = /dev/* ]] ; then
         is_device=1
         device="$arg"
+        el_debug "check_is_mounted: device: $arg"
     else
         is_mountpoint=1
         mountpoint="${arg%/}"
+        el_debug "check_is_mounted: mountpoint: $mountpoint"
     fi
 
 
@@ -359,9 +360,8 @@ check_is_mounted(){
         # well, maybe not working?
         if LC_ALL=C udisks --show-info "$device" | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
-            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
-            $FUNCNAME "$arg"
-            return $?
+            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'"
+            return 1
         fi
     fi
 

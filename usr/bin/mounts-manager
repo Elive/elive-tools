@@ -344,14 +344,24 @@ check_is_mounted(){
     fi
 
     if ((is_device)) ; then
+        # mounted
         if LC_ALL=C udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
             el_debug "Device $device mounted"
             echo "Mounted"
             return 0
-        else
+        fi
+        # not mounted
+        if LC_ALL=C udisks --show-info "$device" | grep -qs "is mounted:.*0" ; then
             el_debug "Device $device not mounted"
             echo "Not mounted"
             return 1
+        fi
+        # well, maybe not working?
+        if LC_ALL=C udisks --show-info "$device" | grep -qs "Cannot find device with major:minor" ; then
+            el_sudo service udev restart
+            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted from mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
+            $FUNCNAME "$arg"
+            return $?
         fi
     fi
 
@@ -409,7 +419,11 @@ el_umount(){
 
 
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
-        gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            gvfs-mount -u "$mountpoint"
+        else
+            gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
+        fi
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
         else
@@ -417,14 +431,22 @@ el_umount(){
         fi
 
         # try with udisks maybe
-        udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            udisks --unmount "$mountpoint"
+        else
+            udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+        fi
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
         else
             return 0
         fi
 
-        command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            command umount "$mountpoint" || command umount "$device"
+        else
+            command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+        fi
         if check_is_mounted "$mountpoint" 1>/dev/null ; then
             el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
         else
@@ -499,9 +521,25 @@ el_mount(){
         return 1
     fi
 
-    timeout 60 udisks --mount "$dev" "$args" 1>/dev/null
-    sync
+    if [[ "$EL_DEBUG" -ge 3 ]] ; then
+        timeout 60 udisks --mount "$dev" "$args"
+    else
+        timeout 60 udisks --mount "$dev" "$args" 1>/dev/null
+    fi
 
+    # previous check
+    sync
+    if check_is_mounted "$dev" 1>/dev/null ; then
+        echo "$dev mounted in: $(get_mountpoint "$dev" )"
+        return 0
+    else
+        if LC_ALL=C udisks --mount "$dev" "$args" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+            el_sudo service udev restart
+            el_request_report_bug "UDEV needed to be restarted in 'el_mount from mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
+        fi
+    fi
+
+    sync
     if check_is_mounted "$dev" 1>/dev/null ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0

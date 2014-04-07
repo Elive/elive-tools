@@ -620,9 +620,11 @@ el_check_sudo_automated(){
 #===============================================================================
 el_sudo(){
     # pre {{{
+    local args
     el_security_function_loop || return
 
-    el_check_variables "$@"
+    args="$@"
+    el_check_variables "args"
 
     el_set_display_variables
 

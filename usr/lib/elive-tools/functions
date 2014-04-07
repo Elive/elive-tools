@@ -1098,7 +1098,7 @@ el_security_function_loop(){
     # }}}
     # high value of count_recursive if we call a function recursively multiple times
     if [[ -n "$1" ]] ; then
-	recursives_allowed="$1"
+        recursives_allowed="$1"
     fi
 
     funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
@@ -1107,7 +1107,7 @@ el_security_function_loop(){
     if [[ -n "$recursives_allowed" ]] ; then
         count_recursive="$(( 1 + $recursives_allowed ))"
     else
-        count_recursive="1"
+        count_recursive="4"
     fi
 
 

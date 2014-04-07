@@ -11,7 +11,7 @@ chroot_layers_mount(){
     # pre {{{
     local dir name
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop 10 || return
 
     dir="$1"
     id="$2"
@@ -130,7 +130,7 @@ chroot_layers_umount(){
     # pre {{{
     local dir id
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop 10 || return
 
     dir="$1"
     id="$2"
@@ -313,7 +313,7 @@ get_mountpoint(){
 check_is_mounted(){
     # pre {{{
     local arg device mountpoint is_device is_mountpoint
-    el_security_function_loop || return
+    el_security_function_loop 10 || return
 
     arg="$1"
     el_check_variables "arg"
@@ -506,7 +506,7 @@ el_mount(){
     # pre {{{
     local dev args
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop 10 || return
 
     dev="$1"
     shift

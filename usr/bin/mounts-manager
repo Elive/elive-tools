@@ -537,7 +537,7 @@ el_mount(){
             el_sudo service udev restart
             timeout 60 udisks --mount "$dev" "$args" 1>/dev/null
 
-            el_request_report_bug "UDEV needed to be restarted in 'el_mount' from 'mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
+            el_request_report_bug "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'"
         fi
     fi
 

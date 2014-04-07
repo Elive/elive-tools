@@ -121,12 +121,12 @@ chroot_layers_mount(){
 
 }
 #===  FUNCTION  ================================================================
-#          NAME:  chroot_layer_umount
+#          NAME:  chroot_layers_umount
 #   DESCRIPTION:  umount the layers of a chroot
 #    PARAMETERS:  $1 dir , $2 name-id-to-use
 #       RETURNS:  -
 #===============================================================================
-chroot_layer_umount(){
+chroot_layers_umount(){
     # pre {{{
     local dir id
     el_debug

@@ -359,7 +359,7 @@ check_is_mounted(){
         # well, maybe not working?
         if LC_ALL=C udisks --show-info "$device" | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
-            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted from mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
+            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager', what caused this need? this restart has broke anything to the user side like (thunar) partitions-panel or shared-folders ?"
             $FUNCNAME "$arg"
             return $?
         fi

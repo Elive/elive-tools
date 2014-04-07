@@ -204,6 +204,10 @@ main(){
 
         while read -ru 3 line
         do
+            # udevadm needs to be restarted?
+            if [[ "$line" = "device node not found" ]] ; then
+                el_request_report_bug "udevadm was unable to show '$item - $(file -s "$item")', why?"
+            fi
             # normal partitions
             if [[ "${line}" = *"ID_FS_USAGE=filesystem" ]] ; then
                 item_is_usable=1
@@ -286,7 +290,7 @@ main(){
                 el_debug "ignoring partition ${item} because is considered a disk"
             fi
 
-        done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" )"
+        done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 )"
 
 
         # re- fixes

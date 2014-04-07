@@ -573,6 +573,12 @@ main(){
         exit 1
     fi
 
+    # checks {{{
+    if udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+    fi
+    # - checks }}}
+
     case "$1" in
         --get-mountpoint)
             get_mountpoint "$2"

@@ -360,7 +360,7 @@ check_is_mounted(){
         # well, maybe not working?
         if LC_ALL=C udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
-            el_request_report_bug "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'"
+            el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
             return 1
         fi
     fi
@@ -537,7 +537,7 @@ el_mount(){
             el_sudo service udev restart
             timeout 60 udisks --mount "$dev" "$args" 1>/dev/null
 
-            el_request_report_bug "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'"
+            el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi
     fi
 
@@ -599,6 +599,9 @@ main(){
             ;;
     esac
 
+    if [[ -n "$errors_found" ]] ; then
+        el_request_report_bug "${errors_found[@]}"
+    fi
 
 }
 

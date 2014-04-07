@@ -575,7 +575,19 @@ main(){
 
     # checks {{{
     if udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
-        el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+        # restart daemons {{{
+        killall udisks-daemon || killall -9 udisks-daemon || true
+        killall polkitd || killall -9 polkitd || true
+
+        /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
+        /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
+
+        sleep 1
+
+        # - restart daemons }}}
+        if udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+            el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+        fi
     fi
     # - checks }}}
 

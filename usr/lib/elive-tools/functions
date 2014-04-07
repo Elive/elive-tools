@@ -613,6 +613,32 @@ el_check_sudo_automated(){
 
 }
 #===  FUNCTION  ================================================================
+#          NAME:  el_sudo
+#   DESCRIPTION:  run a command from root, as much as possible
+#    PARAMETERS:  args/command
+#       RETURNS:  -
+#===============================================================================
+el_sudo(){
+    # pre {{{
+    el_security_function_loop || return
+
+    el_check_variables "$@"
+
+    el_set_display_variables
+
+    # }}}
+    if el_check_sudo_automated 2>/dev/null 1>&2 ; then
+        sudo -H "$@"
+    else
+        if [[ -n "$DISPLAY" ]] ; then
+            gksu "$@"
+        else
+            su -c "$@" root
+        fi
+    fi
+
+}
+#===  FUNCTION  ================================================================
 #          NAME:  el_check_translations_required_notify
 #   DESCRIPTION:  check the amount of translations made for actual application,
 #		  telling the user that he can help improving them

@@ -402,6 +402,10 @@ el_aptget_update(){
         # only run update if we have not updated already 4 hours ago
         message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
 
+        if ! el_verify_internet ; then
+            el_error "We need to update the packages lists but we don't have internet? continuing anyways..."
+        fi
+
         if [[ "$UID" = 0 ]] ; then
             if [[ -n "$DISPLAY" ]] ; then
                 apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"

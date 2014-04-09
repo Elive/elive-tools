@@ -279,7 +279,9 @@ el_make_environment(){ # make ready our environment (source variables and functi
     #fi
 
     if [[ -n "${BASH_SOURCE}" ]] ; then
-        export PS4='+ ($(basename ${BASH_SOURCE}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
+        #export PS4='+ ($(basename ${BASH_SOURCE}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
+        #export PS4='+ [$(basename ${BASH_SOURCE})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
+        export PS4='+ [$(basename ${BASH_SOURCE})  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
 }

@@ -18,25 +18,29 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
     # set a lock here, just because sometimes we are logged in recursive mode and so we only want to run this one time
     LOCKFILE="/tmp/.inform-ssh-remote-${USER}-$(basename $0).lock"
     [[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
-    if (ps -p $PROCESS) >/dev/null 2>&1
-    then
+
+    if (ps -p $PROCESS) >/dev/null 2>&1 ; then
         # already running
-        return
+        want_exit=yes
     else
         rm -f "$LOCKFILE"
         echo $$ > $LOCKFILE
     fi
+fi
 
+if [[ "$want_exit" != "yes" ]] ; then
     # skip local connections, we don't want to inform about them
     if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$SSH_REMOTE_IP" = "127."* ]] || [[ "$SSH_REMOTE_IP" = "10."* ]] ; then
         rm -f "$LOCKFILE"
-        return
+        want_exit=yes
     fi
     if dpkg --compare-versions "$SSH_REMOTE_IP" ge "172.16" && dpkg --compare-versions "$SSH_REMOTE_IP" le "172.32" ; then
         rm -f "$LOCKFILE"
-        return
+        want_exit=yes
     fi
+fi
 
+if [[ "$want_exit" != "yes" ]] ; then
     #echo -e "collecting remote data..." 1>&2
     if [[ -s "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" ]] ; then
         SSH_REMOTE_DATA="$( cat "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" )"
@@ -52,7 +56,7 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
 
 fi
 
-if [[ -n "$SSH_REMOTE_DATA" ]] ; then
+if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then
     # get local data
     #echo -e "collecting local data..." 1>&2
     if [[ -s "/tmp/.ssh_local_data-${USER}" ]] ; then
@@ -85,3 +89,5 @@ if [[ -n "$SSH_REMOTE_DATA" ]] ; then
         fi
     fi
 fi
+
+unset want_exit

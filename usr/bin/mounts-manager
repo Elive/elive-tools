@@ -402,7 +402,7 @@ el_umount(){
         if ((is_device)) ; then
             # is a wap what we try to umount ?
             if file -s "$device" | grep -qs "swap file" ; then
-                swapoff "$device"
+                swapoff "$device" 2>/dev/null
                 return 0
             fi
             # if we are not mounted, nothing more to do

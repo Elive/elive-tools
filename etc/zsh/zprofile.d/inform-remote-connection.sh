@@ -21,7 +21,7 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
     if (ps -p $PROCESS) >/dev/null 2>&1
     then
         # already running
-        exit
+        return
     else
         rm -f "$LOCKFILE"
         echo $$ > $LOCKFILE
@@ -30,11 +30,11 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
     # skip local connections, we don't want to inform about them
     if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$SSH_REMOTE_IP" = "127."* ]] || [[ "$SSH_REMOTE_IP" = "10."* ]] ; then
         rm -f "$LOCKFILE"
-        exit
+        return
     fi
     if dpkg --compare-versions "$SSH_REMOTE_IP" ge "172.16" && dpkg --compare-versions "$SSH_REMOTE_IP" le "172.32" ; then
         rm -f "$LOCKFILE"
-        exit
+        return
     fi
 
     #echo -e "collecting remote data..." 1>&2

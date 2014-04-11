@@ -10,7 +10,7 @@ source /usr/lib/elive-tools/functions
 verify_ip_validity(){
     ((is_valid_ip)) && return 0
 
-    if [[ -z "$ip" ]] || [[ "$ip" = "192.168."* ]] || [[ "$ip" = "10."* ]] ; then
+    if [[ -z "$ip" ]] || [[ "$ip" = "192.168."* ]] || [[ "$ip" = "127.0.0."* ]] || [[ "$ip" = "10."* ]] ; then
         return 1
     fi
 

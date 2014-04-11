@@ -17,7 +17,7 @@ get_all_partitions_list(){
     # LVM support {{{
     if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay | grep -q "logical volume.*active" ) ; then
         # loop between the partitions that are used for a LVM (physical volume)
-        for pvname in $( LC_ALL=C pvdisplay | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
+        for pvname in $( LC_ALL=C pvdisplay 2>/dev/null | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
         do
             # remove extra leading blank chars
             read -r pvname <<< "$pvname"
@@ -28,7 +28,7 @@ get_all_partitions_list(){
         done
 
         # any logical volume (real partition inside lvm2 setup) to add?
-        for lvname in $( LC_ALL=C lvdisplay | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
+        for lvname in $( LC_ALL=C lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
         do
             # remove extra leading blank chars
             read -r lvname <<< "$lvname"

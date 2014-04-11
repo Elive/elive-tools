@@ -15,7 +15,7 @@ get_all_partitions_list(){
 
     # }}}
     # LVM support {{{
-    if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay | grep -q "logical volume.*active" ) ; then
+    if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay 2>/dev/null | grep -q "logical volume.*active" ) ; then
         # loop between the partitions that are used for a LVM (physical volume)
         for pvname in $( LC_ALL=C pvdisplay 2>/dev/null | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
         do

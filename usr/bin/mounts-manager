@@ -526,7 +526,7 @@ el_mount(){
 
     # }}}
 
-    if [[ "$dev" != /dev/* ]] || [[ ! -b "$device" ]] ; then
+    if [[ "$dev" != "/dev/"* ]] || [[ ! -b "$dev" ]] ; then
         el_error "Argument passed to $FUNCNAME is not a device: $dev"
         return 1
     fi

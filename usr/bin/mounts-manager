@@ -516,7 +516,7 @@ el_umount(){
 el_mount(){
     # pre {{{
     local dev
-    el_debug
+    el_debug "Mounting: $@"
     el_security_function_loop 10 || return
 
     dev="$1"

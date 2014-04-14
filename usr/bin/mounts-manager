@@ -507,13 +507,12 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev args
+    local dev
     el_debug
     el_security_function_loop 10 || return
 
     dev="$1"
     shift
-    args="$@"
 
     el_check_variables "dev"
 
@@ -525,9 +524,9 @@ el_mount(){
     fi
 
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$args" "$dev"
+        timeout 60 udisks --mount "$dev" "$@"
     else
-        timeout 60 udisks --mount "$args" "$dev" 1>/dev/null
+        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
     fi
 
     # previous check
@@ -536,9 +535,9 @@ el_mount(){
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
     else
-        if LC_ALL=C udisks --mount "$args" "$dev" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+        if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
-            timeout 60 udisks --mount "$args" "$dev" 1>/dev/null
+            timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
 
             el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi

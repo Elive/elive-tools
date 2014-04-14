@@ -324,6 +324,10 @@ check_is_mounted(){
     if [[ "$arg" = /dev/* ]] ; then
         is_device=1
         device="$arg"
+        if [[ ! -b "$device" ]] ; then
+            el_error "$FUNCNAME, device $device doesn't seems to exist"
+            return 1
+        fi
     else
         is_mountpoint=1
         mountpoint="${arg%/}"
@@ -388,6 +392,10 @@ el_umount(){
         if [[ "$arg" = /dev/* ]] ; then
             is_device=1
             device="$arg"
+            if [[ ! -b "$device" ]] ; then
+                el_error "$FUNCNAME, device $device doesn't seems to exist"
+                return 1
+            fi
         else
             is_mountpoint=1
             mountpoint="${arg%/}"
@@ -518,7 +526,7 @@ el_mount(){
 
     # }}}
 
-    if [[ "$dev" != /dev/* ]] ; then
+    if [[ "$dev" != /dev/* ]] || [[ ! -b "$device" ]] ; then
         el_error "Argument passed to $FUNCNAME is not a device: $dev"
         return 1
     fi

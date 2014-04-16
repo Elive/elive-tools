@@ -211,7 +211,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet
-    if timeout 10 curl --connect-timeout 5 www.google.com 2>/dev/null | grep -qi 'html' ; then
+    if timeout 10 curl --connect-timeout 7 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 
         return 0

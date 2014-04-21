@@ -1402,7 +1402,7 @@ on_exit(){
 #===============================================================================
 el_request_report_bug(){
     # pre {{{
-    local message
+    local message url
     el_debug
     el_security_function_loop || return
 
@@ -1412,23 +1412,31 @@ el_request_report_bug(){
     el_set_display_variables
 
     # }}}
+    url="http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc" # task list sorted by created time
     # check if we should ignore this function
-    if el_check_version_development_is_days_recent 50 ; then
+    if el_check_version_development_is_days_recent 30 ; then
 
         if [[ -n "$DISPLAY" ]] ; then
             local message_report_bug
-            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved.\n\nImportant details to tell to the Elive developers: \n<b>%s</b>\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
+            #message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Although you think that this problem only happens to you, it could happen to everybody, this is why is very important to let us know about them, and if nobody tell us the problem found, they will be never solved.\n\nImportant details to tell to the Elive developers: \n<b>%s</b>\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
+            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this to our developers:\n<b>%s</b>\n\nCan you please tell us now about your recent problem found?" )" "$message" )"
 
             if zenity --question --text="$message_report_bug" ; then
                 if [[ -x /usr/bin/firefox ]] ; then
-                    firefox http://bugs.elivecd.org
+                    firefox "$url" &
                 fi
                 if [[ -x /usr/bin/iceweasel ]] ; then
-                    iceweasel http://bugs.elivecd.org
+                    iceweasel "$url" &
                 fi
                 if [[ -x /usr/bin/chromium ]] ; then
-                    chromium --temp-profile http://bugs.elivecd.org
+                    chromium --temp-profile "$url" &
                 fi
+
+                # explain some details while reporting it
+                local message_instructions
+                message_instructions="$( printf "$( eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )" )"
+                sleep 6
+                zenity --info --text="$message_instructions"
 
             fi
         else

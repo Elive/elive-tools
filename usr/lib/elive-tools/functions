@@ -1412,7 +1412,8 @@ el_request_report_bug(){
     el_set_display_variables
 
     # }}}
-    url="http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc" # task list sorted by created time
+    # task list sorted by created time
+    url='http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc'
     # check if we should ignore this function
     if el_check_version_development_is_days_recent 30 ; then
 
@@ -1433,7 +1434,7 @@ el_request_report_bug(){
 
                 # explain some details while reporting it
                 local message_instructions
-                message_instructions="$( printf "$( eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )" )"
+                message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 sleep 6
                 zenity --info --text="$message_instructions"
 

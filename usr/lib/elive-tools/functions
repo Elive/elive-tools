@@ -1419,7 +1419,7 @@ el_request_report_bug(){
 
         if [[ -n "$DISPLAY" ]] ; then
             local message_report_bug
-            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found?" )" "$message" "$BASH_SOURCE" "${FUNCNAME[1]}" "$LINENO" )"
+            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
             if zenity --question --text="$message_report_bug" ; then
                 if [[ -x /usr/bin/firefox ]] ; then

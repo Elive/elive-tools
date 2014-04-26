@@ -430,39 +430,57 @@ el_umount(){
         fi
 
 
+        # try to umount
+        if ((is_mountpoint)) ; then
+            if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                command umount "$mountpoint" || command umount "$device"
+            else
+                command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+            fi
+
+            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+                el_warning "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
+            else
+                return 0
+            fi
+        fi
+
+
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
-        if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            gvfs-mount -u "$mountpoint"
-        else
-            gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
-        fi
-        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
-        else
-            return 0
-        fi
+        if ((is_device)) ; then
+            if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                gvfs-mount -u "$mountpoint"
+            else
+                gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
+            fi
+            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+                el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+            else
+                return 0
+            fi
 
-        # try with udisks maybe
-        if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            udisks --unmount "$mountpoint"
-        else
-            udisks --unmount "$mountpoint" 2>/dev/null 1>&2
-        fi
-        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
-        else
-            return 0
-        fi
+            # try with udisks maybe
+            if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                udisks --unmount "$mountpoint"
+            else
+                udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+            fi
+            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+                el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
+            else
+                return 0
+            fi
 
-        if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            command umount "$mountpoint" || command umount "$device"
-        else
-            command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
-        fi
-        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
-        else
-            return 0
+            if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                command umount "$mountpoint" || command umount "$device"
+            else
+                command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+            fi
+            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+                el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
+            else
+                return 0
+            fi
         fi
 
         # try to know why we cannot umount it

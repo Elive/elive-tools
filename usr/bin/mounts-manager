@@ -577,9 +577,7 @@ el_mount(){
 
             el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         else
-            if [[ "$EL_DEBUG" -gt 2 ]] ; then
-                LC_ALL=C udisks --mount "$dev" "$@"
-            fi
+            LC_ALL=C udisks --mount "$dev" "$@" 1>&2
         fi
     fi
 

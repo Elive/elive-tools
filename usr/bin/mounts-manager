@@ -377,8 +377,7 @@ check_is_mounted(){
 #===============================================================================
 el_umount(){
     # pre {{{
-    local arg device mountpoint is_device is_mountpoint
-    el_debug "Umounting: $@"
+    local arg device mountpoint is_device is_mountpoint is_umounted
     el_security_function_loop 10 || return
 
     # }}}
@@ -412,6 +411,7 @@ el_umount(){
             # is a wap what we try to umount ?
             if file -s "$device" | grep -qs "swap file" ; then
                 swapoff "$device" 2>/dev/null
+                el_debug "Umounted (swap): $@"
                 return 0
             fi
             # if we are not mounted, nothing more to do
@@ -441,6 +441,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
             else
+                el_debug "Umounted: $@"
                 return 0
             fi
         fi
@@ -456,6 +457,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
+                el_debug "Umounted: $@"
                 return 0
             fi
 
@@ -468,6 +470,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
+                el_debug "Umounted: $@"
                 return 0
             fi
 
@@ -479,6 +482,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
             else
+                el_debug "Umounted: $@"
                 return 0
             fi
         fi
@@ -495,6 +499,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
+                el_debug "Umounted (forced): $@"
                 return 0
             fi
 
@@ -503,6 +508,7 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
+                el_debug "Umounted (forced): $@"
                 return 0
             fi
 
@@ -513,6 +519,7 @@ el_umount(){
                 # supercow powers
                 command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
             else
+                el_debug "Umounted (forced): $@"
                 return 0
             fi
         fi
@@ -521,6 +528,7 @@ el_umount(){
             el_error "unable to umount $dev for ${mountpoint}, I'm upset now"
             return 1
         else
+            el_debug "Umounted (forced): $@"
             el_warning "well, finally umounted"
             return 0
         fi

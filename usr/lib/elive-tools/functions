@@ -1326,37 +1326,37 @@ el_flag(){
     TMP_FLAGS_d="${TMP_FLAGS_d:-"/tmp/.$(basename $0)-flags-$USER"}"
 
     if [[ ! -d "${TMP_FLAGS_d}" ]] ; then
-	mkdir -p "$TMP_FLAGS_d"
+        mkdir -p "$TMP_FLAGS_d"
     fi
 
     el_check_variables "action,name"
 
     # }}}
     case $action in
-	add|set|put)
-	    el_explain 2 "added $name flag"
-	    touch "${TMP_FLAGS_d}/$name"
-	    ;;
-	del|remove|delete|rm)
-	    rm -f "${TMP_FLAGS_d}/$name"
+        add|set|put)
+            el_explain 2 "added $name flag"
+            touch "${TMP_FLAGS_d}/$name"
+            ;;
+        del|remove|delete|rm)
+            rm -f "${TMP_FLAGS_d}/$name"
 
-	    if ! el_check_dir_has_files "${TMP_FLAGS_d}" ; then
-		rmdir "${TMP_FLAGS_d}"
-	    fi
+            if ! el_check_dir_has_files "${TMP_FLAGS_d}" 2>/dev/null ; then
+                rmdir "${TMP_FLAGS_d}"
+            fi
             el_debug "removed flag $name"
-	    ;;
-	check|test|verify)
-	    if [[ -e "${TMP_FLAGS_d}/$name" ]]; then
+            ;;
+        check|test|verify)
+            if [[ -e "${TMP_FLAGS_d}/$name" ]]; then
                 el_debug "$action $name -> [true]"
-		return 0
-	    else
+                return 0
+            else
                 el_debug "$action $name -> [false]"
-		return 1
-	    fi
-	    ;;
-	*)
-	    el_error "unkown action ${action}, func: ${FUNCNAME[1]}"
-	    ;;
+                return 1
+            fi
+            ;;
+        *)
+            el_error "unkown action ${action}, func: ${FUNCNAME[1]}"
+            ;;
     esac
 
 }

@@ -363,7 +363,8 @@ check_is_mounted(){
         if LC_ALL=C udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
             el_sudo service dbus restart
-            el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+            el_warning "udev & dbus needed to be restarted"
+            #el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
             return 1
         fi
     fi
@@ -400,7 +401,6 @@ el_umount(){
             is_mountpoint=1
             mountpoint="${arg%/}"
         fi
-
 
         if ((is_mountpoint)) && ! check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
             # if we are not mounted, nothing more to do
@@ -441,6 +441,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -457,6 +461,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -470,6 +478,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -482,6 +494,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -499,6 +515,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -508,6 +528,10 @@ el_umount(){
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -519,6 +543,10 @@ el_umount(){
                 # supercow powers
                 command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
             else
+                # special dir created by this own tool, we don't need it anymore
+                if [[ "$arg" = /mnt/*_elive ]] ; then
+                    rmdir "$arg"
+                fi
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -530,6 +558,10 @@ el_umount(){
         else
             el_debug "Umounted (forced): $@"
             el_warning "well, finally umounted"
+            # special dir created by this own tool, we don't need it anymore
+            if [[ "$arg" = /mnt/*_elive ]] ; then
+                rmdir "$arg"
+            fi
             return 0
         fi
     done
@@ -542,8 +574,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev
-    el_debug "Mounting: $@"
+    local dev uuid
     el_security_function_loop 10 || return
 
     dev="$1"
@@ -573,11 +604,13 @@ el_mount(){
         if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
             el_sudo service dbus restart
+            el_warning "udev & dbus needed to be restarted"
+
             timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
 
-            el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
-        else
-            LC_ALL=C udisks --mount "$dev" "$@" 1>&2
+            #el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+        #else
+            #LC_ALL=C udisks --mount "$dev" "$@" 1>&2
         fi
     fi
 
@@ -585,8 +618,29 @@ el_mount(){
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
-    else
-        return 1
+    #else
+        #el_error "Unable to mount $dev"
+        #return 1
+    fi
+
+    # if root, try to mount it in any of the cases
+    if [[ "$UID" = 0 ]] ; then
+        uuid="$( lsblk -nio UUID "$dev" )"
+        target="/mnt/${uuid}_elive"
+
+        if check_is_mounted "$target" 2>/dev/null 1>&2 ; then
+            el_error "$target is already mounted, we cannot use it"
+        fi
+
+        mount "$dev" "$target"
+        sync
+        if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+            echo "$dev mounted in: $(get_mountpoint "$dev" )"
+            return 0
+        else
+            el_error "Unable to mount $dev"
+            return 1
+        fi
     fi
 }
 

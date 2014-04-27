@@ -9,13 +9,13 @@ source /usr/lib/elive-tools/functions
 #===============================================================================
 chroot_layers_mount(){
     # pre {{{
-    local dir name
+    local dir id
     el_debug
     el_security_function_loop 10 || return
 
     dir="$1"
     id="$2"
-    if ! el_check_variables "dir,name" || ! el_check_dirs "$dir" ; then
+    if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
         exit 1
     fi
 

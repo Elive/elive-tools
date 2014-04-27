@@ -183,27 +183,27 @@ chroot_layers_umount(){
     rm -f "${dir}/etc/debian_chroot"
 
     # flash-kernel
-    rm -f "${dir}/usr/sbin/flash-kernel"
     if [[ -e "$dir/usr/sbin/flash-kernel.distrib" ]] ; then
+        rm -f "${dir}/usr/sbin/flash-kernel"
         chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/flash-kernel
     fi
     # custom start-stop-daemon
-    rm -f "${dir}/sbin/start-stop-daemon"
     if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
+        rm -f "${dir}/sbin/start-stop-daemon"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/start-stop-daemon
     fi
     # disable dpkg syncin
     rm -f "${dir}/etc/dpkg/dpkg.cfg.d/live-build"
 
     # sysv-rc
-    rm -f "${dir}/usr/sbin/policy-rc.d"
     if [[ -e "$dir/usr/sbin/policy-rc.d.distrib" ]] ; then
+        rm -f "${dir}/usr/sbin/policy-rc.d"
         chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/policy-rc.d
     fi
 
     # upstart
-    rm -f "${dir}/sbin/initctl"
     if [[ -e "$dir/sbin/initctl.distrib" ]] ; then
+        rm -f "${dir}/sbin/initctl"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/initctl
     fi
 
@@ -231,6 +231,7 @@ chroot_layers_umount(){
         mv "$dir/etc/hostname.orig" "$dir/etc/hostname"
     fi
     if [[ -e "$dir/bin/hostname.distrib" ]] ; then
+        rm -f "${dir}/bin/hostname"
         chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
     fi
 

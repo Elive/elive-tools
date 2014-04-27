@@ -15,8 +15,9 @@ chroot_layers_mount(){
 
     dir="$1"
     id="$2"
-    el_check_variables "dir,name"
-    el_check_dirs "$dir"
+    if ! el_check_variables "dir,name" || ! el_check_dirs "$dir" ; then
+        exit 1
+    fi
 
     if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
         el_error "must require root privileges"

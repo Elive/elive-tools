@@ -4,23 +4,28 @@ source /usr/lib/elive-tools/functions
 #===  FUNCTION  ================================================================
 #          NAME:  chroot_layers_mount
 #   DESCRIPTION:  mount the layers needed for a working chroot
-#    PARAMETERS:  $1 directory, $2 name-id-to-use
+#    PARAMETERS:  $1 directory, $2 name-id-to-use, $3 = mode (opt)
 #       RETURNS:  -
 #===============================================================================
 chroot_layers_mount(){
     # pre {{{
-    local dir id
+    local dir id mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return
 
     dir="$1"
     id="$2"
+    mode="$3"
     if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
         exit 1
     fi
 
     if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
         el_error "must require root privileges"
+    fi
+
+    if [[ "$mode" = "bind" ]] ; then
+        is_mode_bind=1
     fi
 
     # }}}
@@ -32,21 +37,38 @@ chroot_layers_mount(){
 
     # devpts
     mkdir -p "$dir/dev/pts"
-    mount devpts-$id -t devpts "${dir}/dev/pts" || true
+    if ((is_mode_bind)) ; then
+        mount --bind "/dev" "${dir}/dev"
+        mount --bind "/dev/pts" "${dir}/dev/pts"
+    else
+        mount devpts-$id -t devpts "${dir}/dev/pts" || true
+    fi
 
     # proc
     mkdir -p "$dir/proc"
-    mount proc-$id -t proc "${dir}/proc" || true
+    if ((is_mode_bind)) ; then
+        mount --bind "/proc" "${dir}/proc"
+    else
+        mount proc-$id -t proc "${dir}/proc" || true
+    fi
 
     # selinux
     if [[ -e "/selinux/enforce" ]] && [[ "$(cat /selinux/enforce)" = "1" ]] ; then
         mkdir -p "$dir/selinux"
-        mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+        if ((is_mode_bind)) ; then
+            mount --bind "/selinux" "${dir}/selinux"
+        else
+            mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+        fi
     fi
 
     # sysfs
     mkdir -p "$dir/sys"
-    mount sysfs-$id -t sysfs "${dir}/sys" || true
+    if ((is_mode_bind)) ; then
+        mount --bind "/sys" "${dir}/sys"
+    else
+        mount sysfs-$id -t sysfs "${dir}/sys" || true
+    fi
 
     # debian chroot mark
     mkdir -p "$dir/etc"
@@ -129,12 +151,13 @@ chroot_layers_mount(){
 #===============================================================================
 chroot_layers_umount(){
     # pre {{{
-    local dir id
+    local dir id mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return
 
     dir="$1"
     id="$2"
+    mode="$3"
     el_check_variables "dir"
     el_check_dirs "$dir"
 
@@ -142,6 +165,9 @@ chroot_layers_umount(){
         el_error "must require root privileges"
     fi
 
+    if [[ "$mode" = "bind" ]] ; then
+        is_mode_bind=1
+    fi
 
     # }}}
 
@@ -151,32 +177,59 @@ chroot_layers_umount(){
     fi
 
     # devpts
-    if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
-        if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
             umount "$dir/dev/pts"
-        else
-            umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
+        fi
+        if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
+            umount "$dir/dev"
+        fi
+    else
+        if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
+            if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
+                umount "$dir/dev/pts"
+            else
+                umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
+            fi
         fi
     fi
 
     # proc
-    if check_is_mounted "$dir/proc" 2>/dev/null 1>&2 ; then
-        if [[ -e "${dir}/proc/sys/fs/binfmt_misc/status" ]] ; then
-            umount "$dir/proc/sys/fs/binfmt_misc"
-        fi
-        if [[ -e "${dir}/proc/version" ]] ; then
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/proc" 2>/dev/null 1>&2 ; then
             umount "$dir/proc"
+        fi
+    else
+        if check_is_mounted "$dir/proc" 2>/dev/null 1>&2 ; then
+            if [[ -e "${dir}/proc/sys/fs/binfmt_misc/status" ]] ; then
+                umount "$dir/proc/sys/fs/binfmt_misc"
+            fi
+            if [[ -e "${dir}/proc/version" ]] ; then
+                umount "$dir/proc"
+            fi
         fi
     fi
 
     # selinux
-    if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 || [[ -e "$dir/selinux/enforce" ]] ; then
-        umount "$dir/selinux"
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 ; then
+            umount "$dir/selinux"
+        fi
+    else
+        if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 || [[ -e "$dir/selinux/enforce" ]] ; then
+            umount "$dir/selinux"
+        fi
     fi
 
     # sysfs
-    if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 ; then
-        umount "$dir/sys"
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 ; then
+            umount "$dir/sys"
+        fi
+    else
+        if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 ; then
+            umount "$dir/sys"
+        fi
     fi
 
     # debian chroot mark

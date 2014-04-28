@@ -26,6 +26,7 @@ chroot_layers_mount(){
 
     if [[ "$mode" = "bind" ]] ; then
         is_mode_bind=1
+        el_debug "using bind mode of mounting layers"
     fi
 
     # }}}
@@ -167,6 +168,7 @@ chroot_layers_umount(){
 
     if [[ "$mode" = "bind" ]] ; then
         is_mode_bind=1
+        el_debug "using bind mode of umounting layers"
     fi
 
     # }}}
@@ -742,27 +744,33 @@ main(){
 
     case "$1" in
         --get-mountpoint)
-            get_mountpoint "$2"
+            shift
+            get_mountpoint "$@"
             ;;
         --check-is-mounted)
-            check_is_mounted "$2"
+            shift
+            check_is_mounted "$@"
             ;;
         --mount)
             shift
             el_mount "$@"
             ;;
         --umount)
-            el_umount "$2"
+            shift
+            el_umount "$@"
             ;;
         --umount-force)
+            shift
             is_forced=1
-            el_umount "$2"
+            el_umount "$@"
             ;;
         --chroot-layers-mount)
-            chroot_layers_mount "$2" "$3"
+            shift
+            chroot_layers_mount "$@"
             ;;
         --chroot-layers-umount)
-            chroot_layers_umount "$2" "$3"
+            shift
+            chroot_layers_umount "$@"
             ;;
     esac
 

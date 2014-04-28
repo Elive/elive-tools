@@ -1347,10 +1347,10 @@ el_flag(){
             ;;
         check|test|verify)
             if [[ -e "${TMP_FLAGS_d}/$name" ]]; then
-                el_debug "$action $name -> [true]"
+                el_debug "$action $name -> [flag found]"
                 return 0
             else
-                el_debug "$action $name -> [false]"
+                el_debug "$action $name -> [no flag]"
                 return 1
             fi
             ;;

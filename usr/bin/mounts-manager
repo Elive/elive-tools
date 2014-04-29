@@ -357,7 +357,7 @@ get_mountpoint(){
         return 0
     else
         # nothing get, return an error
-        el_warning "unable to get mountpoint for $dev"
+        el_warning "unable to get mountpoint for ${dev}, is it this partition formated and mountable?"
         return 1
     fi
 }

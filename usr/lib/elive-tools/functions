@@ -1297,7 +1297,7 @@ el_step_requires_fixme(){
         fi
         #echo -e "$@"
         el_explain 0 "Press ^D or type 'logout' for continue...\n"
-        $SHELL
+        $SHELL -l
     else
         cd "${prev_dir}"
         return 1

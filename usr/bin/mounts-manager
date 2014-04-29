@@ -418,6 +418,9 @@ check_is_mounted(){
         fi
         # well, maybe not working?
         if LC_ALL=C udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+            # re-read partition table
+            sfdisk -R "${dev##*[[:alpha:]]}" || true
+
             el_sudo service udev restart
             el_sudo service dbus restart
             el_warning "udev & dbus needed to be restarted"
@@ -658,12 +661,15 @@ el_mount(){
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
     else
+        # re-read partition table
+        sfdisk -R "${dev##*[[:alpha:]]}" || true
+
         if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
             el_sudo service dbus restart
             el_warning "udev & dbus needed to be restarted"
 
-            timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
+            #timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
 
             #el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         #else
@@ -682,6 +688,7 @@ el_mount(){
 
     # if root, try to mount it in any of the cases
     if [[ "$UID" = 0 ]] ; then
+        sfdisk -R "${dev##*[[:alpha:]]}" || true
         uuid="$( lsblk -nio UUID "$dev" )"
         target="/mnt/${uuid}_elive"
 

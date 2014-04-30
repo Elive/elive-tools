@@ -7,7 +7,11 @@ get_all_partitions_list(){
     for i in /dev/[sh]d[a-z][0-9]*
     do
         if [[ -b "$i" ]] ; then
-            el_array_member_add "${i}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+            if udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then
+                el_array_member_add "${i}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+            else
+                el_warning "Found device $i but doesn't seems to be reachable by udevadm, maybe is a vanished partition, skipping..."
+            fi
         fi
     done
     # debug:
@@ -209,6 +213,8 @@ main(){
             # udevadm needs to be restarted?
             if [[ "$line" = "device node not found" ]] ; then
                 el_request_report_bug "udevadm was unable to show '$item - $(file -s "$item")', why?"
+                #el_warning "Device $item is not reachable, partition was deleted?"
+                #continue
             fi
             # normal partitions
             if [[ "${line}" = *"ID_FS_USAGE=filesystem" ]] ; then

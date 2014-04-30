@@ -28,6 +28,11 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
     fi
 fi
 
+if [[ -z "$SSH_REMOTE_IP" ]] ; then
+    unset SSH_REMOTE_IP
+    want_exit=yes
+fi
+
 if [[ "$want_exit" != "yes" ]] ; then
     # skip local connections, we don't want to inform about them
     if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$SSH_REMOTE_IP" = "127."* ]] || [[ "$SSH_REMOTE_IP" = "10."* ]] ; then

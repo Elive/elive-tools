@@ -163,29 +163,29 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         done
 
         if [[ "$1" != "delayed" ]] ; then
-	    return 1
+            return 1
         fi
 
-	sleep 1
+        sleep 1
     done
 
 
     # exit correctly if we have already run that before
     # 1200 sec == 20 min
     if [[ -e "$stamp_hour_prev" ]] ; then
-	if [[ -n "$OnLine" ]] ; then
-	    if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
-		echo "$date_hour_now" > "$stamp_hour_prev"
+        if [[ -n "$OnLine" ]] ; then
+            if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
+                echo "$date_hour_now" > "$stamp_hour_prev"
 
-		return 0
-	    fi
-	fi
+                return 0
+            fi
+        fi
 
     fi
 
     # we never had internet before and we are not online, return false without delaying more
     if [[ ! -e "$stamp_hour_prev" ]] && [[ -z "$OnLine" ]] ; then
-	return 1
+        return 1
     fi
 
 
@@ -193,17 +193,17 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     unset OnLine
     for i in 1 2 3 4
     do
-	if /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
-	    OnLine=1
-	    break
-	else
-	    # fast check ? directly return
-	    if [[ "$1" != "delayed" ]] ; then
-		return 1
-	    fi
+        if /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+            OnLine=1
+            break
+        else
+            # fast check ? directly return
+            if [[ "$1" != "delayed" ]] ; then
+                return 1
+            fi
 
-	    sleep 1
-	fi
+            sleep 1
+        fi
     done
 
     if ! [ $OnLine ]; then
@@ -218,7 +218,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         return 0
     else
         # fast check ? directly return
-	if [[ "$1" != "delayed" ]] || [[ "$1" != "force" ]] || [[ "$1" != "-f" ]] ; then
+        if [[ "$1" != "delayed" ]] || [[ "$1" != "force" ]] || [[ "$1" != "-f" ]] ; then
             return 1
         fi
 
@@ -455,14 +455,14 @@ el_package_newer_check(){
 
 
     if [[ -n "$installed" ]] && [[ -n "$candidate" ]] ; then
-	if dpkg --compare-versions "${candidate}" gt "${installed}" ; then
-	    return 0
-	else
-	    return 1
-	fi
+        if dpkg --compare-versions "${candidate}" gt "${installed}" ; then
+            return 0
+        else
+            return 1
+        fi
     else
-	el_error "no versions get correctly for package ${package}, installed is '${installed}', candidate is '${candidate}', func: ${FUNCNAME[1]}"
-	return 1
+        el_error "no versions get correctly for package ${package}, installed is '${installed}', candidate is '${candidate}', func: ${FUNCNAME[1]}"
+        return 1
     fi
 }
 
@@ -475,16 +475,16 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 
     while read -ru 3 var
     do
-	if [[ -n $ZSH_VERSION ]] ; then
-	    if [[ ! -n "${(P)var}" ]] ; then
-		el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
-		found_no="yes"
-	    fi
-	else
-	    if [[ ! -n "${!var}" ]] ; then
-		el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
-		found_no="yes"
-	    fi
+        if [[ -n $ZSH_VERSION ]] ; then
+            if [[ ! -n "${(P)var}" ]] ; then
+                el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
+                found_no="yes"
+            fi
+        else
+            if [[ ! -n "${!var}" ]] ; then
+                el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
+                found_no="yes"
+            fi
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
@@ -585,18 +585,18 @@ el_check_dir_has_files(){
 
             return 1
         else
-	    if [[ $SHELL = *bash ]] ; then
-		if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
-		    el_error "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
+            if [[ $SHELL = *bash ]] ; then
+                if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
+                    el_error "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
 
-		    return 1
-		fi
-	    else
-		if ! command ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
-		    el_error "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
+                    return 1
+                fi
+            else
+                if ! command ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
+                    el_error "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
 
-		    return 1
-		fi
+                    return 1
+                fi
             fi
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
@@ -661,38 +661,38 @@ el_check_translations_required_notify(){
     if [[ -n "$TEXTDOMAINDIR" ]] ; then
         textdomaindir="$TEXTDOMAINDIR"
     else
-	textdomaindir="/usr/share/locale"
+        textdomaindir="/usr/share/locale"
     fi
 
     # dont annoy users in the stable released
     if ! el_check_version_development ; then
-	return
+        return
     fi
 
     # }}}
 
     if [[ -n "$TEXTDOMAIN" ]] ; then
-	# we already said it ?
-	if el_flag check "translation_required_${TEXTDOMAIN}" ; then
-	    return
-	fi
-	el_flag add "translation_required_${TEXTDOMAIN}"
+        # we already said it ?
+        if el_flag check "translation_required_${TEXTDOMAIN}" ; then
+            return
+        fi
+        el_flag add "translation_required_${TEXTDOMAIN}"
 
-	stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
+        stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
 
-	if [[ -s "${stat}" ]] ; then
-	    percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
+        if [[ -s "${stat}" ]] ; then
+            percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
 
-	    if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
-		is_translation_required=1
-	    else
-		return
-	    fi
-	fi
+            if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
+                is_translation_required=1
+            else
+                return
+            fi
+        fi
     fi
 
     if ((is_translation_required)) ; then
-	el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application.\n\nThank you"
+        el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application.\n\nThank you"
     fi
 
 }
@@ -705,14 +705,14 @@ el_check_translations_required_notify(){
 #===============================================================================
 el_check_version_development(){
     if [[ -e "/etc/elive-version" ]] ; then
-	if [[ "$( grep stable-release /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
-	    return 1
-	else
-	    return 0
-	fi
+        if [[ "$( grep stable-release /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
+            return 1
+        else
+            return 0
+        fi
     else
-	el_error "File /etc/elive-version not found, func: ${FUNCNAME[1]}"
-	return 0
+        el_error "File /etc/elive-version not found, func: ${FUNCNAME[1]}"
+        return 0
     fi
 }
 
@@ -1197,19 +1197,19 @@ el_array_member_check(){
     list=("$@")
 
     if [[ -n $ZSH_VERSION ]] ; then
-	for i in "${(P)list[@]}"
-	do
-	    if [[ "${list[i]}" = "$match" ]] ; then
-		return 0
-	    fi
-	done
+        for i in "${(P)list[@]}"
+        do
+            if [[ "${list[i]}" = "$match" ]] ; then
+                return 0
+            fi
+        done
     else
-	for i in "${!list[@]}"
-	do
-	    if [[ "${list[i]}" = "$match" ]] ; then
-		return 0
-	    fi
-	done
+        for i in "${!list[@]}"
+        do
+            if [[ "${list[i]}" = "$match" ]] ; then
+                return 0
+            fi
+        done
     fi
 
     return 1
@@ -1370,28 +1370,28 @@ el_flag(){
 #===============================================================================
 el_add_on_exit(){
     if [[ -z "$1" ]] ; then
-	return
+        return
     fi
     local n=${#on_exit_items[*]}
     on_exit_items[$n]="$*"
 
     # add the trap if is not added
     if [[ $n -eq 0 ]]; then
-	#echo "Setting trap"
-	trap on_exit EXIT
+        #echo "Setting trap"
+        trap on_exit EXIT
     fi
 }
 on_exit(){
     # create empty variable of array type if not exist
     if [[ -z "$on_exit_items" ]] ; then
-	declare -a on_exit_items
+        declare -a on_exit_items
     fi
 
     # run each appended command
     for i in "${on_exit_items[@]}"
     do
-	#echo "on_exit: $i"
-	eval $i
+        #echo "on_exit: $i"
+        eval $i
     done
 }
 

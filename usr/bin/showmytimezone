@@ -11,30 +11,30 @@ source /usr/lib/elive-tools/functions
 convert_timezone()
 {
     case "$1" in
-	(right/*|posix/*)
-	    convert_timezone "${1#*/}"
-	    ;;
-	("Africa/Asmera")
-	    echo "Africa/Asmara"
-	    ;;
-	("America/Argentina/ComodRivadavia"|"America/Catamarca")
-	    echo "America/Argentina/Catamarca"
-	    ;;
-	("America/Buenos_Aires")
-	    echo "America/Argentina/Buenos_Aires"
-	    ;;
-	("America/Cordoba"|"America/Rosario")
-	    echo "America/Argentina/Cordoba"
-	    ;;
-	("America/Jujuy")
-	    echo "America/Argentina/Jujuy"
-	    ;;
-	("America/Mendoza")
-	    echo "America/Argentina/Mendoza"
-	    ;;
-	("Antarctica/South_Pole")
-	    echo "Antarctica/McMurdo"
-	    ;;
+        (right/*|posix/*)
+            convert_timezone "${1#*/}"
+            ;;
+        ("Africa/Asmera")
+            echo "Africa/Asmara"
+            ;;
+        ("America/Argentina/ComodRivadavia"|"America/Catamarca")
+            echo "America/Argentina/Catamarca"
+            ;;
+        ("America/Buenos_Aires")
+            echo "America/Argentina/Buenos_Aires"
+            ;;
+        ("America/Cordoba"|"America/Rosario")
+            echo "America/Argentina/Cordoba"
+            ;;
+        ("America/Jujuy")
+            echo "America/Argentina/Jujuy"
+            ;;
+        ("America/Mendoza")
+            echo "America/Argentina/Mendoza"
+            ;;
+        ("Antarctica/South_Pole")
+            echo "Antarctica/McMurdo"
+            ;;
         "Asia/Ashkhabad")
             echo "Asia/Ashgabat"
             ;;
@@ -363,7 +363,7 @@ main(){
     # get our timezone
     result="$( curl -k -s -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" )"
     if ! echo "$result" | grep -q "status.*OK" ; then
-	el_warning "Unkown timezone location, using a smart method..."
+        el_warning "Unkown timezone location, using a smart method..."
     fi
 
 
@@ -371,32 +371,32 @@ main(){
     timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' | grep -E "[[:alpha:]]" )"
 
     if [[ -n "$timezone" ]] ; then
-	# translate to a useful value
-	timezone="$( convert_timezone $timezone )"
+        # translate to a useful value
+        timezone="$( convert_timezone $timezone )"
     else
-	# get the value from the clock
-	# search for the configured delay
-	if [[ "$UID" = 0 ]] ; then
-	    time_hwclock="$( hwclock -u | tr ' ' '\n' | grep "[[:digit:]]*:[[:digit:]]*:[[:digit:]]" | sed -e 's|:.*$||g' -e 's|^0||g' )"
-	    time_date="$( date +%k )"
-	    # remove extra leading blank chars
-	    read -r time_date <<< "$time_date"
+        # get the value from the clock
+        # search for the configured delay
+        if [[ "$UID" = 0 ]] ; then
+            time_hwclock="$( hwclock -u | tr ' ' '\n' | grep "[[:digit:]]*:[[:digit:]]*:[[:digit:]]" | sed -e 's|:.*$||g' -e 's|^0||g' )"
+            time_date="$( date +%k )"
+            # remove extra leading blank chars
+            read -r time_date <<< "$time_date"
 
-	    if [[ "${time_hwclock}" = "${time_date}" ]] ; then
-		timezone="Etc/UTC"
-	    else
-		#time_delay="$(( ${time_date} - ${time_hwclock} ))"
-		time_delay="$(( ${time_hwclock} - ${time_date} ))"
-		if echo "$time_delay" | grep -q "^[[:digit:]]" ; then
-		    # add positive value if we have not
-		    time_delay="+${time_delay}"
-		fi
-		timezone="Etc/GMT${time_delay}"
-	    fi
-	else
-	    el_warning "The result will be improved if you run it by root instead of user"
-	    timezone="Etc/UTC"
-	fi
+            if [[ "${time_hwclock}" = "${time_date}" ]] ; then
+                timezone="Etc/UTC"
+            else
+                #time_delay="$(( ${time_date} - ${time_hwclock} ))"
+                time_delay="$(( ${time_hwclock} - ${time_date} ))"
+                if echo "$time_delay" | grep -q "^[[:digit:]]" ; then
+                    # add positive value if we have not
+                    time_delay="+${time_delay}"
+                fi
+                timezone="Etc/GMT${time_delay}"
+            fi
+        else
+            el_warning "The result will be improved if you run it by root instead of user"
+            timezone="Etc/UTC"
+        fi
     fi
 
 

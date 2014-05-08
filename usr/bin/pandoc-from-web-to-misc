@@ -51,34 +51,34 @@ main(){
 
     while read -ru 3 line
     do
-	[[ -z "$line" ]] && continue
+        [[ -z "$line" ]] && continue
 
-	if [[ "${line}" = /* ]] ; then
-	    line="${baseurl}${line}"
-	fi
+        if [[ "${line}" = /* ]] ; then
+            line="${baseurl}${line}"
+        fi
 
-	cd files
+        cd files
 
-	dirfile="${line%/*}"
-	dirfile="${dirfile#*://}"
-	dirfile="${dirfile#*/}"
-	filename="${line##*/}"
+        dirfile="${line%/*}"
+        dirfile="${dirfile#*://}"
+        dirfile="${dirfile#*/}"
+        filename="${line##*/}"
 
-	wget -q "$line"
+        wget -q "$line"
 
-	mkdir -p "$dirfile"
-	mv "${filename}" "$dirfile" 2>/dev/null || mv *."${filename##*.}" "$dirfile"
+        mkdir -p "$dirfile"
+        mv "${filename}" "$dirfile" 2>/dev/null || mv *."${filename##*.}" "$dirfile"
 
-	cd ../
-	echo "$line"
+        cd ../
+        echo "$line"
 
-	# change the location of the files to here
-	sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded.text
-	sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded_utf8.text
+        # change the location of the files to here
+        sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded.text
+        sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded_utf8.text
 
-	# fix broken links for images
-	sed -i "/${filename}/s|](/|](files/|g" downloaded.text
-	sed -i "/${filename}/s|](/|](files/|g" downloaded_utf8.text
+        # fix broken links for images
+        sed -i "/${filename}/s|](/|](files/|g" downloaded.text
+        sed -i "/${filename}/s|](/|](files/|g" downloaded_utf8.text
 
 
     done 3<<< "$( cat "downloaded-original.text" | tr '(' '\n' | tr ')' '\n' | grep -Ei "(\.gif|\.jpg|\.png|\.bmp)" | sed -e 's|).*$||g' -e 's|^.*(||g' )"
@@ -88,17 +88,17 @@ main(){
     sed -i "s|](/|](${baseurl}/|g" downloaded_utf8.text
 
     if el_confirm "\nDo you want to modify the document? useful for remove useless contents" ; then
-	if [[ -z "$EDITOR" ]] ; then
-	    EDITOR="$( which mousepad geany gvim vim | grep -v "not found" | head -1 )"
-	fi
+        if [[ -z "$EDITOR" ]] ; then
+            EDITOR="$( which mousepad geany gvim vim | grep -v "not found" | head -1 )"
+        fi
 
-	$EDITOR downloaded.text
+        $EDITOR downloaded.text
     fi
 
 
     title="$( head -30 downloaded.text | grep "^% [[:alpha:]]" | head -1 | sed -e 's|^% ||g' )"
     if [[ -z "$title" ]] ; then
-       title="Book"
+        title="Book"
     fi
 
     el_explain 0 "Converting to different formats:"
@@ -107,34 +107,34 @@ main(){
     # convert in all the formats !
     for format in epub html pdf docx odt txt
     do
-	options=""
+        options=""
 
-	case $format in
-	    pdf) options="-V geometry:margin=1in" ; ;;
-	    *) options="" ; ;;
-	esac
-
-
-	# convert
-
-	if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
-	    if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
-		echo "command used:  pandoc downloaded_utf8.text -o \"${title}.${format}\"" 1>&2
-		el_explain 0 "converted to __${format}__"
-	    fi
-	else
-	    echo "command used:  pandoc downloaded.text -o \"${title}.${format}\"" 1>&2
-	    el_explain 0 "converted to __${format}__"
-	fi
-
-    done
+        case $format in
+            pdf) options="-V geometry:margin=1in" ; ;;
+        *) options="" ; ;;
+    esac
 
 
-    mkdir -p files/originals
-    mv downloaded*text files/originals
+    # convert
 
-    echo -e "\n\nDone"
-    el_explain 0 "\n__Documents generated at__ XX$(pwd)XX\n"
+    if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
+        if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
+            echo "command used:  pandoc downloaded_utf8.text -o \"${title}.${format}\"" 1>&2
+            el_explain 0 "converted to __${format}__"
+        fi
+    else
+        echo "command used:  pandoc downloaded.text -o \"${title}.${format}\"" 1>&2
+        el_explain 0 "converted to __${format}__"
+    fi
+
+done
+
+
+mkdir -p files/originals
+mv downloaded*text files/originals
+
+echo -e "\n\nDone"
+el_explain 0 "\n__Documents generated at__ XX$(pwd)XX\n"
 
 
 

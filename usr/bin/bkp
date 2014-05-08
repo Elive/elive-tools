@@ -370,8 +370,8 @@ do_work(){
     if el_confirm "Do you want to run a meld with the original directory?" ; then
         if ! el_dependencies_check meld ; then
             if ! el_dependencies_install meld ; then
-		el_error "Please install required dependencies"
-	    fi
+                el_error "Please install required dependencies"
+            fi
         fi
         meld "${tmpdir}" .
     fi
@@ -612,17 +612,17 @@ main(){
 
     # do we have automated access to sudo ? use sudo
     if el_check_sudo_automated ; then
-	SUDO_MODE="sudo"
+        SUDO_MODE="sudo"
     else
-	SUDO_MODE=""
+        SUDO_MODE=""
     fi
 
 
 
     if ! el_dependencies_check "rsync,rdiff-backup,diff,colordiff" ; then
         if ! el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff" ; then
-	    el_error "Please install required dependencies"
-	fi
+            el_error "Please install required dependencies"
+        fi
     fi
 
     el_check_variables "tool,namedir,bkpdir_id,target"

@@ -25,9 +25,9 @@ main(){
     action="$@"
 
     if [[ "${1}" = "defaults" ]] ; then
-	# extra volumes up
-	amixer -q set Headphone 100% 2>/dev/null
-	amixer -q set Speaker 100% 2>/dev/null
+        # extra volumes up
+        amixer -q set Headphone 100% 2>/dev/null
+        amixer -q set Speaker 100% 2>/dev/null
         # unmute channels
         amixer -q set Master unmute 2>/dev/null
         amixer -q set PCM    unmute 2>/dev/null
@@ -144,7 +144,7 @@ main(){
     fi
 
     if [[ "$action" = "unmute" ]] ; then
-	amixer -q set $meter unmute 2>/dev/null
+        amixer -q set $meter unmute 2>/dev/null
     fi
     ##################
 

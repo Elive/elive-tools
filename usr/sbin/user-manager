@@ -63,8 +63,8 @@ messageuserdeleted(){
 ###########################################################################
 passverify(){
     if [[ "$userpass" != "$repeatpass" ]] ; then
-	$guitool --error --text="$( eval_gettext "The passwords are not equals, please try again" )"
-	passstep
+        $guitool --error --text="$( eval_gettext "The passwords are not equals, please try again" )"
+        passstep
     fi
 }
 
@@ -93,10 +93,10 @@ addgroups(){
 
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
     do
-	# remove extra leading blank chars
-	read -r group <<< "$group"
+        # remove extra leading blank chars
+        read -r group <<< "$group"
 
-	"$ADDUSER" "$username" "${group}"
+        "$ADDUSER" "$username" "${group}"
     done
 
 }
@@ -107,10 +107,10 @@ delgroups(){
 
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
     do
-	# remove extra leading blank chars
-	read -r group <<< "$group"
+        # remove extra leading blank chars
+        read -r group <<< "$group"
 
-	$DELUSER "$username" "${group}"
+        $DELUSER "$username" "${group}"
     done
 }
 
@@ -135,26 +135,26 @@ adduserelive(){
     [[ "$username" = "cancel" ]] && exit 1
 
     if [[ "$username" = "eliveuser" ]] ; then
-	$guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
-	exit 1
+        $guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
+        exit 1
     fi
 
     passstep
 
     if [[ "$USERGROUPS" = "yes" ]] ; then
-	USERGROUP=$username
-	groupadd $USERGROUP 2>"${temp_error}" || errorexit
+        USERGROUP=$username
+        groupadd $USERGROUP 2>"${temp_error}" || errorexit
     else
-	USERGROUP="$USERS_GID"
+        USERGROUP="$USERS_GID"
     fi
 
     $USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
     #$USERADD -m $username 2>/tmp/.errormessage || errorexit
 
     if chpasswd -h 2>&1 | grep -iq md5 ; then
-	chpassopt="-m"
+        chpassopt="-m"
     else
-	chpassopt=""
+        chpassopt=""
     fi
 
     echo "$username:$userpass" | chpasswd $chpassopt
@@ -179,12 +179,12 @@ deluserelive(){
 
     userlist="$( while read -ru 3 line do uid="$( echo "$line" | awk -v FS=":" '{print $3}' )" user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-	if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
-	    if [[ -d "$DHOME/$user" ]] ; then
-		echo "$user"
-	    fi
-	fi
-    done 3<<< "$( cat "/etc/passwd")" )"
+    if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+        if [[ -d "$DHOME/$user" ]] ; then
+            echo "$user"
+        fi
+    fi
+done 3<<< "$( cat "/etc/passwd")" )"
 
     username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
@@ -202,9 +202,9 @@ deluserelive(){
     translated_message="$( printf "$( eval_gettext "Do you like to remove all %s files of the %s user?" )" "$DHOME/$username" "$username" )"
 
     if $guitool --question --text="$translated_message" ; then
-	$USERDEL -r "$username" 2>"${temp_error}" || errorexit
+        $USERDEL -r "$username" 2>"${temp_error}" || errorexit
     else
-	$USERDEL "$username" 2>"${temp_error}" || errorexit
+        $USERDEL "$username" 2>"${temp_error}" || errorexit
     fi
 
     #sudoersdel
@@ -217,14 +217,14 @@ changepass(){
 
     userlist="$( while read -ru 3 line
     do
-	uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
-	user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+        uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+        user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-	if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
-	    if [[ -d "$DHOME/$user" ]] ; then
-		echo "$user"
-	    fi
-	fi
+        if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+            if [[ -d "$DHOME/$user" ]] ; then
+                echo "$user"
+            fi
+        fi
     done 3<<< "$( cat "/etc/passwd")" )"
 
 
@@ -234,9 +234,9 @@ changepass(){
 
     passstep
     if chpasswd -h 2>&1 | grep -iq md5 ; then
-	chpassopt="-m"
+        chpassopt="-m"
     else
-	chpassopt=""
+        chpassopt=""
     fi
 
     echo "$username:$userpass" | chpasswd $chpassopt

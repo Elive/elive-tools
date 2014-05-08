@@ -697,6 +697,7 @@ el_mount(){
         sfdisk -R "${dev%%[0-9]*}" || true
         uuid="$( lsblk -nio UUID "$dev" )"
         target="/mnt/${uuid}_elive"
+        mkdir -p "$target"
 
         if check_is_mounted "$target" 2>/dev/null 1>&2 ; then
             el_error "$target is already mounted, we cannot use it"

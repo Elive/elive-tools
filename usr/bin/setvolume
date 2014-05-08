@@ -64,8 +64,8 @@ main(){
         fi
 
         # then set a default generic volume
-        el_explain 2 "Generic volumes set to 85%"
         main 85% 1>/dev/null
+        exit
     fi
 
 
@@ -122,7 +122,7 @@ main(){
 
     ##################
 
-    el_explain 2 "selected mode $meter"
+    el_explain 2 "selected meter: $meter"
 
     if [[ "$action" = "mute" ]] ; then
         actualvalue="$( amixer get $meter | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
@@ -142,6 +142,7 @@ main(){
 
     if [[ "$action" = "unmute" ]] ; then
         amixer -q set $meter unmute 2>/dev/null
+        exit
     fi
     ##################
 

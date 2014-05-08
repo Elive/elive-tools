@@ -424,7 +424,7 @@ check_is_mounted(){
 
             el_sudo service udev restart
             el_sudo service dbus restart
-            el_warning "udev & dbus needed to be restarted"
+            el_warning "udev & dbus needed to be restarted from $FUNCNAME"
             #el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
             return 1
         fi
@@ -669,7 +669,7 @@ el_mount(){
         if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
             el_sudo service udev restart
             el_sudo service dbus restart
-            el_warning "udev & dbus needed to be restarted"
+            el_warning "udev & dbus needed to be restarted from $FUNCNAME"
 
             #timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
 

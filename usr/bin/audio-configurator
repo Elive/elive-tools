@@ -52,10 +52,11 @@ main(){
     if [[ "$number_cards" -lt "2" ]] ; then
         selection="$(echo $list_cards)"
         # reconfigure alsa.conf default file to correctly work
-        if [[ "$UID" = 0 ]] ; then
-            sed -i 's|^defaults.ctl.card.*$|defaults.ctl.card 0|g' /usr/share/alsa/alsa.conf
-            sed -i 's|^defaults.pcm.card.*$|defaults.pcm.card 0|g' /usr/share/alsa/alsa.conf
-        fi
+        #if [[ "$UID" = 0 ]] ; then
+            # Important: NEVER set these values to a digit, seems like glibc segfaults because of this
+            #sed -i 's|^defaults.ctl.card.*$|defaults.ctl.card 0|g' /usr/share/alsa/alsa.conf
+            #sed -i 's|^defaults.pcm.card.*$|defaults.pcm.card 0|g' /usr/share/alsa/alsa.conf
+        #fi
     else
         if ((is_auto_mode)) ; then
             el_dependencies_check "psort"
@@ -65,8 +66,8 @@ main(){
             select_card_multiple
         fi
 
-        # reconfigure alsa.conf default file to correctly work
-        if [[ "$UID" = 0 ]] ; then
+        # reconfigure alsa.conf default file to correctly work, only if is not a number value
+        if [[ "$UID" = 0 ]] && ! echo "$selection" | grep -qs "^[[:digit:]]*$" ; then
             sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
         fi

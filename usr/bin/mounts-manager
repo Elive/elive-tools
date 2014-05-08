@@ -20,7 +20,7 @@ chroot_layers_mount(){
         exit 1
     fi
 
-    if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
+    if [[ "${UID}" != "0" ]] ; then
         el_error "must require root privileges"
     fi
 
@@ -162,7 +162,7 @@ chroot_layers_umount(){
     el_check_variables "dir"
     el_check_dirs "$dir"
 
-    if [[ "${UID}" != "0" ]] && ! el_check_sudo_automated ; then
+    if [[ "${UID}" != "0" ]] ; then
         el_error "must require root privileges"
     fi
 
@@ -470,7 +470,7 @@ el_umount(){
 
         if ((is_device)) ; then
             # is a wap what we try to umount ?
-            if file -s "$device" | grep -qs "swap file" ; then
+            if LC_ALL=C file -s "$device" | grep -qs "swap file" ; then
                 swapoff "$device" 2>/dev/null
                 el_debug "Umounted (swap): $@"
                 return 0
@@ -783,18 +783,30 @@ main(){
     fi
 
     # checks {{{
-    if udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         # restart daemons {{{
-        killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
-        killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+        if [[ "$UID" = 0 ]] ; then
+            killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
+            killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
 
-        /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
-        /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
+            /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
+            /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
+        else
+            if el_check_sudo_automated ; then
+                sudo killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
+                sudo killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+
+                sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
+                sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
+            else
+                el_error "We need to restart some polkitd services, please run again this tool from root"
+            fi
+        fi
 
         sleep 1
 
         # - restart daemons }}}
-        if udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
             el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi
     fi

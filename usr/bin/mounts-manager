@@ -643,6 +643,8 @@ el_mount(){
 
     el_check_variables "dev"
 
+    sync
+
     # }}}
 
     if [[ "$dev" != "/dev/"* ]] || [[ ! -b "$dev" ]] ; then
@@ -661,31 +663,32 @@ el_mount(){
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
-    else
-        # re-read partition table
-        sync ; sleep 1
+    fi
+
+
+    # re-read partition table
+    sync
+    sfdisk -R "${dev%%[0-9]*}" || true
+    sync ; sleep 1
+
+    if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        echo "$dev mounted in: $(get_mountpoint "$dev" )"
+        return 0
+    fi
+
+
+    if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+        el_sudo service udev restart
+        el_sudo service dbus restart
+        sync
         sfdisk -R "${dev%%[0-9]*}" || true
-
-        if LC_ALL=C udisks --mount "$dev" "$@" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
-            el_sudo service udev restart
-            el_sudo service dbus restart
-            el_warning "udev & dbus needed to be restarted from $FUNCNAME"
-
-            #timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-
-            #el_array_member_add "UDEV needed to be restarted in 'el_mount' from 'mounts-manager' with device '$dev'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
-        #else
-            #LC_ALL=C udisks --mount "$dev" "$@" 1>&2
-        fi
+        el_warning "udev & dbus needed to be restarted from $FUNCNAME"
     fi
 
     sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
-    #else
-        #el_error "Unable to mount $dev"
-        #return 1
     fi
 
     # if root, try to mount it in any of the cases

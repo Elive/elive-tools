@@ -69,6 +69,8 @@ main(){
     fi
 
 
+    # fixes percent space
+    action="${action/ %/%}"
 
     action="${action/ up/+}"
     action="${action/ down/-}" # FIXME: e17 mouse bindings does a segfault when the action is to enter a command like "setvolumes 2%+" ? if yes, report it to E17
@@ -78,7 +80,6 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'PCM'" ; then
             meter=PCM
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
@@ -86,7 +87,6 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'Front'" ; then
             meter=Front
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
@@ -94,7 +94,6 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'Wave'" ; then
             meter=Wave
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
@@ -102,7 +101,6 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'Center'" ; then
             meter=Center
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
@@ -111,7 +109,6 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'Master'" ; then
             meter=Master
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
@@ -120,12 +117,12 @@ main(){
     if [[ -z $meter ]] ; then
         if echo "$list" | grep -q "'DAC'" ; then
             meter=DAC
-            el_explain 2 "selected mode $meter"
         fi
     fi
 
     ##################
 
+    el_explain 2 "selected mode $meter"
 
     if [[ "$action" = "mute" ]] ; then
         actualvalue="$( amixer get $meter | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
@@ -156,6 +153,7 @@ main(){
     fi
     ##################
 
+    el_explain 2 "Volumes are now at $( amixer get $meter | grep -E  "(Left|Right).*%]" | tr ' ' '\n' | grep % | tr '\n' ' ' )"
 }
 
 #

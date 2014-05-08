@@ -122,7 +122,7 @@ main(){
 
     ##################
 
-    el_explain 2 "selected meter: $meter"
+    el_explain 2 "selected meter to modify: $meter"
 
     if [[ "$action" = "mute" ]] ; then
         actualvalue="$( amixer get $meter | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"

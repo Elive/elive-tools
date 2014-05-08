@@ -18,7 +18,7 @@ select_card_multiple(){
 
 main(){
     # pre {{{
-    local list_cards number_cards selection guitool line
+    local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode
 
     if ! el_dependencies_check zenity ; then
         el_dependencies_install zenity
@@ -37,8 +37,12 @@ main(){
         is_auto_mode=1
         shift
     fi
-    if [[ -n "$1" ]] ; then
-        if echo "$list_cards" | grep -q "$1" ; then
+    if [[ "$1" = "--quiet" ]] ; then
+        is_quiet_mode=1
+        shift
+    fi
+    if [[ -n "$1" ]] && [[ "$1" != -* ]] ; then
+        if echo "$list_cards" | grep -qs -- "$1" ; then
             list_cards="$1"
         fi
     fi
@@ -47,6 +51,11 @@ main(){
 
     if [[ "$number_cards" -lt "2" ]] ; then
         selection="$(echo $list_cards)"
+        # reconfigure alsa.conf default file to correctly work
+        if [[ "$UID" = 0 ]] ; then
+            sed -i 's|^defaults.ctl.card.*$|defaults.ctl.card 0|g' /usr/share/alsa/alsa.conf
+            sed -i 's|^defaults.pcm.card.*$|defaults.pcm.card 0|g' /usr/share/alsa/alsa.conf
+        fi
     else
         if ((is_auto_mode)) ; then
             el_dependencies_check "psort"
@@ -56,6 +65,11 @@ main(){
             select_card_multiple
         fi
 
+        # reconfigure alsa.conf default file to correctly work
+        if [[ "$UID" = 0 ]] ; then
+            sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
+            sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
+        fi
     fi
 
     # cleanup, new conf
@@ -68,7 +82,7 @@ main(){
     # set microphone default
     if ! ((is_auto_mode)) ; then
         if ((is_multiple_cards)) ; then
-	    if $guitool --question --text="$( eval_gettext "Do you want to use another card as default for your microphone?" )" ; then
+            if $guitool --question --text="$( eval_gettext "Do you want to use another card as default for your microphone?" )" ; then
                 select_card_multiple
 
                 cat >> "${HOME}/.asoundrc" << EOF
@@ -97,18 +111,20 @@ EOF
 
             else
 
-		local translated_message
-		translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
+                local translated_message
+                translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
 
                 $guitool --info --text="$translated_message"
             fi
 
             # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
-	    $guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )"
+            $guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )"
 
         fi
 
-	$guitool --info --text="$( eval_gettext "Your system is ready to use your audio card, please restart your audio applications" )"
+        if ! ((is_quiet_mode)) ; then
+            $guitool --info --text="$( eval_gettext "Your system is ready to use your audio card, please restart your audio applications" )"
+        fi
 
     fi
 }

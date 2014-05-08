@@ -52,10 +52,10 @@ main(){
         amixer -q sset Mic Playback mute 2>/dev/null
 
         # Fix for skype when we dont have a "Mic" control
-        if ! amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then
-            if [[ -d $HOME/.Skype ]] && grep -q "<AGC>.</AGC>" $HOME/.Skype/shared.xml ; then
+        if ! LC_ALL=C amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then
+            if [[ -d "$HOME/.Skype" ]] && grep -q "<AGC>.</AGC>" "$HOME/.Skype/shared.xml" ; then
                 killall skype 2>/dev/null
-                sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" $HOME/.Skype/shared.xml
+                sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.Skype/shared.xml"
 
                 el_explain 2 "added a fix for your skype: to not modify your volumes"
             else
@@ -125,7 +125,7 @@ main(){
     el_explain 2 "selected meter to modify: $meter"
 
     if [[ "$action" = "mute" ]] ; then
-        actualvalue="$( amixer get $meter | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+        actualvalue="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
         actualvalue="$( echo $actualvalue )"
 
         if [[ "$actualvalue" = "on" ]] ; then
@@ -154,7 +154,7 @@ main(){
     fi
     ##################
 
-    el_explain 2 "Volumes are now at $( amixer get $meter | grep -E  "(Left|Right).*%]" | tr ' ' '\n' | grep % | tr '\n' ' ' )"
+    el_explain 2 "Volumes are now at $( LC_ALL=C amixer get $meter | grep -E  "(Left|Right).*%]" | tr ' ' '\n' | grep % | tr '\n' ' ' )"
 }
 
 #

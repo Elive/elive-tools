@@ -38,6 +38,9 @@ else
     EL_DEBUG=${EL_DEBUG:-"0"}
 fi
 
+# extra vars
+source /etc/adduser.conf
+[[ -z "$DHOME" ]] && export DHOME=/home
 
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable

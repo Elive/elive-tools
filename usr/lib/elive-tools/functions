@@ -684,7 +684,9 @@ el_check_translations_required_notify(){
         fi
         el_flag add "translation_required_${TEXTDOMAIN}"
 
-        stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
+        # deprecated location
+        #stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
+        stat="/var/cache/elive-translations/statistics/${LANG%%_*}/${TEXTDOMAIN}.txt"
 
         if [[ -s "${stat}" ]] ; then
             percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"

@@ -70,7 +70,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
     # END from enlightenment values }}}
     # xauthority {{{
-    if [[ -z "$XAUTHORITY" ]] ; then
+    if [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
         XAUTHORITY="$HOME/.Xauthority"
         export XAUTHORITY
     fi

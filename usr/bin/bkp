@@ -308,6 +308,61 @@ el_check_sudo_automated(){
     # }}}
 }
 #-------------------------------------------------------------------------------
+#   Set the DISPLAY variable
+#-------------------------------------------------------------------------------
+el_set_display_variables(){ # Set DISPLAY variables of our actual user
+    # from enlightenment values {{{
+    local display e_ipc_socket
+
+    if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
+        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
+
+            e_ipc_socket="${display%|*}"
+
+            #display="${display##*disp-}"
+            display="$( basename ${display} )"
+            display="${display%-*}"
+
+            if [[ -z "${DISPLAY}" ]] ; then
+                DISPLAY="${display}"
+                export DISPLAY
+            fi
+
+            if [[ -z "${E_IPC_SOCKET}" ]] ; then
+                E_IPC_SOCKET="${e_ipc_socket}"
+                export E_IPC_SOCKET
+            fi
+        fi
+
+    fi
+    # END from enlightenment values }}}
+    # xauthority {{{
+    if [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
+        XAUTHORITY="$HOME/.Xauthority"
+        export XAUTHORITY
+    fi
+
+    if [[ "$TERM" != linux ]] && [[ "$UID" != 0 ]] ; then
+        # only show the error if we have a graphical system running by the user
+        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+            if [[ -z "${DISPLAY}" ]] ; then
+                el_explain 1 "Variable DISPLAY is not set, so we will not have access to the local graphical system"
+            fi
+            if [[ -z "${XAUTHORITY}" ]] ; then
+                el_explain 1 "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
+            fi
+            if [[ -z "${E_IPC_SOCKET}" ]] ; then
+                if [[ "$UID" != 0 ]] ; then
+                    el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the owner of this graphical session (Ignore this message)"
+                fi
+            fi
+        fi
+    fi
+
+    # END xauthority }}}
+}
+#-------------------------------------------------------------------------------
 #   Install required packages
 #-------------------------------------------------------------------------------
 el_dependencies_install(){
@@ -317,7 +372,7 @@ el_dependencies_install(){
     el_set_display_variables
 
     # TODO:  even better: use a gui tool for install deps
-    el_dependencies_check urxvt
+    el_dependencies_check "urxvt,gksu"
 
     temp="/tmp/.$(basename $0)-${USER}-$$"
     cat > "${temp}" << EOF
@@ -328,7 +383,12 @@ urxvt -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; apt-get updat
 EOF
 
     chmod +x "${temp}"
-    gksu "${temp}"
+    if [[ "$UID" = 0 ]] ; then
+        ./"${temp}"
+    else
+        gksu "${temp}"
+    fi
+
     rm -f "${temp}"
 
     # }}}

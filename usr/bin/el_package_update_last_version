@@ -24,6 +24,16 @@ main(){
     packagename="${1}"
     url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
 
+    # check if exist or apt-get update
+    if [[ -z "$url_repository" ]] ; then
+        el_aptget_update
+    fi
+    if [[ -z "$url_repository" ]] ; then
+        el_warning "Package $packagename not found in the repos, ignoring it..."
+        exit 1
+    fi
+
+
     # check internet
     if ! el_verify_internet ; then
         el_explain 1 "No internet found, ignoring checking of newer packages available"
@@ -33,7 +43,7 @@ main(){
     # check repo url
     if ! el_check_variables "url_repository" ; then
         el_error "no url found for ${packagename} package, ignoring check in $(basename $0)"
-        exit
+        exit 1
     fi
 
     if ! el_dependencies_check "apt-get,apt-cache,zenity,dpkg" ; then

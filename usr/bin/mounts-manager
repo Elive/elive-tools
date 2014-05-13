@@ -36,6 +36,9 @@ chroot_layers_mount(){
         return
     fi
 
+    # create some needed dirs if they don't exist yet:
+    mkdir -p "${dir}/home" "${dir}/tmp" "${dir}/var/lib/live" "${dir}/var/lock" "${dir}/var/log" "${dir}/var/run" "${dir}/var/tmp" "${dir}/var/spool"
+
     # devpts
     mkdir -p "$dir/dev/pts"
     if ((is_mode_bind)) ; then
@@ -49,6 +52,8 @@ chroot_layers_mount(){
     mkdir -p "$dir/proc"
     if ((is_mode_bind)) ; then
         mount --bind "/proc" "${dir}/proc"
+        rm -f "${dir}/etc/mtab"
+        ln -s /proc/mounts "${dir}/etc/mtab"
     else
         mount proc-$id -t proc "${dir}/proc" || true
     fi
@@ -201,6 +206,9 @@ chroot_layers_umount(){
         if check_is_mounted "$dir/proc" 2>/dev/null 1>&2 ; then
             umount "$dir/proc"
         fi
+
+        # this was a link to parent /proc/mounts
+        rm -f "${dir}/etc/mtab"
     else
         if check_is_mounted "$dir/proc" 2>/dev/null 1>&2 ; then
             if [[ -e "${dir}/proc/sys/fs/binfmt_misc/status" ]] ; then

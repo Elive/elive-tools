@@ -1,0 +1,65 @@
+# Modifications from main functions:
+log_daemon_msg () {
+    if [ -z "${1:-}" ]; then
+        return 1
+    fi
+    log_daemon_msg_pre "$@"
+
+    if [ -z "${2:-}" ]; then
+        /bin/echo -n "$( $TPUT bold)$1:$( $TPUT op)" || true
+        return
+    fi
+····
+    /bin/echo -n "$( $TPUT bold)$1:$( $TPUT op) $2" || true
+    log_daemon_msg_post "$@"
+}
+
+#######################################################
+# Default info blocks put to the left of the screen
+log_daemon_msg_pre () {
+    if log_use_fancy_output; then
+        CYAN=$( $TPUT setaf 6)
+        NORMAL=$( $TPUT op)
+        /bin/echo -n "${CYAN}[${NORMAL}⚬⚪⚪⚬${CYAN}]${NORMAL} " || true
+    fi
+}
+log_begin_msg_pre () {
+    log_daemon_msg_pre "$@"
+}
+log_end_msg_pre () {
+    if log_use_fancy_output; then
+        RED=$( $TPUT setaf 3)
+        GREEN=$( $TPUT setaf 2)
+        YELLOW=$( $TPUT setaf 5)
+        CYAN=$( $TPUT setaf 6)
+        NORMAL=$( $TPUT op)
+
+        $TPUT civis || true
+        $TPUT sc && \
+        $TPUT hpa 0 && \
+        if [ $1 -eq 0 ]; then
+            /bin/echo -ne "${CYAN}[${NORMAL}${GREEN} ok ${NORMAL}" || true
+        elif [ $1 -eq 255 ]; then
+            /bin/echo -ne "${CYAN}[${NORMAL}${YELLOW}warn${NORMAL}" || true
+        else
+            /bin/echo -ne "${CYAN}[${NORMAL}${RED}FAIL${NORMAL}" || true
+        fi && \
+        $TPUT rc || true
+        $TPUT cnorm || true
+    fi
+}
+log_action_msg_pre () {
+    if log_use_fancy_output; then
+        CYAN=$( $TPUT setaf 6)
+        NORMAL=$( $TPUT op)
+        /bin/echo -ne "${CYAN}[${NORMAL}${CYAN}info${CYAN}]${NORMAL} " || true
+    fi
+}
+log_action_begin_msg_pre () {
+    log_daemon_msg_pre "$@"
+}
+log_action_end_msg_pre () {
+    log_end_msg_pre "$@"
+}
+
+#######################################################

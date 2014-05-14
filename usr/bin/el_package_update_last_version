@@ -89,7 +89,11 @@ main(){
 
     # - checking results and deciding }}}
 
-    el_aptget_update
+    if ((is_mode_force)) ; then
+        el_aptget_update force
+    else
+        el_aptget_update
+    fi
 
     # install new package if found
     if el_package_newer_check "${packagename}" ; then

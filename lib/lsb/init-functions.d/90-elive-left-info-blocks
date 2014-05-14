@@ -20,7 +20,8 @@ log_daemon_msg_pre () {
     if log_use_fancy_output; then
         CYAN=$( $TPUT setaf 6)
         NORMAL=$( $TPUT op)
-        /bin/echo -n "${CYAN}[${NORMAL}⚬⚪⚪⚬${CYAN}]${NORMAL} " || true
+        BOLD=$( $TPUT bold)
+        /bin/echo -n "${CYAN}${BOLD}[${NORMAL}⚬⚪⚪⚬${CYAN}]${NORMAL} " || true
     fi
 }
 log_begin_msg_pre () {

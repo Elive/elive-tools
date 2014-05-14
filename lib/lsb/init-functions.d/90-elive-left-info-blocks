@@ -30,7 +30,8 @@ log_end_msg_pre () {
     if log_use_fancy_output; then
         #RED=$( $TPUT setaf 1)
         RED=$( $TPUT setaf 3)
-        GREEN=$( $TPUT setaf 2)
+        #GREEN=$( $TPUT setaf 2)
+        GREEN=$( $TPUT setaf 4)
         #YELLOW=$( $TPUT setaf 3)
         YELLOW=$( $TPUT setaf 5)
         CYAN=$( $TPUT setaf 6)

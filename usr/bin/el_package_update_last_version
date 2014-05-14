@@ -99,9 +99,9 @@ main(){
     if el_package_newer_check "${packagename}" ; then
 
         local message_upgrade_please message_upgrade_force
-        message_upgrade_please="$( printf "$( eval_gettext "Newer version found for %s, we suggest to update it, continue?" )" "$packagename" )"
+        message_upgrade_please="$( printf "$( eval_gettext "Found a newer version of %s, update it?" )" "$packagename" )"
 
-        message_upgrade_force="$( printf "$( eval_gettext "The package %s needs to be updated before to continue." )" "$packagename" )"
+        message_upgrade_force="$( printf "$( eval_gettext "The package %s needs to be updated." )" "$packagename" )"
 
         if [[ -n "$DISPLAY" ]] ; then
             if ((is_mode_force)) ; then

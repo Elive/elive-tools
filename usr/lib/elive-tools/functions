@@ -1,7 +1,7 @@
 #!/bin/bash
 . gettext.sh
 
-if [[ -n $ZSH_VERSION ]] ; then
+if [[ -n "$ZSH_VERSION" ]] ; then
     # Note: seems like if you put a ? just after a char, cannot be sourced correctly from zsh
     setopt nonomatch
     alias shopt=':'
@@ -9,6 +9,11 @@ if [[ -n $ZSH_VERSION ]] ; then
     alias _complete=_bash_comp
     #emulate -L sh
     #setopt kshglob noshglob braceexpand
+fi
+
+if [[ -n "$COLUMNS" ]] && [[ -n "$TERM" ]] ; then
+    # do we are in a terminal ? avoid interactive-in-terminal if not
+    is_terminal=1
 fi
 el_c_n="\033[0;39m" # Normal color  (orig: normal)
 el_c_r="\033[1;31m" # Red color  (orig: red)
@@ -78,7 +83,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
-    if [[ "$TERM" != linux ]] && [[ "$UID" != 0 ]] ; then
+    if ((is_terminal)) && [[ "$UID" != 0 ]] ; then
         # only show the error if we have a graphical system running by the user
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
             if [[ -z "${DISPLAY}" ]] ; then
@@ -112,7 +117,7 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
         fi
     fi
 
-    if [[ -n "${TERM}" ]] ; then
+    if ((is_terminal)) ; then
         echo -e "${el_c_y}Info: ${el_c_c}$2${el_c_n}" 1>&2
     fi
 }
@@ -123,7 +128,7 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 
     el_set_display_variables
 
-    if [[ "${DISPLAY}" = ":0.0" ]] && [[ -z "${TERM}" ]] ; then
+    if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_terminal)) ; then
         if el_dependencies_check notify-send ; then
             command notify-send -t 240000 "$@"
         else
@@ -481,7 +486,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 
     while read -ru 3 var
     do
-        if [[ -n $ZSH_VERSION ]] ; then
+        if [[ -n "$ZSH_VERSION" ]] ; then
             if [[ ! -n "${(P)var}" ]] ; then
                 el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
                 found_no="yes"
@@ -795,6 +800,9 @@ el_check_version_development_is_days_recent(){
 #===============================================================================
 el_explain(){
     # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
     local funclevel spaced verbose_level message trace_message trace_col
 
     verbose_level="$1"
@@ -882,6 +890,11 @@ el_explain(){
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_debug(){
+    # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
+    # }}}
     # debug {{{
     local funclevel
 
@@ -965,6 +978,11 @@ el_debug(){
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_warning(){
+    # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
+    # }}}
     # warning {{{
 
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
@@ -980,11 +998,15 @@ el_warning(){
 #    PARAMETERS:  optional (message)
 #===============================================================================
 el_error(){
+    # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
+    # }}}
     # error {{{
 
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         echo -e "${el_c_r}Error: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
-
     fi
 
     # }}}
@@ -1068,29 +1090,41 @@ el_confirm(){
 
     # }}}
     # return answer {{{
-    echo -en "$question [y/n]: "
-    if [[ -n $ZSH_VERSION ]] ; then
-        read reply
-    else
-        read -e reply
-    fi
+    if ((is_terminal)) ; then
+        echo -en "$question [y/n]: "
+        if [[ -n $ZSH_VERSION ]] ; then
+            read reply
+        else
+            read -e reply
+        fi
 
-    case $reply in
-        y|Y|Yes|YES|s|S)
-            return  0
-            ;;
-        n|N|no|NO|nope)
-            return  1
-            ;;
-        *)
-            # repeat question until confirmation
-            if el_confirm "$@" ; then
+        case $reply in
+            y|Y|Yes|YES|s|S)
+                return  0
+                ;;
+            n|N|no|NO|nope)
+                return  1
+                ;;
+            *)
+                # repeat question until confirmation
+                if el_confirm "$@" ; then
+                    return 0
+                else
+                    return 1
+                fi
+                ;;
+        esac
+    else
+        el_set_display_variables
+
+        if [[ -n "$DISPLAY" ]] ; then
+            if zenity --question --text="$question" ; then
                 return 0
             else
                 return 1
             fi
-            ;;
-    esac
+        fi
+    fi
 
     if ((flag_glob)) ; then
         shopt -u extglob
@@ -1294,7 +1328,7 @@ el_step_requires_fixme(){
     el_check_dirs "${dir}"
     cd "$dir"
 
-    if [[ -n "$TERM" ]] ; then
+    if ((is_terminal)) ; then
         echo -e "\n"
         el_warning "Experimental or uncomplete code:"
         echo -e "We have set a breakpoint here, please report to Elive this message if needed:"
@@ -1309,7 +1343,9 @@ el_step_requires_fixme(){
         $SHELL -l
     else
         cd "${prev_dir}"
-        return 1
+        el_set_display_variables
+        zenity --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
+        exit 1
     fi
 
     cd "${prev_dir}"
@@ -1390,6 +1426,7 @@ el_add_on_exit(){
     fi
 }
 on_exit(){
+    local i
     # create empty variable of array type if not exist
     if [[ -z "$on_exit_items" ]] ; then
         declare -a on_exit_items

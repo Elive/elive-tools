@@ -11,9 +11,22 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     #setopt kshglob noshglob braceexpand
 fi
 
-if [[ -n "$COLUMNS" ]] && [[ -n "$TERM" ]] ; then
-    # do we are in a terminal ? avoid interactive-in-terminal if not
-    is_terminal=1
+# do we are in a terminal ? avoid interactive-in-terminal if not
+if [[ -n "$TERM" ]] ; then
+    if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = terminology ]] || [[ "$TERM" = *gnome* ]] ; then
+        is_terminal=1
+    fi
+    if [[ "$TERM" = "linux" ]] ; then
+        if [[ -n "$COLUMNS" ]] ; then
+            is_terminal=1
+            is_console=1
+        else
+            # launched from e17 itself
+            is_terminal=0
+        fi
+    fi
+else
+    is_terminal=0
 fi
 el_c_n="\033[0;39m" # Normal color  (orig: normal)
 el_c_r="\033[1;31m" # Red color  (orig: red)

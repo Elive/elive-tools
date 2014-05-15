@@ -1297,15 +1297,15 @@ el_step_requires_fixme(){
     if [[ -n "$TERM" ]] ; then
         echo -e "\n"
         el_warning "Experimental or uncomplete code:"
-        echo -e "We have set a breakpoint here, please report to Elive this message:"
+        echo -e "We have set a breakpoint here, please report to Elive this message if needed:"
         echo -e "${FUNCNAME} for $0"
         echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
         if [[ -n "$message" ]] ; then
             el_explain 0 "message: XX${message}XX"
             echo -e ""
         fi
-        #echo -e "$@"
-        el_explain 0 "Press ^D or type 'logout' for continue...\n"
+        echo -e "New SHELL Started"
+        el_explain 0 "Type '__exit__' for continue..."
         $SHELL -l
     else
         cd "${prev_dir}"

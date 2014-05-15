@@ -1351,7 +1351,7 @@ el_step_requires_fixme(){
             el_explain 0 "message: XX${message}XX"
             echo -e ""
         fi
-        echo -e "New SHELL Started"
+        echo -e "$(tput setaf 3)$(tput blink)New SHELL Started$(tput op)"
         el_explain 0 "Type '__exit__' for continue..."
         $SHELL -l
     else

@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 
 get_all_partitions_list(){
     # get a normal list of partitions {{{
-    for i in /dev/[sh]d[a-z][0-9]*
+    for i in /dev/[shv]d[a-z][0-9]*
     do
         if [[ -b "$i" ]] ; then
             if udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then

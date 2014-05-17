@@ -383,7 +383,9 @@ main(){
         if ((item_is_usable)) ; then
             el_array_member_add "${item}::${item_type}::${item_filesystem}::${item_label}::${item_human_label}::${item_size}::${item_human_size}::${item_uuid}" "${partitions[@]}" ; partitions=("${_out[@]}")
         else
-            el_debug "$item is NOT usable, not including it in the list"
+            if echo "$item" | grep -qs "[[:digit:]]$" ; then
+                el_debug "$item is NOT usable, not including it in the list"
+            fi
         fi
 
         # next loop

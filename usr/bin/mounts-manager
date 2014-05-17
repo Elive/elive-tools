@@ -755,6 +755,8 @@ el_mount(){
 
         mount "$dev" "$target"
         sync
+        sleep 1
+        sync
         if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
             echo "$dev mounted in: $(get_mountpoint "$dev" )"
             return 0

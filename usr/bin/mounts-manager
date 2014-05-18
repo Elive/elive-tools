@@ -355,10 +355,11 @@ get_mountpoint(){
 
     # get the mountpoint
     if [[ -n "$mountpoint" ]] ; then
-        if [[ "$(echo "$mountpoint" | wc -w )" -gt 1 ]] ; then
-            el_warning "More than one mountpoint assigned to ${dev}: ${mountpoint}, using the last one"
-            mountpoint="$(echo "$mountpoint" |tr ' ' '\n' | tail -1)"
-        fi
+        # disable this supposed feature, it brokes when labels of partitions includes a space like "ian home"
+        #if [[ "$(echo "$mountpoint" | wc -w )" -gt 1 ]] ; then
+            #el_warning "More than one mountpoint assigned to ${dev}: ${mountpoint}, using the last one"
+            #mountpoint="$(echo "$mountpoint" |tr ' ' '\n' | tail -1)"
+        #fi
 
         # and so, show the result
         echo "$mountpoint"

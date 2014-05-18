@@ -85,11 +85,11 @@ get_all_partitions_list(){
     # RAID support (fake-raid - bios featured)) {{{
     if [[ -x /sbin/dmraid ]] && [[ -d /dev/mapper ]] ; then
         # TODO: deleteme, betatesting
-        if dmraid -r 1>/dev/null 2>/dev/null ; then
+        if /sbin/dmraid -r 1>/dev/null 2>/dev/null ; then
             el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"
         fi
 
-        bios_raid_list="$(dmraid -r | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
+        bios_raid_list="$( /sbin/dmraid -r | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
         echo "$bios_raid_list" > /tmp/.bios_raid_list
         while read -r bios_raid_disk
         do

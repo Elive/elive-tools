@@ -12,5 +12,8 @@ read -e message
 git commit -am "$message"
 
 if el_confirm "Push now?" ; then
+    echo ""
     git push
+else
+    echo ""
 fi

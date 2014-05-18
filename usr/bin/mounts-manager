@@ -432,8 +432,8 @@ check_is_mounted(){
             /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
 
             el_sudo service udev restart
-            el_sudo service dbus restart
-            el_warning "udev & dbus needed to be restarted from $FUNCNAME"
+            #el_sudo service dbus restart
+            el_warning "udev needed to be restarted from $FUNCNAME"
             #el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
             return 1
         fi
@@ -697,32 +697,32 @@ el_mount(){
 
 
     # try again
-    sync
-    el_sudo service dbus restart
-    sync
-    /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
-    sync
+    #sync
+    #el_sudo service dbus restart
+    #sync
+    #/sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
+    #sync
 
-    # try to mount
-    if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$dev" "$@"
-    else
-        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    fi
+    ## try to mount
+    #if [[ "$EL_DEBUG" -ge 3 ]] ; then
+        #timeout 60 udisks --mount "$dev" "$@"
+    #else
+        #timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
+    #fi
 
-    # check if mounted
-    sync
-    if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
-        echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart dbus + re-read"
-        return 0
-    fi
+    ## check if mounted
+    #sync
+    #if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart dbus + re-read"
+        #return 0
+    #fi
 
 
     # try again
     sync
     el_sudo service udev restart
-    sync
-    el_sudo service dbus restart
+    #sync
+    #el_sudo service dbus restart
     sync
     /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
     sync
@@ -737,7 +737,8 @@ el_mount(){
     # check if mounted
     sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
-        echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev + dbus + re-read"
+        #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev + dbus + re-read"
+        echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev  + re-read"
         return 0
     fi
 

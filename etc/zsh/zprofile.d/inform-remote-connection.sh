@@ -26,6 +26,13 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
         rm -f "$LOCKFILE"
         echo $$ > $LOCKFILE
     fi
+
+    # ignore invalid ip's like "::1"
+    if ! echo "$SSH_REMOTE_IP" | grep -qsE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' ; then
+        unset SSH_REMOTE_IP
+        want_exit=yes
+    fi
+
 fi
 
 if [[ -z "$SSH_REMOTE_IP" ]] ; then

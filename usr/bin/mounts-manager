@@ -32,7 +32,7 @@ chroot_layers_mount(){
     # }}}
 
     if el_flag check "chroot_layer_prepared" ; then
-        el_explain 2 "chroot layers already mounted"
+        el_explain 3 "chroot layers already mounted"
         return
     fi
 
@@ -179,7 +179,7 @@ chroot_layers_umount(){
     # }}}
 
     if ! el_flag check "chroot_layer_prepared" ; then
-        el_explain 2 "chroot layers already umounted"
+        el_explain 3 "chroot layers already umounted"
         return
     fi
 

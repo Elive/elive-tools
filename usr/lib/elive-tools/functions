@@ -398,7 +398,12 @@ urxvt -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; source /usr/l
 EOF
 
     chmod +x "${temp}"
-    gksu "${temp}"
+    if [[ "$UID" = 0 ]] ; then
+        bash "$temp"
+    else
+        el_dependencies_check gksu
+        gksu "${temp}"
+    fi
     rm -f "${temp}"
 
 }
@@ -448,7 +453,12 @@ el_aptget_update(){
                 fi
             else
                 if [[ -n "$DISPLAY" ]] ; then
-                    gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    if [[ "$UID" = 0 ]] ; then
+                        apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    else
+                        el_dependencies_check gksu
+                        gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    fi
                 else
                     su -c "apt-get update" root
                 fi
@@ -664,6 +674,7 @@ el_sudo(){
         sudo -H "$@"
     else
         if [[ -n "$DISPLAY" ]] ; then
+            el_dependencies_check gksu
             gksu "$@"
         else
             su -c "$@" root
@@ -1065,10 +1076,12 @@ el_group_add(){
 
     # }}}
     if ! el_group_check "${group}" ; then
+        el_dependencies_check gksu
         gksu "adduser ${USER} ${group}"
 
         # try again if not reached
         if ! el_group_check "${group}" ; then
+            el_dependencies_check gksu
             gksu "adduser ${USER} ${group}"
         fi
 

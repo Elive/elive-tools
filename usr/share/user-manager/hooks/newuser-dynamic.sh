@@ -12,10 +12,10 @@ main(){
 
     # variables
     if [[ -z "$LANG" ]] ; then
-        LANG="$(grep -s 'LANG=' /etc/default/locale | sed s/'LANG='// | tr -d '"' )"  # stupid syntax requires: '
+        LANG="$(grep -s 'LANG=' /etc/default/locale | sed s/'LANG='// | tr -d '"' )"  # stupid vim syntax requires: '
     fi
     if [[ -z "$LANG" ]] ; then
-        LANG="en_US.UTF-8" 
+        LANG="en_US.UTF-8"
     fi
 
 
@@ -28,15 +28,24 @@ main(){
 
     if [[ -f "$HOME/.xchat2/xchat.conf" ]] ; then
         NUMBERRANDOM="$(expr $RANDOM % 100)"
-        sed -i "s/irc_nick1\ =\ Elive_user/irc_nick1\ =\ Elive_user${NUMBERRANDOM}_${LANG:0:2}/" "${HOME}/.xchat2/xchat.conf"
+        sed -i "s/irc_nick1\ =\ Elive_user/irc_nick1\ =\ Elive_user${NUMBERRANDOM}_${LANG%%_*}/" "${HOME}/.xchat2/xchat.conf"
 
         NUMBERRANDOM="$(expr $RANDOM % 100)"
-        sed -i "s/irc_nick2\ =\ Elive_user2/irc_nick2\ =\ Elive_user${NUMBERRANDOM}_${LANG:0:2}/" "${HOME}/.xchat2/xchat.conf"
+        sed -i "s/irc_nick2\ =\ Elive_user2/irc_nick2\ =\ Elive_user${NUMBERRANDOM}_${LANG%%_*}/" "${HOME}/.xchat2/xchat.conf"
 
         NUMBERRANDOM="$(expr $RANDOM % 100)"
-        sed -i "s/irc_nick3\ =\ Elive_user3/irc_nick3\ =\ Elive_user${NUMBERRANDOM}_${LANG:0:2}/"  "${HOME}/.xchat2/xchat.conf"
+        sed -i "s/irc_nick3\ =\ Elive_user3/irc_nick3\ =\ Elive_user${NUMBERRANDOM}_${LANG%%_*}/"  "${HOME}/.xchat2/xchat.conf"
     fi
 
+
+    # }}}
+
+    # add elive gpg key {{{
+    if [[ -d "/usr/share/elive-security" ]] ; then
+        if el_dependencies_check gpg ; then
+            gpg --import /usr/share/elive-security/*.asc
+        fi
+    fi
 
     # }}}
 
@@ -51,7 +60,9 @@ main(){
     if [[ -d "/etc/user-manager/hooks/post-create.d" ]] ; then
         for file in /etc/user-manager/hooks/post-create.d/*
         do
-            "$file"
+            if [[ -x "$file" ]] ; then
+                "$file"
+            fi
         done
     fi
 

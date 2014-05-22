@@ -54,17 +54,18 @@ main(){
         # Fix for skype when we dont have a "Mic" control
         if ! LC_ALL=C amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then
             if [[ -d "$HOME/.Skype" ]] && grep -q "<AGC>.</AGC>" "$HOME/.Skype/shared.xml" ; then
-                killall skype 2>/dev/null
+                killall skype 2>/dev/null || killall -9 skype 2>/dev/null
+                sync
                 sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.Skype/shared.xml"
 
-                el_explain 2 "added a fix for your skype: to not modify your volumes"
+                el_explain 0 "added a fix for your skype: to not modify your volumes, your audio card model needs this"
             else
                 el_warning "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
             fi
         fi
 
         # then set a default generic volume
-        main 85% 1>/dev/null
+        main 80% 1>/dev/null
         exit
     fi
 

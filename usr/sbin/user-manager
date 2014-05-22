@@ -8,10 +8,13 @@ set -e
 
 . /etc/adduser.conf
 
+# FIXME: since the installer requires also the same thing, make a "functions" file for create new users, source it from the installer and call the functions to create a new user, simple fast and easy
+#       - TODO: another option is to write it in ELM / RUBY and good, with the option to create it or to generate a script (to run then inside the chroot), note that the installer GUI will look different then
+
 # TODO: adduser and debconf-utils can be removed as dependency by improving this script
 
 # passwd dep
-USERADD=useradd
+#USERADD=useradd
 USERDEL=userdel
 # adduser dep
 ADDUSER=adduser
@@ -91,6 +94,7 @@ passstep(){
 addgroups(){
     local group
 
+    # TODO: add this to the installer too
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
     do
         # remove extra leading blank chars
@@ -148,9 +152,12 @@ adduserelive(){
         USERGROUP="$USERS_GID"
     fi
 
-    $USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
+    # create user
+    #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
     #$USERADD -m $username 2>/tmp/.errormessage || errorexit
+    $ADDUSER --force-badname --disabled-password --gecos 'Elive User' "$username" 2>/tmp/.errormessage || errorexit
 
+    # set password
     if chpasswd -h 2>&1 | grep -iq md5 ; then
         chpassopt="-m"
     else
@@ -159,16 +166,17 @@ adduserelive(){
 
     echo "$username:$userpass" | chpasswd $chpassopt
 
-    elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
+    #elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
 
     addgroups
 
-    chown -R "$username.$USERGROUP" "$DHOME/$username"
+    #chown -R "$username:$USERGROUP" "$DHOME/$username"
 
     #$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
 
-    su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
-    su -c "/usr/share/user-manager/hooks/newuser-dynamic.sh" "$username"
+    # deprecated, we use e17-wizard startup now
+    #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
+    #su -c "/usr/share/user-manager/hooks/newuser-dynamic.sh" "$username"
 
     messagedone
 }

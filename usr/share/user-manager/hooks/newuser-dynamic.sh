@@ -56,6 +56,7 @@ main(){
 
     # }}}
 
+    # FIXME: we cannot run this from here, its useless, and we don't know a way to call it enough reliable
     # run hooks from packages {{{
     if [[ -d "/etc/user-manager/hooks/post-create.d" ]] ; then
         for file in /etc/user-manager/hooks/post-create.d/*

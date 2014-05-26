@@ -1,0 +1,92 @@
+#!/bin/zsh
+setopt localoptions extendedglob noglobdots
+
+main(){
+    # pre {{{
+    local dir match
+
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: command [name]"
+        echo -e "  try's to search the location of a dir in your home hard to found due to XDG structure, try for example with 'dropbox'"
+        exit 1
+    fi
+
+    match="$1"
+
+    # }}}
+
+    # get default values
+    test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
+
+    for dir in \
+        "${$(xdg-user-dir DOWNLOAD)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir DESKTOP)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir DOCUMENTS)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir PUBLICSHARE)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir TEMPLATES)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir PICTURES)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir VIDEOS)%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir MUSIC)%/}"/(#i)${match}(N) \
+        "${HOME%/}"/(#i)${match}(N) \
+        "${$(xdg-user-dir DOWNLOAD)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir DESKTOP)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir DOCUMENTS)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir PUBLICSHARE)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir TEMPLATES)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir PICTURES)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir VIDEOS)%/}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir MUSIC)%/}"/(#a1)${match}(N) \
+        "${HOME}"/(#a1)${match}(N) \
+        "${$(xdg-user-dir DOWNLOAD)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir DESKTOP)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir DOCUMENTS)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir PUBLICSHARE)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir TEMPLATES)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir PICTURES)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir VIDEOS)%/}"/(#a2)${match}(N) \
+        "${$(xdg-user-dir MUSIC)%/}"/(#a2)${match}(N) \
+        "${HOME%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir DOWNLOAD)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir DESKTOP)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir DOCUMENTS)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir PUBLICSHARE)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir TEMPLATES)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir PICTURES)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir VIDEOS)%/}"/(#a3)${match}(N) \
+        "${$(xdg-user-dir MUSIC)%/}"/(#a3)${match}(N) \
+        "${HOME%/}"/*/(#i)${match}(N) \
+        "${HOME%/}"/*/(#a1)${match}(N) \
+        "${HOME%/}"/*/(#a2)${match}(N) \
+        "${HOME%/}"/*/(#a3)${match}(N) \
+        ; do
+
+        if [[ -d "$dir" ]] ; then
+            # no hidden files
+            if ! echo "$dir" | grep -qs "\..*" ; then
+                echo "$dir"
+                exit
+            fi
+
+            # second pass, we want hidden now
+            if ((want_hidden)) ; then
+                echo "$dir"
+                exit
+            fi
+        fi
+    done
+
+    # already around ? ok, let's try again with hidden files
+    if ! ((want_hidden)) ; then
+        want_hidden=1
+        main "$@"
+    fi
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

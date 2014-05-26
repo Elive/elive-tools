@@ -1,0 +1,49 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file where mode
+
+    # Usage
+    if [[ -z "${3}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) where mode file[s]"
+        echo -e "Small tool helper for send files to specific locations using a fuzzy matching system, for example:"
+        echo -e "$ $(basename $BASH_SOURCE) dropbox link $HOME/photo.jpg"
+        echo -r "it will search for approximate matching of your dropbox dir in your home and link the file to this directory, use with caution"
+        echo -e "Modes: copy | link"
+        exit 1
+    fi
+
+    where="$1"
+    shift
+    mode="$1"
+    shift
+
+    # }}}
+    if [[ ! -e "$where" ]] ; then
+        # approximate matching finder if is not absolute location
+        where="$( find-approximate-matching-homedir "$where" )"
+        el_warning "Using approximate match: $where"
+    fi
+
+    for file in "$@"
+    do
+        case "$mode" in
+            link|ln)
+                ln -s "$file" "$where"
+                ;;
+            copy|cp)
+                cp "$file" "$where"
+                ;;
+        esac
+    done
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

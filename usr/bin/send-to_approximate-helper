@@ -1,9 +1,16 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 main(){
     # pre {{{
     local file where mode
+    local message_unabletofound
 
     # Usage
     if [[ -z "${3}" ]] ; then
@@ -23,8 +30,23 @@ main(){
     # }}}
     if [[ ! -e "$where" ]] ; then
         # approximate matching finder if is not absolute location
+        el_dependencies_check "find-approximate-matching-homedir"
+
         where="$( find-approximate-matching-homedir "$where" )"
         el_warning "Using approximate match: $where"
+    fi
+
+    # check and report if target is not found
+    if [[ ! -d "$where" ]] ; then
+        el_dependencies_check "zenity"
+        if echo "$where" | grep -qs "dropbox" ; then
+            message_unabletofound="$( printf "$( eval_gettext "Unable to find the location of %s. Have you already configured your Dropbox account? You can found it in your applications menus." )" "$where" )"
+        else
+            message_unabletofound="$( printf "$( eval_gettext "Unable to find the location of %s." )" "$where" )"
+        fi
+
+        zenity --error --text="$message_unabletofound"
+        exit
     fi
 
     for file in "$@"

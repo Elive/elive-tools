@@ -1,0 +1,50 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local var
+
+    # }}}
+
+    # create dirs and default conf file
+    xdg-user-dirs-update
+
+    # source after to have created it
+    if [[ -s "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs" ]] ; then
+        source "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    fi
+
+    # delete Desktop entry, what a useless idea
+    if [[ -d "$HOME/Desktop" ]] ; then
+        rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
+
+        if [[ -d "$HOME/Desktop" ]] ; then
+            mv "$HOME/Desktop" "$(xdg-user-dir DOWNLOAD)/"
+        fi
+    fi
+
+    rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
+
+    sed -i "/^XDG_DESKTOP_DIR/d" "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    echo -e "XDG_DESKTOP_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+
+
+    # delete Templates too
+    rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
+    sed -i "/^XDG_TEMPLATES_DIR/d" "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    echo -e "XDG_TEMPLATES_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+
+
+    # update again and save results
+    xdg-user-dirs-update
+    xdg-user-dirs-gtk-update
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -16,7 +16,9 @@ main(){
     # }}}
 
     # get default values
-    test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
+    if [[ -s "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs" ]] ; then
+        source "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    fi
 
     for dir in \
         "${$(xdg-user-dir DOWNLOAD)%/}"/(#i)${match}(N) \

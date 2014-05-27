@@ -19,8 +19,8 @@ demo_file_add_home(){
     fi
 
 
-echo    mkdir -p "${target}/${subdir}"
-echo    ln -s "$from" "$target/$subdir/$filename"
+    mkdir -p "${target}/${subdir}"
+    ln -s "$from" "$target/$subdir/$filename"
 
 }
 
@@ -47,12 +47,42 @@ main(){
         el_error "No xdg dirs are set?"
     fi
 
+    # link all the files found:
+    target="$( xdg-user-dir DOWNLOAD )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target"
+    done 3<<< "$( find "$demodir/Downloads" \( -type f -o -type l \) | sed -e "s|^${demodir}/Downloads/||g" )"
+
+    target="$( xdg-user-dir PUBLICSHARE )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target"
+    done 3<<< "$( find "$demodir/Public" \( -type f -o -type l \) | sed -e "s|^${demodir}/Public/||g" )"
+
     target="$( xdg-user-dir DOCUMENTS )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Documents" \( -type f -o -type l \) | sed -e "s|^${demodir}/||g" )"
+    done 3<<< "$( find "$demodir/Documents" \( -type f -o -type l \) | sed -e "s|^${demodir}/Documents/||g" )"
 
+    target="$( xdg-user-dir MUSIC )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target"
+    done 3<<< "$( find "$demodir/Music" \( -type f -o -type l \) | sed -e "s|^${demodir}/Music/||g" )"
+
+    target="$( xdg-user-dir PICTURES )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target"
+    done 3<<< "$( find "$demodir/Images" \( -type f -o -type l \) | sed -e "s|^${demodir}/Images/||g" )"
+
+    target="$( xdg-user-dir VIDEOS )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target"
+    done 3<<< "$( find "$demodir/Videos" \( -type f -o -type l \) | sed -e "s|^${demodir}/Videos/||g" )"
 
 }
 

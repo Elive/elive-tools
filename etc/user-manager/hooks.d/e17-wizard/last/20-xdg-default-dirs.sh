@@ -6,6 +6,9 @@ main(){
     local var
 
     # }}}
+    if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+        XDG_CONFIG_HOME="${HOME}/.config"
+    fi
 
     # clean conf, so create it again in case that already exists
     rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
@@ -15,10 +18,7 @@ main(){
     xdg-user-dirs-gtk-update
 
     # source after to have created it
-    #if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
-        #XDG_CONFIG_HOME="${HOME}/.config"
-    #fi
-    #source "${XDG_CONFIG_HOME}/user-dirs.dirs"
+    source "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
     # delete Desktop entry, what a useless idea
     if [[ -d "$HOME/Desktop" ]] ; then

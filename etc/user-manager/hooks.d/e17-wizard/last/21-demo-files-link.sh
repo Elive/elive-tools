@@ -6,21 +6,37 @@ demo_file_add_home(){
     file="$1"
     target="$2"
 
-    filename="$(basename "$file" )"
-    from="${demodir}/${file}"
-    subdir="${file%/*}"
-
-    if [[ -L "$file" ]] ; then
-        file="$(readlink -f "$file" )"
+    # make sure that we have a correct input
+    if [[ -z "$file" ]] || [[ -z "$target" ]] || [[ "$file" != */* ]] ; then
+        return
     fi
-    if [[ -s "$file" ]] ; then
+
+    # get some specific data
+    filename="$(basename "$file" )"
+
+    # absolute location of file
+    from="${demodir}/${file}"
+
+    # fix paths from
+    if [[ -L "$from" ]] ; then
+        from="$(readlink -f "$from" )"
+    fi
+    if [[ ! -s "$from" ]] ; then
         el_warning "skipping $file, it seems to be empty or broken link"
         return
     fi
 
 
+    # subdir to create
+    # remove filename
+    subdir="$( dirname "${file}" )"
+    # we have already the first subdir in target so remove it
+    subdir="${subdir#*/}"
+
+
+
     mkdir -p "${target}/${subdir}"
-    ln -s "$from" "$target/$subdir/$filename"
+    ln -s "$from" "$target/$subdir/"
 
 }
 
@@ -52,37 +68,37 @@ main(){
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Downloads" \( -type f -o -type l \) | sed -e "s|^${demodir}/Downloads/||g" )"
+    done 3<<< "$( find "$demodir/Downloads" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir PUBLICSHARE )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Public" \( -type f -o -type l \) | sed -e "s|^${demodir}/Public/||g" )"
+    done 3<<< "$( find "$demodir/Public" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir DOCUMENTS )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Documents" \( -type f -o -type l \) | sed -e "s|^${demodir}/Documents/||g" )"
+    done 3<<< "$( find "$demodir/Documents" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir MUSIC )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Music" \( -type f -o -type l \) | sed -e "s|^${demodir}/Music/||g" )"
+    done 3<<< "$( find "$demodir/Music" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir PICTURES )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Images" \( -type f -o -type l \) | sed -e "s|^${demodir}/Images/||g" )"
+    done 3<<< "$( find "$demodir/Images" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir VIDEOS )"
     while read -ru 3 file
     do
         demo_file_add_home "$file" "$target"
-    done 3<<< "$( find "$demodir/Videos" \( -type f -o -type l \) | sed -e "s|^${demodir}/Videos/||g" )"
+    done 3<<< "$( find "$demodir/Videos" | sed -e "s|^${demodir}/||g" )"
 
 }
 

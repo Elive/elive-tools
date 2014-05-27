@@ -17,6 +17,16 @@ demo_file_add_home(){
     # absolute location of file
     from="${demodir}/${file}"
 
+    # remove first subdir, which always we have it
+    subdir="${file#*/}"
+
+    # if we are a dir, just create it
+    if [[ -d "$from" ]] ; then
+        mkdir -p "$target/$subdir"
+        return
+    fi
+
+
     # fix paths from
     if [[ -L "$from" ]] ; then
         from="$(readlink -f "$from" )"
@@ -28,15 +38,14 @@ demo_file_add_home(){
 
 
     # subdir to create
-    # remove filename
-    subdir="$( dirname "${file}" )"
-    # we have already the first subdir in target so remove it
-    subdir="${subdir#*/}"
+    if [[ "$subdir" = */* ]] ; then
+        subdir="$( dirname "${subdir}" )"
+        mkdir -p "${target}/${subdir}"
+        ln -s "$from" "$target/$subdir"
+    else
+        ln -s "$from" "$target/"
+    fi
 
-
-
-    mkdir -p "${target}/${subdir}"
-    ln -s "$from" "$target/$subdir/"
 
 }
 

@@ -42,6 +42,9 @@ main(){
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
 
+    # Make the publicshare folder to be directly shared
+    # net usershare add NAME DIR COMMENT ACL GUEST
+    net usershare add "${USER}-$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "Public directory share for $USER in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
 }
 
 #

@@ -16,9 +16,10 @@ main(){
     # }}}
 
     # get default values
-    if [[ -s "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs" ]] ; then
-        source "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+        XDG_CONFIG_HOME="${HOME}/.config"
     fi
+    source "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
     for dir in \
         "${$(xdg-user-dir DOWNLOAD)%/}"/(#i)${match}(N) \

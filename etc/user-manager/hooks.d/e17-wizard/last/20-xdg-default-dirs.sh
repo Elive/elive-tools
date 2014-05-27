@@ -9,11 +9,13 @@ main(){
 
     # create dirs and default conf file
     xdg-user-dirs-update
+    xdg-user-dirs-gtk-update
 
     # source after to have created it
-    if [[ -s "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs" ]] ; then
-        source "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+        XDG_CONFIG_HOME="${HOME}/.config"
     fi
+    source "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
     # delete Desktop entry, what a useless idea
     if [[ -d "$HOME/Desktop" ]] ; then

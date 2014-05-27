@@ -45,6 +45,9 @@ main(){
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
 
+    # clean some files created by E17 which are useless:
+    rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"
+
     # Make the publicshare folder to be directly shared
     # net usershare add NAME DIR COMMENT ACL GUEST
     net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true

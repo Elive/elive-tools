@@ -7,15 +7,18 @@ main(){
 
     # }}}
 
+    # clean conf, so create it again in case that already exists
+    rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
+
     # create dirs and default conf file
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
 
     # source after to have created it
-    if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
-        XDG_CONFIG_HOME="${HOME}/.config"
-    fi
-    source "${XDG_CONFIG_HOME}/user-dirs.dirs"
+    #if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+        #XDG_CONFIG_HOME="${HOME}/.config"
+    #fi
+    #source "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
     # delete Desktop entry, what a useless idea
     if [[ -d "$HOME/Desktop" ]] ; then
@@ -44,7 +47,7 @@ main(){
 
     # Make the publicshare folder to be directly shared
     # net usershare add NAME DIR COMMENT ACL GUEST
-    net usershare add "${USER}-$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "Public directory share for $USER in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
+    net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
 }
 
 #

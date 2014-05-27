@@ -1,4 +1,4 @@
-/etc/user-manager/hooks:
+/etc/user-manager/hooks.d:
 Files from this directory are hooks to run for user creation, where:
 
 - e17-wizard:  hooks to run in the first startup of e17 (new user without e17 conf), useful if you have those needs:
@@ -13,4 +13,8 @@ Files from this directory are hooks to run for user creation, where:
 
 
 # There's also "deliver" for the same things -only- for live, like:
-/etc/deliver/hooks/e17-wizard/*
+/etc/deliver/hooks.d/e17-wizard/*
+
+
+DEBUG:
+- if you run the live mode (or installed) with the "quiet" boot parameter, the terminal will not appear

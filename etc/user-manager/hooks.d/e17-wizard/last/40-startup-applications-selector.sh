@@ -43,7 +43,7 @@ main(){
         # default to enabled/disabled {{{
 
         if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-)" ; then
+            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update)" ; then
                 menu+=("TRUE")
                 el_debug "state: TRUE"
             else
@@ -51,7 +51,7 @@ main(){
                 el_debug "state: FALSE"
             fi
         else
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif)" ; then
+            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update)" ; then
                 menu+=("TRUE")
                 el_debug "state: TRUE"
             else

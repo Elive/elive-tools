@@ -31,14 +31,14 @@ main(){
 
     rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
 
-    sed -i "/^XDG_DESKTOP_DIR/d" "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
-    echo -e "XDG_DESKTOP_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    sed -i "/^XDG_DESKTOP_DIR/d" "${XDG_CONFIG_HOME}/user-dirs.dirs"
+    echo -e "XDG_DESKTOP_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
 
     # delete Templates too
     rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
-    sed -i "/^XDG_TEMPLATES_DIR/d" "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
-    echo -e "XDG_TEMPLATES_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs"
+    sed -i "/^XDG_TEMPLATES_DIR/d" "${XDG_CONFIG_HOME}/user-dirs.dirs"
+    echo -e "XDG_TEMPLATES_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
 
     # update again and save results

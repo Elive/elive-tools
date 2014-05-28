@@ -2,9 +2,10 @@
 source /usr/lib/elive-tools/functions
 
 demo_file_add_home(){
-    local from target file subdir
+    local from target file subdir mode
     file="$1"
     target="$2"
+    mode="$3"
 
     # make sure that we have a correct input
     if [[ -z "$file" ]] || [[ -z "$target" ]] || [[ "$file" != */* ]] ; then
@@ -37,14 +38,32 @@ demo_file_add_home(){
     fi
 
 
-    # subdir to create
-    if [[ "$subdir" = */* ]] ; then
-        subdir="$( dirname "${subdir}" )"
-        mkdir -p "${target}/${subdir}"
-        ln -s "$from" "$target/$subdir"
-    else
-        ln -s "$from" "$target/"
-    fi
+    case "$mode" in
+        cp|copy)
+            if [[ "$subdir" = */* ]] ; then
+                # subdir to create if needed
+                subdir="$( dirname "${subdir}" )"
+
+                mkdir -p "${target}/${subdir}"
+                cp "$from" "$target/$subdir"
+            else
+                cp "$from" "$target/"
+            fi
+
+            ;;
+        ln|link|*)
+            if [[ "$subdir" = */* ]] ; then
+                # subdir to create if needed
+                subdir="$( dirname "${subdir}" )"
+
+                mkdir -p "${target}/${subdir}"
+                ln -s "$from" "$target/$subdir"
+            else
+                ln -s "$from" "$target/"
+            fi
+
+            ;;
+    esac
 
 
 }
@@ -76,37 +95,37 @@ main(){
     target="$( xdg-user-dir DOWNLOAD )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Downloads" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir PUBLICSHARE )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "copy"
     done 3<<< "$( find "$demodir/Public" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir DOCUMENTS )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Documents" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir MUSIC )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Music" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir PICTURES )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Images" | sed -e "s|^${demodir}/||g" )"
 
     target="$( xdg-user-dir VIDEOS )"
     while read -ru 3 file
     do
-        demo_file_add_home "$file" "$target"
+        demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Videos" | sed -e "s|^${demodir}/||g" )"
 
 }

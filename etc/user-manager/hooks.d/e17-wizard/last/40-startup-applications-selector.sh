@@ -67,15 +67,18 @@ main(){
         el_debug "file: $file"
 
         # include name {{{
-        name="$( grep "^Name\[${LANG%%.*}\]" "$file" )"
+        name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
         if [[ -z "$name" ]] ; then
-            name="$( grep "^Name\[${LANG%%.*}" "$file" )"
+            name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$name" ]] ; then
-                name="$( grep "^Name\[${LANG%%_*}\]" "$file" )"
+                name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                 if [[ -z "$name" ]] ; then
-                    name="$( grep "^Name\[${LANG%%_*}" "$file" )"
+                    name="$( grep "^Name\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                     if [[ -z "$name" ]] ; then
-                        name="$( basename "${file%.*}" )"
+                        name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        if [[ -z "$name" ]] ; then
+                            name="$( basename "${file%.*}" )"
+                        fi
                     fi
                 fi
             fi
@@ -86,18 +89,23 @@ main(){
             name="(empty)"
         fi
         # add name
-        menu+=("${name#*]=}")
-        el_debug "name: ${name#*]=}"
+        name="${name#*]=}"
+        name="${name#Name=}"
+        menu+=("${name}")
+        el_debug "name: ${name}"
 
         # }}}
         # include comment {{{
-        comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" )"
+        comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
         if [[ -z "$comment" ]] ; then
-            comment="$( grep "^Comment\[${LANG%%.*}" "$file" )"
+            comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$comment" ]] ; then
-                comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" )"
+                comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                 if [[ -z "$comment" ]] ; then
-                    comment="$( grep "^Comment\[${LANG%%_*}" "$file" )"
+                    comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                    if [[ -z "$comment" ]] ; then
+                        comment="$( grep "^Comment\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                    fi
                 fi
             fi
         fi
@@ -106,9 +114,11 @@ main(){
         if [[ -z "$comment" ]] ; then
             comment="(empty)"
         fi
+        comment="${comment#*]=}"
+        comment="${comment#Name=}"
         # add comment
-        menu+=("${comment#*]=}")
-        el_debug "comment: ${comment#*]=}"
+        menu+=("${comment}")
+        el_debug "comment: ${comment}"
 
         el_debug "       (loop)"
         # }}}

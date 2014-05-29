@@ -115,7 +115,7 @@ main(){
             comment="(empty)"
         fi
         comment="${comment#*]=}"
-        comment="${comment#Name=}"
+        comment="${comment#Comment=}"
         # add comment
         menu+=("${comment}")
         el_debug "comment: ${comment}"

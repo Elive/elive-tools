@@ -384,7 +384,7 @@ EOF
 
     chmod +x "${temp}"
     if [[ "$UID" = 0 ]] ; then
-        ./"${temp}"
+        bash "${temp}"
     else
         gksu "${temp}"
     fi

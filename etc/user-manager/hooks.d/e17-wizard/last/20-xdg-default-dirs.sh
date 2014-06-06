@@ -16,6 +16,12 @@ migrate_conf_file(){
         sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
         el_explain 0 "Migrated references for __Desktop__ in __${file}__"
     fi
+    # downloads needs to be after desktop, since desktop was the real downloads dir
+    if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
+        el_explain 0 "Migrated references for __Downloads__ in __${file}__"
+    fi
+
     if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
         el_explain 0 "Migrated references for __Documents__ in __${file}__"
@@ -34,11 +40,6 @@ migrate_conf_file(){
     if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
         el_explain 0 "Migrated references for __Videos__ in __${file}__"
-    fi
-
-    if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Downloads__ in __${file}__"
     fi
 
 
@@ -198,7 +199,7 @@ main(){
                 fi
             fi
         fi
-    done 3<<< "$( ls -a1 "$HOME" )"
+    done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' )"
 
 
 

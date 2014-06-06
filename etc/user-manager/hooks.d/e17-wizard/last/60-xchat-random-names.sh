@@ -27,20 +27,22 @@ main(){
     # - checks }}}
 
     if [[ -f "$HOME/.xchat2/xchat.conf" ]] ; then
-        ip="$( showmyip )"
 
-        if [[ -n "$ip" ]] ; then
-            md5ip="$( echo "$ip" | md5sum | awk '{print $1}' )"
+        # disabled: this stupid idea make it slower, we don't really need ip-based unique code, we have enough with the random, the xchat name is recyclated, duh!
+        #ip="$( showmyip )"
 
-            NUMBERRANDOM="${md5ip:0:2}"
-            sed -i "s|^.*irc_nick1 = Elive_user1.*$|irc_nick1 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+        #if [[ -n "$ip" ]] ; then
+            #md5ip="$( echo "$ip" | md5sum | awk '{print $1}' )"
 
-            NUMBERRANDOM="${md5ip:2:2}"
-            sed -i "s|^.*irc_nick2 = Elive_user2.*$|irc_nick2 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            #NUMBERRANDOM="${md5ip:0:2}"
+            #sed -i "s|^.*irc_nick1 = Elive_user1.*$|irc_nick1 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
 
-            NUMBERRANDOM="${md5ip:4:2}"
-            sed -i "s|^.*irc_nick3 = Elive_user3.*$|irc_nick3 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
-        else
+            #NUMBERRANDOM="${md5ip:2:2}"
+            #sed -i "s|^.*irc_nick2 = Elive_user2.*$|irc_nick2 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+
+            #NUMBERRANDOM="${md5ip:4:2}"
+            #sed -i "s|^.*irc_nick3 = Elive_user3.*$|irc_nick3 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+        #else
 
             randomized="$RANDOM$RANDOM$RANDOM"
 
@@ -52,7 +54,7 @@ main(){
 
             NUMBERRANDOM="${randomized:4:2}"
             sed -i "s|^.*irc_nick3 = Elive_user3.*$|irc_nick3 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
-        fi
+        #fi
     else
         el_error "No xchat conf dir exist? ignoring..."
     fi

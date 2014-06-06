@@ -147,7 +147,6 @@ main(){
     #
     # Images / Pictures
     #
-    # FIXME: lots of confs of applications could reference to old dirs, make sure that we "upgrade" them too
 
     if [[ -e "$HOME/Images" ]] ; then
         mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true

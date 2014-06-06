@@ -1,8 +1,60 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
-# mv dir/* will include hidden files:
-shopt -s dotglob
+migrate_conf_file(){
+    locale file file_bkp
+    file="$1"
+    file_bkp="/tmp/.$(basename $0)-$USER-$(basename $file )"
+
+    # debug info
+    if [[ "$EL_DEBUG" -gt 2 ]] ; then
+        cp "$file" "$file_bkp"
+    fi
+
+
+    if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
+        el_explain 0 "Migrated references for __Desktop__ in __${file}__"
+    fi
+    if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
+        el_explain 0 "Migrated references for __Documents__ in __${file}__"
+    fi
+
+    if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
+        el_explain 0 "Migrated references for __Images__ in __${file}__"
+    fi
+
+    if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
+        el_explain 0 "Migrated references for __Music__ in __${file}__"
+    fi
+
+    if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
+        el_explain 0 "Migrated references for __Videos__ in __${file}__"
+    fi
+
+    if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
+        sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
+        el_explain 0 "Migrated references for __Downloads__ in __${file}__"
+    fi
+
+
+
+    # show debug to compare results
+    if [[ "$EL_DEBUG" -gt 2 ]] ; then
+        el_debug "Migrated conf file $file as:"
+
+        if [[ -x "$(which colordiff)" ]] ; then
+            diff "$file_bkp" "$file" | colordiff
+        else
+            diff "$file_bkp" "$file"
+        fi
+        rm -f "$file_bkp"
+    fi
+}
 
 main(){
     # pre {{{
@@ -119,6 +171,36 @@ main(){
     fi
 
 
+    # FIX all the old references
+    local entry conf dir file
+    while read -ru 3 entry
+    do
+        unset entry
+
+        if [[ "$entry" = .* ]] ; then
+            entry="$HOME/$entry"
+
+            # is a dir, scan all subfiles from it
+            if [[ -d "$entry" ]] ; then
+                while read -ru 3 file
+                do
+                    if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
+                        migrate_conf_file "$file"
+                    fi
+                done 3<<< "$( find "$entry" -type f )"
+
+            fi
+
+            # is a file
+            if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
+                if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
+                    migrate_conf_file "$entry"
+                fi
+            fi
+        fi
+    done 3<<< "$( ls -a1 "$HOME" )"
+
+
 
     # update again and save results
     xdg-user-dirs-update
@@ -136,13 +218,18 @@ main(){
     net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
 
 
-    # put back values
-    shopt -u dotglob
 }
 
 #
 #  MAIN
 #
+
+# mv dir/* will include hidden files:
+shopt -s dotglob
+
 main "$@"
+
+# put back values
+shopt -u dotglob
 
 # vim: set foldmethod=marker :

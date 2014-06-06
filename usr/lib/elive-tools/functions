@@ -59,6 +59,8 @@ fi
 # extra vars
 source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
+[[ -z "$guitool" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+
 
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable
@@ -393,7 +395,7 @@ el_dependencies_install(){
     cat > "${temp}" << EOF
 #!/bin/bash
 
-urxvt -e bash -c "echo -e 'Installing Dependencies...' ; sleep 1 ; source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; apt-get install $depends ; echo ; echo ; echo ; echo ; echo 'Finished, you can close the terminal...' ; sleep 10 "
+urxvt -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; apt-get install $depends ; echo ; echo ; echo ; echo ; echo 'Finished, you can close the terminal...' ; sleep 10 "
 
 EOF
 
@@ -440,24 +442,24 @@ el_aptget_update(){
 
         if [[ "$UID" = 0 ]] ; then
             if [[ -n "$DISPLAY" ]] ; then
-                apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
                 apt-get update
             fi
         else
             if el_check_sudo_automated ; then
                 if [[ -n "$DISPLAY" ]] ; then
-                    sudo apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    sudo apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
                     sudo apt-get update
                 fi
             else
                 if [[ -n "$DISPLAY" ]] ; then
                     if [[ "$UID" = 0 ]] ; then
-                        apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                        apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     else
                         el_dependencies_check gksu
-                        gksu apt-get update | zenity --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                        gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     fi
                 else
                     su -c "apt-get update" root
@@ -1144,7 +1146,7 @@ el_confirm(){
         el_set_display_variables
 
         if [[ -n "$DISPLAY" ]] ; then
-            if zenity --question --text="$question" ; then
+            if $guitool --question --text="$question" ; then
                 return 0
             else
                 return 1
@@ -1370,7 +1372,7 @@ el_step_requires_fixme(){
     else
         cd "${prev_dir}"
         el_set_display_variables
-        zenity --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
+        $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
         exit 1
     fi
 
@@ -1493,7 +1495,7 @@ el_request_report_bug(){
             local message_report_bug
             message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
-            if zenity --question --text="$message_report_bug" ; then
+            if $guitool --question --text="$message_report_bug" ; then
                 if [[ -x /usr/bin/firefox ]] ; then
                     firefox "$url" &
                 fi
@@ -1508,7 +1510,7 @@ el_request_report_bug(){
                 local message_instructions
                 message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 sleep 6
-                zenity --info --text="$message_instructions"
+                $guitool --info --text="$message_instructions"
 
             fi
         else

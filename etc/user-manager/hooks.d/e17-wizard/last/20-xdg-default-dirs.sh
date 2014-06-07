@@ -12,6 +12,7 @@ migrate_conf_file(){
     fi
 
 
+    # replacements {{{
     if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
         el_explain 0 "Migrated references for __Desktop__ in __${file}__"
@@ -43,6 +44,7 @@ migrate_conf_file(){
     fi
 
 
+    # - replacements }}}
 
     # show debug to compare results
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -81,6 +83,9 @@ main(){
     # Desktop & Downloads
     #
 
+    # if this is just a symlink (old deprecated dir), safe to remove like this
+    rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
+
     # delete Desktop entirely, what a useless idea
     if [[ -e "$HOME/Desktop" ]] ; then
 
@@ -92,8 +97,6 @@ main(){
             mv "$HOME/Desktop" "$(xdg-user-dir DOWNLOAD)/"
         fi
 
-        # if this is just a symlink (old deprecated dir), safe to remove like this
-        rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
     fi
 
     # remove new xdg desktop dir too

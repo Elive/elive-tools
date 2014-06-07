@@ -1,5 +1,8 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
 
 eliveversion="$( awk '$1 ~ /elive-version/ {($1="");print $0}' /etc/elive-version | sed 's/^\ //g' )"
 cachedir="$HOME/.cache/elive-migration-to-${eliveversion}"

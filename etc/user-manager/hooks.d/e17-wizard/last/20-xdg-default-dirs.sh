@@ -2,7 +2,7 @@
 source /usr/lib/elive-tools/functions
 
 migrate_conf_file(){
-    locale file file_bkp
+    local file file_bkp
     file="$1"
     file_bkp="/tmp/.$(basename $0)-$USER-$(basename $file )"
 

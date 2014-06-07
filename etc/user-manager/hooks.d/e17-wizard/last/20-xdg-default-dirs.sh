@@ -195,8 +195,21 @@ main(){
                 while read -ru 3 file
                 do
                     if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
-                        migrate_conf_file "$file"
-                        is_migrate_files_needed=1
+                        case "$(file -b "$file" )" in
+                            *database*)
+                                # exclude these ones, unreliable
+                                true
+                                ;;
+                            *text*)
+                                migrate_conf_file "$file"
+                                is_migrate_files_needed=1
+                                ;;
+                            *)
+                                el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                migrate_conf_file "$file"
+                                is_migrate_files_needed=1
+                                ;;
+                        esac
                     fi
                 done 3<<< "$( find "$entry" -type f )"
 
@@ -205,8 +218,21 @@ main(){
             # is a file
             if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
                 if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
-                    migrate_conf_file "$entry"
-                    is_migrate_files_needed=1
+                        case "$(file -b "$file" )" in
+                            *database*)
+                                # exclude these ones, unreliable
+                                true
+                                ;;
+                            *text*)
+                                migrate_conf_file "$file"
+                                is_migrate_files_needed=1
+                                ;;
+                            *)
+                                el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                migrate_conf_file "$file"
+                                is_migrate_files_needed=1
+                                ;;
+                        esac
                 fi
             fi
         fi

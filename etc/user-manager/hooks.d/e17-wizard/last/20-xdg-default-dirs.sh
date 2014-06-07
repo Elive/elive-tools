@@ -196,7 +196,7 @@ main(){
                 do
                     if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                         case "$(file -b "$file" )" in
-                            *database*)
+                            *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
                                 # exclude these ones, unreliable
                                 true
                                 ;;
@@ -219,7 +219,7 @@ main(){
             if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
                 if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                         case "$(file -b "$file" )" in
-                            *database*)
+                            *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
                                 # exclude these ones, unreliable
                                 true
                                 ;;

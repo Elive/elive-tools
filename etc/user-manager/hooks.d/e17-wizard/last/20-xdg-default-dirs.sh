@@ -178,8 +178,6 @@ main(){
     local entry conf dir file
     while read -ru 3 entry
     do
-        unset entry
-
         if [[ "$entry" = .* ]] ; then
             entry="$HOME/$entry"
 

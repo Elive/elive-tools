@@ -251,7 +251,7 @@ main(){
                 fi
             fi
         fi
-    done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' )"
+    done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
 
 
     # explain how to verify results

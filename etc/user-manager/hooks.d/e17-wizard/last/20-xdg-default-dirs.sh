@@ -1,6 +1,9 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+eliveversion="$( awk '$1 ~ /elive-version/ {($1="");print $0}' /etc/elive-version | sed 's/^\ //g' )"
+cachedir="$HOME/.cache/elive-migration-to-${eliveversion}"
+
 migrate_conf_file(){
     local file file_bkp
     file="$1"
@@ -11,36 +14,42 @@ migrate_conf_file(){
         cp "$file" "$file_bkp"
     fi
 
+    # backup the file in case user wants to restore it:
+    mkdir -p "$cachedir"
+    cd "$cachedir"
+    echo "$file" | cpio -paduv .
+    cd
+
 
     # replacements {{{
     if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Desktop__ in __${file}__"
+        el_explain 0 "Migrated references for __Desktop__ in __${file}__" >> "$cachedir/logs.txt"
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
     if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Downloads__ in __${file}__"
+        el_explain 0 "Migrated references for __Downloads__ in __${file}__" >> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
-        el_explain 0 "Migrated references for __Documents__ in __${file}__"
+        el_explain 0 "Migrated references for __Documents__ in __${file}__" >> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
-        el_explain 0 "Migrated references for __Images__ in __${file}__"
+        el_explain 0 "Migrated references for __Images__ in __${file}__" >> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
-        el_explain 0 "Migrated references for __Music__ in __${file}__"
+        el_explain 0 "Migrated references for __Music__ in __${file}__" >> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
-        el_explain 0 "Migrated references for __Videos__ in __${file}__"
+        el_explain 0 "Migrated references for __Videos__ in __${file}__" >> "$cachedir/logs.txt"
     fi
 
 
@@ -48,12 +57,12 @@ migrate_conf_file(){
 
     # show debug to compare results
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        el_debug "Migrated conf file $file as:"
+        el_explain 0 "Migrated conf file $file as:" >> "$cachedir/logs.txt"
 
         if [[ -x "$(which colordiff)" ]] ; then
-            diff "$file_bkp" "$file" | colordiff
+            diff "$file_bkp" "$file" | colordiff >> "$cachedir/logs.txt"
         else
-            diff "$file_bkp" "$file"
+            diff "$file_bkp" "$file" >> "$cachedir/logs.txt"
         fi
         rm -f "$file_bkp"
     fi
@@ -187,6 +196,7 @@ main(){
                 do
                     if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                         migrate_conf_file "$file"
+                        is_migrate_files_needed=1
                     fi
                 done 3<<< "$( find "$entry" -type f )"
 
@@ -196,10 +206,28 @@ main(){
             if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
                 if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                     migrate_conf_file "$entry"
+                    is_migrate_files_needed=1
                 fi
             fi
         fi
     done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' )"
+
+
+    # explain how to verify results
+    local message_migrated_files
+    message_migrated_files="$( printf "$( eval_gettext "Some configurations in your home has been migrated to the new directory names that are now set in your own language, you can see what exactly has changed by opening a terminal and running this command: %s" )" "cat $cachedir/logs.txt " )"
+
+    zenity --info --text="$message_migrated_files"
+
+    if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
+        local message_share_results
+        message_share_results="$( printf "$( eval_gettext "Since your beta version of elive is very recent, we cannot guarantee you that everything was migrated fine, but the best that you can do is to open the chat application and show to Thanatermesis your migrated configurations results and he will tell you if all looks good, also, you are contributing in reporting any possible error and he will tell you how to restore any file if you need to." )" )"
+        if zenity --question --text="$message_share_results" ; then
+            xchat &
+            sleep 5
+            zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs.txt"
+        fi
+    fi
 
 
 

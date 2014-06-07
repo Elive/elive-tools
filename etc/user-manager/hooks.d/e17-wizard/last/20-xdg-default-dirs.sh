@@ -24,32 +24,32 @@ migrate_conf_file(){
     # replacements {{{
     if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Desktop__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
     if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Downloads__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
-        el_explain 0 "Migrated references for __Documents__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
-        el_explain 0 "Migrated references for __Images__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
-        el_explain 0 "Migrated references for __Music__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
 
     if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
         sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
-        el_explain 0 "Migrated references for __Videos__ in __${file}__" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
     fi
 
 
@@ -57,7 +57,7 @@ migrate_conf_file(){
 
     # show debug to compare results
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        el_explain 0 "Migrated conf file $file as:" >> "$cachedir/logs.txt"
+        el_explain 0 "Migrated conf file $file as:" 2>> "$cachedir/logs.txt"
 
         if [[ -x "$(which colordiff)" ]] ; then
             diff "$file_bkp" "$file" | colordiff >> "$cachedir/logs.txt"
@@ -202,12 +202,12 @@ main(){
                                 ;;
                             *text*)
                                 migrate_conf_file "$file"
-                                is_migrate_files_needed=1
                                 ;;
                             *)
                                 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                 migrate_conf_file "$file"
-                                is_migrate_files_needed=1
+                                # Only report if they are unknown filetypes, otherwise should be more than fine
+                                is_migrate_files_done=1
                                 ;;
                         esac
                     fi
@@ -225,12 +225,12 @@ main(){
                                 ;;
                             *text*)
                                 migrate_conf_file "$file"
-                                is_migrate_files_needed=1
                                 ;;
                             *)
                                 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                 migrate_conf_file "$file"
-                                is_migrate_files_needed=1
+                                # Only report if they are unknown filetypes, otherwise should be more than fine
+                                is_migrate_files_done=1
                                 ;;
                         esac
                 fi
@@ -240,18 +240,20 @@ main(){
 
 
     # explain how to verify results
-    local message_migrated_files
-    message_migrated_files="$( printf "$( eval_gettext "Some configurations in your home has been migrated to the new directory names that are now set in your own language, you can see what exactly has changed by opening a terminal and running this command: %s" )" "cat $cachedir/logs.txt " )"
+    if ((is_migrate_files_done)) ; then
+        local message_migrated_files
+        message_migrated_files="$( printf "$( eval_gettext "Some configurations in your home has been migrated to the new directory names that are now set in your own language, you can see what exactly has changed by opening a terminal and running this command: %s" )" "cat $cachedir/logs.txt " )"
 
-    zenity --info --text="$message_migrated_files"
+        zenity --info --text="$message_migrated_files"
 
-    if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
-        local message_share_results
-        message_share_results="$( printf "$( eval_gettext "Since your beta version of elive is very recent, we cannot guarantee you that everything was migrated fine, but the best that you can do is to open the chat application and show to Thanatermesis your migrated configurations results and he will tell you if all looks good, also, you are contributing in reporting any possible error and he will tell you how to restore any file if you need to." )" )"
-        if zenity --question --text="$message_share_results" ; then
-            xchat &
-            sleep 5
-            zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs.txt"
+        if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
+            local message_share_results
+            message_share_results="$( printf "$( eval_gettext "Since your beta version of elive is very recent, we cannot guarantee you that everything was migrated fine, but the best that you can do is to open the chat application and show to Thanatermesis your migrated configurations results and he will tell you if all looks good, also, you are contributing in reporting any possible error and he will tell you how to restore any file if you need to." )" )"
+            if zenity --question --text="$message_share_results" ; then
+                xchat &
+                sleep 5
+                zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs.txt"
+            fi
         fi
     fi
 

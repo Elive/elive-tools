@@ -206,10 +206,22 @@ main(){
                             *text*)
                                 migrate_conf_file "$file"
                                 ;;
+                            data)
+                                if echo "$file" | grep -qs "config/transmission/" ; then
+                                    migrate_conf_file "$file"
+                                else
+                                    el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                    migrate_conf_file "$file"
+                                    echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
+                                    is_migrate_files_done=1
+                                fi
+
+                                ;;
                             *)
                                 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                 migrate_conf_file "$file"
                                 # Only report if they are unknown filetypes, otherwise should be more than fine
+                                echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
                                 is_migrate_files_done=1
                                 ;;
                         esac
@@ -251,11 +263,11 @@ main(){
 
         if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
             local message_share_results
-            message_share_results="$( printf "$( eval_gettext "Since your beta version of elive is very recent, we cannot guarantee you that everything was migrated fine, but the best that you can do is to open the chat application and show to Thanatermesis your migrated configurations results and he will tell you if all looks good, also, you are contributing in reporting any possible error and he will tell you how to restore any file if you need to." )" )"
+            message_share_results="$( printf "$( eval_gettext "Since your beta version of elive is very recent, we cannot guarantee you that everything was migrated fine, please help us to improve the migration tools by open the chat application and show to Thanatermesis the contents of this file: '%s' and he will tell you if all looks good, also, you are contributing in reporting any possible error and he will tell you how to restore any file if you need to." )" "$cachedir/logs-unknown-filetypes.txt" )"
             if zenity --question --text="$message_share_results" ; then
                 xchat &
                 sleep 5
-                zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs.txt"
+                zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs-unknown-filetypes.txt"
             fi
         fi
     fi

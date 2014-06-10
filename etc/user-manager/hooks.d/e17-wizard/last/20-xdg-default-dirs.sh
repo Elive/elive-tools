@@ -25,34 +25,46 @@ migrate_conf_file(){
 
 
     # replacements {{{
-    if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir DESKTOP )" != */Desktop ]] ; then
+        if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
+            el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
-    if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
-        el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir DOWNLOAD )" != */Downloads ]] ; then
+        if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
+            el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
 
-    if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
-        el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] ; then
+        if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
+            el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
 
-    if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
-        el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir PICTURES )" != */Images ]] ; then
+        if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
+            el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
 
-    if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
-        el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir MUSIC )" != */Music ]] ; then
+        if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
+            el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
 
-    if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
-        sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
-        el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
+    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] ; then
+        if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
+            sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
+            el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
+        fi
     fi
 
 
@@ -137,66 +149,110 @@ main(){
     # Documents
     #
 
-    if [[ -e "$HOME/Documents" ]] ; then
-        mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
+    if [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] ; then
+        if [[ -e "$HOME/Documents" ]] ; then
+            mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
 
-        rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
+            rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
 
-        # if still exist, move it somewhere that doesn't annoy us
-        mv "$HOME/Documents" "$(xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Documents" "$(xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
+        fi
     fi
 
     #
     # Music
     #
 
-    if [[ -e "$HOME/Music" ]] ; then
-        mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
+    if [[ "$( xdg-user-dir MUSIC )" != */Music ]] ; then
+        if [[ -e "$HOME/Music" ]] ; then
+            mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
 
-        rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
+            rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
 
-        # if still exist, move it somewhere that doesn't annoy us
-        mv "$HOME/Music" "$(xdg-user-dir MUSIC )/" 2>/dev/null || true
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Music" "$(xdg-user-dir MUSIC )/" 2>/dev/null || true
+        fi
     fi
 
     #
     # Images / Pictures
     #
 
-    if [[ -e "$HOME/Images" ]] ; then
-        mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
+    if [[ "$( xdg-user-dir PICTURES )" != */Images ]] ; then
+        if [[ -e "$HOME/Images" ]] ; then
+            mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
 
-        rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
+            rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
 
-        # if still exist, move it somewhere that doesn't annoy us
-        mv "$HOME/Images" "$(xdg-user-dir PICTURES )/" 2>/dev/null || true
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Images" "$(xdg-user-dir PICTURES )/" 2>/dev/null || true
+        fi
     fi
 
     #
     # Videos
     #
 
-    if [[ -e "$HOME/Videos" ]] ; then
-        mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
+    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] ; then
+        if [[ -e "$HOME/Videos" ]] ; then
+            mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
 
-        rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
+            rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
 
-        # if still exist, move it somewhere that doesn't annoy us
-        mv "$HOME/Videos" "$(xdg-user-dir VIDEOS )/" 2>/dev/null || true
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Videos" "$(xdg-user-dir VIDEOS )/" 2>/dev/null || true
+        fi
     fi
 
 
     # FIX all the old references
-    local entry conf dir file
-    while read -ru 3 entry
-    do
-        if [[ "$entry" = .* ]] ; then
-            entry="$HOME/$entry"
+    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] && [[ "$( xdg-user-dir MUSIC )" != */Music ]] && [[ "$( xdg-user-dir PICTURES )" != */Images ]] && [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] && [[ "$( xdg-user-dir DOWNLOAD )" != */Downloads ]] && [[ "$( xdg-user-dir DESKTOP )" != */Desktop ]] ; then
+        local entry conf dir file
+        while read -ru 3 entry
+        do
+            if [[ "$entry" = .* ]] ; then
+                entry="$HOME/$entry"
 
-            # is a dir, scan all subfiles from it
-            if [[ -d "$entry" ]] ; then
-                while read -ru 3 file
-                do
+                # is a dir, scan all subfiles from it
+                if [[ -d "$entry" ]] ; then
+                    while read -ru 3 file
+                    do
+                        if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
+                            case "$(file -b "$file" )" in
+                                *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
+                                    # exclude these ones, unreliable
+                                    true
+                                    ;;
+                                *text*)
+                                    migrate_conf_file "$file"
+                                    ;;
+                                data)
+                                    if echo "$file" | grep -qs "config/transmission/" ; then
+                                        migrate_conf_file "$file"
+                                    else
+                                        el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                        migrate_conf_file "$file"
+                                        echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
+                                        is_migrate_files_done=1
+                                    fi
+
+                                    ;;
+                                *)
+                                    el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                    migrate_conf_file "$file"
+                                    # Only report if they are unknown filetypes, otherwise should be more than fine
+                                    echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
+                                    is_migrate_files_done=1
+                                    ;;
+                            esac
+                        fi
+                    done 3<<< "$( find "$entry" -type f )"
+
+                fi
+
+                # is a file
+                if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
                     if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                         case "$(file -b "$file" )" in
                             *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
@@ -206,52 +262,18 @@ main(){
                             *text*)
                                 migrate_conf_file "$file"
                                 ;;
-                            data)
-                                if echo "$file" | grep -qs "config/transmission/" ; then
-                                    migrate_conf_file "$file"
-                                else
-                                    el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
-                                    migrate_conf_file "$file"
-                                    echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
-                                    is_migrate_files_done=1
-                                fi
-
-                                ;;
                             *)
                                 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                 migrate_conf_file "$file"
                                 # Only report if they are unknown filetypes, otherwise should be more than fine
-                                echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
                                 is_migrate_files_done=1
                                 ;;
                         esac
                     fi
-                done 3<<< "$( find "$entry" -type f )"
-
-            fi
-
-            # is a file
-            if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
-                if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
-                        case "$(file -b "$file" )" in
-                            *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
-                                # exclude these ones, unreliable
-                                true
-                                ;;
-                            *text*)
-                                migrate_conf_file "$file"
-                                ;;
-                            *)
-                                el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
-                                migrate_conf_file "$file"
-                                # Only report if they are unknown filetypes, otherwise should be more than fine
-                                is_migrate_files_done=1
-                                ;;
-                        esac
                 fi
             fi
-        fi
-    done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
+        done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
+    fi
 
 
     # explain how to verify results

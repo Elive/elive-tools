@@ -128,9 +128,9 @@ main(){
     el_dependencies_check "zenity"
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then
-        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Note that you don't have much RAM memory and they will use it." )" )"
+        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Note that you don't have much RAM memory and they will use it. Elive has already selected the best option for you." )" )"
     else
-        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop." )" )"
+        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Elive has already selected the best option for you." )" )"
     fi
 
     answer="$( zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
@@ -213,6 +213,13 @@ EOF
                 sleep 2
             fi
         fi
+    fi
+
+
+    # if we are debugging give it a little pause to see what is going on
+    if grep -qs "debug" /proc/cmdline ; then
+        echo -e "debug: sleep 4" 1>&2
+        sleep 4
     fi
 
 }

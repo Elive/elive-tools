@@ -311,6 +311,12 @@ main(){
     # net usershare add NAME DIR COMMENT ACL GUEST
     net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
 
+    # if we are debugging give it a little pause to see what is going on
+    if grep -qs "debug" /proc/cmdline ; then
+        echo -e "debug: sleep 4" 1>&2
+        sleep 4
+    fi
+
 
 }
 

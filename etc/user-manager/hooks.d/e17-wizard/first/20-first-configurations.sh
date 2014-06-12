@@ -28,6 +28,12 @@ main(){
 
     # }}}
 
+    # if we are debugging give it a little pause to see what is going on
+    if grep -qs "debug" /proc/cmdline ; then
+        echo -e "debug: sleep 4" 1>&2
+        sleep 4
+    fi
+
 }
 
 #

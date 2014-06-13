@@ -76,6 +76,9 @@ main(){
     timeout 20 dig NS google.com 1>/dev/null 2>/dev/null
     sleep 1
 
+    # add a stamp, how many amount of users are able to connect successfully
+    { curl --connect-timeout 20 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.0/live-connected-success 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+
     # get our connected MAC
     connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
     connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
@@ -238,6 +241,7 @@ EOF
             fi
         fi
     fi
+
 
     sed -i '/^last:::.*$/d' "${conf}"
     echo "last:::${timezone}" >> "${conf}"

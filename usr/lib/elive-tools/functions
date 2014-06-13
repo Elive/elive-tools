@@ -756,6 +756,28 @@ el_check_version_development(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_elive_version_get
+#   DESCRIPTION:  Get the version number of the HOST elive system
+#    PARAMETERS:  -
+#       RETURNS:  version number
+#===============================================================================
+el_elive_version_get(){
+    # pre {{{
+    local version
+    el_debug
+    el_security_function_loop || return
+
+    # }}}
+    version="$(cat "/etc/elive-version" | grep elive-version | sed 's/^.*version:\ //' )"
+
+    if [[ -n "$version" ]] ; then
+        echo "$version"
+    else
+        el_error "Unable to get this version of Elive ID number"
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_check_version_development_is_days_recent
 #   DESCRIPTION:  check if this development version is less than $1 ~days old
 #    PARAMETERS:  $1 = days old to check

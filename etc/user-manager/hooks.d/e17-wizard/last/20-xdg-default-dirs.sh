@@ -124,6 +124,10 @@ main(){
     fi
 
     # remove new xdg desktop dir too
+    rm -f "$(xdg-user-dir DESKTOP )/home.desktop" 2>/dev/null 1>&2 || true
+    rm -f "$(xdg-user-dir DESKTOP )/root.desktop" 2>/dev/null 1>&2 || true
+    rm -f "$(xdg-user-dir DESKTOP )/tmp.desktop" 2>/dev/null 1>&2 || true
+
     rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
 
     # and never create it again

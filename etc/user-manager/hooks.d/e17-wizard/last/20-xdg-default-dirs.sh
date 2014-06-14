@@ -127,6 +127,10 @@ main(){
     rm -f "$(xdg-user-dir DESKTOP )/home.desktop" 2>/dev/null 1>&2 || true
     rm -f "$(xdg-user-dir DESKTOP )/root.desktop" 2>/dev/null 1>&2 || true
     rm -f "$(xdg-user-dir DESKTOP )/tmp.desktop" 2>/dev/null 1>&2 || true
+    rm -f "$(xdg-user-dir DOWNLOAD )/home.desktop" 2>/dev/null 1>&2 || true
+    rm -f "$(xdg-user-dir DOWNLOAD )/root.desktop" 2>/dev/null 1>&2 || true
+    rm -f "$(xdg-user-dir DOWNLOAD )/tmp.desktop" 2>/dev/null 1>&2 || true
+
 
     rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
 

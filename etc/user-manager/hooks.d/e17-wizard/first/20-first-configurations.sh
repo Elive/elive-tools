@@ -1,5 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+# gettext not works here because we are on first page
 
 main(){
     # pre {{{

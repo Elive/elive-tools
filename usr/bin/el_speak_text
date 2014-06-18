@@ -7,8 +7,15 @@ source /usr/lib/elive-tools/functions
 main(){
     # pre {{{
 
-    local text process hour
-    text="$1"
+    local text process hour is_force
+
+    if [[ "$1" = -f ]] || [[ "$1" = --force ]] ; then
+        is_force=1
+        shift
+    fi
+
+
+    text="$@"
     if [[ -z "$text" ]] ; then
         return
     fi
@@ -21,8 +28,10 @@ main(){
     hour="$(date +%H)"
 
     if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
-        el_explain 2 "ignoring reproduction of voice because we may be sleeping at this hour"
-        exit
+        if ! ((is_force)) ; then
+            el_explain 2 "ignoring reproduction of voice because we may be sleeping at this hour"
+            exit
+        fi
     fi
 
     # }}}

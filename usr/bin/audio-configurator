@@ -47,6 +47,12 @@ main(){
         fi
     fi
 
+    if [[ -z "$list_cards" ]] ; then
+        rm -f "${HOME}/.asoundrc"
+        $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system, we suggest you to try with a newer kernel version to see if can have newer drivers for it." )"
+        exit
+    fi
+
     number_cards="$( echo -e "$list_cards" | wc -l )"
 
     if [[ "$number_cards" -lt "2" ]] ; then

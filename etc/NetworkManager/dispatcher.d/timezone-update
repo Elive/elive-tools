@@ -78,7 +78,7 @@ main(){
 
     # mark a stamp, amount of users that was able to successfully connect to internet
     if grep -qs "boot=live" /proc/cmdline && ! el_flag check stamp-connected ; then
-        { curl --connect-timeout 20 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.0/live-connected-success 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        { curl --connect-timeout 20 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.0/live-connected-success.html 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         el_flag add stamp-connected
     fi
 

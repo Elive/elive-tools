@@ -49,7 +49,15 @@ main(){
 
     if [[ -z "$list_cards" ]] ; then
         rm -f "${HOME}/.asoundrc"
+
+        # reconfigure alsa.conf default file to correctly work, only if is not a number value
+        if [[ "$UID" = 0 ]] ; then
+            sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card 0|g" /usr/share/alsa/alsa.conf
+            sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card 0|g" /usr/share/alsa/alsa.conf
+        fi
+
         $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system, we suggest you to try with a newer kernel version to see if can have newer drivers for it." )"
+
         exit
     fi
 

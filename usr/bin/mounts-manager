@@ -512,9 +512,13 @@ el_umount(){
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -532,9 +536,13 @@ el_umount(){
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -549,9 +557,13 @@ el_umount(){
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -565,9 +577,13 @@ el_umount(){
                 el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted: $@"
                 return 0
             fi
@@ -586,9 +602,13 @@ el_umount(){
                 el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -599,9 +619,13 @@ el_umount(){
                 el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -614,9 +638,13 @@ el_umount(){
                 command umount -l "$mountpoint" || command umount -l "$device" || command umount -f "$mountpoint" || command umount -f "$device"
             else
                 # special dir created by this own tool, we don't need it anymore
-                if [[ "$arg" = /mnt/*_elive ]] ; then
-                    rmdir "$arg"
-                fi
+                for dir in  /mnt/*_elive
+                do
+                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                        rmdir "$dir"
+                    fi
+                done
+
                 el_debug "Umounted (forced): $@"
                 return 0
             fi
@@ -629,9 +657,13 @@ el_umount(){
             el_debug "Umounted (forced): $@"
             el_warning "well, finally umounted"
             # special dir created by this own tool, we don't need it anymore
-            if [[ "$arg" = /mnt/*_elive ]] ; then
-                rmdir "$arg"
-            fi
+            for dir in  /mnt/*_elive
+            do
+                if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    rmdir "$dir"
+                fi
+            done
+
             return 0
         fi
     done

@@ -9,6 +9,9 @@ if [[ -z "$3" ]]; then
     exit
 fi
 
+# if we come from an existing tmux we need to allow to run new ones (they are not really nested)
+unset TMUX
+
 group_session="$1"
 shift
 win_name="$1"

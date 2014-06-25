@@ -29,6 +29,8 @@ chroot_layers_mount(){
         el_debug "using bind mode of mounting layers"
     fi
 
+    sync
+
     # }}}
 
     if el_flag check "chroot_layer_prepared" ; then
@@ -175,6 +177,8 @@ chroot_layers_umount(){
         is_mode_bind=1
         el_debug "using bind mode of umounting layers"
     fi
+
+    sync
 
     # }}}
 

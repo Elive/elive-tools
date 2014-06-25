@@ -395,7 +395,7 @@ el_dependencies_install(){
     cat > "${temp}" << EOF
 #!/bin/bash
 
-urxvt -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; apt-get install $depends ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+urxvt -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install $depends ; then el_aptget_update force ; if ! apt-get install $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
 
 EOF
 

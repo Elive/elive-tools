@@ -1,4 +1,6 @@
 #!/bin/bash
+set +e
+set +E
 
 #
 # Some modules like r8168 doest recompile at new kernel installs, so this hook does a kind of dpkg-reconfigure for all the dkms modules, just in case
@@ -64,7 +66,7 @@ do
     ##dpkg-reconfigure -fnoninteractive -pcritical "$package"
 
     if [[ -x "/var/lib/dpkg/info/${package}.postinst" ]] ; then
-        exec "/var/lib/dpkg/info/${package}.postinst" configure || true
+        "/var/lib/dpkg/info/${package}.postinst" configure || true
     fi
 done 3<<< "$( dpkg -l | grep -E "^ii\s*.*[[:print:]]-dkms\s*" | awk '{print $2}' )"
 

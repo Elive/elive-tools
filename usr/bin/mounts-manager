@@ -822,11 +822,14 @@ main(){
         echo -e "--mount dev [args]  : mount a device, args must be in udisks format:"
         echo -e "                    (--mount-fstype reiserX --mount-options foo,bar)"
         echo -e "--umount [dev|mountpoint]  : umounts a device|mountpoint"
-        echo -e "--umount-force [dev|mountpoint]  : umounts a device|mountpoint in a forced mode, NEVER do this"
+        echo -e "--umount-force [dev|mountpoint]  : umounts a device|mountpoint in a forced mode, NEVER do this unless you are a wizard in level 17"
         echo -e ""
         echo -e "Chroots related:"
         echo -e "--chroot-layers-mount directory idname  : mount the layers needed for a full-working chroot (proc, sysfs, etc)"
-        echo -e "--chroot-layers-umount directory [idname]  : umount the layers"
+        echo -e "--chroot-layers-umount directory [idname] [bind]  : umount the layers"
+        echo -e "                                           \ bind is a special mode that allows you to run things in the graphical system among other features"
+        echo -e ""
+        echo -e "Note: by checking the source code you can found shortcuts to these long commands"
         exit 1
     fi
 
@@ -861,32 +864,32 @@ main(){
     # - checks }}}
 
     case "$1" in
-        --get-mountpoint)
+        --get-mountpoint|-g)
             shift
             get_mountpoint "$@"
             ;;
-        --check-is-mounted)
+        --check-is-mounted|-c)
             shift
             check_is_mounted "$@"
             ;;
-        --mount)
+        --mount|-m)
             shift
             el_mount "$@"
             ;;
-        --umount)
+        --umount|-u)
             shift
             el_umount "$@"
             ;;
-        --umount-force)
+        --umount-force|-uf)
             shift
             is_forced=1
             el_umount "$@"
             ;;
-        --chroot-layers-mount)
+        --chroot-layers-mount|-clm)
             shift
             chroot_layers_mount "$@"
             ;;
-        --chroot-layers-umount)
+        --chroot-layers-umount|-clu)
             shift
             chroot_layers_umount "$@"
             ;;

@@ -518,7 +518,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -542,7 +542,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -563,7 +563,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -583,7 +583,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -608,7 +608,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -625,7 +625,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -644,7 +644,7 @@ el_umount(){
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
                 do
-                    if ! check_is_mounted "$dir" 1>/dev/null ; then
+                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                         rmdir "$dir"
                     fi
                 done
@@ -663,7 +663,7 @@ el_umount(){
             # special dir created by this own tool, we don't need it anymore
             for dir in  /mnt/*_elive
             do
-                if ! check_is_mounted "$dir" 1>/dev/null ; then
+                if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
                     rmdir "$dir"
                 fi
             done

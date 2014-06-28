@@ -112,12 +112,11 @@ get_volume(){
 #===============================================================================
 mute_modes_force(){
     # pre {{{
-    local mode conf volume_before volume_actual
+    local mode volume_before volume_actual
     el_debug
     el_security_function_loop 8 || return
 
     mode="$1"
-    conf="$HOME/.config/setvolume"
     el_check_variables "mode"
 
 
@@ -332,6 +331,9 @@ main(){
 
     list="$( amixer scontrols )"
     action="$@"
+
+    conf="$HOME/.config/setvolume"
+
 
     if [[ "${1}" = "defaults" ]] ; then
         # extra volumes up

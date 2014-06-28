@@ -1,5 +1,308 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+
+#===  FUNCTION  ================================================================
+#          NAME:  get_meter
+#   DESCRIPTION:  prints the meter that we should use for modify volumes
+#    PARAMETERS:  -
+#       RETURNS:  meter name in a string value
+#===============================================================================
+get_meter(){
+    # pre {{{
+    local meter
+    el_debug
+    el_security_function_loop || return
+
+    el_check_variables "list"
+
+
+    # }}}
+
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'PCM'" ; then
+            meter=PCM
+        fi
+    fi
+
+    ##################
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'Front'" ; then
+            meter=Front
+        fi
+    fi
+
+    ##################
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'Wave'" ; then
+            meter=Wave
+        fi
+    fi
+
+    ##################
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'Center'" ; then
+            meter=Center
+        fi
+    fi
+
+    # this doesn't exist on this time but may make things working in the future
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'PulseAudio'" ; then
+            meter=PulseAudio
+        fi
+    fi
+    ##################
+    # Master should be everytime on Max volume or you got distortions
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'Master'" ; then
+            meter=Master
+        fi
+    fi
+
+    ##################
+    # Special Cards, like ice1712/Terratec_ewx24/96
+    if [[ -z $meter ]] ; then
+        if echo "$list" | grep -q "'DAC'" ; then
+            meter=DAC
+        fi
+    fi
+
+    # so wtf
+    if [[ -z $meter ]] ; then
+        el_error "No meter found, is your audio card working?"
+    fi
+
+    # DONE, show it
+    echo "$meter"
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  get_volume
+#   DESCRIPTION:  get the actual volume status
+#    PARAMETERS:  -
+#       RETURNS:  volume percentage in a simple integer value
+#===============================================================================
+get_volume(){
+    # pre {{{
+    local volume meter
+    el_debug
+    el_security_function_loop || return
+
+    meter="$( get_meter )"
+    el_check_variables "meter,list"
+
+    # }}}
+
+    # show and return a value
+    if echo "$list" | grep -q "'$meter',1" ; then
+        # stereo
+        LC_ALL=C amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | tail -1
+    else
+        # mono
+        LC_ALL=C amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | tail -1
+    fi
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  mute_modes_force
+#   DESCRIPTION:  force (hack) a mute mode for un unsupported card
+#    PARAMETERS:  $1 = mode: mute|unmute  (no toggle modes)
+#       RETURNS:  -
+#===============================================================================
+mute_modes_force(){
+    # pre {{{
+    local mode conf volume_before volume_actual
+    el_debug
+    el_security_function_loop 8 || return
+
+    mode="$1"
+    conf="$HOME/.config/setvolume"
+    el_check_variables "mode"
+
+
+    # }}}
+
+    # get volume from conf
+    if [[ -e "$conf" ]] && [[ -s "$conf" ]] ; then
+        volume_before="$( grep "^volume:" "$conf" )"
+        volume_before="${volume_before#volume:}"
+        # remove extra leading blank chars
+        read -r volume_before <<< "$volume_before"
+    else
+        # no conf? get it now
+        volume_before="$( get_volume )"
+    fi
+
+    # get actual volume
+    volume_actual="$( get_volume )"
+    if [[ -z "$volume_actual" ]] ; then
+        el_error "unable to get actual volume"
+        exit
+    fi
+
+    # set mute modes
+    case "$mode" in
+        muteset)
+            # save our last state of volume for next use
+            sed -i '/^volume:/d' "$conf" 2>/dev/null
+            echo -e "volume: $volume_actual" >> "$conf"
+
+            # set volume to 0
+            "$0" "0%"
+
+            ;;
+        unmute|unmuteset)
+
+            # set volume to our previous state
+            "$0" "${volume_before}%"
+
+            ;;
+        mute|toggle)
+            el_explain 0 "volumes was originally at $volume_before and now $volume_actual"
+            if [[ "$volume_actual" -lt 2 ]] ; then
+                $FUNCNAME unmute
+            else
+                $FUNCNAME muteset
+            fi
+
+            ;;
+        *)
+            el_error "Unkown $mode option for $FUNCNAME"
+            ;;
+    esac
+
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  mute_modes
+#   DESCRIPTION:  set mute or unmute the audio card
+#    PARAMETERS:  $1 = mode: mute (toggle), muteset, unmute|unmuteset
+#       RETURNS:  -
+#===============================================================================
+mute_modes(){
+    # pre {{{
+    local state_before state_after mode
+    el_debug
+    el_security_function_loop 8 || return
+
+    mode="$1"
+    el_check_variables "mode"
+
+    # }}}
+    state_before="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+    # remove extra leading blank chars
+    read -r state_before <<< "$state_before"
+
+    case "$mode" in
+        unmute|unmuteset)
+            # set talk
+            if [[ -n "$state_before" ]] ; then
+                if amixer -q set "$meter" unmute 2>/dev/null ; then
+                    el_explain 2 "mute was on"
+                else
+                    # failed to set, force
+                    mute_modes_force unmute
+                    return
+                fi
+            else
+                # we dont know about mute values for this channel/card, force
+                mute_modes_force unmute
+                return
+            fi
+            # force detect {{{
+            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            # remove extra leading blank chars
+            read -r state_after <<< "$state_after"
+
+            # unsuccessful mute, force
+            if [[ "$state_after" = "off" ]] ; then
+                el_explain 2 "mute has not changed, forcing it"
+                mute_modes_force unmute
+                return
+            fi
+
+            # - force detect }}}
+
+            ;;
+        muteset)
+            # set silent
+            if [[ -n "$state_before" ]] ; then
+                if amixer -q set "$meter" mute 2>/dev/null ; then
+                    el_explain 2 "mute was off"
+                else
+                    # failed to set, force
+                    mute_modes_force mute
+                    return
+                fi
+            else
+                # we dont know about mute values for this channel/card, force
+                mute_modes_force mute
+                return
+            fi
+            # force detect {{{
+            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            # remove extra leading blank chars
+            read -r state_after <<< "$state_after"
+
+            # unsuccessful mute, force
+            if [[ "$state_after" = "on" ]] ; then
+                el_explain 2 "mute has not changed, forcing it"
+                mute_modes_force mute
+                return
+            fi
+
+            # - force detect }}}
+
+            ;;
+        mute)
+            # Toggle mute modes
+            if [[ -n "$state_before" ]] ; then
+
+                if [[ "$state_before" = "off" ]] ; then
+                    if amixer -q set "$meter" unmute 2>/dev/null ; then
+                        el_explain 2 "mute was on"
+                    else
+                        # failed to set, force
+                        mute_modes_force unmute
+                        return
+                    fi
+                fi
+
+                if [[ "$state_before" = "on" ]] ; then
+                    if amixer -q set "$meter" mute 2>/dev/null ; then
+                        el_explain 2 "mute was off"
+                    else
+                        # failed to set, force
+                        mute_modes_force mute
+                        return
+                    fi
+                fi
+            else
+                # we dont know about mute values for this channel/card, force
+                mute_modes_force toggle
+                return
+            fi
+            # force detect {{{
+            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            # remove extra leading blank chars
+            read -r state_after <<< "$state_after"
+
+            # unsuccessful mute, force
+            if [[ "$state_before" = "$state_after" ]] ; then
+                el_explain 2 "mute has not changed, forcing it"
+                mute_modes_force toggle
+                return
+            fi
+
+            # - force detect }}}
+
+            ;;
+        *)
+            el_error "Unkown $mode option for $FUNCNAME"
+            ;;
+    esac
+
+}
 main(){
     # pre {{{
     local list action meter actualvalue
@@ -11,12 +314,15 @@ main(){
     # Usage
     if [[ -z "${1}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) args"
-        echo -e "Examples:"
+        echo -e "\nExamples:"
         echo -e "$(basename $0) defaults  # set volumes generically to optimal ones"
         echo -e "$(basename $0) 80%  # set the volume to the 80 % level"
         echo -e "$(basename $0) 10%+ # increases 10% the actual volume"
-        echo -e "$(basename $0) mute # switch on/off mute mode"
-        echo -e "$(basename $0) unmute # switch off mute mode"
+        echo -e "$(basename $0) mute    # switch on/off mute mode"
+        echo -e "$(basename $0) muteset # set ON mute mode"
+        echo -e "$(basename $0) unmute  # set OFF mute mode"
+
+        echo -e "\n$(basename $0) uses special powers making any card to work with all the features even the mute one, if doesn't, report the bug to us"
         exit 1
     fi
 
@@ -89,84 +395,42 @@ main(){
 
     ##################
     # First = see if first option is available, if not, try with the next one
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'PCM'" ; then
-            meter=PCM
-        fi
-    fi
-
-    ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Front'" ; then
-            meter=Front
-        fi
-    fi
-
-    ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Wave'" ; then
-            meter=Wave
-        fi
-    fi
-
-    ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Center'" ; then
-            meter=Center
-        fi
-    fi
-
-    ##################
-    # Master should be everytime on Max volume or you got distortions
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Master'" ; then
-            meter=Master
-        fi
-    fi
-
-    ##################
-    # Special Cards, like ice1712/Terratec_ewx24/96
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'DAC'" ; then
-            meter=DAC
-        fi
-    fi
-
+    meter="$( get_meter )"
     ##################
 
-    el_explain 2 "selected meter to modify: $meter"
+    el_explain 2 "selected meter: $meter"
 
-    if [[ "$action" = "mute" ]] ; then
-        actualvalue="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-        actualvalue="$( echo $actualvalue )"
-
-        if [[ "$actualvalue" = "on" ]] ; then
-            el_explain 2 "mute was on"
-            amixer -q set $meter mute 2>/dev/null
-        fi
-
-        if [[ "$actualvalue" = "off" ]] ; then
-            el_explain 2 "mute was off"
-            amixer -q set $meter unmute 2>/dev/null
-        fi
+    # MUTE modes
+    # silent
+    if [[ "$action" = "muteset" ]] ; then
+        mute_modes "muteset"
         exit
     fi
-
+    # speak
     if [[ "$action" = "unmute" ]] ; then
-        amixer -q set $meter unmute 2>/dev/null
+        mute_modes "unmute"
         exit
     fi
+    # toggle
+    if [[ "$action" = "mute" ]] ; then
+        mute_modes "mute"
+        exit
+    fi
+
     ##################
 
+    # normal actions, like setting the volume
     if echo "$list" | grep -q "'$meter',1" ; then
+        # stereo
         amixer -q set ${meter},0 $action 2>/dev/null
         amixer -q set ${meter},1 $action 2>/dev/null
     else
+        # mono
         amixer -q set $meter $action 2>/dev/null
     fi
     ##################
 
-    el_explain 2 "Volumes are now at $( LC_ALL=C amixer get $meter | grep -E  "(Left|Right).*%]" | tr ' ' '\n' | grep % | tr '\n' ' ' )"
+    # this is old and deprecated
 }
 
 #

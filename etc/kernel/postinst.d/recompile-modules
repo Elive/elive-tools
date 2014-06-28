@@ -66,6 +66,7 @@ do
     ##dpkg-reconfigure -fnoninteractive -pcritical "$package"
 
     if [[ -x "/var/lib/dpkg/info/${package}.postinst" ]] ; then
+        echo -e "Rebuilding modules for $package"
         "/var/lib/dpkg/info/${package}.postinst" configure || true
     fi
 done 3<<< "$( dpkg -l | grep -E "^ii\s*.*[[:print:]]-dkms\s*" | awk '{print $2}' )"

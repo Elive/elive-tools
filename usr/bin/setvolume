@@ -18,57 +18,57 @@ get_meter(){
 
     # }}}
 
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'PCM'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'PCM'"* ]] ; then
             meter=PCM
         fi
     fi
 
     ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Front'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Front'"* ]] ; then
             meter=Front
         fi
     fi
 
     ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Wave'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Wave'"* ]] ; then
             meter=Wave
         fi
     fi
 
     ##################
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Center'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Center'"* ]] ; then
             meter=Center
         fi
     fi
 
     # this doesn't exist on this time but may make things working in the future
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'PulseAudio'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'PulseAudio'"* ]] ; then
             meter=PulseAudio
         fi
     fi
     ##################
     # Master should be everytime on Max volume or you got distortions
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'Master'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Master'"* ]] ; then
             meter=Master
         fi
     fi
 
     ##################
     # Special Cards, like ice1712/Terratec_ewx24/96
-    if [[ -z $meter ]] ; then
-        if echo "$list" | grep -q "'DAC'" ; then
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'DAC'"* ]] ; then
             meter=DAC
         fi
     fi
 
     # so wtf
-    if [[ -z $meter ]] ; then
+    if [[ -z "$meter" ]] ; then
         el_error "No meter found, is your audio card working?"
     fi
 
@@ -94,7 +94,8 @@ get_volume(){
     # }}}
 
     # show and return a value
-    if echo "$list" | grep -q "'$meter',1" ; then
+    #if echo "$list" | grep -q "'$meter',1" ; then
+    if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         LC_ALL=C amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | tail -1
     else
@@ -422,7 +423,8 @@ main(){
     ##################
 
     # normal actions, like setting the volume
-    if echo "$list" | grep -q "'$meter',1" ; then
+    #if echo "$list" | grep -q "'$meter',1" ; then
+    if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         amixer -q set ${meter},0 $action 2>/dev/null
         amixer -q set ${meter},1 $action 2>/dev/null

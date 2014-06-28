@@ -9,7 +9,6 @@ source /usr/lib/elive-tools/functions
 #===============================================================================
 get_meter(){
     # pre {{{
-    local meter
     el_debug
     el_security_function_loop || return
 
@@ -84,11 +83,9 @@ get_meter(){
 #===============================================================================
 get_volume(){
     # pre {{{
-    local volume meter
-    el_debug
-    el_security_function_loop || return
+    #el_debug
+    #el_security_function_loop || return
 
-    meter="$( get_meter )"
     el_check_variables "meter,list"
 
     # }}}
@@ -97,10 +94,10 @@ get_volume(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        LC_ALL=C amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | tail -1
+        LC_ALL=C amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
     else
         # mono
-        LC_ALL=C amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | tail -1
+        LC_ALL=C amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
     fi
 
 }
@@ -143,14 +140,14 @@ mute_modes_force(){
     # set mute modes
     case "$mode" in
         muteset)
+            # set volume to 0
+            "$0" "0%"
+
             # save our last state of volume for next use
             if [[ "$volume_actual" -gt 1 ]] ; then
                 sed -i '/^volume:/d' "$conf" 2>/dev/null
                 echo -e "volume: $volume_actual" >> "$conf"
             fi
-
-            # set volume to 0
-            "$0" "0%"
 
             ;;
         unmute|unmuteset)
@@ -161,6 +158,7 @@ mute_modes_force(){
             ;;
         mute|toggle)
             el_explain 0 "volumes was originally at $volume_before and now $volume_actual"
+
             if [[ "$volume_actual" -lt 2 ]] ; then
                 $FUNCNAME unmute
             else
@@ -307,7 +305,7 @@ mute_modes(){
 }
 main(){
     # pre {{{
-    local list action meter actualvalue
+    local list action actualvalue
 
     el_dependencies_check amixer
 
@@ -332,6 +330,9 @@ main(){
     list="$( amixer scontrols )"
     action="$@"
 
+    meter="$( get_meter )"
+    el_explain 2 "selected meter: $meter"
+
     conf="$HOME/.config/setvolume"
 
 
@@ -346,10 +347,6 @@ main(){
         amixer -q set Wave   unmute 2>/dev/null
         amixer -q set DAC    unmute 2>/dev/null
 
-        # Master should be always set to 100 % in order to avoid distortions
-        el_explain 2 "Master set to 100%"
-        amixer -q set Master,0 100  2>/dev/null
-        amixer -q set Master,1 100  2>/dev/null
 
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
@@ -386,6 +383,12 @@ main(){
             fi
         fi
 
+        # Master should be always set to 100 % in order to avoid distortions
+        el_explain 2 "Master set to 100%"
+        amixer -q set Master,0 100%  2>/dev/null
+        amixer -q set Master,1 100%  2>/dev/null
+        amixer -q set Master 100%  2>/dev/null
+
         # then set a default generic volume
         main 80% 1>/dev/null
         exit
@@ -398,12 +401,6 @@ main(){
     action="${action/ up/+}"
     action="${action/ down/-}" # FIXME: e17 mouse bindings does a segfault when the action is to enter a command like "setvolumes 2%+" ? if yes, report it to E17
 
-    ##################
-    # First = see if first option is available, if not, try with the next one
-    meter="$( get_meter )"
-    ##################
-
-    el_explain 2 "selected meter: $meter"
 
     # MUTE modes
     # silent

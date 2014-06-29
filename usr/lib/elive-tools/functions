@@ -442,27 +442,23 @@ el_aptget_update(){
 
         if [[ "$UID" = 0 ]] ; then
             if [[ -n "$DISPLAY" ]] ; then
-                apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
-                apt-get update
+                apt-get update || apt-get update
             fi
         else
             if el_check_sudo_automated ; then
                 if [[ -n "$DISPLAY" ]] ; then
-                    sudo apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    { sudo apt-get update || sudo apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
-                    sudo apt-get update
+                    sudo apt-get update || sudo apt-get update
                 fi
             else
                 if [[ -n "$DISPLAY" ]] ; then
-                    if [[ "$UID" = 0 ]] ; then
-                        apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-                    else
-                        el_dependencies_check gksu
-                        gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
-                    fi
+                    el_dependencies_check gksu
+                    gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
-                    su -c "apt-get update" root
+                    su -c "apt-get update || apt-get update" root
                 fi
             fi
         fi

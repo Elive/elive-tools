@@ -297,7 +297,7 @@ el_check_sudo_automated(){
 
     if ! sudo -H -n echo 2>/dev/null 1>/dev/null ; then
         #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
-        el_error "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it"
+        #el_explain 0 "Automated sudo is suggested (nopassword option): This tool requires it in case there's files without permissions"
 
         return 1
     else

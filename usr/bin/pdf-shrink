@@ -48,7 +48,7 @@ shrink(){
       -q -dNOPAUSE -dBATCH -dSAFER      \
       -sDEVICE=pdfwrite         \
       -dCompatibilityLevel=1.3      \
-      -dPDFSETTINGS=/$quality         \
+      -dPDFSETTINGS=/screen         \
       -dEmbedAllFonts=true          \
       -dSubsetFonts=true            \
       -dColorImageDownsampleType=/Bicubic   \
@@ -58,7 +58,7 @@ shrink(){
       -dMonoImageDownsampleType=/Bicubic    \
       -dMonoImageResolution=72      \
       -sOutputFile="$2"         \
-      "$1" || exit 1
+      "$1" || { zenity --error ; exit 1 ; }
 }
 
 check_smaller(){
@@ -94,7 +94,7 @@ fi
 
 main(){
     # pre {{{
-    local file PROCESS NUMBER_OF_FILES ARTIST TITLE ALBUM GENRE TRACKNUMBER DATEYEAR file_dest_dir GENRE_NUM GENRE_NUM2 is_delete_original PROGRESS filename guitool tempdir extension
+    local file PROCESS NUMBER_OF_FILES ARTIST TITLE ALBUM GENRE TRACKNUMBER DATEYEAR file_dest_dir GENRE_NUM GENRE_NUM2 is_delete_original PROGRESS filename tempdir extension
     # How many files to make the progress bar
     PROGRESS=0
     NUMBER_OF_FILES="$#"
@@ -104,10 +104,6 @@ main(){
 
 
     # }}}
-
-    if ! el_dependencies_check "ghostscript" ; then
-        el_dependencies_install ghostscript
-    fi
 
     if [[ -z "$@" ]] ; then
         $guitool --error --text="$( eval_gettext "No files provided to convert" )"
@@ -122,18 +118,18 @@ main(){
 
     mkdir -p "$file_dest_dir"
 
-    quality="$( $guitool --list --height=220 --width=410 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low resolution images, high compressed" )" 2 "$( eval_gettext "Medium resolution images" )" 3 "$( eval_gettext "High resolution images, low compression"  )" )"
+    #quality="$( $guitool --list --height=220 --width=410 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low resolution images, high compressed" )" 2 "$( eval_gettext "Medium resolution images" )" 3 "$( eval_gettext "High resolution images, low compression"  )" )"
+    quality="$( $guitool --list --height=190 --width=420 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low quality, using ghostscript, slow" )" 2 "$( eval_gettext "High quality, using qpdf, fast"  )" )"
+
     case $quality in
         1)
-            quality="screen"
+            quality="low"
             ;;
         2)
-            quality="ebook"
-            ;;
-        3)
-            quality="printer"
+            quality="high"
             ;;
         *)
+            $guitool --error --text="Wrong option selected"
             exit
             ;;
     esac
@@ -158,7 +154,23 @@ main(){
         # convert it !
         #
 
-        shrink "$file" "${tempdir}/$filename" "$quality"
+        case $quality in
+            low)
+                if ! el_dependencies_check "ghostscript" ; then
+                    el_dependencies_install ghostscript
+                fi
+
+                shrink "$file" "${tempdir}/$filename"
+                ;;
+            high)
+                if ! el_dependencies_check "qpdf" ; then
+                    el_dependencies_install qpdf
+                fi
+
+                qpdf --linearize "$file" "${tempdir}/$filename"
+                ;;
+        esac
+
         check_smaller "$file" "${tempdir}/$filename"
 
         # move it after success
@@ -178,7 +190,7 @@ main(){
         sleep 2
     fi
 
-    $guitool --info --text="$( eval_gettext "All files converted, please verify that they works correctly" )"
+    $guitool --info --text="$( eval_gettext "Files converted, please verify that they works correctly" )"
 
 
 }

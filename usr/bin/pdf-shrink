@@ -48,7 +48,7 @@ shrink(){
       -q -dNOPAUSE -dBATCH -dSAFER      \
       -sDEVICE=pdfwrite         \
       -dCompatibilityLevel=1.3      \
-      -dPDFSETTINGS=/screen         \
+      -dPDFSETTINGS=/$quality         \
       -dEmbedAllFonts=true          \
       -dSubsetFonts=true            \
       -dColorImageDownsampleType=/Bicubic   \
@@ -58,7 +58,7 @@ shrink(){
       -dMonoImageDownsampleType=/Bicubic    \
       -dMonoImageResolution=72      \
       -sOutputFile="$2"         \
-      "$1"
+      "$1" || exit 1
 }
 
 check_smaller(){
@@ -122,6 +122,23 @@ main(){
 
     mkdir -p "$file_dest_dir"
 
+    quality="$( $guitool --list --height=220 --width=410 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low resolution images, high compressed" )" 2 "$( eval_gettext "Medium resolution images" )" 3 "$( eval_gettext "High resolution images, low compression"  )" )"
+    case $quality in
+        1)
+            quality="screen"
+            ;;
+        2)
+            quality="ebook"
+            ;;
+        3)
+            quality="printer"
+            ;;
+        *)
+            exit
+            ;;
+    esac
+
+
     (
     for file in "$@"
     do
@@ -141,7 +158,7 @@ main(){
         # convert it !
         #
 
-        shrink "$file" "${tempdir}/$filename"
+        shrink "$file" "${tempdir}/$filename" "$quality"
         check_smaller "$file" "${tempdir}/$filename"
 
         # move it after success
@@ -158,6 +175,7 @@ main(){
 
     if ! ((is_delete_original)) ; then
         thunar "${file_dest_dir}" &
+        sleep 2
     fi
 
     $guitool --info --text="$( eval_gettext "All files converted, please verify that they works correctly" )"

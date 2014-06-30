@@ -1,4 +1,17 @@
 #!/bin/bash
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+exit_me(){
+    rm -rf "${tempdir}"
+    exit 1
+}
+
+trap "exit_me 0" 0 1 2 5 15
+
 
 # http://www.alfredklomp.com/programming/shrinkpdf
 # Licensed under the 3-clause BSD license:
@@ -30,9 +43,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-shrink ()
-{
-    gs                  \
+shrink(){
+    /usr/bin/gs                  \
       -q -dNOPAUSE -dBATCH -dSAFER      \
       -sDEVICE=pdfwrite         \
       -dCompatibilityLevel=1.3      \
@@ -49,43 +61,111 @@ shrink ()
       "$1"
 }
 
-check_smaller ()
-{
+check_smaller(){
     # If $1 and $2 are regular files, we can compare file sizes to
     # see if we succeeded in shrinking. If not, we copy $1 over $2:
     if [ ! -f "$1" -o ! -f "$2" ]; then
         return 0;
     fi
+
     ISIZE="$(echo $(wc -c "$1") | cut -f1 -d\ )"
     OSIZE="$(echo $(wc -c "$2") | cut -f1 -d\ )"
+
     if [ "$ISIZE" -lt "$OSIZE" ]; then
-        echo "Input smaller than output, doing straight copy" >&2
+        echo "# Input smaller than output, doing straight copy" >&2
         cp "$1" "$2"
     fi
 }
 
-usage ()
-{
+usage(){
     echo "Reduces PDF filesize by lossy recompressing with Ghostscript."
     echo "Not guaranteed to succeed, but usually works."
     echo "  Usage: $1 infile [outfile]"
+    exit
 }
 
-IFILE="$1"
 
 # Need an input file:
-if [ -z "$IFILE" ]; then
+if [ -z "$1" ]; then
     usage "$0"
     exit 1
 fi
 
-# Output filename defaults to "-" (stdout) unless given:
-if [ ! -z "$2" ]; then
-    OFILE="$2"
-else
-    OFILE="-"
-fi
 
-shrink "$IFILE" "$OFILE" || exit $?
+main(){
+    # pre {{{
+    local file PROCESS NUMBER_OF_FILES ARTIST TITLE ALBUM GENRE TRACKNUMBER DATEYEAR file_dest_dir GENRE_NUM GENRE_NUM2 is_delete_original PROGRESS filename guitool tempdir extension
+    # How many files to make the progress bar
+    PROGRESS=0
+    NUMBER_OF_FILES="$#"
 
-check_smaller "$IFILE" "$OFILE"
+    guitool=zenity
+    tempdir="/tmp/.${USER}-audio-converter-$$"
+
+
+    # }}}
+
+    if ! el_dependencies_check "/usr/bin/gs" ; then
+        el_dependencies_install ghostscript
+    fi
+
+    if [[ -z "$@" ]] ; then
+        $guitool --error --text="$( eval_gettext "No files provided to convert" )"
+        exit 1
+    fi
+
+    let "INCREMENT=10000000/$NUMBER_OF_FILES"
+
+    mkdir -p "$tempdir"
+
+    file_dest_dir="$(pwd)/Reconverted_PDFs"
+
+    mkdir -p "$file_dest_dir"
+
+    (
+    for file in "$@"
+    do
+        echo "$(( ${PROGRESS%%.*} / 100000 ))"
+        file="$file"
+        filename="${file##*/}"
+        filenameraw="${filename%.*}"
+        echo -e "# Converting \t ${filename}"
+
+        # cache it for faster multiprocess (not i/o overload)
+        cat "${file}" > /dev/null
+
+        rm -rf "${tempdir}"
+        mkdir -p "${tempdir}"
+
+        #
+        # convert it !
+        #
+
+        shrink "$file" "${tempdir}/$filename"
+        check_smaller "$file" "${tempdir}/$filename"
+
+        # move it after success
+        mv "${tempdir}/$filename" "${file_dest_dir}/${filename}"
+
+        let "PROGRESS+=$INCREMENT"
+
+    done
+    ) | $guitool  --progress --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
+
+
+    rm -rf "${tempdir}"
+
+
+    if ! ((is_delete_original)) ; then
+        thunar "${file_dest_dir}" &
+    fi
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

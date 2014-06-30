@@ -10,7 +10,7 @@ exit_me(){
     exit 1
 }
 
-trap "exit_me 0" 0 1 2 5 15
+trap "exit_me 0" 1 2 5 15
 
 
 # http://www.alfredklomp.com/programming/shrinkpdf
@@ -44,7 +44,7 @@ trap "exit_me 0" 0 1 2 5 15
 
 
 shrink(){
-    /usr/bin/gs                  \
+    ghostscript                  \
       -q -dNOPAUSE -dBATCH -dSAFER      \
       -sDEVICE=pdfwrite         \
       -dCompatibilityLevel=1.3      \
@@ -105,7 +105,7 @@ main(){
 
     # }}}
 
-    if ! el_dependencies_check "/usr/bin/gs" ; then
+    if ! el_dependencies_check "ghostscript" ; then
         el_dependencies_install ghostscript
     fi
 
@@ -129,7 +129,7 @@ main(){
         file="$file"
         filename="${file##*/}"
         filenameraw="${filename%.*}"
-        echo -e "# Converting \t ${filename}"
+        echo -e "# Converting \t ${filenameraw}"
 
         # cache it for faster multiprocess (not i/o overload)
         cat "${file}" > /dev/null

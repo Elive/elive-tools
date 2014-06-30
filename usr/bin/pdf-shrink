@@ -160,6 +160,8 @@ main(){
         thunar "${file_dest_dir}" &
     fi
 
+    $guitool --info --text="$( eval_gettext "All files converted, please verify that they works correctly" )"
+
 
 }
 

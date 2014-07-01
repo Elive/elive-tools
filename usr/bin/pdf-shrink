@@ -124,7 +124,7 @@ main(){
 
 
     #quality="$( $guitool --list --height=220 --width=410 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low resolution images, high compressed" )" 2 "$( eval_gettext "Medium resolution images" )" 3 "$( eval_gettext "High resolution images, low compression"  )" )"
-    quality="$( $guitool --list --height=190 --width=420 --text="$message_quality_select" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low quality, using ghostscript, slow" )" 2 "$( eval_gettext "High quality, using qpdf, fast"  )" )"
+    quality="$( $guitool --list --height=190 --width=440 --text="$message_quality_select" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low quality, smallest size, slow to convert" )" 2 "$( eval_gettext "High quality, biggest size, fast"  )" )"
 
     case $quality in
         1)

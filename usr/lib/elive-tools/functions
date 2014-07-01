@@ -409,8 +409,6 @@ EOF
         do
             if gksu "$temp" ; then
                 break
-            else
-                return 1
             fi
         done
 
@@ -473,8 +471,6 @@ el_aptget_update(){
                             if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
                                 break
                             fi
-                        else
-                            return 1
                         fi
                     done
 
@@ -700,8 +696,6 @@ el_sudo(){
             do
                 if gksu "$@" ; then
                     break
-                else
-                    return 1
                 fi
             done
 
@@ -1133,8 +1127,6 @@ el_group_add(){
         do
             if gksu "adduser $USER $group" ; then
                 break
-            else
-                return 1
             fi
         done
 
@@ -1147,8 +1139,6 @@ el_group_add(){
             do
                 if gksu "adduser $USER $group" ; then
                     break
-                else
-                    return 1
                 fi
             done
 

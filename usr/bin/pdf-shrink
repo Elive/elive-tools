@@ -141,6 +141,11 @@ main(){
 
 
     (
+
+    if [[ -z "$2" ]] ; then
+        progress_opts="--pulsate"
+    fi
+
     for file in "$@"
     do
         echo "$(( ${PROGRESS%%.*} / 100000 ))"
@@ -170,6 +175,7 @@ main(){
                 while read -ru 3 line
                 do
                     echo "# $line"
+                    LC_ALL=C sleep 0.3
                 done 3<<< "$( shrink "$file" "${tempdir}/$filename" )"
 
                 ;;
@@ -183,6 +189,7 @@ main(){
                 while read -ru 3 line
                 do
                     echo "# $line"
+                    LC_ALL=C sleep 0.3
                 done 3<<< "$( qpdf --linearize "$file" "${tempdir}/$filename" )"
                 ;;
         esac
@@ -195,7 +202,7 @@ main(){
         let "PROGRESS+=$INCREMENT"
 
     done
-    ) | $guitool  --progress --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
+    ) | $guitool  --progress $progress_opts --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
 
 
     rm -rf "${tempdir}"

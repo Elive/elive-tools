@@ -142,10 +142,6 @@ main(){
 
     (
 
-    if [[ -z "$2" ]] ; then
-        progress_opts="--pulsate"
-        el_debug "pulsate mode of progress bar"
-    fi
 
     for file in "$@"
     do
@@ -207,7 +203,7 @@ main(){
         let "PROGRESS+=$INCREMENT"
 
     done
-    ) | $guitool  --progress $progress_opts --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
+    ) | $guitool  --progress --pulsate --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
 
 
     rm -rf "${tempdir}"

@@ -144,6 +144,7 @@ main(){
 
     if [[ -z "$2" ]] ; then
         progress_opts="--pulsate"
+        el_debug "pulsate mode of progress bar"
     fi
 
     for file in "$@"
@@ -159,6 +160,10 @@ main(){
 
         rm -rf "${tempdir}"
         mkdir -p "${tempdir}"
+
+        # progress
+        sleep 1
+        echo "10"
 
         #
         # convert it !

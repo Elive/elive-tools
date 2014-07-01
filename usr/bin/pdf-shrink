@@ -73,6 +73,7 @@ check_smaller(){
 
     if [ "$ISIZE" -lt "$OSIZE" ]; then
         echo "# Input smaller than output, doing straight copy" >&2
+        sleep 2
         cp "$1" "$2"
     fi
 }
@@ -133,7 +134,7 @@ main(){
             quality="high"
             ;;
         *)
-            $guitool --error --text="Wrong option selected"
+            #$guitool --error --text="Wrong option selected"
             exit
             ;;
     esac

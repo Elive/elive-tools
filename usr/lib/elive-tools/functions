@@ -405,13 +405,17 @@ EOF
     else
         el_dependencies_check gksu
         # multiple gksu attempts
-        for i in 1 2 3 4 5
+        for i in 1 2 3
         do
             if gksu "$temp" ; then
+                is_password_ok=1
                 break
             fi
         done
 
+        if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+            zenity --error
+        fi
     fi
     rm -f "${temp}"
 
@@ -465,14 +469,19 @@ el_aptget_update(){
                     el_dependencies_check gksu
                     #gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     # multiple gksu attempts
-                    for i in 1 2 3 4 5
+                    for i in 1 2 3
                     do
                         if gksu "$temp" ; then
                             if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
+                                is_password_ok=1
                                 break
                             fi
                         fi
                     done
+
+                    if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+                        zenity --error
+                    fi
 
                 else
                     su -c "apt-get update || apt-get update" root
@@ -692,13 +701,17 @@ el_sudo(){
             el_dependencies_check gksu
 
             # multiple gksu attempts
-            for i in 1 2 3 4 5
+            for i in 1 2 3
             do
                 if gksu "$@" ; then
+                    is_password_ok=1
                     break
                 fi
             done
 
+            if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+                zenity --error
+            fi
         else
             su -c "$@" root
         fi
@@ -1123,25 +1136,34 @@ el_group_add(){
     if ! el_group_check "${group}" ; then
         el_dependencies_check gksu
         # multiple gksu attempts
-        for i in 1 2 3 4 5
+        for i in 1 2 3
         do
             if gksu "adduser $USER $group" ; then
+                is_password_ok=1
                 break
             fi
         done
+
+        if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+            zenity --error --text="$( eval_gettext "Wrong password" )"
+        fi
 
 
         # try again if not reached
         if ! el_group_check "${group}" ; then
             el_dependencies_check gksu
             # multiple gksu attempts
-            for i in 1 2 3 4 5
+            for i in 1 2 3
             do
                 if gksu "adduser $USER $group" ; then
+                    is_password_ok=1
                     break
                 fi
             done
 
+            if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+                zenity --error
+            fi
         fi
 
         # inform that a reboot is needed

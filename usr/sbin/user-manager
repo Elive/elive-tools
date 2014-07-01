@@ -35,7 +35,7 @@ el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,
 
 ###########################################################################
 errorexit(){
-    $guitool --error --text="$( cat "${temp_error}" )"
+    $guitool --error --text="Error, $( cat "${temp_error}" )"
 
     rm -f "${temp_error}" 2>/dev/null
     exit 1
@@ -145,9 +145,11 @@ adduserelive(){
 
     passstep
 
+    # this comes from /etc/adduser.conf
     if [[ "$USERGROUPS" = "yes" ]] ; then
         USERGROUP=$username
-        groupadd $USERGROUP 2>"${temp_error}" || errorexit
+        # do not create it or adduser will fail
+        #groupadd $USERGROUP 2>"${temp_error}" || errorexit
     else
         USERGROUP="$USERS_GID"
     fi

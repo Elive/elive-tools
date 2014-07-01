@@ -162,14 +162,18 @@ main(){
         case $quality in
             low)
                 if ! el_dependencies_check "ghostscript" ; then
-                    el_dependencies_install ghostscript
+                    if ! el_dependencies_install ghostscript ; then
+                        exit 1
+                    fi
                 fi
 
                 shrink "$file" "${tempdir}/$filename"
                 ;;
             high)
                 if ! el_dependencies_check "qpdf" ; then
-                    el_dependencies_install qpdf
+                    if ! el_dependencies_install qpdf ; then
+                        exit 1
+                    fi
                 fi
 
                 qpdf --linearize "$file" "${tempdir}/$filename"

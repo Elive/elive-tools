@@ -404,7 +404,16 @@ EOF
         bash "$temp"
     else
         el_dependencies_check gksu
-        gksu "${temp}"
+        # multiple gksu attempts
+        for i in 1 2 3 4 5
+        do
+            if gksu "$temp" ; then
+                break
+            else
+                return 1
+            fi
+        done
+
     fi
     rm -f "${temp}"
 
@@ -456,7 +465,19 @@ el_aptget_update(){
             else
                 if [[ -n "$DISPLAY" ]] ; then
                     el_dependencies_check gksu
-                    gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    #gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    # multiple gksu attempts
+                    for i in 1 2 3 4 5
+                    do
+                        if gksu "$temp" ; then
+                            if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
+                                break
+                            fi
+                        else
+                            return 1
+                        fi
+                    done
+
                 else
                     su -c "apt-get update || apt-get update" root
                 fi
@@ -673,7 +694,17 @@ el_sudo(){
     else
         if [[ -n "$DISPLAY" ]] ; then
             el_dependencies_check gksu
-            gksu "$@"
+
+            # multiple gksu attempts
+            for i in 1 2 3 4 5
+            do
+                if gksu "$@" ; then
+                    break
+                else
+                    return 1
+                fi
+            done
+
         else
             su -c "$@" root
         fi
@@ -1097,12 +1128,30 @@ el_group_add(){
     # }}}
     if ! el_group_check "${group}" ; then
         el_dependencies_check gksu
-        gksu "adduser ${USER} ${group}"
+        # multiple gksu attempts
+        for i in 1 2 3 4 5
+        do
+            if gksu "adduser $USER $group" ; then
+                break
+            else
+                return 1
+            fi
+        done
+
 
         # try again if not reached
         if ! el_group_check "${group}" ; then
             el_dependencies_check gksu
-            gksu "adduser ${USER} ${group}"
+            # multiple gksu attempts
+            for i in 1 2 3 4 5
+            do
+                if gksu "adduser $USER $group" ; then
+                    break
+                else
+                    return 1
+                fi
+            done
+
         fi
 
         # inform that a reboot is needed

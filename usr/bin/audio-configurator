@@ -21,7 +21,9 @@ main(){
     local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode
 
     if ! el_dependencies_check zenity ; then
-        el_dependencies_install zenity
+        if ! el_dependencies_install zenity ; then
+            exit 1
+        fi
     fi
 
     # }}}

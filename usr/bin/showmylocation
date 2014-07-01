@@ -5,7 +5,9 @@ main(){
     # pre {{{
 
     if ! el_dependencies_check curl ; then
-        el_dependencies_install curl
+        if ! el_dependencies_install curl ; then
+            exit 1
+        fi
     fi
 
     if ! el_verify_internet ; then

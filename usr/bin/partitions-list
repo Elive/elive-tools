@@ -167,7 +167,9 @@ main(){
     # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
 
     if ! el_dependencies_check "udevadm" ; then
-        el_dependencies_install udev
+        if ! el_dependencies_install udev ; then
+            exit 1
+        fi
     fi
 
 

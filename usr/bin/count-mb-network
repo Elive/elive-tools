@@ -5,7 +5,9 @@ main(){
     # pre {{{
     local input output Bi Bo
     if ! el_dependencies_check iptables ; then
-        el_dependencies_install iptables
+        if ! el_dependencies_install iptables ; then
+            exit 1
+        fi
     fi
 
     # }}}

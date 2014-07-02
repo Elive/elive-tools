@@ -1,0 +1,90 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+# Usage
+#if [[ -z "${1}" ]] ; then
+#echo -e "Usage: $(basename $BASH_SOURCE) options"
+#echo -e "where:"
+#echo -e "-nomic  no mic"
+#echo -e "-mic    use mic"
+#exit 1
+#fi
+
+
+main(){
+    # pre {{{
+    local option
+    local tempfile
+
+    # }}}
+
+    #case $option in
+    #-mic)
+    #options="$options"
+    #;;
+#-nomic)
+    #;;
+    #esac
+
+    el_set_display_variables
+    if ! el_dependencies_check "ffmpeg" ; then
+        if ! el_dependencies_install "ffmpeg" ; then
+            exit 1
+        fi
+    fi
+
+    resolution="$(el_resolution_get)"
+    resolution_x="$( echo "$resolution" | sed 's|x.*$||g' )"
+    resolution_y="$( echo "$resolution" | sed 's|^.*x||g' )"
+
+    if [[ "$( echo $resolution | sed 's|^.*x||g' )" -gt 1080 ]] ; then
+        if el_confirm "$resolution_y seems to be too big for a real screen (xinerama?)\nDo you want to use half of it?" ; then
+            resolution="${resolution_x}x$(( $resolution_y / 2 ))"
+        fi
+    fi
+
+    tempfile="$(tempfile -p "video-" -s ".avi")"
+    rm -f "$tempfile" # it will be created later, but we have the name
+
+    echo -e "Going to record, press 'q' for finish, starting in:"
+    #echo -en "\r5" ; sleep 1
+    #echo -en "\r4" ; sleep 1
+    echo -en "\r3" ; sleep 1
+    echo -en "\r2" ; sleep 1
+    echo -en "\r1" ; sleep 1
+    echo -en "\r0\n"
+    #-f alsa -ac 2 -ab 128k -i default
+
+    ffmpeg -v warning -f x11grab \
+        -s $resolution -i $DISPLAY \
+        -sameq -r 30000/1001 \
+        -vcodec libx264 -crf 22 -preset ultrafast -pix_fmt yuvj420p -tune grain \
+        -threads 2 "$tempfile"
+
+    # use crf 0 for better quality, more info:
+    #    https://trac.ffmpeg.org/wiki/x264EncodingGuide
+
+    # use this only for "real colors", very huge video results
+    #ffmpeg -v warning -f x11grab -s $resolution -r 30000/1001 -i $DISPLAY -vcodec rawvideo -pix_fmt yuv420p -threads 2 "$tempfile.y4m"
+
+    echo -e "\nVideo saved as $tempfile"
+    el_explain 0 "\nVideo saved at __${tempfile}__"
+    el_explain 0 "Press enter to Play it"
+    read nada
+
+    mplayer -fs "${tempfile}"
+
+    if el_confirm "Delete video?" ; then
+        rm -f "${tempfile}"
+    else
+        el_explain 0 "\nVideo saved at __${tempfile} with $(du -hs "$tempfile" | awk '{print $1}' )__"
+    fi
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

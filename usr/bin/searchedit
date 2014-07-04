@@ -31,7 +31,7 @@ main(){
 
     if [[ "$( echo "$matches" | wc -l )" -eq 1 ]] ; then
         echo "Found:"
-        echo "$matches"
+        echo "$matches" | grep --color=auto "$filename"
         echo ""
         el_explain 0 "going to run __${EDITOR}__, press __Enter__ to continue"
         read nothing

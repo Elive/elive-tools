@@ -1,0 +1,56 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local filename match matches
+
+    filename="$1"
+    shift
+    # }}}
+
+    # Usage
+    if [[ -z "${filename}" ]] ; then
+        echo -e "This tool searches a file from your actual directory recursively, if found only one match it directly edits it with your EDITOR variable, otherwise it will return an error showing you the possible matches"
+        echo -e "Usage: $(basename $BASH_SOURCE) filename"
+        exit 1
+    fi
+
+    if [[ -z "$EDITOR" ]] ; then
+        el_warning "EDITOR variable is not set, please assign it to your .bashrc / .zshrc"
+        if [[ -x "/usr/bin/vim" ]] ; then
+            el_warning "we will fallback to vim"
+            EDITOR="vim"
+        else
+            el_warning "we will fallback to nano"
+            EDITOR=nano
+        fi
+    fi
+
+    matches="$( find . -type f -iname '*'$filename'*' \( -not -path '*'.git'*' -not -path '*'.svn'*' \) )"
+
+    if [[ "$( echo "$matches" | wc -l )" -eq 1 ]] ; then
+        echo "Found:"
+        echo "$matches"
+        echo ""
+        el_explain 0 "going to run __${EDITOR}__, press __Enter__ to continue"
+        read nothing
+
+        $EDITOR "$matches"
+    fi
+
+    if [[ "$( echo "$matches" | wc -l )" -gt 1 ]] ; then
+        echo -e "\nMatches found:"
+        echo "$matches" | grep --color=auto "$filename"
+        echo -e "\nPlease be more precise"
+        el_explain 0 "Tip: If you recently edited the file you can also use the :MRU feature in vim"
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

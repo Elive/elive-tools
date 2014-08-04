@@ -141,6 +141,7 @@ EOF
 
         if ! ((is_quiet_mode)) ; then
             $guitool --info --text="$( eval_gettext "Your system is ready to use your audio card, please restart your audio applications" )"
+            $guitool --info --text="$( eval_gettext "To raise and decrease the volume use your keyboard hotkeys, if they don't works you can configure them in your Enlightenment hotkey preferences." )"
         fi
 
     fi

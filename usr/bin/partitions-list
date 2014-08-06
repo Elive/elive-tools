@@ -32,23 +32,25 @@ get_all_partitions_list(){
         done
 
         # any logical volume (real partition inside lvm2 setup) to add?
-        #for lvname in $( LC_ALL=C lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
-        #do
-            ## remove extra leading blank chars
-            #read -r lvname <<< "$lvname"
-            #[[ ! -b "${lvname}" ]] && continue || true
-            #el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
-            #el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
-        #done
-        # this one seems to be more standard:
-        while read -ru 3 lvname
+        for lvname in $( LC_ALL=C lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
         do
             # remove extra leading blank chars
             read -r lvname <<< "$lvname"
             [[ ! -b "${lvname}" ]] && continue || true
             el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
             el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
-        done 3<<< "$( LVM_SUPPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name,lv_name | sed "s|-|--|g;s|^[[:space:]]*\(.*\):\(.*\)$|/dev/mapper/\1-\2|" )"
+        done
+
+        # this one seems to be more standard:
+        # note: this is the way os-prober does it, but seems like linux mint 17 is configured when installed like the previous mode, actually im looking a migration-mode of the installer that is unable to boot on that setup so let's try to use back the old mode ^
+        #while read -ru 3 lvname
+        #do
+            ## remove extra leading blank chars
+            #read -r lvname <<< "$lvname"
+            #[[ ! -b "${lvname}" ]] && continue || true
+            #el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
+            #el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
+        #done 3<<< "$( LVM_SUPPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name,lv_name | sed "s|-|--|g;s|^[[:space:]]*\(.*\):\(.*\)$|/dev/mapper/\1-\2|" )"
         unset lvname pvname
     fi
 

@@ -840,8 +840,10 @@ el_check_version_development_is_days_recent(){
 
     date_builded_m="${date_builded%-*}"
     date_builded_m="${date_builded_m#*-}"
+    date_builded_m="${date_builded_m#0}"
 
     date_builded_d="${date_builded##*-}"
+    date_builded_d="${date_builded_d#0}"
 
     date_builded_total_days="$(( ${date_builded_m} * 30 + ${date_builded_d} ))"
     date_builded_total_days="$(( ${date_builded_y} * 365 + ${date_builded_total_days} ))"

@@ -1,0 +1,349 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+el_make_environment
+#. gettext.sh
+#TEXTDOMAIN=""
+#export TEXTDOMAIN
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_cherry_pick
+#   DESCRIPTION:    run a cherry-pick to the commit_id variable, run helpers if something fails
+#===============================================================================
+do_cherry_pick(){
+    # pre {{{
+    el_debug
+
+    # }}}
+
+    el_explain 0 "git cherry-pick -x -s '$commit_id'"
+    # TODO: add a menu that asks if abort, mergetool, or shell
+    if ! command git cherry-pick -x -s "$commit_id" ; then
+        el_explain 0 "Oops, something went wrong, shell started, logout for continue"
+        el_explain 0 "Remember: you can use '__git cherry-pick --abort__' or '__git mergetool__'"
+        $SHELL
+    fi
+
+    el_explain 0 "Your actual history is now:"
+    git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -10
+
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  option_show
+#   DESCRIPTION:  show an option to pick in a nice-colored way
+#    PARAMETERS:  $1 = char, $2 = description
+#       RETURNS:  -
+#===============================================================================
+option_show(){
+    # pre {{{
+    local char
+    local description
+    el_debug
+
+    char="$1"
+    description="$2"
+    el_check_variables "char,description"
+
+    # }}}
+
+    echo -e "${el_c_c}${char}  ${el_c_g}${description}${el_c_n}"
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  options_main_interact
+#   DESCRIPTION:
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+options_main_interact(){
+    # pre {{{
+    el_debug
+
+    # }}}
+
+    # TODO: add a "h" option for show extra help of how this works, run it the first time too
+
+    echo -e ""
+    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+    echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
+    option_show "n"         "Next commit"
+    option_show "a"         "Actual commit-id pointer info"
+    option_show "p"         "show Patch/diff/commit contents"
+    option_show "s"         "show misc State info"
+    option_show "i"         "Import this commit (cherry-pick)"
+    if [[ -n "$user_input_backport_branches" ]] ; then
+        option_show "b"         "Backport to: $user_input_backport_branches"
+    else
+        option_show "b"         "Backport it to another branches too (set them as comma-separated)"
+    fi
+    option_show "d"         "Deletes last commit in your branch"
+    option_show "m"         "run Make (useful for check if new code is compatible)"
+    option_show "c"         "set a specific Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
+    if [[ -n "$user_input_command" ]] ; then
+        option_show "r"     "Run:  $user_input_command"
+    fi
+    #option_show "l"         "List nearest commits"
+    option_show "S/R"       "Save / Recover directory state (bkp, to not mess up things)"
+    option_show "q"         "Quit"
+    #option_show "h"         "Info of what does these options"
+    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+
+
+    read -N 1 option
+    echo
+
+
+    case "$option" in
+        n)
+            #el_explain 0 "Saving last commit watched"
+            continue
+            ;;
+        a)
+            command git show --stat "$commit_id"
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        s)
+            echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            # show history
+            lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
+            if [[ -n "$lines" ]] ; then
+                lines="$(( $lines +1 ))"
+                el_explain 0 "Your __not pushed__ changes:"
+
+
+                git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
+            else
+                el_explain 0 "Recent history in your working branch:"
+                git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -20
+
+            fi
+
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            # show status
+            git status
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            # show actual commit-id
+            command git show --stat "$commit_id"
+
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        p)
+            command git show "$commit_id" | lsdiff
+            command git show "$commit_id"
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        i)
+            el_explain 0 "Note: if the cherry-pick fails you can run '__git cherry-pick --abort__' or '__git mergetool__'"
+            do_cherry_pick
+            # return back to main menu
+            $FUNCNAME
+            ;;
+
+        b)
+            el_explain 0 "Note: if the cherry-pick fails you can run '__git cherry-pick --abort__' or '__git mergetool__'"
+            if [[ -n "$user_input_backport_branches" ]] ; then
+
+                while read -ru 3 branch
+                do
+                    command git checkout "$branch"
+                    do_cherry_pick
+                    command git checkout "$branch_working"
+
+                done 3<<< "$( echo "$user_input_backport_branches" | tr ',' '\n' )"
+
+            else
+                read -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
+                read user_input_backport_branches
+            fi
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        d)
+            el_explain 0 "$ git reset --hard HEAD~1"
+            command git reset --hard HEAD~1
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        m)
+            make
+
+            el_speak_text "make complete"
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        c)
+            echo -e "\nPlease enter the command that you want to use:"
+            read -e user_input_command
+            ;;
+        r)
+            if [[ -n "$user_input_command" ]] ; then
+                $user_input_command
+                el_speak_text "finished"
+            fi
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        S)
+            bkp save
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        R)
+            bkp get
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        q)
+            exit
+            ;;
+
+
+        # LAST option
+        *)
+            # return back to main menu because you picked a wrong option accidentally
+            $FUNCNAME
+            ;;
+    esac
+}
+#===  FUNCTION  ================================================================
+#          NAME:  usage_show
+#===============================================================================
+usage_show(){
+    echo ""
+    echo -e "$(basename $0) is a tool to watch what recently happened to a git repository and gives you some handy features like cherry-picking." 1>&2
+
+    echo -e "Important notes: " 1>&2
+    echo -e " - you must be in the branch where you want to apply the work" 1>&2
+    echo -e " - the last-commit ID is memorized, based on the directory-name and working-branch name" 1>&2
+    echo -e " - check your $HOME/.cache/$(basename $0) if you want to cleanup a conf or state" 1>&2
+
+    echo -e ""
+    echo -e "Options:"
+    option_show "-b" "Branch that you want to track changes"
+
+    echo -e ""
+    echo -e "Example: $(basename $0) -b master" 1>&2
+
+    echo -e ""
+}
+
+main(){
+    # pre {{{
+
+    # get the working branch name
+    branch_working="$(command git symbolic-ref HEAD )"
+    branch_working="${branch_working#refs/heads/}"
+    # }}}
+
+    # input parameters {{{
+
+    while getopts "b:" opt ; do
+        case "$opt" in
+            b)
+                branch_watch="$OPTARG"
+                ;;
+            \?|*)
+                echo ""
+                #echo "Invalid option" 1>&2
+                usage_show
+                exit
+                ;;
+            :)
+                echo ""
+                #echo "Option -$OPTARG requires an argument" 1>&2
+                usage_show
+                exit
+                ;;
+        esac
+    done
+
+    # - input parameters }}}
+    # configurations saved {{{
+    conf_d="$HOME/.cache/$(basename $0)"
+
+    repo_id="$(pwd | sed -e 's|/|%|g' )"
+    repo_id="${repo_id}::${branch_working}"
+
+    mkdir -p "$conf_d/$repo_id"
+
+    conf_commit_last_f="${conf_d}/$repo_id/commit_last"
+
+    if [[ -s "$conf_commit_last_f" ]] ; then
+        commit_id_last="$(tail -1 "$conf_commit_last_f" )"
+    else
+        touch "$conf_commit_last_f"
+    fi
+    # - configurations saved }}}
+    # checks {{{
+
+    if ! el_check_variables "branch_working,branch_watch" ; then
+        usage_show
+        exit 1
+    fi
+
+    # - checks }}}
+
+    while read -ru 3 line
+    do
+        # skip until last commit
+        if [[ -n "$commit_id_last" ]] && [[ "$line" != "commit "$commit_id_last ]] && ! ((is_commit_id_last_reached)) ; then
+            continue
+        else
+            is_commit_id_last_reached=1
+        fi
+
+        # get commit
+        if [[ "$line" = "commit "* ]] ; then
+            commit_id="${line#commit }"
+            echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            clear
+
+            # show actual commit
+            command git show --stat "$commit_id"
+
+            # store actual position for future calls of this tool
+            echo "$commit_id" > "$conf_commit_last_f"
+
+            # show main options
+            options_main_interact
+
+        fi
+
+    done 3<<< "$( command git log --reverse "$branch_working".."$branch_watch" )"
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

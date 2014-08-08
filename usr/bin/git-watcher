@@ -268,6 +268,7 @@ main(){
                 ;;
             k)
                 keyword_search="$OPTARG"
+                options_extra_git="-i --grep $keyword_search"
                 ;;
             \?|*)
                 echo ""
@@ -330,24 +331,18 @@ main(){
         # get commit
         if [[ "$line" = "commit "* ]] ; then
 
-            commit_id="${line#commit }"
-
-            # skip until keyword if we are searching for it
-            if [[ -n "$keyword_search" ]] ; then
-                if ! git show --stat "$commit_id" | LC_ALL=C grep -iqs "$keyword_search" ; then
-                    continue
-                fi
-            fi
+            #commit_id="${line#commit }"
 
             counter="$(( $counter + 1 ))"
 
             echo -en "\r${el_c_b}Calculating commits: \t${el_c_y}$counter   ${el_c_n}"
         fi
 
-    done 3<<< "$( command git log --reverse "$branch_working".."$branch_watch" )"
+    done 3<<< "$( command git log $options_extra_git --reverse "$branch_working".."$branch_watch" )"
     echo ""
 
 
+    # loop
     while read -ru 3 line
     do
         # skip until last commit
@@ -361,13 +356,6 @@ main(){
         if [[ "$line" = "commit "* ]] ; then
 
             commit_id="${line#commit }"
-
-            # skip until keyword if we are searching for it
-            if [[ -n "$keyword_search" ]] ; then
-                if ! git show --stat "$commit_id" | grep -iqs "$keyword_search" ; then
-                    continue
-                fi
-            fi
 
 
             #
@@ -390,7 +378,7 @@ main(){
             # show counter, once
             if [[ -n "$counter" ]] ; then
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-                echo -e "${el_c_y} $counter ${el_c_g} Remaining commits to review${el_c_n}"
+                echo -e "${el_c_y} $counter ${el_c_g} Remaining commits  ${el_c_n}"
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
                 unset counter
             fi
@@ -406,7 +394,7 @@ main(){
 
         fi
 
-    done 3<<< "$( command git log --reverse "$branch_working".."$branch_watch" )"
+    done 3<<< "$( command git log $options_extra_git --reverse "$branch_working".."$branch_watch" )"
 }
 
 #

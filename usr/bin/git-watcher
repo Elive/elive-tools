@@ -191,12 +191,13 @@ options_main_interact(){
             ;;
         c)
             echo -e "\nPlease enter the command that you want to use:"
+            echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
             read -e user_input_command
             ;;
         r)
             if [[ -n "$user_input_command" ]] ; then
                 $user_input_command
-                el_speak_text "finished"
+                el_speak_text "run finished"
             fi
 
             # return back to main menu
@@ -375,12 +376,12 @@ main(){
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             clear
 
-            # show counter, once
+            # show counter
             if [[ -n "$counter" ]] ; then
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
                 echo -e "${el_c_y} $counter ${el_c_g} Remaining commits  ${el_c_n}"
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-                unset counter
+                counter="$(( $counter - 1 ))"
             fi
 
             # show actual commit

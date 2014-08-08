@@ -17,11 +17,18 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick -x -s '$commit_id'"
     # TODO: add a menu that asks if abort, mergetool, or shell
-    if ! command git cherry-pick -x -s "$commit_id" ; then
+    if command git cherry-pick -x -s "$commit_id" ; then
+        el_explain 0 "Successfully applied! Press Enter..."
+        read nothing
+
+        # store actual position for future calls of this tool
+        echo "$commit_id" > "$conf_commit_last_f"
+    else
         el_explain 0 "Oops, something went wrong, shell started, logout for continue"
         el_explain 0 "Remember: you can use '__git cherry-pick --abort__' or '__git mergetool__'"
         $SHELL
     fi
+
 
     el_explain 0 "Your actual history is now:"
     git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -10
@@ -64,8 +71,6 @@ options_main_interact(){
 
     # TODO: add a "h" option for show extra help of how this works, run it the first time too
 
-    # TODO: e for Edit the files, useful to read what else teh code does
-
     echo -e ""
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
@@ -73,6 +78,7 @@ options_main_interact(){
     option_show "a"         "Actual commit-id pointer info"
     option_show "p"         "show Patch/diff/commit contents"
     option_show "s"         "show misc State info"
+    option_show "e"         "Edit the files affected by this commit, useful to understand the overall code"
     option_show "i"         "Import this commit (cherry-pick)"
     if [[ -n "$user_input_backport_branches" ]] ; then
         option_show "b"         "Backport to: $user_input_backport_branches"
@@ -142,8 +148,29 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        p)
+        e)
+            if [[ -z "$EDITOR" ]] ; then
+                echo -e "Set the editor (command) that you want to use"
+                read EDITOR
+            fi
+
+            # edit files
+            $EDITOR $(git show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )
+
+
+            # show back the diff, we always want to see it again
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             command git show "$commit_id" | lsdiff
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            command git show "$commit_id"
+
+            ;;
+        p)
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            command git show "$commit_id" | lsdiff
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
             command git show "$commit_id"
             # return back to main menu
             $FUNCNAME
@@ -151,6 +178,10 @@ options_main_interact(){
         i)
             el_explain 0 "Note: if the cherry-pick fails you can run '__git cherry-pick --abort__' or '__git mergetool__'"
             do_cherry_pick
+
+            # show the last commit, to make sure that we know where we are
+            command git show --stat "$commit_id"
+
             # return back to main menu
             $FUNCNAME
             ;;

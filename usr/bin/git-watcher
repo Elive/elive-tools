@@ -5,6 +5,9 @@ el_make_environment
 #TEXTDOMAIN=""
 #export TEXTDOMAIN
 
+# TODO: alternative to bkp that should be faster, try git stage
+            # FIXME: the state is not correctly saved
+
 #===  FUNCTION  ================================================================
 #          NAME:  do_cherry_pick
 #   DESCRIPTION:    run a cherry-pick to the commit_id variable, run helpers if something fails
@@ -150,6 +153,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         e)
+            # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
                 echo -e "Set the editor (command) that you want to use"
                 read EDITOR
@@ -170,6 +174,8 @@ options_main_interact(){
             $FUNCNAME
             ;;
         p)
+            # FIXME: put a clear_screen function, call it from misc locations like this one
+            # FIXME: able to call this function with the given parameter, which doesntt show the help but directly triggers tthe actionf, like this next "show patch" stuff
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             command git show "$commit_id" | lsdiff
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -277,6 +283,7 @@ usage_show(){
     echo -e "Options:"
     option_show "-b" "Branch that you want to track changes"
     option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
+    option_show "-f" "Files where to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
 
     echo -e ""
     echo -e "Example: $(basename $0) -b master" 1>&2
@@ -296,14 +303,18 @@ main(){
 
     # input parameters {{{
 
-    while getopts "b:k:" opt ; do
+    while getopts "b:k:f:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
                 ;;
             k)
                 keyword_search="$OPTARG"
-                options_extra_git="-i --grep $keyword_search"
+                options_extra_git_before="-i --grep $keyword_search $options_extra_git_before"
+                ;;
+            f)
+                files_search="$OPTARG"
+                options_extra_git_after="${files_search//,/ } $options_extra_git_after"
                 ;;
             \?|*)
                 echo ""
@@ -327,11 +338,7 @@ main(){
     repo_id="$(pwd | sed -e 's|/|%|g' )"
 
     # append keyword in conf file if we have it
-    if [[ -n "$keyword_search" ]] ; then
-        repo_id="${repo_id}::${branch_working}::${keyword_search}"
-    else
-        repo_id="${repo_id}::${branch_working}"
-    fi
+    repo_id="${repo_id}::${branch_working}::${keyword_search}::${files_search}"
 
 
     mkdir -p "$conf_d/$repo_id"
@@ -340,8 +347,6 @@ main(){
 
     if [[ -s "$conf_commit_last_f" ]] ; then
         commit_id_last="$(tail -1 "$conf_commit_last_f" )"
-    else
-        touch "$conf_commit_last_f"
     fi
     # - configurations saved }}}
     # checks {{{
@@ -373,7 +378,7 @@ main(){
             echo -en "\r${el_c_b}Calculating commits: \t${el_c_y}$counter   ${el_c_n}"
         fi
 
-    done 3<<< "$( command git log $options_extra_git --reverse "$branch_working".."$branch_watch" )"
+    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
     echo ""
 
 
@@ -381,10 +386,16 @@ main(){
     while read -ru 3 line
     do
         # skip until last commit
-        if [[ -n "$commit_id_last" ]] && [[ "$line" != "commit "$commit_id_last ]] && ! ((is_commit_id_last_reached)) ; then
+        if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
+
+            # FIXME: the state is not correctly saved
+            if [[ "$line" = "commit "$commit_id_last ]] ; then
+                is_commit_id_last_reached=1
+            else
+                counter="$(( $counter - 1 ))"
+            fi
+
             continue
-        else
-            is_commit_id_last_reached=1
         fi
 
         # get commit
@@ -413,6 +424,10 @@ main(){
             # show counter
             if [[ -n "$counter" ]] ; then
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+                if [[ -n "$commit_id_last" ]] && ! ((is_continue_info_show)) ; then
+                    echo -e "${el_c_y} Continuing from last tracked commit: ${el_c_g}$commit_id_last${el_c_n}"
+                    is_continue_info_show=1
+                fi
                 echo -e "${el_c_y} $counter ${el_c_g} Remaining commits  ${el_c_n}"
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
                 counter="$(( $counter - 1 ))"
@@ -429,7 +444,7 @@ main(){
 
         fi
 
-    done 3<<< "$( command git log $options_extra_git --reverse "$branch_working".."$branch_watch" )"
+    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
 }
 
 #

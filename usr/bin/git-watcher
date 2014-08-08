@@ -255,6 +255,8 @@ main(){
     # get the working branch name
     branch_working="$(command git symbolic-ref HEAD )"
     branch_working="${branch_working#refs/heads/}"
+
+    unset counter
     # }}}
 
     # input parameters {{{
@@ -315,6 +317,37 @@ main(){
 
     # - checks }}}
 
+    # pre-statistics a bit
+    while read -ru 3 line
+    do
+        # skip until last commit
+        if [[ -n "$commit_id_last" ]] && [[ "$line" != "commit "$commit_id_last ]] && ! ((is_commit_id_last_reached)) ; then
+            continue
+        else
+            is_commit_id_last_reached=1
+        fi
+
+        # get commit
+        if [[ "$line" = "commit "* ]] ; then
+
+            commit_id="${line#commit }"
+
+            # skip until keyword if we are searching for it
+            if [[ -n "$keyword_search" ]] ; then
+                if ! git show --stat "$commit_id" | LC_ALL=C grep -iqs "$keyword_search" ; then
+                    continue
+                fi
+            fi
+
+            counter="$(( $counter + 1 ))"
+
+            echo -en "\r${el_c_b}Calculating commits: \t${el_c_y}$counter   ${el_c_n}"
+        fi
+
+    done 3<<< "$( command git log --reverse "$branch_working".."$branch_watch" )"
+    echo ""
+
+
     while read -ru 3 line
     do
         # skip until last commit
@@ -353,6 +386,14 @@ main(){
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             clear
+
+            # show counter, once
+            if [[ -n "$counter" ]] ; then
+                echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+                echo -e "${el_c_y} $counter ${el_c_g} Remaining commits to review${el_c_n}"
+                echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+                unset counter
+            fi
 
             # show actual commit
             command git show --stat "$commit_id"

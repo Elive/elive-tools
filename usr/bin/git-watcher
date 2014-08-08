@@ -64,6 +64,8 @@ options_main_interact(){
 
     # TODO: add a "h" option for show extra help of how this works, run it the first time too
 
+    # TODO: e for Edit the files, useful to read what else teh code does
+
     echo -e ""
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
@@ -233,12 +235,13 @@ usage_show(){
 
     echo -e "Important notes: " 1>&2
     echo -e " - you must be in the branch where you want to apply the work" 1>&2
-    echo -e " - the last-commit ID is memorized, based on the directory-name and working-branch name" 1>&2
+    echo -e " - the last-commit ID is memorized, based on the directory-name/working-branch/keyword name" 1>&2
     echo -e " - check your $HOME/.cache/$(basename $0) if you want to cleanup a conf or state" 1>&2
 
     echo -e ""
     echo -e "Options:"
     option_show "-b" "Branch that you want to track changes"
+    option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
 
     echo -e ""
     echo -e "Example: $(basename $0) -b master" 1>&2
@@ -256,10 +259,13 @@ main(){
 
     # input parameters {{{
 
-    while getopts "b:" opt ; do
+    while getopts "b:k:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
+                ;;
+            k)
+                keyword_search="$OPTARG"
                 ;;
             \?|*)
                 echo ""
@@ -278,10 +284,17 @@ main(){
 
     # - input parameters }}}
     # configurations saved {{{
-    conf_d="$HOME/.cache/$(basename $0)"
+    conf_d="$HOME/.config/$(basename $0)"
 
     repo_id="$(pwd | sed -e 's|/|%|g' )"
-    repo_id="${repo_id}::${branch_working}"
+
+    # append keyword in conf file if we have it
+    if [[ -n "$keyword_search" ]] ; then
+        repo_id="${repo_id}::${branch_working}::${keyword_search}"
+    else
+        repo_id="${repo_id}::${branch_working}"
+    fi
+
 
     mkdir -p "$conf_d/$repo_id"
 
@@ -313,7 +326,22 @@ main(){
 
         # get commit
         if [[ "$line" = "commit "* ]] ; then
+
             commit_id="${line#commit }"
+
+            # skip until keyword if we are searching for it
+            if [[ -n "$keyword_search" ]] ; then
+                if ! git show --stat "$commit_id" | grep -iqs "$keyword_search" ; then
+                    continue
+                fi
+            fi
+
+
+            #
+            #  SHOW
+            #
+
+            # clear is not enough, if you scroll back you can see old things, reset is too slow, so let's put some huge separator instead
             echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
             echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
             echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"

@@ -70,6 +70,7 @@ options_main_interact(){
     # }}}
 
     # TODO: add a "h" option for show extra help of how this works, run it the first time too
+    # TODO: add a feature to watch specific files only
 
     echo -e ""
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -165,6 +166,8 @@ options_main_interact(){
 
             command git show "$commit_id"
 
+            # return back to main menu
+            $FUNCNAME
             ;;
         p)
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"

@@ -1,9 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 el_make_environment
-#. gettext.sh
-#TEXTDOMAIN=""
-#export TEXTDOMAIN
 
 # TODO: alternative to bkp that should be faster, try git stage
             # FIXME: the state is not correctly saved

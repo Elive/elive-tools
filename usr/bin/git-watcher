@@ -4,6 +4,34 @@ el_make_environment
 
 # TODO: alternative to bkp that should be faster, try git stage
             # FIXME: the state is not correctly saved
+#===  FUNCTION  ================================================================
+#          NAME:  show_history
+#   DESCRIPTION:  show last history if any
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+show_history(){
+    # pre {{{
+    el_debug
+    local lines
+
+    # }}}
+    el_explain 0 "Your actual history is now:"
+
+    lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
+    if [[ -n "$lines" ]] ; then
+        lines="$(( $lines +1 ))"
+        el_explain 0 "Your __not pushed__ changes:"
+
+
+        git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
+    else
+        el_explain 0 "Recent history in your working branch:"
+        git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -20
+
+    fi
+
+}
 
 #===  FUNCTION  ================================================================
 #          NAME:  do_cherry_pick
@@ -29,10 +57,7 @@ do_cherry_pick(){
         $SHELL
     fi
 
-
-    el_explain 0 "Your actual history is now:"
-    git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -10
-
+    show_history
 
 }
 #===  FUNCTION  ================================================================
@@ -122,19 +147,7 @@ options_main_interact(){
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
             # show history
-            lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
-            if [[ -n "$lines" ]] ; then
-                lines="$(( $lines +1 ))"
-                el_explain 0 "Your __not pushed__ changes:"
-
-
-                git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
-            else
-                el_explain 0 "Recent history in your working branch:"
-                git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -20
-
-            fi
-
+            show_history
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
             # show status

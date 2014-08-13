@@ -358,17 +358,8 @@ main(){
     # pre-statistics a bit
     while read -ru 3 line
     do
-        # skip until last commit
-        if [[ -n "$commit_id_last" ]] && [[ "$line" != "commit "$commit_id_last ]] && ! ((is_commit_id_last_reached)) ; then
-            continue
-        else
-            is_commit_id_last_reached=1
-        fi
-
-        # get commit
+        # get commit line
         if [[ "$line" = "commit "* ]] ; then
-
-            #commit_id="${line#commit }"
 
             counter="$(( $counter + 1 ))"
 
@@ -382,21 +373,22 @@ main(){
     # loop
     while read -ru 3 line
     do
-        # skip until last commit
-        if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
-
-            # FIXME: the state is not correctly saved
-            if [[ "$line" = "commit "$commit_id_last ]] ; then
-                is_commit_id_last_reached=1
-            else
-                counter="$(( $counter - 1 ))"
-            fi
-
-            continue
-        fi
-
         # get commit
         if [[ "$line" = "commit "* ]] ; then
+
+            # always count another commit
+            counter="$(( $counter - 1 ))"
+
+            # skip until last commit
+            if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
+                if [[ "$line" = "commit "$commit_id_last ]] ; then
+                    is_commit_id_last_reached=1
+                else
+                    # loop until we reach the desired commit
+                    continue
+                fi
+            fi
+
 
             commit_id="${line#commit }"
 
@@ -427,7 +419,6 @@ main(){
                 fi
                 echo -e "${el_c_y} $counter ${el_c_g} Remaining commits  ${el_c_n}"
                 echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-                counter="$(( $counter - 1 ))"
             fi
 
             # show actual commit

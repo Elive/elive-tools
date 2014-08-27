@@ -33,7 +33,7 @@ chroot_layers_mount(){
 
     # }}}
 
-    if el_flag check "chroot_layer_prepared" ; then
+    if el_flag check "chroot_layer_prepared_$id" ; then
         el_explain 3 "chroot layers already mounted"
         return
     fi
@@ -155,7 +155,7 @@ chroot_layers_mount(){
     el_explain 2 "Layers for chroot ready"
 
     # add a flag
-    el_flag add "chroot_layer_prepared"
+    el_flag add "chroot_layer_prepared_$id"
 
 
 }
@@ -174,8 +174,10 @@ chroot_layers_umount(){
     dir="$1"
     id="$2"
     mode="$3"
-    el_check_variables "dir"
-    el_check_dirs "$dir"
+
+    if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
+        exit 1
+    fi
 
     if [[ "${UID}" != "0" ]] ; then
         el_error "must require root privileges"
@@ -190,7 +192,7 @@ chroot_layers_umount(){
 
     # }}}
 
-    if ! el_flag check "chroot_layer_prepared" ; then
+    if ! el_flag check "chroot_layer_prepared_$id" ; then
         el_explain 3 "chroot layers already umounted"
         return
     fi
@@ -321,7 +323,7 @@ chroot_layers_umount(){
     el_explain 2 "Layers for chroot umounted"
 
     # remove the flag
-    el_flag del "chroot_layer_prepared"
+    el_flag del "chroot_layer_prepared_$id"
 
 }
 

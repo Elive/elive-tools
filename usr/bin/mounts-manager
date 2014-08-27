@@ -355,6 +355,7 @@ get_mountpoint(){
 
     mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     read -r mountpoint <<< "$mountpoint"
+    mountpoint="$(readlink -f "$mountpoint" )"
 
     # not mounted ? mount it first
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -369,6 +370,7 @@ get_mountpoint(){
             mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
             # remove extra leading blank chars
             read -r mountpoint <<< "$mountpoint"
+            mountpoint="$(readlink -f "$mountpoint" )"
             # umount it
             if [[ -n "$mountpoint" ]] ; then
                 el_umount "$mountpoint" 1>/dev/null
@@ -421,11 +423,15 @@ check_is_mounted(){
     else
         is_mountpoint=1
         mountpoint="${arg%/}"
+        mountpoint="$(readlink -f "$mountpoint" )"
     fi
 
 
     if ((is_mountpoint)) ; then
+        #if LC_ALL=C grep -qs " ${mountpoint} " /proc/mounts ; then
+        # this should be a more reliable way, more regex
         if LC_ALL=C mount | grep -qs "on ${mountpoint} type" ; then
+
             el_debug "Mountpoint $mountpoint mounted"
             echo "Mounted"
             return 0
@@ -494,6 +500,7 @@ el_umount(){
         else
             is_mountpoint=1
             mountpoint="${arg%/}"
+            mountpoint="$(readlink -f "$mountpoint" )"
         fi
 
         if ((is_mountpoint)) && ! check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then

@@ -78,6 +78,14 @@ chroot_layers_mount(){
         mount sysfs-$id -t sysfs "${dir}/sys" || true
     fi
 
+    # dbus
+    if ((is_mode_bind)) ; then
+        mkdir -p "$dir/run/dbus"
+        mount --bind "/run/dbus" "${dir}/run/dbus"
+        # enable access to graphical system too
+        xhost local:localhost 1>/dev/null
+    fi
+
     # debian chroot mark
     mkdir -p "$dir/etc"
     echo "live" > "${dir}/etc/debian_chroot"
@@ -144,7 +152,7 @@ chroot_layers_mount(){
         chmod 755 "$dir/bin/hostname"
     fi
 
-    echo "Layers for chroot $dir are now ready"
+    el_explain 2 "Layers for chroot ready"
 
     # add a flag
     el_flag add "chroot_layer_prepared"
@@ -245,6 +253,14 @@ chroot_layers_umount(){
             umount "$dir/sys"
         fi
     fi
+    # dbus
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/dbus"
+            xhost -local:localhost 1>/dev/null
+        fi
+    fi
+
 
     # debian chroot mark
     rm -f "${dir}/etc/debian_chroot"
@@ -302,7 +318,7 @@ chroot_layers_umount(){
         chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
     fi
 
-    echo "Layers for chroot $dir are umounted"
+    el_explain 2 "Layers for chroot umounted"
 
     # remove the flag
     el_flag del "chroot_layer_prepared"

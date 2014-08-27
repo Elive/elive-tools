@@ -9,11 +9,12 @@ source /usr/lib/elive-tools/functions
 #===============================================================================
 chroot_layers_mount(){
     # pre {{{
-    local dir id mode is_mode_bind
+    local dir id dirid mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return
 
     dir="$1"
+    dirid="${dir//\//%}"
     id="$2"
     mode="$3"
     if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
@@ -33,7 +34,7 @@ chroot_layers_mount(){
 
     # }}}
 
-    if el_flag check "chroot_layer_prepared_$id" ; then
+    if el_flag check "chroot_layer_prepared__$dirid" ; then
         el_explain 3 "chroot layers already mounted"
         return
     fi
@@ -155,7 +156,7 @@ chroot_layers_mount(){
     el_explain 2 "Layers for chroot ready"
 
     # add a flag
-    el_flag add "chroot_layer_prepared_$id"
+    el_flag add "chroot_layer_prepared__$dirid"
 
 
 }
@@ -167,11 +168,12 @@ chroot_layers_mount(){
 #===============================================================================
 chroot_layers_umount(){
     # pre {{{
-    local dir id mode is_mode_bind
+    local dir id dirid mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return
 
     dir="$1"
+    dirid="${dir//\//%}"
     id="$2"
     mode="$3"
 
@@ -192,7 +194,7 @@ chroot_layers_umount(){
 
     # }}}
 
-    if ! el_flag check "chroot_layer_prepared_$id" ; then
+    if ! el_flag check "chroot_layer_prepared__$dirid" ; then
         el_explain 3 "chroot layers already umounted"
         return
     fi
@@ -323,7 +325,7 @@ chroot_layers_umount(){
     el_explain 2 "Layers for chroot umounted"
 
     # remove the flag
-    el_flag del "chroot_layer_prepared_$id"
+    el_flag del "chroot_layer_prepared__$dirid"
 
 }
 

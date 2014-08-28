@@ -1,0 +1,70 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file from to rate
+
+    from="${1%/}"
+    to="${2%/}"
+
+    # Usage
+    if [[ -z "${2}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) from-dir to-dir"
+        exit 1
+    fi
+
+    if ! el_dependencies_check "lame" ; then
+        el_dependencies_install lame
+    fi
+
+    # }}}
+
+    while read -ru 3 file
+    do
+        dest="${to}/$( dirname "$file" )"
+        if [[ -s "$dest/$( basename "$file" )" ]] ; then
+            el_explain 0 "skipping $(basename "$file" )"
+            continue
+        fi
+
+        mkdir -p "$dest"
+
+        rate="$( eyeD3 "$file" | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
+
+
+        if [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; then
+            #echo convert "$file"
+            el_explain 0 "converting $(basename "$file" )"
+
+            # v4 for a much more quality (flac converter)
+            lame --quiet -vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"
+
+
+            # file is bigger OR file is less than 800 kb (which should be broken in conversion) --> copy back the original one
+            if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -lt "$( du -s "$file" | awk '{print $1}' )" ]] \
+                || [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
+                # add a visual mark (ls) to see that we have converted it
+                chmod +x "$dest/$( basename "$file" )"
+            else
+                if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
+                    el_explain 0 "Oops, resulting file was bigger, using copy instead"
+                else
+                    el_explain 0 "Less than 800 kb, maybe broken file, copying back the original one"
+                fi
+                cp "$file" "$dest"
+            fi
+
+        else
+            el_explain 0 "copied $(basename "$file" )"
+            cp "$file" "$dest"
+        fi
+    done 3<<< "$( find "$from" -type f -iname '*'.mp3 | sed -e 's|^\./||g' )"
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

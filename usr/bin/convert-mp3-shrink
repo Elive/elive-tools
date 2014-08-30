@@ -38,6 +38,7 @@ main(){
             el_explain 0 "converting $(basename "$file" )"
 
             # v4 for a much more quality (flac converter)
+            cat "$file" > /dev/null
             lame --quiet -vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"
 
 

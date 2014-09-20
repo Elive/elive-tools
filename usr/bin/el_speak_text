@@ -63,7 +63,7 @@ main(){
 #
 #  MAIN
 #
-#el_dependencies_check "text2wave,play,sox,iconv"
+el_dependencies_check "text2wave,play,sox,iconv"
 
 { main "$@" & disown ; } 2>/dev/null
 #main "$@"

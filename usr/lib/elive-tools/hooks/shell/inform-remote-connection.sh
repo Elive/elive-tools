@@ -68,7 +68,7 @@ if [[ "$want_exit" != "yes" ]] ; then
 
     # ignore if invalid country
     if [[ "${SSH_REMOTE_COUNTRY}" = "Reserved" ]] ; then
-        unset SSH_REMOTE_COUNTRY SSH_REMOTE_DATA SSH_REMOTE_CITY SSH_REMOTE_REGION SSH_REMOTE_IP
+        unset SSH_REMOTE_COUNTRY SSH_REMOTE_CITY SSH_REMOTE_REGION
         want_exit="yes"
     fi
 

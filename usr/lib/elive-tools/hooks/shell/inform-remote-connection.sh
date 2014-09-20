@@ -1,12 +1,12 @@
 # which remote ip?
-if [[ -n "$SSH_CLIENT" ]] ; then
+if [ -n "$SSH_CLIENT" ] ; then
     SSH_REMOTE_IP="${SSH_CLIENT%% *}"
 fi
-if [[ -z "$SSH_REMOTE_IP" ]] && [[ -n "$SSH_IP" ]] ; then
+if [ -z "$SSH_REMOTE_IP" ] && [ -n "$SSH_IP" ] ; then
     SSH_REMOTE_IP="${SSH_IP%% *}"
 fi
 
-if [[ -z "$SSH_REMOTE_IP" ]] && [[ -n "$SSH2_IP" ]] ; then
+if [ -z "$SSH_REMOTE_IP" ] && [ -n "$SSH2_IP" ] ; then
     SSH_REMOTE_IP="${SSH2_IP%% *}"
 fi
 
@@ -14,10 +14,10 @@ fi
 # For test, you can try to set this ip which should reference to India
 #SSH_REMOTE_IP=14.139.237.50
 
-if [[ -n "$SSH_REMOTE_IP" ]] ; then
+if [ -n "$SSH_REMOTE_IP" ] ; then
     # set a lock here, just because sometimes we are logged in recursive mode and so we only want to run this one time
     LOCKFILE="/tmp/.inform-ssh-remote-${USER}-$(basename $0).lock"
-    [[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
+    [ -r $LOCKFILE ] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
 
     if (ps -p $PROCESS) >/dev/null 2>&1 ; then
         # already running
@@ -35,14 +35,14 @@ if [[ -n "$SSH_REMOTE_IP" ]] ; then
 
 fi
 
-if [[ -z "$SSH_REMOTE_IP" ]] ; then
+if [ -z "$SSH_REMOTE_IP" ] ; then
     unset SSH_REMOTE_IP
     want_exit=yes
 fi
 
-if [[ "$want_exit" != "yes" ]] ; then
+if [ "$want_exit" != "yes" ] ; then
     # skip local connections, we don't want to inform about them
-    if [[ "$SSH_REMOTE_IP" = "192.168."* ]] || [[ "$SSH_REMOTE_IP" = "127."* ]] || [[ "$SSH_REMOTE_IP" = "10."* ]] ; then
+    if [ "$SSH_REMOTE_IP" = "192.168."* ] || [ "$SSH_REMOTE_IP" = "127."* ] || [ "$SSH_REMOTE_IP" = "10."* ] ; then
         rm -f "$LOCKFILE"
         want_exit=yes
     fi
@@ -52,9 +52,9 @@ if [[ "$want_exit" != "yes" ]] ; then
     fi
 fi
 
-if [[ "$want_exit" != "yes" ]] ; then
+if [ "$want_exit" != "yes" ] ; then
     #echo -e "collecting remote data..." 1>&2
-    if [[ -s "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" ]] ; then
+    if [ -s "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" ] ; then
         SSH_REMOTE_DATA="$( cat "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" )"
     else
         SSH_REMOTE_DATA="$( showmylocation "$SSH_REMOTE_IP" )"
@@ -68,10 +68,10 @@ if [[ "$want_exit" != "yes" ]] ; then
 
 fi
 
-if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then
+if [ -n "$SSH_REMOTE_DATA" ] && [ "$want_exit" != "yes" ] ; then
     # get local data
     #echo -e "collecting local data..." 1>&2
-    if [[ -s "/tmp/.ssh_local_data-${USER}" ]] ; then
+    if [ -s "/tmp/.ssh_local_data-${USER}" ] ; then
         SSH_LOCAL_DATA="$( cat "/tmp/.ssh_local_data-${USER}" )"
     else
         SSH_LOCAL_DATA="$( showmylocation )"
@@ -85,16 +85,16 @@ if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then
 
 
     # Inform to user about remote connection from...
-    if [[ "${SSH_REMOTE_COUNTRY}" != "$SSH_LOCAL_COUNTRY" ]] ; then
+    if [ "${SSH_REMOTE_COUNTRY}" != "$SSH_LOCAL_COUNTRY" ] ; then
         el_speak_text "somebody connected from $SSH_REMOTE_COUNTRY"
         # wait a small delay for settle the lockfile in slow computers
         LC_NUMERIC=C sleep 0.8
     else
-        if [[ "${SSH_REMOTE_REGION}" != "$SSH_LOCAL_REGION" ]] ; then
+        if [ "${SSH_REMOTE_REGION}" != "$SSH_LOCAL_REGION" ] ; then
             el_speak_text "somebody connected from $SSH_REMOTE_REGION"
             LC_NUMERIC=C sleep 0.8
         else
-            if [[ "${SSH_REMOTE_CITY}" != "$SSH_LOCAL_CITY" ]] ; then
+            if [ "${SSH_REMOTE_CITY}" != "$SSH_LOCAL_CITY" ] ; then
                 el_speak_text "somebody connected from $SSH_REMOTE_CITY"
                 LC_NUMERIC=C sleep 0.8
             fi

@@ -66,6 +66,12 @@ if [[ "$want_exit" != "yes" ]] ; then
     SSH_REMOTE_REGION="$( echo "$SSH_REMOTE_DATA" | grep RegionName | sed -e 's|</Region.*$||g' -e 's|^.*Name>||g' )"
     SSH_REMOTE_CITY="$( echo "$SSH_REMOTE_DATA" | grep City | sed -e 's|</City.*$||g' -e 's|^.*City>||g' )"
 
+    # ignore if invalid country
+    if [[ "${SSH_REMOTE_COUNTRY}" = "Reserved" ]] ; then
+        unset SSH_REMOTE_COUNTRY SSH_REMOTE_DATA SSH_REMOTE_CITY SSH_REMOTE_REGION SSH_REMOTE_IP
+        want_exit="yes"
+    fi
+
 fi
 
 if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then

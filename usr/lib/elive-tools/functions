@@ -857,8 +857,10 @@ el_check_version_development_is_days_recent(){
 
     date_today_m="${date_today%-*}"
     date_today_m="${date_today_m#*-}"
+    date_today_m="${date_today_m#0}"
 
     date_today_d="${date_today##*-}"
+    date_today_d="${date_today_d#0}"
 
     date_today_total_days="$(( ${date_today_m} * 30 + ${date_today_d} ))"
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"

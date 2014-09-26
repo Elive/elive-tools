@@ -25,42 +25,42 @@ migrate_conf_file(){
 
 
     # replacements {{{
-    if [[ "$( xdg-user-dir DESKTOP )" != */Desktop ]] ; then
+    if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
         if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
         fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
-    if [[ "$( xdg-user-dir DOWNLOAD )" != */Downloads ]] ; then
+    if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
         if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
         fi
     fi
 
-    if [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] ; then
+    if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
         if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
             el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
         fi
     fi
 
-    if [[ "$( xdg-user-dir PICTURES )" != */Images ]] ; then
+    if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
         if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
             el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
         fi
     fi
 
-    if [[ "$( xdg-user-dir MUSIC )" != */Music ]] ; then
+    if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
         if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
             el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
         fi
     fi
 
-    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] ; then
+    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
         if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
             el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
@@ -110,17 +110,27 @@ main(){
     # if this is just a symlink (old deprecated dir), safe to remove like this
     rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
 
-    # delete Desktop entirely, what a useless idea
-    if [[ -e "$HOME/Desktop" ]] ; then
+    # Create a better dir structure, we need this dir in any of the cases
+    desktop_d="$( basename "$(xdg-user-dir DOWNLOADS )")/$( basename "$(xdg-user-dir DESKTOP )" )"
+    # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
+    mkdir -p "$HOME/$desktop_d"
 
-        mv "$HOME/"Desktop/* "$( xdg-user-dir DOWNLOAD)/" 2>/dev/null || true
-        rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
+    # replace the templates entry
+    sed -i "s|^XDG_DESKTOP_DIR.*$|XDG_DESKTOP_DIR=\"\$HOME/$desktop_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
-        # if still exist, move it somewhere that doesn't annoy us
+
+    if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
         if [[ -e "$HOME/Desktop" ]] ; then
-            mv "$HOME/Desktop" "$(xdg-user-dir DOWNLOAD)/"
-        fi
 
+            mv "$HOME/"Desktop/* "$( xdg-user-dir DESKTOP )/" 2>/dev/null || true
+            rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
+
+            # if still exist, move it somewhere that doesn't annoy us
+            if [[ -e "$HOME/Desktop" ]] ; then
+                mv "$HOME/Desktop" "$(xdg-user-dir DESKTOP )/"
+            fi
+
+        fi
     fi
 
     # remove new xdg desktop dir too
@@ -132,21 +142,12 @@ main(){
     rm -f "$(xdg-user-dir DOWNLOAD )/tmp.desktop" 2>/dev/null 1>&2 || true
 
 
-    rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
-
-    # and never create it again
-    sed -i "/^XDG_DESKTOP_DIR/d" "${XDG_CONFIG_HOME}/user-dirs.dirs"
-    #echo -e "XDG_DESKTOP_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
-    # put it on the same place as downloads, not main homedir
-    grep "^XDG_DOWNLOAD_DIR=" "${XDG_CONFIG_HOME}/user-dirs.dirs" | sed -e 's|_DOWNLOAD_|_DESKTOP_|g' >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
-
 
     #
     # Templates
     #
 
-    # delete if empty
-    rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
+    # Create a better dir structure, we need this dir in any of the cases
     templates_d="$( basename "$(xdg-user-dir DOCUMENTS )")/$( basename "$(xdg-user-dir TEMPLATES )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
     mkdir -p "$HOME/$templates_d"
@@ -155,11 +156,25 @@ main(){
     sed -i "s|^XDG_TEMPLATES_DIR.*$|XDG_TEMPLATES_DIR=\"\$HOME/$templates_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
 
+    # move old files to the new structure, if there was any
+    if [[ "$( xdg-user-dir TEMPLATES )" != "$HOME/Templates" ]] ; then
+        if [[ -e "$HOME/Templates" ]] ; then
+            mv "$HOME/"Templates/* "$( xdg-user-dir TEMPLATES )/" 2>/dev/null || true
+
+            rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
+
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Templates" "$(xdg-user-dir TEMPLATES )/" 2>/dev/null || true
+        fi
+    fi
+
+
+
     #
     # Documents
     #
 
-    if [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] ; then
+    if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
         if [[ -e "$HOME/Documents" ]] ; then
             mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
 
@@ -174,7 +189,7 @@ main(){
     # Music
     #
 
-    if [[ "$( xdg-user-dir MUSIC )" != */Music ]] ; then
+    if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
         if [[ -e "$HOME/Music" ]] ; then
             mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
 
@@ -189,7 +204,7 @@ main(){
     # Images / Pictures
     #
 
-    if [[ "$( xdg-user-dir PICTURES )" != */Images ]] ; then
+    if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
         if [[ -e "$HOME/Images" ]] ; then
             mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
 
@@ -204,7 +219,7 @@ main(){
     # Videos
     #
 
-    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] ; then
+    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
         if [[ -e "$HOME/Videos" ]] ; then
             mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
 
@@ -217,7 +232,14 @@ main(){
 
 
     # FIX all the old references
-    if [[ "$( xdg-user-dir VIDEOS )" != */Videos ]] && [[ "$( xdg-user-dir MUSIC )" != */Music ]] && [[ "$( xdg-user-dir PICTURES )" != */Images ]] && [[ "$( xdg-user-dir DOCUMENTS )" != */Documents ]] && [[ "$( xdg-user-dir DOWNLOAD )" != */Downloads ]] && [[ "$( xdg-user-dir DESKTOP )" != */Desktop ]] ; then
+    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] \
+        && [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] \
+        && [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] \
+        && [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] \
+        && [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] \
+        && [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] \
+        && [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Templates" ]] \
+        ; then
         local entry conf dir file
         while read -ru 3 entry
         do
@@ -314,7 +336,7 @@ main(){
     rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"
 
     #
-    # Publishare
+    # Public Share
     #
 
     # Make the publicshare folder to be directly shared

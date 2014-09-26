@@ -279,7 +279,7 @@ main(){
                                     ;;
                             esac
                         fi
-                    done 3<<< "$( find "$entry" -type f )"
+                    done 3<<< "$( find "$entry" -type f | grep -v "$cachedir" )"
 
                 fi
 

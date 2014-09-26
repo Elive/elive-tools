@@ -14,13 +14,16 @@ migrate_conf_file(){
 
     # debug info
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
+        echo "# cp \"$file\" \"$file_bkp\""
         cp "$file" "$file_bkp"
     fi
 
     # backup the file in case user wants to restore it:
     mkdir -p "$cachedir"
     cd "$cachedir"
-    echo "$file" | cpio -paduv .
+    echo "# Backuped $file to $cachedir"
+
+    echo "$file" | cpio -padu --quiet .
     cd
 
 
@@ -29,6 +32,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Desktop in ${file}"
         fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
@@ -36,6 +40,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Downloads in ${file}"
         fi
     fi
 
@@ -43,6 +48,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
             el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Documents in ${file}"
         fi
     fi
 
@@ -50,6 +56,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
             el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Images in ${file}"
         fi
     fi
 
@@ -57,6 +64,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
             el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Music in ${file}"
         fi
     fi
 
@@ -64,6 +72,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
             el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
+            echo "# Migrated references for Videos in ${file}"
         fi
     fi
 
@@ -97,6 +106,9 @@ main(){
         exit 0
     fi
 
+    # progress
+    echo 10
+
     # clean conf, so create it again in case that already exists
     rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
 
@@ -120,6 +132,7 @@ main(){
 
         # and just in case is not a symlink:
         if [[ -e "$HOME/Downloads" ]] ; then
+            echo "# Moving files in Downloads to $( xdg-user-dir DOWNLOAD )"
             mv "$HOME/"Downloads/* "$( xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
 
             rmdir "$HOME/Downloads" 2>/dev/null 1>&2 || true
@@ -143,6 +156,7 @@ main(){
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
         if [[ -e "$HOME/Desktop" ]] ; then
 
+            echo "# Moving files in Desktop to $( xdg-user-dir DESKTOP )"
             mv "$HOME/"Desktop/* "$( xdg-user-dir DESKTOP )/" 2>/dev/null || true
 
             rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
@@ -199,6 +213,7 @@ main(){
 
     if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
         if [[ -e "$HOME/Documents" ]] ; then
+            echo "# Moving files in Documents to $( xdg-user-dir DOCUMENTS )"
             mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
 
             rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
@@ -214,6 +229,7 @@ main(){
 
     if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
         if [[ -e "$HOME/Music" ]] ; then
+            echo "# Moving files in Music to $( xdg-user-dir MUSIC )"
             mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
 
             rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
@@ -229,6 +245,7 @@ main(){
 
     if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
         if [[ -e "$HOME/Images" ]] ; then
+            echo "# Moving files in Images to $( xdg-user-dir PICTURES )"
             mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
 
             rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
@@ -244,6 +261,7 @@ main(){
 
     if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
         if [[ -e "$HOME/Videos" ]] ; then
+            echo "# Moving files in Videos to $( xdg-user-dir VIDEOS )"
             mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
 
             rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
@@ -370,6 +388,10 @@ main(){
     mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
     touch "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
+    # progress
+    echo -e "# Done"
+    sleep 1
+
     # if we are debugging give it a little pause to see what is going on
     if grep -qs "debug" /proc/cmdline ; then
         echo -e "debug: sleep 4" 1>&2
@@ -386,7 +408,7 @@ main(){
 # mv dir/* will include hidden files:
 shopt -s dotglob
 
-main "$@"
+main "$@" | zenity --progress --pulsate --auto-close --text="$( eval_gettext "Migrating directories and configurations to selected language, this operation can be slow, please be patient." )"
 
 # put back values
 shopt -u dotglob

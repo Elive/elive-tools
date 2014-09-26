@@ -145,12 +145,14 @@ main(){
     # Templates
     #
 
-    # delete Templates too, they are useless
+    # delete if empty
     rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
-    sed -i "/^XDG_TEMPLATES_DIR/d" "${XDG_CONFIG_HOME}/user-dirs.dirs"
-    #echo -e "XDG_TEMPLATES_DIR=\"\$HOME/\"" >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
-    # put it on the same place as documents, not main homedir
-    grep "^XDG_DOCUMENTS_DIR=" "${XDG_CONFIG_HOME}/user-dirs.dirs" | sed -e 's|_DOCUMENTS_|_TEMPLATES_|g' >> "${XDG_CONFIG_HOME}/user-dirs.dirs"
+    templates_d="$( basename "$(xdg-user-dir DOCUMENTS )")/$( basename "$(xdg-user-dir TEMPLATES )" )"
+    # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
+    mkdir -p "$HOME/$templates_d"
+
+    # replace the templates entry
+    sed -i "s|^XDG_TEMPLATES_DIR.*$|XDG_TEMPLATES_DIR=\"\$HOME/$templates_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
 
     #

@@ -92,6 +92,11 @@ main(){
         XDG_CONFIG_HOME="${HOME}/.config"
     fi
 
+    if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] ; then
+        el_explain 0 "xdg home dirs already migrated to new language"
+        exit 0
+    fi
+
     # clean conf, so create it again in case that already exists
     rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
 
@@ -360,6 +365,10 @@ main(){
     # Make the publicshare folder to be directly shared
     # net usershare add NAME DIR COMMENT ACL GUEST
     net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   #2>/dev/null 1>&2 || true
+
+    # mark a state flag so that we don't run this again
+    mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+    touch "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
     # if we are debugging give it a little pause to see what is going on
     if grep -qs "debug" /proc/cmdline ; then

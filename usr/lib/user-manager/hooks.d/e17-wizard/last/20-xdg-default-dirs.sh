@@ -100,6 +100,7 @@ main(){
     xdg-user-dirs-gtk-update
 
     # source after to have created it and dirs
+    # FIXME: what about future upgrades? do not remove it?
     source "${XDG_CONFIG_HOME}/user-dirs.dirs"
     cd
 
@@ -107,15 +108,30 @@ main(){
     # Desktop & Downloads
     #
 
-    # if this is just a symlink (old deprecated dir), safe to remove like this
-    rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
+    # move old files to the new structure, if there was any
+    if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
+        # if this is just a symlink (old deprecated dir), safe to remove like this
+        rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
 
+        # and just in case is not a symlink:
+        if [[ -e "$HOME/Downloads" ]] ; then
+            mv "$HOME/"Downloads/* "$( xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
+
+            rmdir "$HOME/Downloads" 2>/dev/null 1>&2 || true
+
+            # if still exist, move it somewhere that doesn't annoy us
+            mv "$HOME/Downloads" "$(xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
+        fi
+    fi
+
+
+    rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
     # Create a better dir structure, we need this dir in any of the cases
-    desktop_d="$( basename "$(xdg-user-dir DOWNLOADS )")/$( basename "$(xdg-user-dir DESKTOP )" )"
+    desktop_d="$( basename "$(xdg-user-dir DOWNLOAD )")/$( basename "$(xdg-user-dir DESKTOP )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
     mkdir -p "$HOME/$desktop_d"
 
-    # replace the templates entry
+    # replace the desktop entry
     sed -i "s|^XDG_DESKTOP_DIR.*$|XDG_DESKTOP_DIR=\"\$HOME/$desktop_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
 
@@ -123,6 +139,7 @@ main(){
         if [[ -e "$HOME/Desktop" ]] ; then
 
             mv "$HOME/"Desktop/* "$( xdg-user-dir DESKTOP )/" 2>/dev/null || true
+
             rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
@@ -147,6 +164,7 @@ main(){
     # Templates
     #
 
+    rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
     # Create a better dir structure, we need this dir in any of the cases
     templates_d="$( basename "$(xdg-user-dir DOCUMENTS )")/$( basename "$(xdg-user-dir TEMPLATES )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
@@ -161,7 +179,7 @@ main(){
         if [[ -e "$HOME/Templates" ]] ; then
             mv "$HOME/"Templates/* "$( xdg-user-dir TEMPLATES )/" 2>/dev/null || true
 
-            rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
+            rmdir "$HOME/Templates" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
             mv "$HOME/Templates" "$(xdg-user-dir TEMPLATES )/" 2>/dev/null || true

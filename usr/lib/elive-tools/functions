@@ -171,8 +171,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # remove extra leading blank chars
     read -r date_hour_prev <<< "$date_hour_prev"
 
-    el_dependencies_check "curl,route"
-
     # }}}
 
     # Test for network carrier first, and exit if we don't have it at all
@@ -180,8 +178,14 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     unset OnLine
     for i in 1 2 3 4 5 6 7
     do
-        for interface in $(ls /sys/class/net/ | grep -v lo);
+        #for interface in $(ls /sys/class/net/ | grep -v lo);
+        for interface in /sys/class/net/*
         do
+            interface="${interface##*/}"
+            if [[ "${interface}" = "lo" ]] ; then
+                continue
+            fi
+
             if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
                 OnLine=1;
                 break 2
@@ -214,6 +218,8 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         return 1
     fi
 
+
+    el_dependencies_check "curl,route"
 
     # check if gateway correctly set
     unset OnLine

@@ -143,7 +143,10 @@ main(){
     fi
 
 
-    rmdir "$(xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
+    #rmdir "$( xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
+    # E already created the desktop dir and filled it with files, we want to keep them so:
+    mv "$( xdg-user-dir DESKTOP )" "$HOME/desktop_old_d.tmp"  || true
+
     # Create a better dir structure, we need this dir in any of the cases
     desktop_d="$( basename "$(xdg-user-dir DOWNLOAD )")/$( basename "$(xdg-user-dir DESKTOP )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
@@ -151,6 +154,10 @@ main(){
 
     # replace the desktop entry
     sed -i "s|^XDG_DESKTOP_DIR.*$|XDG_DESKTOP_DIR=\"\$HOME/$desktop_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
+
+    # move back the files created by E to the new desktop dir
+    mv "$HOME"/desktop_old_d.tmp/* "$HOME/$desktop_d/"  || true
+    rmdir "$HOME/desktop_old_d.tmp" || true
 
 
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then

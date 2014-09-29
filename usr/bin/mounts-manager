@@ -33,6 +33,18 @@ restart_daemons(){
     fi
 
     sync
+    # we need to wait a bit, seems like udisks dont read anything if we don't
+    sleep 1
+    if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        sleep 1
+        if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+            sleep 2
+            if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+                sleep 5
+            fi
+        fi
+    fi
+
 
     # - restart daemons }}}
 }

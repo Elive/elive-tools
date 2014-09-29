@@ -2,6 +2,41 @@
 source /usr/lib/elive-tools/functions
 
 #===  FUNCTION  ================================================================
+#          NAME:  restart_daemons
+#   DESCRIPTION:  Restarts udisks and polkit when we found an error trying to use the disk
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+restart_daemons(){
+    # pre {{{
+    el_debug
+    el_security_function_loop 20 || return
+
+    # }}}
+    # restart daemons {{{
+    if [[ "$UID" = 0 ]] ; then
+        killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
+        killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+
+        { /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        { /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+    else
+        if el_check_sudo_automated ; then
+            sudo killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
+            sudo killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+
+            { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        else
+            el_error "We need to restart some polkitd services, please run again this tool from root"
+        fi
+    fi
+
+    sync
+
+    # - restart daemons }}}
+}
+#===  FUNCTION  ================================================================
 #          NAME:  chroot_layers_mount
 #   DESCRIPTION:  mount the layers needed for a working chroot
 #    PARAMETERS:  $1 directory, $2 name-id-to-use, $3 = mode (opt)
@@ -724,6 +759,10 @@ el_mount(){
         return 1
     fi
 
+    if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        restart_daemons
+    fi
+
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
         timeout 60 udisks --mount "$dev" "$@"
@@ -782,10 +821,8 @@ el_mount(){
 
 
     # try again
-    sync
-    el_sudo service udev restart
-    #sync
-    #el_sudo service dbus restart
+    restart_daemons
+
     sync
     /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
     sync
@@ -862,28 +899,7 @@ main(){
 
     # checks {{{
     if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
-        # restart daemons {{{
-        if [[ "$UID" = 0 ]] ; then
-            killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
-            killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
-
-            /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
-            /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
-        else
-            if el_check_sudo_automated ; then
-                sudo killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
-                sudo killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
-
-                sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown
-                sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown
-            else
-                el_error "We need to restart some polkitd services, please run again this tool from root"
-            fi
-        fi
-
-        sleep 1
-
-        # - restart daemons }}}
+        restart_daemons
         if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
             el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi

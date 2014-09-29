@@ -477,6 +477,10 @@ check_is_mounted(){
         fi
     fi
 
+    if LC_ALL=C udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+        restart_daemons
+    fi
+
     if ((is_device)) ; then
         # mounted
         if LC_ALL=C udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
@@ -490,18 +494,11 @@ check_is_mounted(){
             echo "Not mounted"
             return 1
         fi
-        # well, maybe not working?
-        if LC_ALL=C udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
-            # re-read partition table
-            sync ; sleep 1
-            /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
 
-            el_sudo service udev restart
-            #el_sudo service dbus restart
-            el_warning "udev needed to be restarted from $FUNCNAME"
-            #el_array_member_add "UDEV needed to be restarted in 'check_is_mounted' from 'mounts-manager' with device '$device'" "${errors_found[@]}" ; errors_found=("${_out[@]}")
-            return 1
-        fi
+        # nothing? return 1
+
+        el_warning "unable to determine if $device is mounted or not, assuming is not"
+        return 1
     fi
 
 }

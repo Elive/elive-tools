@@ -62,9 +62,9 @@ if [[ "$want_exit" != "yes" ]] ; then
     fi
 
     # get the rest of data
-    SSH_REMOTE_COUNTRY="$( echo "$SSH_REMOTE_DATA" | grep CountryName | sed -e 's|</Country.*$||g' -e 's|^.*Name>||g' )"
-    SSH_REMOTE_REGION="$( echo "$SSH_REMOTE_DATA" | grep RegionName | sed -e 's|</Region.*$||g' -e 's|^.*Name>||g' )"
-    SSH_REMOTE_CITY="$( echo "$SSH_REMOTE_DATA" | grep City | sed -e 's|</City.*$||g' -e 's|^.*City>||g' )"
+    SSH_REMOTE_COUNTRY="$( echo "$SSH_REMOTE_DATA" | awk -v FS="::" '{if ($1 == "country_name" ) print $2 }' )"
+    SSH_REMOTE_REGION="$( echo "$SSH_REMOTE_DATA" | awk -v FS="::" '{if ($1 == "region_name" ) print $2 }' )"
+    SSH_REMOTE_CITY="$( echo "$SSH_REMOTE_DATA" | awk -v FS="::" '{if ($1 == "city_name" ) print $2 }' )"
 
     # ignore if invalid country
     if [[ "${SSH_REMOTE_COUNTRY}" = "Reserved" ]] ; then

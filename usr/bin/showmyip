@@ -37,21 +37,21 @@ main(){
         exit 1
     fi
 
-    ip="$( curl -A "Mozilla" -s http://icanhazip.com | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -1 )"
+    ip="$( curl -A "Mozilla" --max-time 8 -s http://icanhazip.com | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -1 )"
     # remove extra leading blank chars
     read -r ip <<< "$ip"
 
 
     # check and try from another if is wrong
     if ! verify_ip_validity ; then
-        ip="$( curl -A "Mozilla" -s http://www.showmyip.co.uk | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        ip="$( curl -A "Mozilla" --max-time 8 -s http://www.showmyip.co.uk | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r ip <<< "$ip"
     fi
 
     # check and try from another if is wrong
     if ! verify_ip_validity ; then
-        ip="$( curl -A "Mozilla" -s http://www.hostip.info | grep -i "IP address:.*" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        ip="$( curl -A "Mozilla" --max-time 8 -s http://www.hostip.info | grep -i "IP address:.*" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r ip <<< "$ip"
     fi

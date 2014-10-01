@@ -3,6 +3,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
+    local data is_data_valid ip
 
     if ! el_dependencies_check curl ; then
         if ! el_dependencies_install curl ; then
@@ -15,12 +16,204 @@ main(){
         exit 1
     fi
 
-    # }}}
-
     if [[ -n "$1" ]] ; then
-        curl -s -A "Mozilla" "http://freegeoip.net/xml/$1"
+        if echo "$1" | grep -qs "^[[:digit:]]*" ; then
+            ip="$1"
+        fi
     else
-        curl -s -A "Mozilla" "http://freegeoip.net/xml/$(showmyip)"
+        ip="$( showmyip )"
+    fi
+
+
+    # }}}
+    # DEMO outputs {{{
+
+    #  api.ipaddresslabs.com:
+
+    #<?xml version="1.0" encoding="UTF-8"?>
+    #<response>
+        #<query_status>
+            #<query_status_code>OK</query_status_code>
+            #<query_status_description>Query successfully performed.</query_status_description>
+        #</query_status>
+        #<ip_address>88.0.190.30</ip_address>
+        #<geolocation_data>
+            #<continent_code>EU</continent_code>
+            #<continent_name>Europe</continent_name>
+            #<country_code_iso3166alpha2>ES</country_code_iso3166alpha2>
+            #<country_code_iso3166alpha3>ESP</country_code_iso3166alpha3>
+            #<country_code_iso3166numeric>724</country_code_iso3166numeric>
+            #<country_code_fips10-4>SP</country_code_fips10-4>
+            #<country_name>Spain</country_name>
+            #<region_code>SP52</region_code>
+            #<region_name>Aragon</region_name>
+            #<city>Zaragoza</city>
+            #<postal_code>-</postal_code>
+            #<metro_code>-</metro_code>
+            #<area_code>-</area_code>
+            #<latitude>41.6453</latitude>
+            #<longitude>-0.8849</longitude>
+            #<isp>Telefonica de Espana</isp>
+            #<organization>Telefonica de Espana</organization>
+        #</geolocation_data>
+    #</response>
+
+    #########################################
+
+
+    #  freegeoip.net:
+    #<Response>
+        #<Ip>88.0.190.30</Ip>
+        #<CountryCode>ES</CountryCode>
+        #<CountryName>Spain</CountryName>
+        #<RegionCode>52</RegionCode>
+        #<RegionName>Aragon</RegionName>
+        #<City>Zaragoza</City>
+        #<ZipCode></ZipCode>
+        #<Latitude>41.6453</Latitude>
+        #<Longitude>-0.8849</Longitude>
+        #<MetroCode></MetroCode>
+        #<AreaCode></AreaCode>
+    #</Response>
+
+
+
+    # - DEMO outputs }}}
+
+    # try with ipaddresslabs
+    if ! ((is_data_valid)) ; then
+        data="$( curl -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
+
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            is_data_valid=1
+        fi
+    fi
+
+
+    # try with freegeoip
+    if ! ((is_data_valid)) ; then
+        data="$( curl -s --max-time 8 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            is_data_valid=1
+        fi
+    fi
+
+
+    if ((is_data_valid)) ; then
+        # show the ip, always good to have
+        echo "ip::$ip"
+
+        while read -ru 3 line
+        do
+            case "$line" in
+                \<latitude\>*)
+                    line="${line#<latitude>}"
+                    line="${line%</latitude>}"
+
+                    echo "latitude::$line"
+                ;;
+                \<Latitude\>*)
+                    line="${line#<Latitude>}"
+                    line="${line%</Latitude>}"
+
+                    echo "latitude::$line"
+                ;;
+                \<longitude\>*)
+                    line="${line#<longitude>}"
+                    line="${line%</longitude>}"
+
+                    echo "latitude::$line"
+                ;;
+                \<Longitude\>*)
+                    line="${line#<Longitude>}"
+                    line="${line%</Longitude>}"
+
+                    echo "latitude::$line"
+                ;;
+                \<continent_code\>*)
+                    line="${line#<continent_code>}"
+                    line="${line%</continent_code>}"
+
+                    echo "continent_code::$line"
+                ;;
+                \<continent_name\>*)
+                    line="${line#<continent_name>}"
+                    line="${line%</continent_name>}"
+
+                    echo "continent_name::$line"
+                ;;
+                \<CountryCode\>*)
+                    line="${line#<CountryCode>}"
+                    line="${line%</CountryCode>}"
+
+                    echo "country_code::$line"
+                ;;
+                \<country_code_iso3166alpha2\>*)
+                    line="${line#<country_code_iso3166alpha2>}"
+                    line="${line%</country_code_iso3166alpha2>}"
+
+                    echo "country_code::$line"
+                ;;
+                \<CountryName\>*)
+                    line="${line#<CountryName>}"
+                    line="${line%</CountryName>}"
+
+                    echo "country_name::$line"
+                ;;
+                \<country_name\>*)
+                    line="${line#<country_name>}"
+                    line="${line%</country_name>}"
+
+                    echo "country_name::$line"
+                ;;
+                \<region_name\>*)
+                    line="${line#<region_name>}"
+                    line="${line%</region_name>}"
+
+                    echo "region_name::$line"
+                ;;
+                \<RegionName\>*)
+                    line="${line#<RegionName>}"
+                    line="${line%</RegionName>}"
+
+                    echo "region_name::$line"
+                ;;
+                \<region_code\>*)
+                    line="${line#<region_code>}"
+                    line="${line%</region_code>}"
+                    line="$( echo "$line" | tr -cd '[[:digit:]]' )"
+
+                    echo "region_code::$line"
+                ;;
+                \<RegionCode\>*)
+                    line="${line#<RegionCode>}"
+                    line="${line%</RegionCode>}"
+
+                    echo "region_code::$line"
+                ;;
+                \<city\>*)
+                    line="${line#<city>}"
+                    line="${line%</city>}"
+
+                    echo "city_name::$line"
+                ;;
+                \<City\>*)
+                    line="${line#<City>}"
+                    line="${line%</City>}"
+
+                    echo "city_name::$line"
+                ;;
+                \<isp\>*)
+                    line="${line#<isp>}"
+                    line="${line%</isp>}"
+
+                    echo "isp_provider_name::$line"
+                ;;
+            esac
+        done 3<<< "$( echo "$data")" | sort -u
     fi
 
 }

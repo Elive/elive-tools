@@ -110,6 +110,12 @@ main(){
         demo_file_add_home "$file" "$target" "link"
     done 3<<< "$( find "$demodir/Documents" | sed -e "s|^${demodir}/||g" )"
 
+    target="$( xdg-user-dir TEMPLATES )"
+    while read -ru 3 file
+    do
+        demo_file_add_home "$file" "$target" "link"
+    done 3<<< "$( find "$demodir/Templates" | sed -e "s|^${demodir}/||g" )"
+
     target="$( xdg-user-dir MUSIC )"
     while read -ru 3 file
     do

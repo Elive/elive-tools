@@ -12,14 +12,27 @@ get_meter(){
     el_debug
     el_security_function_loop || return
 
-    el_check_variables "list"
+    el_check_variables "list,conf"
 
+    # get volume from conf
+    if [[ -e "$conf" ]] && [[ -s "$conf" ]] ; then
+        meter="$( grep "^meter:" "$conf" )"
+        meter="${meter#meter:}"
+        # remove extra leading blank chars
+        read -r meter <<< "$meter"
+    fi
 
     # }}}
 
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'PCM'"* ]] ; then
             meter=PCM
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
@@ -27,6 +40,12 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'Front'"* ]] ; then
             meter=Front
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
@@ -34,6 +53,12 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'Wave'"* ]] ; then
             meter=Wave
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
@@ -41,6 +66,12 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'Center'"* ]] ; then
             meter=Center
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
@@ -48,6 +79,12 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'PulseAudio'"* ]] ; then
             meter=PulseAudio
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
     ##################
@@ -55,6 +92,12 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'Master'"* ]] ; then
             meter=Master
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
@@ -63,13 +106,23 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'DAC'"* ]] ; then
             meter=DAC
+
+            # verify that this meter really works or skip to the next one
+            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
         fi
     fi
 
-    # so wtf
-    if [[ -z "$meter" ]] ; then
+    # save the meter conf
+    if [[ -n "$meter" ]] ; then
+        sed -i '/^meter:/d' "$conf" 2>/dev/null
+        echo -e "meter: $meter" >> "$conf"
+    else
         el_error "No meter found, is your audio card working?"
     fi
+
 
     # DONE, show it
     echo "$meter"
@@ -98,6 +151,33 @@ get_volume(){
     else
         # mono
         LC_ALL=C amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
+    fi
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  set_volume
+#   DESCRIPTION:  set the volume
+#    PARAMETERS:  $1 = volume (80%, 2%+, etc)
+#       RETURNS:  true or false if failed
+#===============================================================================
+set_volume(){
+    # pre {{{
+    local action
+    el_debug
+    el_security_function_loop || return
+
+    action="$1"
+    el_check_variables "action,list,meter"
+
+    # }}}
+
+    if [[ "$list" = *"'$meter',1"* ]] ; then
+        # stereo
+        amixer -q set ${meter},0 $action 2>/dev/null
+        amixer -q set ${meter},1 $action 2>/dev/null
+    else
+        # mono
+        amixer -q set $meter $action 2>/dev/null
     fi
 
 }
@@ -398,8 +478,9 @@ main(){
     # fixes percent space
     action="${action/ %/%}"
 
+    # e17 keybindings seems to segfault when using - char, so use words instead
     action="${action/ up/+}"
-    action="${action/ down/-}" # FIXME: e17 mouse bindings does a segfault when the action is to enter a command like "setvolumes 2%+" ? if yes, report it to E17
+    action="${action/ down/-}"
 
 
     # MUTE modes

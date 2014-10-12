@@ -385,7 +385,7 @@ mute_modes(){
 }
 main(){
     # pre {{{
-    local list action actualvalue
+    local list action actualvalue is_failed
 
     el_dependencies_check amixer
 
@@ -507,7 +507,12 @@ main(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        if ! amixer -q set ${meter},0 $action 2>/dev/null && ! amixer -q set ${meter},1 $action 2>/dev/null ; then
+        if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
+            is_failed=1
+        fi
+        amixer -q set ${meter},1 $action 2>/dev/null
+
+        if ((is_failed)) ; then
             sed -i '/^meter:/d' "$conf" 2>/dev/null
             get_meter
             set_volume "$action"

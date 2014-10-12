@@ -410,10 +410,11 @@ main(){
     list="$( amixer scontrols )"
     action="$@"
 
+    conf="$HOME/.config/setvolume"
+
     meter="$( get_meter )"
     el_explain 2 "selected meter: $meter"
 
-    conf="$HOME/.config/setvolume"
 
 
     if [[ "${1}" = "defaults" ]] ; then
@@ -506,11 +507,19 @@ main(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        amixer -q set ${meter},0 $action 2>/dev/null
-        amixer -q set ${meter},1 $action 2>/dev/null
+        if ! amixer -q set ${meter},0 $action 2>/dev/null && ! amixer -q set ${meter},1 $action 2>/dev/null ; then
+            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            get_meter
+            set_volume "$action"
+        fi
+
     else
         # mono
-        amixer -q set $meter $action 2>/dev/null
+        if ! amixer -q set $meter $action 2>/dev/null ; then
+            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            get_meter
+            set_volume "$action"
+        fi
     fi
     ##################
 

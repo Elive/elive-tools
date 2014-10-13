@@ -29,7 +29,9 @@ get_meter(){
             meter=PCM
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -42,7 +44,9 @@ get_meter(){
             meter=Front
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -55,7 +59,9 @@ get_meter(){
             meter=Wave
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -68,7 +74,9 @@ get_meter(){
             meter=Center
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -81,7 +89,9 @@ get_meter(){
             meter=PulseAudio
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -94,7 +104,9 @@ get_meter(){
             meter=Master
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -108,7 +120,9 @@ get_meter(){
             meter=DAC
 
             # verify that this meter really works or skip to the next one
-            set_volume "6%-" 2>/dev/null || true
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
             if ! set_volume "2%+" 2>/dev/null ; then
                 unset meter
             fi
@@ -508,11 +522,12 @@ main(){
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
-            is_failed=1
+            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            get_meter
+            set_volume "$action"
         fi
-        amixer -q set ${meter},1 $action 2>/dev/null
 
-        if ((is_failed)) ; then
+        if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
             sed -i '/^meter:/d' "$conf" 2>/dev/null
             get_meter
             set_volume "$action"

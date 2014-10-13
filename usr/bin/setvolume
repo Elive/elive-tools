@@ -131,7 +131,7 @@ get_meter(){
 
     # save the meter conf
     if [[ -n "$meter" ]] ; then
-        sed -i '/^meter:/d' "$conf" 2>/dev/null
+        sed -i '/^meter:.*$/d' "$conf" 2>/dev/null
         echo -e "meter: $meter" >> "$conf"
     else
         el_error "No meter found, is your audio card working?"
@@ -239,7 +239,7 @@ mute_modes_force(){
 
             # save our last state of volume for next use
             if [[ "$volume_actual" -gt 1 ]] ; then
-                sed -i '/^volume:/d' "$conf" 2>/dev/null
+                sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
                 echo -e "volume: $volume_actual" >> "$conf"
             fi
 
@@ -522,13 +522,13 @@ main(){
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
-            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            sed -i '/^meter:.*$/d' "$conf" 2>/dev/null
             get_meter
             set_volume "$action"
         fi
 
         if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
-            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            sed -i '/^meter:.*$/d' "$conf" 2>/dev/null
             get_meter
             set_volume "$action"
         fi
@@ -536,7 +536,7 @@ main(){
     else
         # mono
         if ! amixer -q set $meter $action 2>/dev/null ; then
-            sed -i '/^meter:/d' "$conf" 2>/dev/null
+            sed -i '/^meter:.*$/d' "$conf" 2>/dev/null
             get_meter
             set_volume "$action"
         fi

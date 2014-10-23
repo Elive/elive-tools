@@ -15,7 +15,7 @@ main(){
     fi
 
 
-    mplayer -user-agent Mozilla "http://translate.google.com/translate_tts?tl=en&q=$(echo "$text" | sed 's#\ #\+#g')" > /dev/null 2>&1
+    mplayer -user-agent Mozilla -af volume=6:0 "http://translate.google.com/translate_tts?tl=en&q=$(echo "$text" | sed 's#\ #\+#g')" > /dev/null 2>&1
 }
 
 #

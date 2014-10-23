@@ -1,0 +1,18 @@
+#!/bin/bash
+main(){
+    # pre {{{
+    local text
+
+    # }}}
+    text="$@"
+
+    mplayer -user-agent Mozilla "http://translate.google.com/translate_tts?tl=en&q=$(echo "$text" | sed 's#\ #\+#g')" > /dev/null 2>&1
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

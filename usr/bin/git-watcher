@@ -53,7 +53,8 @@ show_states(){
                 #echo '---------'
 
                 echo -e "${el_c_b}Watchers Tracking:${el_c_n}"
-                echo -e "Branch | only Keyword | on Files | Progress"
+                echo -e "on Branch: | only Keyword: | on Files: | Remaining:"
+                echo -e "|"
 
                 is_header_show=1
             fi
@@ -62,24 +63,24 @@ show_states(){
             _keyword_search="$( echo "$line" | awk -F "::" '{print $2}')"
             _files_search="$(   echo "$line" | awk -F "::" '{print $3}' | sed -e 's|#|/|g' )"
 
-            _commits_total="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $2}' )" )"
+            #_commits_total="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $2}' )" )"
             _commits_remaining="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $1}' )" )"
-            _commits_done="$( echo "$_commits_total - $_commits_remaining" | bc -l 2>/dev/null )"
+            #_commits_done="$( echo "$_commits_total - $_commits_remaining" | bc -l 2>/dev/null )"
 
-            if [[ -n "$_commits_done" ]] ; then
-                _progress="$( echo "${_commits_done}/${_commits_remaining}" )"
-            fi
+            #if [[ -n "$_commits_done" ]] ; then
+                #_progress="$( echo "${_commits_done}/${_commits_remaining}" )"
+            #fi
 
 
             if [[ "$_branch_working" = "$branch_working" ]] \
                 && [[ "$_keyword_search" = "$keyword_search" ]] \
                 && [[ "$_files_search" = "$files_search" ]] ; then
-                echo -e "${el_c_g}$_branch_working | $_keyword_search | $_files_search | $_progress  ${el_c_y}${el_c_n}"
+                echo -e "${el_c_g}$_branch_working | $_keyword_search | $_files_search | $_commits_remaining  ${el_c_y}${el_c_n}"
             else
 
                 if [[ -n "$_branch_working" ]] ; then
 
-                    echo -e "$_branch_working | $_keyword_search | $_files_search | $_progress "
+                    echo -e "$_branch_working | $_keyword_search | $_files_search | $_commits_remaining "
 
                 fi
             fi
@@ -110,10 +111,14 @@ show_commit_stat(){
     pre_git_options="$1"
 
     # }}}
+    # show actual position
+    #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
+    echo -e "${el_c_y}[$counter/$counter_total] ${el_c_n}"
+
     # show actual commit-id
     if [[ -n "$keyword_search" ]] ; then
         # hilight the keyword to search
-        command git $pre_git_options show --stat "$commit_id" | grep --color -E "^|$keyword_search|"
+        command git $pre_git_options show --stat "$commit_id" | grep --color -Ei "^|$keyword_search|"
     else
         command git $pre_git_options show --stat "$commit_id"
     fi
@@ -157,6 +162,66 @@ clear_screen(){
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
     clear
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_count_commits
+#   DESCRIPTION:  counter of total commits to track
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+do_count_commits(){
+    # pre {{{
+    el_debug
+
+    local _counter _counter_total is_commit_id_last_reached
+
+    el_check_variables "branch_working,branch_watch"
+
+    _counter_total="$counter_total"
+    _counter="$counter"
+
+    counter_total=0
+    counter=1
+
+    # }}}
+    # pre-statistics a bit: show the amount of commits between branches
+    while read -ru 3 line
+    do
+        # get commit line
+        if [[ "$line" = "commit "* ]] ; then
+
+            counter_total="$(( $counter_total + 1 ))"
+
+            # skip until last commit
+            if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
+                if [[ "$line" = "commit "$commit_id_last ]] ; then
+                    is_commit_id_last_reached=1
+                else
+                    # loop until we reach the desired commit
+                    counter="$(( $counter + 1 ))"
+                fi
+            fi
+
+            echo -en "\r${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+        fi
+
+    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+    echo ""
+
+
+    # do we have found new commits?
+    if [[ -n "$_counter_total" ]] ; then
+        if [[ "$(( $counter_total - $_counter_total ))" = 0 ]] ; then
+            el_explain 0 "No new commits found for this watcher"
+
+        else
+            el_explain 0 "Nice! XX$(( $counter_total - $_counter_total ))XX New commits found on this watcher!"
+            echo "Press Enter to continue"
+            read nothing
+        fi
+    fi
+
 }
 
 #===  FUNCTION  ================================================================
@@ -285,6 +350,7 @@ do_cherry_pick(){
     if command git cherry-pick -Xpatience -x -s "$commit_id" ; then
         el_explain 0 "Successfully applied!"
         el_explain 0 "If you need to __add related commits__ in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
+        echo -e "Press Enter to continue"
         read nothing
         # TODO: if cherry-pick success, show a list of the next 20 commits and ask if we want to include more of them (copypaste id),
         # note: we always need to start from the earliest one, just make sure that it is the case
@@ -379,29 +445,30 @@ options_main_interact(){
     # TODO: when sending messages, could be there a way to receive them via email or something like this? gmail from cli? mmh..
 
     echo -e ""
-    echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
+    #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
     option_show "n"         "Next commit"
     option_show "N"         "Prev commit"
-    option_show "p"         "Show diff"
+    option_show "u"         "Update watching branch (pull --rebase)"
     option_show "s"         "Show commit summary"
     option_show "S"         "Show detailed commit info"
+    option_show "p"         "Show diff"
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other commits (cherry-pick)"
 
     if [[ -n "$user_input_backport_branches" ]] ; then
-        option_show "b"         "Backport to: $user_input_backport_branches"
+        option_show "b"         " > Backport to: $user_input_backport_branches"
     else
         option_show "b"         "Backport it to another branches too (set them as comma-separated)"
     fi
-    option_show "u"         "Undo last commit in your working branch"
+    option_show "z"         "Undo last commit in your working branch"
     option_show "m"         "run Make (useful for check if new code is compatible)"
     option_show "c"         "set a specific Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
     if [[ -n "$user_input_command" ]] ; then
-        option_show "r"     "Run:  $user_input_command"
+        option_show "r"     " > Run:  $user_input_command"
     fi
     option_show "l"         "List nearest commits (from our watching thread)"
     option_show "L"         "List nearest commits (from the full branch history)"
@@ -420,6 +487,7 @@ options_main_interact(){
         n)  # Next commit
             #el_explain 0 "Saving last commit watched"
             true
+
             ;;
         N)  # Prev commit
             # get the previous commit id
@@ -429,7 +497,16 @@ options_main_interact(){
             echo "$commit_id" > "$conf_commit_last_f"
 
             # set the counter to count another commit remaining
-            counter="$(( $counter + 1 ))"
+            counter="$(( $counter - 1 ))"
+
+            # we cannot go down to 0
+            if [[ "${counter}" = "0" ]] ; then
+                break
+            fi
+
+
+            # cleanup
+            clear_screen default
 
             # show commit stat
             show_commit_stat --no-pager
@@ -437,6 +514,36 @@ options_main_interact(){
             # go back to main menu
             $FUNCNAME
 
+
+            ;;
+        u)
+
+            # which remote to fetch from?
+            if [[ -z "$remote_fetching" ]] ; then
+                if [[ "$( git remote -v | grep "(fetch)" | awk '{print $1}' | grep -v origin | wc -l )" -gt 1 ]] ; then
+                    echo -e "\nWhich remote you want to update from ?\n"
+                    git remote -v | grep "(fetch)" | awk '{print $1}'
+
+                    read remote_fetching
+                    echo "$remote_fetching" > "$conf_remote_fetch_from_f"
+                else
+                    remote_fetching=origin
+                fi
+            fi
+
+
+            el_explain 0 "git checkout $branch_watch"
+            command git checkout "$branch_watch"
+
+            el_explain 0 "git pull --rebase $remote_fetching $branch_watch"
+            command git pull --rebase "$remote_fetching" "$branch_watch"
+
+            el_explain 0 "git checkout $branch_working"
+            command git checkout "$branch_working"
+
+
+            # update total of commits
+            do_count_commits
 
             ;;
         s)  # show info
@@ -468,6 +575,17 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
+        p)  # show patch
+            clear_screen default
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            command git --no-pager show "$commit_id" | lsdiff
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            command git show "$commit_id"
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
         e)  # edit files
             # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
@@ -488,17 +606,6 @@ options_main_interact(){
 
             # return back to main menu
             $FUNCNAME
-            ;;
-        p)  # show patch
-            clear_screen default
-            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-            command git --no-pager show "$commit_id" | lsdiff
-            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-
-            command git show "$commit_id"
-            # return back to main menu
-            $FUNCNAME
-
             ;;
         i)  # cherry-pick
             do_cherry_pick
@@ -525,7 +632,7 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
-        b)
+        b)  # extra branches where to backport
             if [[ -z "$user_input_backport_branches" ]] ; then
                 read -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
                 read user_input_backport_branches
@@ -545,21 +652,21 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        u)
+        z)  # undo
             el_explain 0 "$ git reset --hard HEAD~1"
             command git reset --hard HEAD~1
 
             # return back to main menu
             $FUNCNAME
             ;;
-        m)
+        m)  # make
             make
 
             el_speak_text "make complete"
             # return back to main menu
             $FUNCNAME
             ;;
-        c)
+        c)  # command specific
             echo -e "\nPlease enter the command that you want to use:"
             echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
             read -e user_input_command
@@ -567,7 +674,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        r)
+        r)  # run specific command
             if [[ -n "$user_input_command" ]] ; then
                 $user_input_command
                 el_speak_text "run finished"
@@ -576,7 +683,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        l)
+        l)  #  list nearest
             el_explain 0 "nearest commits to your actual position in our watcher:"
 
             el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_working\"..\"$branch_watch\" $options_extra_git_after | grep --color -C 6 \"${commit_id:0:12}\""
@@ -588,7 +695,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        L)
+        L)  # list nearest commits full
             el_explain 0 "nearest commits to your actual position in its full branch history:"
 
             el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
@@ -599,20 +706,43 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        B)
+        B)  # bkp
             bkp save
 
             # return back to main menu
             $FUNCNAME
             ;;
-        R)
+        R)  # bkp
             bkp get
 
             # return back to main menu
             $FUNCNAME
             ;;
-        Q)
-            #if el_confirm "Share saved session?" ; then
+        q)  # quit
+
+            el_explain 0 "Session not saved"
+            el_explain 0 "Session not shared"
+
+            # remove all our watcher traces if we don't want to save the session
+            if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+                rm -rf "$conf_d/$repo_id"
+            fi
+
+            exit
+
+            ;;
+
+        Q)  # quit and save/share
+            # add a mark to know that this is a persistent watcher to save
+            touch "$conf_d/$repo_id/flags/persistent_watcher"
+
+            # save some needed info
+            echo "$branch_working" > "$conf_branch_working_f"
+
+            el_explain 0 "Session __saved__"
+
+
+            if el_confirm "Share (push) your session?" ; then
                 #el_explain 0 "$ git add \".$(basename $0)/$repo_id\""
                 #command git add ".$(basename $0)/$repo_id"
                 el_explain 0 "$ git add \".$(basename $0)\""
@@ -622,13 +752,11 @@ options_main_interact(){
                 command git commit -m "$(basename $0): auto: sharing watcher: (worked on $repo_id)"
 
                 el_explain 0 "Now push your branch to share it: XXgit push REMOTE ${branch_working}XX"
+            else
+                el_explain 0 "Session not shared"
 
-            #fi
-            exit
+            fi
 
-            ;;
-
-        q)
             exit
 
             ;;
@@ -661,6 +789,7 @@ usage_show(){
 
     echo -e ""
     echo -e "Example making a new watch: $(basename $0) -b master -k fix" 1>&2
+    echo -e "To delete an existing watcher just remove the dir reference in .git-watcher" 1>&2
 
     echo -e ""
 
@@ -677,7 +806,7 @@ main(){
     branch_working="${branch_working#refs/heads/}"
     pwd="$(pwd)"
 
-    unset counter
+    local is_commit_id_last_reached
 
     # }}}
     # input parameters {{{
@@ -758,35 +887,43 @@ main(){
     #repo_id="${repo_id}::${branch_working}::${keyword_search}::${files_search}"
     repo_id="${branch_watch}::${keyword_search}::${files_search_regexed}"
 
-    mkdir -p "$conf_d/$repo_id"
+    mkdir -p "$conf_d/$repo_id/flags"
+    mkdir -p "$conf_d/$repo_id/marks"
 
     conf_commit_last_f="${conf_d}/$repo_id/last_commit_tracked"
     conf_commit_last_progress_f="${conf_d}/$repo_id/last_commit_tracked_progress"
+    conf_remote_fetch_from_f="${conf_d}/$repo_id/remote_fetching_from"
+    conf_branch_working_f="${conf_d}/$repo_id/branch_working_for"
 
+    # - configurations saved }}}
+    # configurations get {{{
+
+    # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
         commit_id_last="$( tail -1 "$conf_commit_last_f" )"
     fi
-    # - configurations saved }}}
 
+    # remote fetching
+    if [[ -s "$conf_remote_fetch_from_f" ]] ; then
+        remote_fetching="$( tail -1 "$conf_remote_fetch_from_f" )"
+    fi
 
-
-    # pre-statistics a bit: show the amount of commits between branches
-    while read -ru 3 line
-    do
-        # get commit line
-        if [[ "$line" = "commit "* ]] ; then
-
-            counter="$(( $counter + 1 ))"
-
-            echo -en "\r${el_c_b}Calculating total of commits for this tracker: \t${el_c_y}$counter   ${el_c_n}"
+    # branch working
+    if [[ -s "$conf_branch_working_f" ]] ; then
+        _branch_working="$( tail -1 "$conf_branch_working_f" )"
+        if [[ "$branch_working" != "$_branch_working" ]] ; then
+            el_explain 0 "XXWarningXX: working branch set for this watcher is not __${_branch_working}__: ${branch_working}"
+            if el_confirm "Want to switch to $branch_working ?" ; then
+                command git checkout "$branch_working"
+            fi
         fi
+    fi
 
-    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
-    # yeah, files_search is alredy included on the options_extra_git* variables
-    #clear_screen interactive
-    clear_screen default
+    # - configurations get }}}
 
-    counter_total="$counter"
+    # get the total of commits list
+    do_count_commits
+
 
     # debug
     if [[ "${EL_DEBUG}" -gt "2" ]] ; then
@@ -802,8 +939,6 @@ main(){
         # get commit
         if [[ "$line" = "commit "* ]] ; then
 
-            # always count another commit
-            counter="$(( $counter - 1 ))"
 
             # skip until last commit
             if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
@@ -819,23 +954,6 @@ main(){
             commit_id="${line#commit }"
 
 
-            #
-            #  SHOW
-            #
-
-            clear_screen default
-
-            # show counter
-            if [[ -n "$counter" ]] ; then
-                echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-                if [[ -n "$commit_id_last" ]] && ! ((is_continue_info_show)) ; then
-                    echo -e "${el_c_y} Continuing from last tracked commit: ${el_c_g}$commit_id_last${el_c_n}"
-                    is_continue_info_show=1
-                fi
-                echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
-                echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-            fi
-
             # show actual commit
             show_commit_stat --no-pager
 
@@ -846,9 +964,19 @@ main(){
             # show main options
             options_main_interact
 
+            # count another commit because we go to next loop
+            counter="$(( $counter + 1 ))"
+
+            # clear screen, but after that we did everything before to start
+            clear_screen default
+
         fi
 
     done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+
+    if ! ((is_header_show)) ; then
+        el_explain 0 "No more matches found"
+    fi
 
 }
 

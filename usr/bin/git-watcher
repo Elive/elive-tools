@@ -2,6 +2,24 @@
 source /usr/lib/elive-tools/functions
 el_make_environment
 
+#===  FUNCTION  ================================================================
+#          NAME:  exit_cleanups
+#   DESCRIPTION:  delete temporal things when exit
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+exit_cleanups(){
+    # pre {{{
+    el_debug
+
+    # }}}
+    if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+        rm -rf "$conf_d/$repo_id"
+    fi
+}
+
+el_add_on_exit exit_cleanups
+
 # TODO: alternative to bkp that should be faster, try git stage
 #===  FUNCTION  ================================================================
 #          NAME:  show_history
@@ -450,11 +468,11 @@ options_main_interact(){
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
     option_show "n"         "Next commit"
-    option_show "N"         "Prev commit"
+    option_show "p"         "Prev commit"
     option_show "u"         "Update watching branch (pull --rebase)"
     option_show "s"         "Show commit summary"
     option_show "S"         "Show detailed commit info"
-    option_show "p"         "Show diff"
+    option_show "d"         "Show diff"
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other commits (cherry-pick)"
@@ -489,7 +507,7 @@ options_main_interact(){
             true
 
             ;;
-        N)  # Prev commit
+        p)  # Prev commit
             # get the previous commit id
             commit_id="$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
 
@@ -575,7 +593,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        p)  # show patch
+        d)  # show patch
             clear_screen default
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             command git --no-pager show "$commit_id" | lsdiff
@@ -724,10 +742,6 @@ options_main_interact(){
             el_explain 0 "Session not shared"
 
             # remove all our watcher traces if we don't want to save the session
-            if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
-                rm -rf "$conf_d/$repo_id"
-            fi
-
             exit
 
             ;;

@@ -366,8 +366,8 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick -Xpatience -x -s '$commit_id'"
     if command git cherry-pick -Xpatience -x -s "$commit_id" ; then
-        el_explain 0 "Successfully applied!"
-        el_explain 0 "If you need to __add related commits__ in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
+        el_explain 0 "XXSuccessfullyXX applied!"
+        el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
         echo -e "Press Enter to continue"
         read nothing
         # TODO: if cherry-pick success, show a list of the next 20 commits and ask if we want to include more of them (copypaste id),
@@ -471,7 +471,8 @@ options_main_interact(){
     option_show "p"         "Prev commit"
     option_show "u"         "Update watching branch (pull --rebase)"
     option_show "s"         "Show commit summary"
-    option_show "S"         "Show detailed commit info"
+    option_show "S"         "Show detailed info"
+    option_show "h"         "Show history"
     option_show "d"         "Show diff"
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "i"         "Import this commit (cherry-pick)"
@@ -488,8 +489,9 @@ options_main_interact(){
     if [[ -n "$user_input_command" ]] ; then
         option_show "r"     " > Run:  $user_input_command"
     fi
-    option_show "l"         "List nearest commits (from our watching thread)"
-    option_show "L"         "List nearest commits (from the full branch history)"
+    option_show "a"         "list Around commits (from our watching thread)"
+    option_show "A"         "list Around commits (from the full branch history)"
+    option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit"
     option_show "Q"         "Quit sharing your session"
@@ -563,6 +565,9 @@ options_main_interact(){
             # update total of commits
             do_count_commits
 
+            # return back to main menu
+            $FUNCNAME
+
             ;;
         s)  # show info
             # show actual commit-id
@@ -592,6 +597,18 @@ options_main_interact(){
 
             # return back to main menu
             $FUNCNAME
+            ;;
+
+        h)  #history
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            # show history
+            show_history
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            # return back to main menu
+            $FUNCNAME
+
             ;;
         d)  # show patch
             clear_screen default
@@ -624,6 +641,7 @@ options_main_interact(){
 
             # return back to main menu
             $FUNCNAME
+
             ;;
         i)  # cherry-pick
             do_cherry_pick
@@ -701,7 +719,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        l)  #  list nearest
+        a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our watcher:"
 
             el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_working\"..\"$branch_watch\" $options_extra_git_after | grep --color -C 6 \"${commit_id:0:12}\""
@@ -713,7 +731,7 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        L)  # list nearest commits full
+        A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in its full branch history:"
 
             el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
@@ -723,6 +741,13 @@ options_main_interact(){
 
             # return back to main menu
             $FUNCNAME
+            ;;
+        l)  # shell
+            $SHELL -l
+
+            # return back to main menu
+            $FUNCNAME
+
             ;;
         B)  # bkp
             bkp save
@@ -759,11 +784,14 @@ options_main_interact(){
             if el_confirm "Share (push) your session?" ; then
                 #el_explain 0 "$ git add \".$(basename $0)/$repo_id\""
                 #command git add ".$(basename $0)/$repo_id"
-                el_explain 0 "$ git add \".$(basename $0)\""
-                command git add ".$(basename $0)"
 
-                el_explain "git commit -m \"$(basename $0): auto: sharing watcher: (worked on $repo_id)\""
-                command git commit -m "$(basename $0): auto: sharing watcher: (worked on $repo_id)"
+                #el_explain 0 "$ git add \".$(basename $0)\""
+                # FIXME: we cannot include this in the git repo because it is going to be shared with upstream too, maybe we should use something different like dropbox which is also realtime
+                #command git add ".$(basename $0)/$repo_id"
+                #command git add ".$(basename $0)"
+
+                #el_explain "git commit -m \"$(basename $0): auto: sharing watcher: (worked on $repo_id)\""
+                #command git commit -m "$(basename $0): auto: sharing watcher: (worked on $repo_id)"
 
                 el_explain 0 "Now push your branch to share it: XXgit push REMOTE ${branch_working}XX"
             else

@@ -364,7 +364,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
         return 0
     else
-        el_error "Connection to internet not found"
+        el_debug "Connection to internet not found"
 
         return 1
     fi

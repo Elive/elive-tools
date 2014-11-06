@@ -9,6 +9,11 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     alias _complete=_bash_comp
     #emulate -L sh
     #setopt kshglob noshglob braceexpand
+
+    # we cannot set parameters on this variable, so use it without icon:
+    [[ -z "$guitool" ]] && guitool="/usr/bin/zenity"
+else
+    [[ -z "$guitool" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 fi
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
@@ -59,7 +64,6 @@ fi
 # extra vars
 source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
-[[ -z "$guitool" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 
 
 #-------------------------------------------------------------------------------

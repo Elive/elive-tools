@@ -350,8 +350,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         echo "$date_hour_now" > "$stamp_hour_prev"
         el_debug "connection to internet found at ping level"
         return 0
-    else
-        el_debug "seems like we cannot ping google yet, strange, let's check other things..."
     fi
 
 

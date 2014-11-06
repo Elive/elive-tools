@@ -227,13 +227,15 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout
+    local stamp_hour_prev stamp_hour_prev_offline date_hour_now date_hour_prev date_hour_prev_offline returned OnLine i mode timeout
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
+    stamp_hour_prev_offline="/tmp/.stamps-${USER}/verify_internet-last_run_hour_offline"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
 
     date_hour_now="$( date +%s )"
     date_hour_prev="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
+    date_hour_prev_offline="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
 
     # remove extra leading blank chars
     read -r date_hour_prev <<< "$date_hour_prev"
@@ -283,21 +285,24 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     done
 
 
-    # exit correctly if we have already run that before, we don't want to lose time in a ping
-    # 1200 sec == 20 min
-    if [[ -e "$stamp_hour_prev" ]] ; then
-        if [[ -n "$OnLine" ]] ; then
-            if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
+    # cache online (5 min)
+    if [[ -s "$stamp_hour_prev" ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 300 ]] ; then
+            if [[ -n "$OnLine" ]] ; then
+                el_debug "we was online at least 5 minutes ago, our carrier says the same, so assume it for speed"
 
-                if el_verify_internet_ping 1  2>/dev/null ; then
-                    echo "$date_hour_now" > "$stamp_hour_prev"
-                    #el_debug "we was online at least 20 min ago and seems like that we still online, so we return that assumption"
-                    el_debug "we was online at least 20 min ago and a fast ping demonstrated it"
+                return 0
+            fi
+        fi
+    fi
 
-                    return 0
-                else
-                    el_debug "we was online at least 20 min ago, but we cannot ping to google in one second so let's do other checks..."
-                fi
+    # cache offline (5 min)
+    if [[ -s "$stamp_hour_prev_offline" ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | bc -l )" -lt 300 ]] ; then
+            if [[ -z "$OnLine" ]] ; then
+                el_debug "we was offline at least 5 minutes ago, our carrier says the same, so assume it for speed"
+
+                return 1
             fi
         fi
     fi
@@ -328,7 +333,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     do
         if /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
             el_debug "route or ip route tell us that we are correctly routed"
-            OnLine=1
             break
         else
             # fast check ? directly return
@@ -364,6 +368,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
         return 0
     else
+        echo "$date_hour_now" > "$stamp_hour_prev_offline"
         el_debug "Connection to internet not found"
 
         return 1

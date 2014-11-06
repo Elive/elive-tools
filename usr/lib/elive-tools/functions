@@ -247,11 +247,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         timeout=8
     fi
 
-    # debug
-    if [[ -n "$date_hour_prev" ]] ; then
-        el_debug "previous check was at $date_hour_prev and now is $date_hour_now"
-    fi
-
     # }}}
 
     # Test for network carrier first, and exit if we don't have it at all

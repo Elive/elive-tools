@@ -210,11 +210,11 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 
         # wanna debug more?
         if [[ "${EL_DEBUG}" -gt "2" ]] ; then
-            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.goggle.com )"
+            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.goggle.com 2>&1 )"
             if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
-                el_debug "by other side we can ping directly to the DNS server of google (8.8.8.8), is your /etc/resolv.conf correctly set?"
+                el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
             else
-                el_debug "we cannot even ping to the google dns (8.8.8.8), so you have no connection at all"
+                el_debug "we cannot even ping to the google dns (8.8.8.8)"
             fi
         fi
 
@@ -254,58 +254,52 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # Test for network carrier first, and exit if we don't have it at all
     # we should have "something" connected somewhere
     unset OnLine
-    #for i in 1 2 3 4 5 6
-    for i in 1 2
+    #for interface in $(ls /sys/class/net/ | grep -v lo);
+    for interface in /sys/class/net/*
     do
-        #for interface in $(ls /sys/class/net/ | grep -v lo);
-        for interface in /sys/class/net/*
-        do
-            interface="${interface##*/}"
-            if [[ "${interface}" = "lo" ]] ; then
-                continue
-            fi
-
-            if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
-                el_debug "carrier for $interface marks that we are connected"
-
-                OnLine=1;
-                break 2
-            fi
-        done
-
-        if [[ "$mode" = "fast" ]] ; then
-            if [[ "${interface}" != "lo" ]] ; then
-                el_debug "carrier for $interface tells us that we are not connected, fast mode is set so we sadly return that we are not connected"
-            fi
-
-            return 1
+        interface="${interface##*/}"
+        if [[ "${interface}" = "lo" ]] ; then
+            continue
         fi
 
-        sleep 1
+        if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
+            el_debug "carrier for $interface marks that we are connected"
+
+            OnLine=1;
+            break 2
+        fi
     done
 
 
-    # cache online (5 min)
-    if [[ -s "$stamp_hour_prev" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 300 ]] ; then
-            if [[ -n "$OnLine" ]] ; then
-                el_debug "we was online at least 5 minutes ago, our carrier says the same, so assume it for speed"
 
+    # cache online (20 min)
+    if [[ -s "$stamp_hour_prev" ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
+
+            # if anything tell us that we are connected and we was before, we should still be
+            el_dependencies_check "route"
+            if [[ -n "$OnLine" ]] || /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
+                el_debug "seems like we still online, using cache + small checks"
                 return 0
             fi
         fi
     fi
 
-    # cache offline (5 min)
+    # cache offline (20 min)
     if [[ -s "$stamp_hour_prev_offline" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | bc -l )" -lt 300 ]] ; then
-            if [[ -z "$OnLine" ]] ; then
-                el_debug "we was offline at least 5 minutes ago, our carrier says the same, so assume it for speed"
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | bc -l )" -lt 1200 ]] ; then
 
+            # if all the other checks tell us that we really are not connected, say that we are not, in cache mode
+            el_dependencies_check "route"
+            if [[ -z "$OnLine" ]] && ! /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" && ! ip route | grep -qs "default via" ; then
+                el_debug "we was OFFline at least 20 minutes ago, so assume it for speed"
                 return 1
             fi
         fi
     fi
+
+    # we have not jumped from the caches, so remove them so we will avoid the next check loops
+    rm -f "$stamp_hour_prev_offline" "$stamp_hour_prev"
 
 
     # do a ping check
@@ -322,37 +316,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
 
-    # second attempt
-
-    el_dependencies_check "curl,route"
-
-    # check if gateway correctly set
-    unset OnLine
-
-    for i in 1 2
-    do
-        if /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
-            el_debug "route or ip route tell us that we are correctly routed"
-            break
-        else
-            # fast check ? directly return
-            if [[ "${mode}" = "fast" ]] ; then
-                return 1
-            fi
-
-            sleep 1
-        fi
-    done
-
-    # we should do another ping check ? well, nothing has changed in fact so do a fast one
-    # do a ping check
-    if el_verify_internet_ping 1  2>/dev/null ; then
-        echo "$date_hour_now" > "$stamp_hour_prev"
-        el_debug "connection to internet found at ping level"
-        return 0
-    fi
-
-
     # still in fast check ? return
     if [[ "${mode}" = "fast" ]] ; then
         return 1
@@ -362,7 +325,8 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # check for connection to internet using curl instead
     el_debug "let's do a last check using a curl to google"
 
-    if timeout 11 curl --connect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
+    el_dependencies_check "curl"
+    if timeout 9 curl --connect-timeout 8 www.google.com 2>/dev/null | grep -qsi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
         el_debug "connection to internet finally using curl"
 

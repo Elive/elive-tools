@@ -156,11 +156,50 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 }
 
 #-------------------------------------------------------------------------------
+#   Verify if we have internet connection with a fast ping check
+#-------------------------------------------------------------------------------
+el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
+    # pre {{{
+    local timeout
+    timeout="$1"
+
+    if [[ -z "$timeout" ]] ; then
+        # default timeout if not set
+        timeout=7
+    fi
+
+    # - pre }}}
+    if timeout $timeout ping -c 1 www.google.com  2>/dev/null 1>&2 ; then
+        return 0
+    else
+        # just do another small attemp, because we really want to use internet
+        if [[ "$timeout" -gt 5 ]] ; then
+
+            if timeout 1 ping -c 2 www.google.com  2>/dev/null 1>&2 ; then
+                return 0
+            fi
+        fi
+
+        # wanna debug more?
+        if [[ "${EL_DEBUG}" -gt "2" ]] ; then
+            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.goggle.com )"
+            if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
+                el_debug "by other side we can ping directly to the DNS server of google (8.8.8.8), is your /etc/resolv.conf correctly set?"
+            else
+                el_debug "we cannot even ping to the google dns (8.8.8.8), so you have no connection at all"
+            fi
+        fi
+
+        # in any case if we reach here, is because we cannot ping to google, so return that
+        return 1
+    fi
+}
+#-------------------------------------------------------------------------------
 #   Verify if we have internet connection (return value)
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
     mkdir -p "$(dirname "${stamp_hour_prev}" )"
@@ -171,12 +210,27 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # remove extra leading blank chars
     read -r date_hour_prev <<< "$date_hour_prev"
 
+    # note: we should not use delayed, we always want delayed, instead, we should use "fast" when we need a fast check
+    mode="$1"
+
+    if [[ "${mode}" = "fast" ]] ; then
+        timeout=2
+    else
+        timeout=8
+    fi
+
+    # debug
+    if [[ -n "$date_hour_prev" ]] ; then
+        el_debug "previous check was at $date_hour_prev and now is $date_hour_now"
+    fi
+
     # }}}
 
     # Test for network carrier first, and exit if we don't have it at all
     # we should have "something" connected somewhere
     unset OnLine
-    for i in 1 2 3 4 5 6 7
+    #for i in 1 2 3 4 5 6
+    for i in 1 2
     do
         #for interface in $(ls /sys/class/net/ | grep -v lo);
         for interface in /sys/class/net/*
@@ -187,12 +241,15 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             fi
 
             if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
+                el_debug "carrier for $interface marks that we are online"
+
                 OnLine=1;
                 break 2
             fi
         done
 
-        if [[ "$1" != "delayed" ]] ; then
+        if [[ "$mode" = "fast" ]] ; then
+            el_debug "carrier for $interface tells us that we not online, fast mode is set so we sadly return that we are not connected"
             return 1
         fi
 
@@ -200,37 +257,52 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     done
 
 
-    # exit correctly if we have already run that before
+    # exit correctly if we have already run that before, we don't want to lose time in a ping
     # 1200 sec == 20 min
     if [[ -e "$stamp_hour_prev" ]] ; then
         if [[ -n "$OnLine" ]] ; then
             if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
 
+                el_debug "we was online at least 20 min ago and seems like that we still online, so we return that assumption"
                 return 0
             fi
         fi
-
     fi
 
-    # we never had internet before and we are not online, return false without delaying more
-    if [[ ! -e "$stamp_hour_prev" ]] && [[ -z "$OnLine" ]] ; then
-        return 1
+
+    # do a ping check
+    if el_verify_internet_ping $timeout ; then
+        echo "$date_hour_now" > "$stamp_hour_prev"
+        el_debug "connection to internet found at ping level"
+        return 0
+    else
+        if [[ "${mode}" = "fast" ]] ; then
+            # we have no time for other checks, return
+            return 1
+        fi
+
+        el_debug "seems like we cannot ping google yet, strange, let's check other things..."
     fi
 
+
+
+    # second attempt
 
     el_dependencies_check "curl,route"
 
     # check if gateway correctly set
     unset OnLine
-    for i in 1 2 3 4
+
+    for i in 1 2
     do
-        if /sbin/route -n | grep UG | grep -q "0.0.0.0" || ip route | grep -q "default via" ; then
+        if /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
+            el_debug "route or ip route tell us that we are correctly routed"
             OnLine=1
             break
         else
             # fast check ? directly return
-            if [[ "$1" != "delayed" ]] ; then
+            if [[ "${mode}" = "fast" ]] ; then
                 return 1
             fi
 
@@ -238,19 +310,26 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         fi
     done
 
-    if ! [ $OnLine ]; then
-        return 1
+    # we should do another ping check ? well, nothing has changed in fact so do a fast one
+    # do a ping check
+    if el_verify_internet_ping 1 ; then
+        echo "$date_hour_now" > "$stamp_hour_prev"
+        el_debug "connection to internet found at ping level"
+        return 0
+    else
+        el_debug "seems like we cannot ping google yet, strange, let's check other things..."
     fi
 
 
-    # check for connection to internet
+
+    # check for connection to internet using curl instead
     if timeout 6 curl --connect-timeout 4 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 
         return 0
     else
         # fast check ? directly return
-        if [[ "$1" != "delayed" ]] || [[ "$1" != "force" ]] || [[ "$1" != "-f" ]] ; then
+        if [[ "${mode}" = "fast" ]] ; then
             return 1
         fi
 
@@ -268,7 +347,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
                 return 0
             else
-                echo -e "Connection to internet not found" 1>&2
+                el_error "Connection to internet not found"
                 echo "$date_hour_now" > "$stamp_hour_prev"
 
                 return 1

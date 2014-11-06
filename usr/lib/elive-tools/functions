@@ -34,7 +34,28 @@ else
     is_terminal=0
 fi
 
-if [[ -z "$NOCOLOR" ]] || [[ -z "$LS_COLOR" ]] ; then
+if [[ -n "$NOCOLOR" ]] || [[ -z "$LS_COLORS" ]] ; then
+    el_c_n=""
+    el_c_r=""
+    el_c_r2=""
+    el_c_g=""
+    el_c_g2=""
+    el_c_y=""
+    el_c_y2=""
+    el_c_m=""
+    el_c_m2=""
+    el_c_c=""
+    el_c_c2=""
+    el_c_b=""
+    el_c_b2=""
+    el_c_gr=""
+    el_c_gr2=""
+
+    el_c_blink=""
+    el_c_underline=""
+    el_c_italic=""
+    el_c_bold=""
+else
     el_c_n="\033[0;39m" # Normal color  (orig: normal)
     el_c_r="\033[1;31m" # Red color  (orig: red)
     el_c_r2="\033[0;31m" # Red2 color  (orig: red)

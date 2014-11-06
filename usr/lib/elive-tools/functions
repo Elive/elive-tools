@@ -348,7 +348,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
                 return 0
             else
                 el_error "Connection to internet not found"
-                echo "$date_hour_now" > "$stamp_hour_prev"
 
                 return 1
             fi

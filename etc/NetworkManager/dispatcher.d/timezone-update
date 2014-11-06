@@ -71,9 +71,8 @@ main(){
     # }}}
 
     # let's connect to internet first, and do at least one ping somewhere! or arp -a will not work
-    el_verify_internet delayed 2>/dev/null 1>/dev/null
-    timeout 20 ping -c 1 google.com 1>/dev/null 2>/dev/null
-    timeout 20 dig NS google.com 1>/dev/null 2>/dev/null
+    el_verify_internet 2>/dev/null 1>/dev/null
+    timeout 10 ping -c 1 google.com 1>/dev/null 2>/dev/null || timeout 10 dig NS google.com 1>/dev/null 2>/dev/null
     sleep 1
 
     # mark a stamp, amount of users that was able to successfully connect to internet

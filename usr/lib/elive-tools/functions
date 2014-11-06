@@ -334,41 +334,23 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     fi
 
 
+    # still in fast check ? return
+    if [[ "${mode}" = "fast" ]] ; then
+        return 1
+    fi
+
 
     # check for connection to internet using curl instead
-    if timeout 6 curl --connect-timeout 4 www.google.com 2>/dev/null | grep -qi 'html' ; then
+    if timeout 11 curl --connect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
 
         return 0
     else
-        # fast check ? directly return
-        if [[ "${mode}" = "fast" ]] ; then
-            return 1
-        fi
+        el_error "Connection to internet not found"
 
-        #el_warning "no connection to internet found, waiting 3 seconds"
-        #sleep 3
-        if timeout 10 curl --connect-timeout 8 www.google.com 2>/dev/null | grep -qi 'html' ; then
-            echo "$date_hour_now" > "$stamp_hour_prev"
-
-            return 0
-        else
-            el_warning "no connection to internet found, waiting 2 seconds"
-            sleep 2
-            if timeout 16 curl --conect-timeout 14 www.google.com 2>/dev/null | grep -qi 'html' ; then
-                echo "$date_hour_now" > "$stamp_hour_prev"
-
-                return 0
-            else
-                el_error "Connection to internet not found"
-
-                return 1
-            fi
-        fi
+        return 1
     fi
-
 }
-
 
 #-------------------------------------------------------------------------------
 #   Make ready the user's environment (bash variables, extra functions, etc)

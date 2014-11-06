@@ -269,7 +269,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             fi
 
             if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
-                el_debug "carrier for $interface marks that we are online"
+                el_debug "carrier for $interface marks that we are connected"
 
                 OnLine=1;
                 break 2
@@ -277,7 +277,10 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         done
 
         if [[ "$mode" = "fast" ]] ; then
-            el_debug "carrier for $interface tells us that we not online, fast mode is set so we sadly return that we are not connected"
+            if [[ "${interface}" != "lo" ]] ; then
+                el_debug "carrier for $interface tells us that we are not connected, fast mode is set so we sadly return that we are not connected"
+            fi
+
             return 1
         fi
 
@@ -315,8 +318,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             # we have no time for other checks, return
             return 1
         fi
-
-        el_debug "seems like we cannot ping google yet, strange, let's check other things..."
     fi
 
 
@@ -360,8 +361,11 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet using curl instead
+    el_debug "let's do a last check using a curl to google"
+
     if timeout 11 curl --connect-timeout 10 www.google.com 2>/dev/null | grep -qi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
+        el_debug "connection to internet finally using curl"
 
         return 0
     else

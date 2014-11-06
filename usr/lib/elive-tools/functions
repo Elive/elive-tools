@@ -316,7 +316,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # we should do another ping check ? well, nothing has changed in fact so do a fast one
     # do a ping check
-    if el_verify_internet_ping 1 ; then
+    if el_verify_internet_ping 1  2>/dev/null ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
         el_debug "connection to internet found at ping level"
         return 0

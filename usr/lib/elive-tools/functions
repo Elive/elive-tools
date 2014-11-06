@@ -290,9 +290,12 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | bc -l )" -lt 1200 ]] ; then
 
             # if all the other checks tell us that we really are not connected, say that we are not, in cache mode
-            el_dependencies_check "route"
-            if [[ -z "$OnLine" ]] && ! /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" && ! ip route | grep -qs "default via" ; then
-                el_debug "we was OFFline at least 20 minutes ago, so assume it for speed"
+            if el_verify_internet_ping 2 ; then
+                echo "$date_hour_now" > "$stamp_hour_prev"
+                el_debug "connection to internet found at ping level"
+                return 0
+            else
+                el_debug "we was OFFline at least 20 minutes ago, ping dont answer in 2 seconds, we should still off"
                 return 1
             fi
         fi

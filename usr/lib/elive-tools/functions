@@ -269,10 +269,16 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     if [[ -e "$stamp_hour_prev" ]] ; then
         if [[ -n "$OnLine" ]] ; then
             if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | bc -l )" -lt 1200 ]] ; then
-                echo "$date_hour_now" > "$stamp_hour_prev"
 
-                el_debug "we was online at least 20 min ago and seems like that we still online, so we return that assumption"
-                return 0
+                if el_verify_internet_ping 1  2>/dev/null ; then
+                    echo "$date_hour_now" > "$stamp_hour_prev"
+                    #el_debug "we was online at least 20 min ago and seems like that we still online, so we return that assumption"
+                    el_debug "we was online at least 20 min ago and a fast ping demonstrated it"
+
+                    return 0
+                else
+                    el_debug "we was online at least 20 min ago, but we cannot ping to google in one second so let's do other checks..."
+                fi
             fi
         fi
     fi

@@ -210,7 +210,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 
         # wanna debug more?
         if [[ "${EL_DEBUG}" -gt "2" ]] ; then
-            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.goggle.com 2>&1 )"
+            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.google.com 2>&1 )"
             if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
                 el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
             else

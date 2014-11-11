@@ -425,6 +425,9 @@ main(){
     action="$@"
 
     conf="$HOME/.config/setvolume"
+    if ! [[ -d "$(dirname "$conf" )" ]] ; then
+        mkdir -p "$( dirname "$conf" )"
+    fi
 
     meter="$( get_meter )"
     el_explain 2 "selected meter: $meter"

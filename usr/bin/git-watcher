@@ -2,6 +2,9 @@
 source /usr/lib/elive-tools/functions
 el_make_environment
 
+# TODO: alternative to bkp that should be faster, try git stage
+# FIXME: add variable checkers everywhere neeeded
+
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
 #   DESCRIPTION:  delete temporal things when exit
@@ -13,14 +16,163 @@ exit_cleanups(){
     el_debug
 
     # }}}
+    # do we need to recover our original position?
+    if ((is_traveling)) && [[ -n "$_commit_id" ]] ; then
+        el_explain 0 "Restoring time-traveling position!"
+
+        commit_id="$_commit_id"
+        echo "$commit_id" > "$conf_commit_last_f"
+
+        do_count_commits
+        unset is_traveling
+    fi
+
     if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
         rm -rf "$conf_d/$repo_id"
+    fi
+
+    # tell us if we save
+    if [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+        el_explain 0 "Session __saved__"
+    else
+        el_explain 0 "Session not saved"
+    fi
+
+    # share session always when exiting
+    if ((is_shared)) ; then
+        # store actual position for future calls of this tool
+        if [[ "$commit_id" != "$( tail -1 "$shared_personal_d/last_commit_tracked" )" ]] ; then
+            echo "$commit_id" > "$shared_personal_d/last_commit_tracked"
+            #echo "$counter $counter_total" > "$shared_personal_d/last_commit_tracked_progress"
+            el_explain 0 "Session __shared__"
+        fi
+
+    else
+        el_explain 0 "Session not shared"
     fi
 }
 
 el_add_on_exit exit_cleanups
 
-# TODO: alternative to bkp that should be faster, try git stage
+#===  FUNCTION  ================================================================
+#          NAME:  conf_share_setup
+#   DESCRIPTION:  configure shares if not configured yet
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+conf_share_setup(){
+    # pre {{{
+    local arg
+    el_debug
+
+    # }}}
+
+    # setup new shared conf
+    if ! [[ -L "$conf_d/$repo_id/shared" ]] ; then
+        if el_confirm "Include sharing features? useful to work among other ppl in the same repo watcher" ; then
+            # let's cowork!
+
+            # dropbox shared dir
+            echo -e "We use dropbox for a shared control directory, insert the absolute-path address of this directory, for example: $HOME/Dropbox/developments/git-watcher (TAB to autocomplete)"
+            read -e shared_main_d
+            # remove extra leading blank chars
+            read -r shared_main_d <<< "${shared_main_d%/}"
+
+
+            # check it
+            if ! [[ -d "$shared_main_d" ]] ; then
+                el_error "shared dir not exist, you may want to create (and invite friends) first"
+                exit
+            fi
+
+            # remote working, needed for use as an identifier in the shares
+            if [[ -z "$remote_working" ]] ; then
+                if [[ "$( git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                    echo -e "\nWhich is the remote URL that you work (push) mainly with (optionally) friends?\n"
+                    command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t
+
+                    read -e remote_working
+                else
+                    remote_working="$( command git remote -v | grep "(push)" | awk '{print $2}' | head -1 )"
+                fi
+
+                echo "$remote_working" > "$conf_remote_work_from_f"
+            fi
+
+
+            # create location for this repository identifier
+            if ! [[ -d "$shared_main_d/$remote_working/$repo_id" ]] ; then
+                mkdir -p "$shared_main_d/$remote_working/$repo_id"
+            fi
+
+            ln -s "$shared_main_d/$remote_working/$repo_id" "$conf_d/$repo_id/shared"
+
+            shared_d="$conf_d/$repo_id/shared"
+            shared_personal_d="$shared_d/$git_username"
+            mkdir -p "$shared_personal_d"
+
+            echo "$git_email" > "$shared_personal_d/email.txt" # and this is how we expect to be contacted
+
+            # sync our changes
+            run_dropbox
+        fi
+    fi
+}
+#===  FUNCTION  ================================================================
+#          NAME:  run_dropbox
+#   DESCRIPTION:  run the dropbox daemon
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+run_dropbox(){
+    # pre {{{
+    el_debug
+
+    el_dependencies_check "dropbox"
+
+    # }}}
+    if ! ps ux | grep -v grep | grep -qs "$HOME/\.dropbox-dist/" ; then
+        dropbox start -i
+    fi
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  go_to_commit
+#   DESCRIPTION:  go to a commit position, and returns back on the normal history when finished
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+go_to_commit(){
+    # pre {{{
+    el_debug
+    # }}}
+
+    # save our real position
+    _commit_id="$commit_id"
+
+    is_traveling=1
+
+    echo -e "Insert the desired commit to go on this watcher history"
+    read -e commit_id
+
+    # mark our new position
+    echo "$commit_id" > "$conf_commit_last_f"
+
+    # count our new position
+    do_count_commits
+
+    # and so, what you want to do now?
+    options_main_interact
+
+    # we are back! let's restore
+    el_explain 0 "Restoring time-traveling position!"
+    commit_id="$_commit_id"
+
+    # count our new position
+    do_count_commits
+
+    unset is_traveling
+}
 #===  FUNCTION  ================================================================
 #          NAME:  show_history
 #   DESCRIPTION:  show last history if any
@@ -41,10 +193,10 @@ show_history(){
         el_explain 0 "Your __not pushed__ changes:"
 
 
-        git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
+        command git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
     else
         el_explain 0 "Recent history in your working branch:"
-        git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -12
+        command git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -12
 
     fi
 }
@@ -212,8 +364,8 @@ do_count_commits(){
             counter_total="$(( $counter_total + 1 ))"
 
             # skip until last commit
-            if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
-                if [[ "$line" = "commit "$commit_id_last ]] ; then
+            if [[ -n "$commit_id" ]] && ! ((is_commit_id_last_reached)) ; then
+                if [[ "$line" = "commit "$commit_id ]] ; then
                     is_commit_id_last_reached=1
                 else
                     # loop until we reach the desired commit
@@ -221,7 +373,8 @@ do_count_commits(){
                 fi
             fi
 
-            echo -en "\r${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+            #echo -en "\r${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+            echo -en "\r${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
         fi
 
     done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
@@ -343,6 +496,8 @@ EOF
 
             ;;
         l)
+            el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
+
             $SHELL -l
 
             $FUNCNAME
@@ -427,7 +582,6 @@ option_show(){
     # pre {{{
     local char
     local description
-    el_debug
 
     char="$1"
     description="$2"
@@ -457,7 +611,8 @@ options_main_interact(){
     #       - review (accept / approve)
     #       - ask/suggest a cherry-pick
     #       - message to @who
-    #       - positions (marks of commits should move you to the marked position)
+    #       - positions (marks of commits should move you [temporally] to the marked position)
+
 
     # TODO: INBOX: show by default message to "you"
     # TODO: when sending messages, could be there a way to receive them via email or something like this? gmail from cli? mmh..
@@ -469,7 +624,9 @@ options_main_interact(){
     #option_show "h"         "Help: how this tool works" # TODO add
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit"
-    option_show "u"         "Update watching branch (pull --rebase)"
+    option_show "g"         "Go to commit id"
+    option_show "u"         "Update working branch (pull --rebase)"
+    option_show "U"         "Update watching branch (pull --rebase)"
     option_show "s"         "Show commit summary"
     option_show "S"         "Show detailed info"
     option_show "h"         "Show history"
@@ -494,7 +651,7 @@ options_main_interact(){
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit"
-    option_show "Q"         "Quit sharing your session"
+    option_show "Q"         "Quit!"
     echo -e "${el_c_b}================================================================${el_c_n}"
 
 
@@ -506,10 +663,15 @@ options_main_interact(){
     case "$option" in
         n)  # Next commit
             #el_explain 0 "Saving last commit watched"
-            true
+            return
 
             ;;
         p)  # Prev commit
+            if ((is_traveling)) ; then
+                # so we return from who called it, which is go_to_commit
+                return
+            fi
+
             # get the previous commit id
             commit_id="$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
 
@@ -536,19 +698,36 @@ options_main_interact(){
 
 
             ;;
-        u)
+        g)  # go to commit id
+            go_to_commit
+
+            ;;
+        u)  # update working branch
+
+            el_explain 0 "git pull --rebase $branch_working"
+            command git pull --rebase "$branch_working"
+
+            # update total of commits
+            do_count_commits
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
+        U)  # update watching branch
 
             # which remote to fetch from?
             if [[ -z "$remote_fetching" ]] ; then
-                if [[ "$( git remote -v | grep "(fetch)" | awk '{print $1}' | grep -v origin | wc -l )" -gt 1 ]] ; then
+                if [[ "$( git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
                     echo -e "\nWhich remote you want to update from ?\n"
-                    git remote -v | grep "(fetch)" | awk '{print $1}'
+                    command git remote -v | grep "(fetch)" | awk '{print $1}'
 
-                    read remote_fetching
-                    echo "$remote_fetching" > "$conf_remote_fetch_from_f"
+                    read -e remote_fetching
                 else
-                    remote_fetching=origin
+                    remote_fetching="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
                 fi
+
+                echo "$remote_fetching" > "$conf_remote_fetch_from_f"
             fi
 
 
@@ -588,7 +767,7 @@ options_main_interact(){
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
             # show status
-            git status
+            command git status
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
@@ -625,7 +804,7 @@ options_main_interact(){
             # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
                 echo -e "Set the editor (command) that you want to use"
-                read EDITOR
+                read -e EDITOR
             fi
 
             # edit files
@@ -670,8 +849,8 @@ options_main_interact(){
             ;;
         b)  # extra branches where to backport
             if [[ -z "$user_input_backport_branches" ]] ; then
-                read -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
-                read user_input_backport_branches
+                echo -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
+                read -e user_input_backport_branches
             fi
 
             if [[ -n "$user_input_backport_branches" ]] ; then
@@ -689,6 +868,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         z)  # undo
+            # TODO: show actual commit and ask before to undo it
             el_explain 0 "$ git reset --hard HEAD~1"
             command git reset --hard HEAD~1
 
@@ -743,6 +923,8 @@ options_main_interact(){
             $FUNCNAME
             ;;
         l)  # shell
+            el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
+
             $SHELL -l
 
             # return back to main menu
@@ -763,44 +945,25 @@ options_main_interact(){
             ;;
         q)  # quit
 
-            el_explain 0 "Session not saved"
-            el_explain 0 "Session not shared"
+            if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+                # TODO add another flag to not ask all the times if we select NO
+                if el_confirm "Do you want to save this session?" ; then
+                    # add a mark to know that this is a persistent watcher to save
+                    touch "$conf_d/$repo_id/flags/persistent_watcher"
 
-            # remove all our watcher traces if we don't want to save the session
-            exit
+                    # save some needed info
+                    echo "$branch_working" > "$conf_branch_working_f"
 
-            ;;
-
-        Q)  # quit and save/share
-            # add a mark to know that this is a persistent watcher to save
-            touch "$conf_d/$repo_id/flags/persistent_watcher"
-
-            # save some needed info
-            echo "$branch_working" > "$conf_branch_working_f"
-
-            el_explain 0 "Session __saved__"
-
-
-            if el_confirm "Share (push) your session?" ; then
-                #el_explain 0 "$ git add \".$(basename $0)/$repo_id\""
-                #command git add ".$(basename $0)/$repo_id"
-
-                #el_explain 0 "$ git add \".$(basename $0)\""
-                # FIXME: we cannot include this in the git repo because it is going to be shared with upstream too, maybe we should use something different like dropbox which is also realtime
-                #command git add ".$(basename $0)/$repo_id"
-                #command git add ".$(basename $0)"
-
-                #el_explain "git commit -m \"$(basename $0): auto: sharing watcher: (worked on $repo_id)\""
-                #command git commit -m "$(basename $0): auto: sharing watcher: (worked on $repo_id)"
-
-                el_explain 0 "Now push your branch to share it: XXgit push REMOTE ${branch_working}XX"
-            else
-                el_explain 0 "Session not shared"
-
+                    # ask and conf about sharing session
+                    conf_share_setup
+                fi
             fi
 
             exit
 
+            ;;
+        Q)
+            exit
             ;;
 
 
@@ -827,10 +990,11 @@ usage_show(){
     echo -e "Options:"
     option_show "-b" "Branch that you want to track changes"
     option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
-    option_show "-f" "Files where to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
+    option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
+
 
     echo -e ""
-    echo -e "Example making a new watch: $(basename $0) -b master -k fix" 1>&2
+    echo -e "Example of a new watcher: $(basename $0) -b master -k fix" 1>&2
     echo -e "To delete an existing watcher just remove the dir reference in .git-watcher" 1>&2
 
     echo -e ""
@@ -840,7 +1004,7 @@ usage_show(){
 
 main(){
     # version of this tool
-    tool_version="1.1"
+    tool_version="1.2"
     # pre {{{
 
     # get the working branch name
@@ -864,7 +1028,7 @@ main(){
                 ;;
             f)
                 files_search="$OPTARG"
-                options_extra_git_after="${files_search//,/ } $options_extra_git_after"
+                options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
                 ;;
             \?|*)
                 echo ""
@@ -883,7 +1047,8 @@ main(){
 
     # - input parameters }}}
     # configurations saved {{{
-    conf_d="${pwd}/.$(basename $0)"
+    #conf_d="${pwd}/.$(basename $0)"
+    conf_d="$HOME/.config/$(basename $0)"
 
     # compatibility replacements
     repo_id="$(pwd | sed -e 's|/|%|g' )"
@@ -920,8 +1085,10 @@ main(){
 
     if ! el_check_variables "branch_working,branch_watch" 2>/dev/null ; then
         usage_show
-        exit 1
+        exit
     fi
+
+
 
     # - checks }}}
 
@@ -930,11 +1097,11 @@ main(){
     repo_id="${branch_watch}::${keyword_search}::${files_search_regexed}"
 
     mkdir -p "$conf_d/$repo_id/flags"
-    mkdir -p "$conf_d/$repo_id/marks"
 
     conf_commit_last_f="${conf_d}/$repo_id/last_commit_tracked"
     conf_commit_last_progress_f="${conf_d}/$repo_id/last_commit_tracked_progress"
     conf_remote_fetch_from_f="${conf_d}/$repo_id/remote_fetching_from"
+    conf_remote_work_from_f="${conf_d}/$repo_id/remote_fetching_from"
     conf_branch_working_f="${conf_d}/$repo_id/branch_working_for"
 
     # - configurations saved }}}
@@ -942,13 +1109,18 @@ main(){
 
     # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
-        commit_id_last="$( tail -1 "$conf_commit_last_f" )"
+        commit_id="$( tail -1 "$conf_commit_last_f" )"
     fi
 
     # remote fetching
     if [[ -s "$conf_remote_fetch_from_f" ]] ; then
         remote_fetching="$( tail -1 "$conf_remote_fetch_from_f" )"
     fi
+    # remote working
+    if [[ -s "$conf_remote_work_from_f" ]] ; then
+        remote_working="$( tail -1 "$conf_remote_work_from_f" )"
+    fi
+
 
     # branch working
     if [[ -s "$conf_branch_working_f" ]] ; then
@@ -961,7 +1133,22 @@ main(){
         fi
     fi
 
+    git_username="$( command git config user.name | tail -1 )"
+    git_email="$( command git config user.email | tail -1 )"
+
     # - configurations get }}}
+
+    # get share configurations
+    if [[ -L "$conf_d/$repo_id/shared" ]] ; then
+        is_shared=1
+
+        shared_d="$conf_d/$repo_id/shared"
+        shared_personal_d="$shared_d/$git_username"
+
+        # start the share daemon
+        run_dropbox
+    fi
+
 
     # get the total of commits list
     do_count_commits
@@ -981,19 +1168,23 @@ main(){
         # get commit
         if [[ "$line" = "commit "* ]] ; then
 
+            # get the commit id of this loop
+            commit_id="${line#commit }"
 
-            # skip until last commit
-            if [[ -n "$commit_id_last" ]] && ! ((is_commit_id_last_reached)) ; then
-                if [[ "$line" = "commit "$commit_id_last ]] ; then
-                    is_commit_id_last_reached=1
-                else
-                    # loop until we reach the desired commit
-                    continue
+
+            # skip until last commit, this only runs when starting back a watcher
+            if ! ((is_commit_id_last_reached)) ; then
+                if [[ -n "$commit_id" ]] ; then
+                    if [[ "$line" = "commit "$commit_id ]] ; then
+                        is_commit_id_last_reached=1
+                    else
+                        # loop until we reach the desired commit
+                        el_debug "skip commit because is not $commit_id : $line"
+                        continue
+                    fi
                 fi
             fi
 
-
-            commit_id="${line#commit }"
 
 
             # show actual commit
@@ -1003,8 +1194,13 @@ main(){
             echo "$commit_id" > "$conf_commit_last_f"
             echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
 
+            #
             # show main options
             options_main_interact
+
+            el_debug "going to next loop"
+            #
+            #
 
             # count another commit because we go to next loop
             counter="$(( $counter + 1 ))"
@@ -1015,6 +1211,8 @@ main(){
         fi
 
     done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+
+
 
     if ! ((is_header_show)) ; then
         el_explain 0 "No more matches found"

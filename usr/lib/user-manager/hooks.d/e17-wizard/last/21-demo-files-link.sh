@@ -57,9 +57,9 @@ demo_file_add_home(){
                 subdir="$( dirname "${subdir}" )"
 
                 mkdir -p "${target}/${subdir}"
-                ln -s "$from" "$target/$subdir"
+                ln -f -s "$from" "$target/$subdir"
             else
-                ln -s "$from" "$target/"
+                ln -f -s "$from" "$target/"
             fi
 
             ;;

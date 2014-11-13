@@ -266,7 +266,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             el_debug "carrier for $interface marks that we are connected"
 
             OnLine=1;
-            break 2
+            break
         fi
     done
 

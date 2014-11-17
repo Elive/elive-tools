@@ -244,9 +244,10 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     mode="$1"
 
     if [[ "${mode}" = "fast" ]] ; then
-        timeout=2
+        # bad network in house dont show anything before 4 seconds
+        timeout=6
     else
-        timeout=8
+        timeout=12
     fi
 
     # }}}

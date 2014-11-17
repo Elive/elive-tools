@@ -9,11 +9,12 @@ main(){
     # }}}
 
     # Audio configurations {{{
+    rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
+
     el_explain 0 "Configuring audio cards..."
     audio-configurator --quiet
 
     el_explain 0 "Setting default volumes..."
-    rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
     setvolume defaults
 
     # - Audio configurations }}}

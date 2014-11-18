@@ -80,7 +80,28 @@ main(){
 
     # - DEMO outputs }}}
 
-    # try with ipaddresslabs
+
+    # try with freegeoip
+    if ! ((is_data_valid)) ; then
+        data="$( curl -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            is_data_valid=1
+        fi
+    fi
+
+    if ! ((is_data_valid)) ; then
+        data="$( curl -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
+
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            is_data_valid=1
+        fi
+    fi
+
+    # try with ipaddresslabs:
+    # note: actually it says demo license expired, place this test at the end
     if ! ((is_data_valid)) ; then
         data="$( curl -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
 
@@ -91,16 +112,6 @@ main(){
     fi
 
 
-    # try with freegeoip
-    if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 8 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
-
-        # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-            is_data_valid=1
-        fi
-    fi
-
 
     if ((is_data_valid)) ; then
         # show the ip, always good to have
@@ -108,6 +119,9 @@ main(){
 
         while read -ru 3 line
         do
+            # filter/remove some useless stuff
+            line="${line//geoplugin_/}"
+
             case "$line" in
                 \<latitude\>*)
                     line="${line#<latitude>}"
@@ -145,6 +159,12 @@ main(){
 
                     echo "continent_name::$line"
                 ;;
+                \<countryCode\>*)
+                    line="${line#<countryCode>}"
+                    line="${line%</countryCode>}"
+
+                    echo "country_code::$line"
+                ;;
                 \<CountryCode\>*)
                     line="${line#<CountryCode>}"
                     line="${line%</CountryCode>}"
@@ -156,6 +176,12 @@ main(){
                     line="${line%</country_code_iso3166alpha2>}"
 
                     echo "country_code::$line"
+                ;;
+                \<countryName\>*)
+                    line="${line#<countryName>}"
+                    line="${line%</countryName>}"
+
+                    echo "country_name::$line"
                 ;;
                 \<CountryName\>*)
                     line="${line#<CountryName>}"
@@ -175,6 +201,12 @@ main(){
 
                     echo "region_name::$line"
                 ;;
+                \<regionName\>*)
+                    line="${line#<regionName>}"
+                    line="${line%</regionName>}"
+
+                    echo "region_name::$line"
+                ;;
                 \<RegionName\>*)
                     line="${line#<RegionName>}"
                     line="${line%</RegionName>}"
@@ -185,6 +217,12 @@ main(){
                     line="${line#<region_code>}"
                     line="${line%</region_code>}"
                     line="$( echo "$line" | tr -cd '[[:digit:]]' )"
+
+                    echo "region_code::$line"
+                ;;
+                \<regionCode\>*)
+                    line="${line#<regionCode>}"
+                    line="${line%</regionCode>}"
 
                     echo "region_code::$line"
                 ;;

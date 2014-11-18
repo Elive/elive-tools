@@ -20,6 +20,12 @@ get_meter(){
         meter="${meter#meter:}"
         # remove extra leading blank chars
         read -r meter <<< "$meter"
+
+        # remove entry from conf if we have not it existing now
+        if [[ "${list}" != *"'$meter'"* ]] ; then
+            unset meter
+            sed -i '/^meter:/d' "$conf"
+        fi
     fi
 
     # }}}
@@ -488,6 +494,7 @@ main(){
         amixer -q set Master 100%  2>/dev/null
 
         # then set a default generic volume
+        unset meter
         main 80% 1>/dev/null
         exit
     fi

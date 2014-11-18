@@ -140,13 +140,13 @@ main(){
                     line="${line#<longitude>}"
                     line="${line%</longitude>}"
 
-                    echo "latitude::$line"
+                    echo "longitude::$line"
                 ;;
                 \<Longitude\>*)
                     line="${line#<Longitude>}"
                     line="${line%</Longitude>}"
 
-                    echo "latitude::$line"
+                    echo "longitude::$line"
                 ;;
                 \<continent_code\>*)
                     line="${line#<continent_code>}"

@@ -346,17 +346,12 @@ main(){
 
     location="$( showmylocation )"
 
-    if ! echo "$location" | grep -q "Latitude" ; then
+    if ! echo "$location" | grep -qi "Latitude" ; then
         el_warning "Cannot get latitude info from internet right now"
     fi
 
-    latitude="$( echo "$location" | grep "<Latitude>.*[[:digit:]]" | sed -e 's|^.*<Latitude>||g' -e 's|</Latitude.*$||g' )"
-    # remove extra leading blank chars
-    read -r latitude <<< "$latitude"
-
-    longitude="$( echo "$location" | grep "<Longitude>.*[[:digit:]]" | sed -e 's|^.*<Longitude>||g' -e 's|</Longitude.*$||g' )"
-    # remove extra leading blank chars
-    read -r longitude <<< "$longitude"
+    latitude="$( echo "$location" | awk -v FS="::" '{if ( $1 == "latitude") print $2}' )"
+    longitude="$( echo "$location" | awk -v FS="::" '{if ( $1 == "longitude") print $2}' )"
 
     if [[ -z "$latitude" ]] || [[ -z "$longitude" ]] ; then
         el_warning "Cannot get latitude or longitude info from internet right now"

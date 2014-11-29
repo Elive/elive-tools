@@ -1,0 +1,366 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+guitool=zenity
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_email_send
+#   DESCRIPTION:  send of email
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+do_email_send(){
+    # pre {{{
+    el_check_files "$conf_mutt"
+
+    if ! el_dependencies_check "mutt" ; then
+        el_dependencies_install "mutt"
+    fi
+
+    if ! el_check_variables "conf_mutt,conf" ; then
+        do_configure
+    fi
+
+    if ! el_check_variables "subject,to,message" ; then
+        el_error "missing arguments"
+    fi
+
+    if el_check_files "$message" 1>/dev/null 2>/dev/null ; then
+        is_message_file=1
+    fi
+
+    # }}}
+
+    if ((is_message_file)) ; then
+        if file "$message" | grep -qsi "HTML Document" ; then
+            is_html=1
+        else
+            # file is not html, ignore
+            true
+        fi
+    else
+        is_html=1
+    fi
+
+
+    # lacks attachments and body
+    if ((is_message_file)) ; then
+        el_debug "mutt -F \"$conf_mutt\" -s \"$subject\" \"$to\" \"${attachments[@]/#/-a}\" -- < \"$message\""
+
+        if ((is_html)) ; then
+            mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" -- < "$message"
+        else
+            mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" -- < "$message"
+        fi
+    else
+        el_debug "echo \"$message\" | mutt -F \"$conf_mutt\" -s \"$subject\" \"$to\" \"${attachments[@]/#/-a}\" --"
+
+        if ((is_html)) ; then
+            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+        else
+            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+        fi
+    fi
+
+}
+#===  FUNCTION  ================================================================
+#          NAME:  do_validate_sending
+#   DESCRIPTION:  validate if our set up email really works
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+do_validate_sending(){
+    # pre {{{
+    local result
+    el_check_files "$conf_mutt"
+
+    if ! el_dependencies_check "mutt" ; then
+        el_dependencies_install "mutt"
+    fi
+
+    if ! el_dependencies_check "curl" ; then
+        el_dependencies_install "curl"
+    fi
+
+    # }}}
+
+    echo "This is a verification / test email send by your own computer, seems like it works so just delete or ignore me" | mutt -F "$conf_mutt" -s "test email by elive" "$email_account"
+    #sleep 2
+
+    for i in 1 2 3 4 5 6 7
+    do
+        result="$( curl -u "${email_account}:${email_password}" --silent "https://mail.google.com/mail/feed/atom" | sed -e 's|<entry>|\n\n<entry>|g' | grep "<entry>" | sed -e 's|^.*<title>||g' -e 's|</title>.*$||g' )"
+
+        if echo "$result" | grep -qs "test email by elive" ; then
+            # succeed
+            local message_success_sending
+            message_success_sending="$( printf "$( eval_gettext "Your email sending works correctly. You will found in your email account a testing email that you can simply delete." )" "" )"
+
+            $guitool --info --text="$message_success_sending"
+            return 0
+        else
+            sleep 1
+        fi
+    done
+
+
+    # if we have not returned, something is wrong
+    local message_cannot_send_email
+    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account, please verify that you have POP and IMAP activated in your email settings, for more information see the help in google about how to enable them. By other side if our test email is in your spam folder you can add a filter to allow all the emails from this sender." )" "" )"
+
+    $guitool --warning --text="$message_cannot_send_email"
+
+    local message_try_again
+    message_try_again="$( printf "$( eval_gettext "Do you want to try again now? do this after to have enabled your IMAP and POP services." )" "" )"
+
+    if $guitool --question --text="$message_try_again" ; then
+        do_configure
+    else
+        return 1
+    fi
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_configure
+#   DESCRIPTION:  configure email client
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+do_configure(){
+    # pre {{{
+
+    # }}}
+    if [[ -z "$email_account" ]] ; then
+        local message_intro
+        message_intro="$( printf "$( eval_gettext "Setting up your email notifications, to use it you need a gmail email account, with this feature you can be notified via email if errors are detected on your computer, or we can make much easier for you the process of reporting problems to Elive, you will be always prompted when there's an email going to be sent. Do you want to continue?" )" "" )"
+
+        if ! $guitool --question --text="$message_intro" ; then
+            el_error "You didn't want to set up your email sending?"
+            exit 1
+        fi
+
+        local message_login
+        message_login="$( printf "$( eval_gettext "Insert your email, for example: %s" )" "john.smith@gmail.com" )"
+
+        # request username
+        email_account="$( $guitool --entry --text="$message_login" || echo cancel )"
+
+
+        local message_invalid
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a gmail account, for example '%s', please try again." )" "john.smith@gmail.com" )"
+
+        # verify username inserted
+        if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+            $guitool --error --text="$message_invalid"
+
+            email_account="$( $guitool --entry --text="$message_invalid" || echo cancel )"
+
+            if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+                exit 1
+            fi
+        fi
+    fi
+
+
+    # request password too
+    if [[ -z "$email_password" ]] ; then
+        local message_password
+        message_password="$( printf "$( eval_gettext "Insert your email password" )" "" )"
+
+        email_password="$( $guitool --entry --text="$message_password" || echo cancel )"
+
+        if [[ "${email_password}" = "cancel" ]] ; then
+            email_password="$( $guitool --entry --text="$message_password" || echo cancel )"
+
+            if [[ "${email_password}" = "cancel" ]] ; then
+                exit 1
+            fi
+        fi
+    fi
+
+
+    # cleanups
+    rm -f "$conf"
+    mkdir -p "$(dirname "$conf_mutt" )"
+    rm -f "$conf_mutt"
+
+
+    # configure client
+    case $email_account in
+        *@gmail*)
+            echo "# stmp, sending of emails:" >> "${conf_mutt}"
+            echo "set smtp_url = \"smtp://${email_account%%@*}@smtp.gmail.com:587/\"" >> "${conf_mutt}"
+            echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
+            echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
+
+            echo "email_account=\"$email_account\"" >> "$conf"
+            echo "email_password=\"$email_password\"" >> "$conf"
+            echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
+            ;;
+        #*@yahoo*)
+            # Well, we don't know how to verify if the sending works from a yahoo one so let's disable it for now
+            #echo "# stmp, sending of emails:" >> "${conf_mutt}"
+            #echo "set smtp_url = \"smtp://smtp.mail.${email_yahoo##*@}:587/\"" >> "${conf_mutt}"
+            #echo "set from = \"${email_account}\"" >> "${conf_mutt}"
+            #echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
+
+            #echo "email_account=\"$email_account\"" >> "$conf"
+            #echo "email_password=\"$email_password\"" >> "$conf"
+            #echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
+            #;;
+
+        *)
+            $guitool --error --text="Unknown email service provider, you should use a gmail account"
+            ;;
+    esac
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  usage
+#   DESCRIPTION:  shows usage help
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+usage(){
+    echo -e "
+    Usage: $(basename $0) args:
+
+[sending options]:
+-a attach_file (can be called multiple times)
+-t to
+-s subject
+-m message (can be file or text passed)
+
+[other options]
+-c  configure: it sets up your email sending and then exits
+-C  check:  checks if your sending of email works, and exits
+-d  debug mode
+-v  verbose mode
+"
+
+exit
+
+}
+
+main(){
+    # pre {{{
+    local conf
+
+    # user conf
+    conf="$HOME/.config/email-sender"
+    conf_mutt="$HOME/.mutt/accounts/elive-sender"
+    if [[ -s "$conf" ]] ; then
+        source "$conf"
+    fi
+
+    # }}}
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        usage
+    fi
+
+    #while true
+    #do
+        #case "$1" in
+            #--configure|-c)
+                #shift
+
+                #do_configure
+                ## testing email client
+                #do_validate_sending
+
+                #exit
+
+                #;;
+            #-a | --attach)
+                #shift
+                #el_array_member_add "$1" "${attachments[@]}" ; attachments=("${_out[@]}")
+
+                #;;
+            #-h | --help)
+                #usage
+                #;;
+        #esac
+    #done
+
+    while getopts ":a:cCdhm:s:t:v" opt; do
+        case $opt in
+            a)
+                el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")
+                el_explain 2 "attached file: $OPTARG"
+
+                echo -e "${attachments[@]}"
+
+                ;;
+            c)
+                el_debug "configure mode"
+                do_configure
+                do_validate_sending
+                exit
+
+                ;;
+            C)
+                do_validate_sending
+                exit
+
+                ;;
+            d)
+                export EL_DEBUG=3
+
+                ;;
+            h)
+                usage
+                exit
+                ;;
+
+            #p)
+                #is_plain_mode=1
+                #el_explain 2 "plain mode selected"
+
+                #;;
+            t)
+                to="$OPTARG"
+                el_explain 2 "target (to) is __${to}__"
+
+                ;;
+            m)
+                message="$OPTARG"
+                el_explain 2 "message is __${message}__"
+
+                ;;
+            s)
+                subject="$OPTARG"
+                el_explain 2 "subject is __${subject}__"
+
+
+                ;;
+            v)
+                export EL_DEBUG=2
+
+                ;;
+            \?)
+                el_error "Invalid option: -$OPTARG"
+                usage
+                exit 1
+                ;;
+            :)
+                el_error "Option -$OPTARG requires an argument."
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+
+    do_email_send
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

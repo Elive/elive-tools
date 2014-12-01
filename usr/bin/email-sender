@@ -196,7 +196,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "This tool allows you to send emails in a friendly way from your command line or scripts, it can also make much easier the process of reporting bugs to Elive, also, if your computer detects a possible error or disks full it can send an email to yourself so you will be notified, you will always be prompted when there's an email going to be sent automatically. Do you want to continue?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "This tool allows you to send emails in a practical way from your command line or scripts, it can also make much easier the process of reporting bugs to Elive, and if your computer detects a possible error or disks full it can send an email to yourself so you will be notified, you will always be prompted when there's an email going to be sent automatically. Do you want to continue?" )" "" )"
 
         if ! $guitool --question --text="$message_intro" ; then
             el_error "You didn't want to set up your email sending?"

@@ -30,7 +30,7 @@ do_email_send(){
         do_configure
     fi
 
-    if ! el_check_variables "subject,to,message" ; then
+    if ! el_check_variables "to,message" ; then
         el_error "missing arguments"
         exit 1
     fi
@@ -59,9 +59,22 @@ do_email_send(){
     #
     # Default values
     #
+    username="$(awk -v FS=":" -v user="$USER" '{if ($1 == user) print $5 }' /etc/passwd | sed -e 's|,.*$||g' | tail -1 )"
+    if [[ -z "$username" ]] || echo "$username" | grep -qsiE "Elive.User" ; then
+        username="$USER"
+    fi
+
+    if [[ -z "$subject" ]] ; then
+        local message_subject
+        message_subject="$( printf "$( eval_gettext "A message from %s in %s's computer" )" "$username" "$(hostname)" )"
+
+        subject="$message_subject"
+    fi
+
     if [[ -z "$title" ]] ; then
         title="$subject"
     fi
+
     if [[ -z "$template" ]] && ((is_html)) ; then
         template="default"
     fi
@@ -73,11 +86,6 @@ do_email_send(){
         else
             el_error "template don't exist in /usr/share/email-sender/templates"
         fi
-    fi
-
-    username="$(awk -v FS=":" -v user="$USER" '{if ($1 == user) print $5 }' /etc/passwd | sed -e 's|,.*$||g' | tail -1 )"
-    if [[ -z "$username" ]] || echo "$username" | grep -qsiE "Elive.User" ; then
-        username="$USER"
     fi
 
     #
@@ -342,12 +350,12 @@ usage(){
     Usage: $(basename $0) args:
 
 [sending options]:
--a attach_file (can be called multiple times)
+-a attach_file (can be called multiple times, optional)
 -t to
--s subject
--S super-subject (title message)
+-s subject (optional)
+-S super-subject (title message, optional)
 -m message (can be file or text passed)
--T template to use (if you want to use) [default|none]
+-T template to use (if you want to use, optional) [default|none]
 
 [other options]
 -c  configure: it sets up your email sending and then exits

@@ -22,6 +22,7 @@ do_email_send(){
 
     if ! el_check_variables "subject,to,message" ; then
         el_error "missing arguments"
+        exit 1
     fi
 
     if el_check_files "$message" 1>/dev/null 2>/dev/null ; then
@@ -34,32 +35,68 @@ do_email_send(){
         if file "$message" | grep -qsi "HTML Document" ; then
             is_html=1
         else
-            # file is not html, ignore
-            true
+            is_plain_mode=1
         fi
     else
         is_html=1
     fi
 
+    # force plain mode?
+    if ((is_plain_mode)) ; then
+        unset is_html
+    fi
 
-    # lacks attachments and body
-    if ((is_message_file)) ; then
-        el_debug "mutt -F \"$conf_mutt\" -s \"$subject\" \"$to\" \"${attachments[@]/#/-a}\" -- < \"$message\""
+    #
+    # Default values
+    #
+    if [[ -z "$title" ]] ; then
+        title="$subject"
+    fi
+    if [[ -z "$template" ]] && ((is_html)) ; then
+        template="default"
+    fi
 
-        if ((is_html)) ; then
-            mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" -- < "$message"
-        else
+
+    username="$(awk -v FS=":" -v user="$USER" '{if ($1 == user) print $5 }' /etc/passwd | sed -e 's|,.*$||g' | tail -1 )"
+    if [[ -z "$username" ]] || echo "$username" | grep -qsiE "Elive.User" ; then
+        username="$USER"
+    fi
+
+    #
+    # Send !
+    #
+
+    if ((is_plain_mode)) ; then
+        if ((is_message_file)) ; then
             mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" -- < "$message"
-        fi
-    else
-        el_debug "echo \"$message\" | mutt -F \"$conf_mutt\" -s \"$subject\" \"$to\" \"${attachments[@]/#/-a}\" --"
-
-        if ((is_html)) ; then
-            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
         else
-            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
         fi
     fi
+
+
+    if ((is_html)) ; then
+        # prepare template stuff
+        if [[ -f "$template" ]] ; then
+            if ((is_message_file)) ; then
+                message="$(cat "$message" )"
+            fi
+
+            cat "$template" | sed \
+                -e "s|XXXyearXXX|$(date +%Y)|g" \
+                -e "s|XXXusernameXXX|$username|g" \
+                -e "s|XXXyearXXX|$(date +%Y)|g" \
+                -e "s|XXXhostnameXXX|$(hostname)|g" \
+                -e "s|XXXyearXXX|$(date +%Y)|g" \
+                -e "s|XXXtitleXXX|$title|g" \
+                -e "s|XXXsubjectXXX|$subject|g" \
+                -e "s|XXXmessageXXX|$message|g" \
+                | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+
+
+        fi
+    fi
+
 
 }
 #===  FUNCTION  ================================================================
@@ -192,7 +229,6 @@ do_configure(){
             echo "set smtp_url = \"smtp://${email_account%%@*}@smtp.gmail.com:587/\"" >> "${conf_mutt}"
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
-            echo "set copy = no" >> "${conf_mutt}"
 
             echo "email_account=\"$email_account\"" >> "$conf"
             echo "email_password=\"$email_password\"" >> "$conf"
@@ -204,7 +240,6 @@ do_configure(){
             #echo "set smtp_url = \"smtp://smtp.mail.${email_yahoo##*@}:587/\"" >> "${conf_mutt}"
             #echo "set from = \"${email_account}\"" >> "${conf_mutt}"
             #echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
-            #echo "set copy = no" >> "${conf_mutt}"
 
             #echo "email_account=\"$email_account\"" >> "$conf"
             #echo "email_password=\"$email_password\"" >> "$conf"
@@ -232,13 +267,18 @@ usage(){
 -a attach_file (can be called multiple times)
 -t to
 -s subject
+-S super-subject (title message)
 -m message (can be file or text passed)
+-T template to use (if you want to use) [default|none]
 
 [other options]
 -c  configure: it sets up your email sending and then exits
 -C  check:  checks if your sending of email works, and exits
 -d  debug mode
 -v  verbose mode
+
+[modes]
+- You can use this tool with -m 'message' or concatenating from the standard input
 "
 
 exit
@@ -254,6 +294,10 @@ main(){
     conf_mutt="$HOME/.mutt/accounts/elive-sender"
     if [[ -s "$conf" ]] ; then
         source "$conf"
+    fi
+
+    if [[ ! -t 0 ]] ; then
+        is_stdin=1
     fi
 
     # }}}
@@ -287,7 +331,7 @@ main(){
         #esac
     #done
 
-    while getopts ":a:cCdhm:s:t:v" opt; do
+    while getopts ":a:cCdhm:s:S:pt:T:v" opt; do
         case $opt in
             a)
                 el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")
@@ -317,14 +361,9 @@ main(){
                 exit
                 ;;
 
-            #p)
-                #is_plain_mode=1
-                #el_explain 2 "plain mode selected"
-
-                #;;
-            t)
-                to="$OPTARG"
-                el_explain 2 "target (to) is __${to}__"
+            p)
+                is_plain_mode=1
+                el_explain 2 "plain mode selected"
 
                 ;;
             m)
@@ -336,10 +375,29 @@ main(){
                 subject="$OPTARG"
                 el_explain 2 "subject is __${subject}__"
 
+                ;;
+            S)
+                title="$OPTARG"
+                el_explain 2 "Title is __${title}__"
 
                 ;;
             v)
                 export EL_DEBUG=2
+
+                ;;
+            t)
+                to="$OPTARG"
+                el_explain 2 "target (to) is __${to}__"
+
+                ;;
+            T)
+                template="$OPTARG"
+                if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
+                    template="/usr/share/email-sender/templates/$template/main.html"
+                else
+                    el_error "template don't exist in /usr/share/elive-sender/templates"
+                fi
+                el_explain 2 "template is __${template}__"
 
                 ;;
             \?)
@@ -354,6 +412,11 @@ main(){
                 ;;
         esac
     done
+
+    # is our message from stdin ? use it
+    if ((is_stdin)) ; then
+        message="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+    fi
 
 
     do_email_send

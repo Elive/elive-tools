@@ -6,6 +6,10 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+tempfile_tmp="/tmp/.${USER}-$(basename $0)_tmp_$$"
+tempfile_body="/tmp/.${USER}-$(basename $0)_body_$$"
+el_add_on_exit rm -f "$tempfile_tmp" "$tempfile_body"
+
 #===  FUNCTION  ================================================================
 #          NAME:  do_email_send
 #   DESCRIPTION:  send of email
@@ -44,14 +48,10 @@ do_email_send(){
     if ((is_message_file)) ; then
         if file "$message" | grep -qsi "HTML Document" ; then
             is_html=1
-        else
-            is_plain_mode=1
         fi
-    else
-        is_html=1
     fi
 
-    # force plain mode?
+    # forced plain mode?
     if ((is_plain_mode)) ; then
         unset is_html
     fi
@@ -75,86 +75,93 @@ do_email_send(){
         title="$subject"
     fi
 
-    if [[ -z "$template" ]] && ((is_html)) ; then
+    if [[ -z "$template" ]] ; then
         template="default"
     fi
 
     # set template
-    if ((is_html)) ; then
-        if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
-            template="/usr/share/email-sender/templates/$template/main.html"
-        else
-            el_error "template don't exist in /usr/share/email-sender/templates"
-        fi
+    if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
+        #template="/usr/share/email-sender/templates/$template/main.html"
+        template_header="/usr/share/email-sender/templates/$template/header.html"
+        template_footer="/usr/share/email-sender/templates/$template/footer.html"
+    else
+        el_error "template don't exist in /usr/share/email-sender/templates"
     fi
+
+    #
+    # Prepare body message:
+    #
+    if ((is_plain_mode)) ; then
+        # dump to file and dont do any html conversion
+        if ((is_message_file)) ; then
+            cp -f "$message" "$tempfile_body"
+        else
+            echo "$message" > "$tempfile_body"
+        fi
+    else
+        # we don't want to be strictly plain, so let's do the conversion
+        if ! ((is_stdin)) ; then
+            # if is stdin we have already it
+            if ((is_message_file)) ; then
+                cp -f "$message" "$tempfile_tmp"
+            else
+                echo "$message" > "$tempfile_tmp"
+            fi
+        fi
+
+        # if we are not html (file command) we should convert it to html first
+        if ((is_html)) ; then
+            cp -f "$tempfile_tmp" "$tempfile_body"
+        else
+            # translate some simple text to html
+            cat "$tempfile_tmp" | awk '{if ($0 ~ /^\s+/)  print "<pre>"$0"</pre>"; else  print $0"<br/>" }' > "$tempfile_body"
+            is_html=1
+        fi
+
+
+    fi
+
 
     #
     # Send !
     #
 
-    if ((is_plain_mode)) ; then
-        if ((is_message_file)) ; then
-            mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" -- < "$message"
-
-            if [[ "$?" != 0 ]] ; then
-                is_message_showed_welcome=1
-                do_configure
-                do_validate_sending
-                # send again -this- email
-                $FUNCNAME
-            fi
-        else
-            message="$( echo "$message" | sed \
-                -e "s|<br>|\n|g" \
-                -e "s|<br/>|\n|g" \
-                -e "s|<b>|**|g" \
-                -e "s|</b>|**|g" \
-                -e "s|<strong>|**|g" \
-                -e "s|</strong>|**|g" \
-                )"
-
-            echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
-
-            if [[ "$?" != 0 ]] ; then
-                is_message_showed_welcome=1
-                do_configure
-                do_validate_sending
-                # send again -this- email
-                $FUNCNAME
-            fi
-        fi
-    fi
-
-
     if ((is_html)) ; then
-        # prepare template stuff
-        if [[ -f "$template" ]] ; then
-            if ((is_message_file)) ; then
-                message="$(cat "$message" )"
-            fi
 
-            cat "$template" | sed \
-                -e "s|XXXyearXXX|$(date +%Y)|g" \
-                -e "s|XXXusernameXXX|$username|g" \
-                -e "s|XXXyearXXX|$(date +%Y)|g" \
-                -e "s|XXXhostnameXXX|$(hostname)|g" \
-                -e "s|XXXyearXXX|$(date +%Y)|g" \
-                -e "s|XXXtitleXXX|$title|g" \
-                -e "s|XXXsubjectXXX|$subject|g" \
-                -e "s|XXXmessageXXX|$message|g" \
-                | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+        # create body
+        cp -f "$tempfile_body" "$tempfile_tmp"
+        cat "$template_header" "$tempfile_tmp" "$template_footer" | sed \
+            -e "s|XXXyearXXX|$(date +%Y)|g" \
+            -e "s|XXXusernameXXX|$username|g" \
+            -e "s|XXXyearXXX|$(date +%Y)|g" \
+            -e "s|XXXhostnameXXX|$(hostname)|g" \
+            -e "s|XXXyearXXX|$(date +%Y)|g" \
+            -e "s|XXXtitleXXX|$title|g" \
+            -e "s|XXXsubjectXXX|$subject|g" \
+            > "$tempfile_body"
 
-            if [[ "$?" != 0 ]] ; then
-                is_message_showed_welcome=1
-                do_configure
-                do_validate_sending
-                # send again -this- email
-                $FUNCNAME
-            fi
+        # SEND !
+        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+        if [[ "$?" != 0 ]] ; then
+            is_message_showed_welcome=1
+            do_configure
+            do_validate_sending
+            # send again -this- email
+            $FUNCNAME
+        fi
 
+    else
+
+        # SEND !
+        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
+        if [[ "$?" != 0 ]] ; then
+            is_message_showed_welcome=1
+            do_configure
+            do_validate_sending
+            # send again -this- email
+            $FUNCNAME
         fi
     fi
-
 
 }
 #===  FUNCTION  ================================================================
@@ -176,16 +183,21 @@ do_validate_sending(){
         el_dependencies_install "curl"
     fi
 
+    if [[ -z "$random" ]] ; then
+        random="$RANDOM$RANDOM$RANDOM"
+        random="${RANDOM:0:8}"
+    fi
+
     # }}}
 
-    echo "This is a verification / test email send by your own computer, seems like it works so just delete or ignore me" | mutt -F "$conf_mutt" -s "test email by elive" "$email_account"
+    echo "This is a verification email send by your own computer, seems like it works so just delete or ignore me" | mutt -F "$conf_mutt" -s "testing elive email ($random)" "$email_account"
     #sleep 2
 
     for i in 1 2 3 4 5 6 7
     do
         result="$( curl -u "${email_account}:${email_password}" --silent "https://mail.google.com/mail/feed/atom" | sed -e 's|<entry>|\n\n<entry>|g' | grep "<entry>" | sed -e 's|^.*<title>||g' -e 's|</title>.*$||g' | head -3 )"
 
-        if echo "$result" | grep -qs "test email by elive" ; then
+        if echo "$result" | grep -qs "testing elive email ($random)" ; then
             # succeed
             local message_success_sending
             message_success_sending="$( printf "$( eval_gettext "Email settings correctly working, you will found a testing email in your account, you can delete it." )" "" )"
@@ -427,7 +439,7 @@ main(){
 
             p)
                 is_plain_mode=1
-                el_explain 2 "plain mode selected"
+                el_explain 2 "__plain__ mode selected"
 
                 ;;
             m)
@@ -474,7 +486,9 @@ main(){
 
     # is our message from stdin ? use it
     if ((is_stdin)) ; then
-        message="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+        #message="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+        cat 2>&1 > "$tempfile_tmp"
+        message="$tempfile_tmp"
     fi
 
 

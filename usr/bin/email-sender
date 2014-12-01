@@ -62,10 +62,13 @@ do_email_send(){
         template="default"
     fi
 
-    if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
-        template="/usr/share/email-sender/templates/$template/main.html"
-    else
-        el_error "template don't exist in /usr/share/email-sender/templates"
+    # set template
+    if ((is_html)) ; then
+        if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
+            template="/usr/share/email-sender/templates/$template/main.html"
+        else
+            el_error "template don't exist in /usr/share/email-sender/templates"
+        fi
     fi
 
     username="$(awk -v FS=":" -v user="$USER" '{if ($1 == user) print $5 }' /etc/passwd | sed -e 's|,.*$||g' | tail -1 )"
@@ -81,6 +84,15 @@ do_email_send(){
         if ((is_message_file)) ; then
             mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" -- < "$message"
         else
+            message="$( echo "$message" | sed \
+                -e "s|<br>|\n|g" \
+                -e "s|<br/>|\n|g" \
+                -e "s|<b>|**|g" \
+                -e "s|</b>|**|g" \
+                -e "s|<strong>|**|g" \
+                -e "s|</strong>|**|g" \
+                )"
+
             echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
         fi
     fi

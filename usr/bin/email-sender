@@ -192,6 +192,7 @@ do_configure(){
             echo "set smtp_url = \"smtp://${email_account%%@*}@smtp.gmail.com:587/\"" >> "${conf_mutt}"
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
+            echo "set copy = no" >> "${conf_mutt}"
 
             echo "email_account=\"$email_account\"" >> "$conf"
             echo "email_password=\"$email_password\"" >> "$conf"
@@ -203,6 +204,7 @@ do_configure(){
             #echo "set smtp_url = \"smtp://smtp.mail.${email_yahoo##*@}:587/\"" >> "${conf_mutt}"
             #echo "set from = \"${email_account}\"" >> "${conf_mutt}"
             #echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
+            #echo "set copy = no" >> "${conf_mutt}"
 
             #echo "email_account=\"$email_account\"" >> "$conf"
             #echo "email_password=\"$email_password\"" >> "$conf"

@@ -30,7 +30,7 @@ do_email_send(){
     fi
 
     # check if we have a valid setup and otherwise set it up first
-    if [[ -z "$email_account" ]] || [[ -z "$email_password" ]] ; then
+    if [[ -z "$email_account" ]] || [[ -z "$email_password" ]] || ! [[ -s "$conf_mutt" ]] ; then
         do_configure
         do_validate_sending
     fi
@@ -330,29 +330,6 @@ main(){
         usage
     fi
 
-    #while true
-    #do
-        #case "$1" in
-            #--configure|-c)
-                #shift
-
-                #do_configure
-                ## testing email client
-                #do_validate_sending
-
-                #exit
-
-                #;;
-            #-a | --attach)
-                #shift
-                #el_array_member_add "$1" "${attachments[@]}" ; attachments=("${_out[@]}")
-
-                #;;
-            #-h | --help)
-                #usage
-                #;;
-        #esac
-    #done
 
     while getopts ":a:cCdhm:s:S:pt:T:v" opt; do
         case $opt in

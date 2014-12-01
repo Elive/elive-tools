@@ -56,6 +56,11 @@ do_email_send(){
         template="default"
     fi
 
+    if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
+        template="/usr/share/email-sender/templates/$template/main.html"
+    else
+        el_error "template don't exist in /usr/share/email-sender/templates"
+    fi
 
     username="$(awk -v FS=":" -v user="$USER" '{if ($1 == user) print $5 }' /etc/passwd | sed -e 's|,.*$||g' | tail -1 )"
     if [[ -z "$username" ]] || echo "$username" | grep -qsiE "Elive.User" ; then
@@ -392,11 +397,6 @@ main(){
                 ;;
             T)
                 template="$OPTARG"
-                if [[ -f "/usr/share/email-sender/templates/$template/main.html" ]] ; then
-                    template="/usr/share/email-sender/templates/$template/main.html"
-                else
-                    el_error "template don't exist in /usr/share/elive-sender/templates"
-                fi
                 el_explain 2 "template is __${template}__"
 
                 ;;

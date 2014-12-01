@@ -29,6 +29,12 @@ do_email_send(){
         is_message_file=1
     fi
 
+    # check if we have a valid setup and otherwise set it up first
+    if [[ -z "$email_account" ]] || [[ -z "$email_password" ]] ; then
+        do_configure
+        do_validate_sending
+    fi
+
     # }}}
 
     if ((is_message_file)) ; then

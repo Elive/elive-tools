@@ -87,6 +87,14 @@ do_email_send(){
     if ((is_plain_mode)) ; then
         if ((is_message_file)) ; then
             mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" -- < "$message"
+
+            if [[ "$?" != 0 ]] ; then
+                is_message_showed_welcome=1
+                do_configure
+                do_validate_sending
+                # send again -this- email
+                $FUNCNAME
+            fi
         else
             message="$( echo "$message" | sed \
                 -e "s|<br>|\n|g" \
@@ -98,6 +106,14 @@ do_email_send(){
                 )"
 
             echo "$message" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
+
+            if [[ "$?" != 0 ]] ; then
+                is_message_showed_welcome=1
+                do_configure
+                do_validate_sending
+                # send again -this- email
+                $FUNCNAME
+            fi
         fi
     fi
 
@@ -120,6 +136,13 @@ do_email_send(){
                 -e "s|XXXmessageXXX|$message|g" \
                 | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
 
+            if [[ "$?" != 0 ]] ; then
+                is_message_showed_welcome=1
+                do_configure
+                do_validate_sending
+                # send again -this- email
+                $FUNCNAME
+            fi
 
         fi
     fi
@@ -157,7 +180,7 @@ do_validate_sending(){
         if echo "$result" | grep -qs "test email by elive" ; then
             # succeed
             local message_success_sending
-            message_success_sending="$( printf "$( eval_gettext "Your email sending works correctly. You will found in your email account a testing email that you can simply delete." )" "" )"
+            message_success_sending="$( printf "$( eval_gettext "Email settings correctly working, you will found a testing email in your account, you can delete it." )" "" )"
 
             $guitool --info --text="$message_success_sending"
             return 0
@@ -167,21 +190,41 @@ do_validate_sending(){
     done
 
 
-    # if we have not returned, something is wrong
     local message_cannot_send_email
-    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account, please verify that you have POP and IMAP activated in your email settings, for more information see the help in google about how to enable them. By other side if our test email is in your spam folder you can add a filter to allow all the emails from this sender." )" "" )"
-
+    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account, is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
     $guitool --warning --text="$message_cannot_send_email"
 
-    local message_try_again
-    message_try_again="$( printf "$( eval_gettext "Do you want to try again now? do this after to have enabled your IMAP and POP services." )" "" )"
-
-    if $guitool --question --text="$message_try_again" ; then
-        do_configure
-    else
-        return 1
+    # configure pop / imap?
+    local message_popimap
+    message_popimap="$( printf "$( eval_gettext "Do you want to configure now the POP and IMAP options in your gmail account? You need them to be enabled." )" )"
+    if $guitool --question --text="$message_popimap" ; then
+        /etc/alternatives/x-www-browser "https://mail.google.com/mail/#settings/fwdandpop" &
+        sleep 15
     fi
 
+
+    local message_try_again
+    message_try_again="$( printf "$( eval_gettext "Do you want to change the email or password that you have previously inserted?" )" )"
+    local message_try_or_exit
+    message_try_or_exit="$( printf "$( eval_gettext "Try again?" )" )"
+
+
+    # change user and pass?
+    if $guitool --question --text="$message_try_again" ; then
+        unset email_account email_password
+    else
+        # just ask if we want to continue
+        if ! $guitool --question --text="$message_try_or_exit" ; then
+            exit 1
+        fi
+    fi
+
+
+
+
+    # so try again
+    do_configure
+    do_validate_sending
 }
 
 #===  FUNCTION  ================================================================
@@ -193,14 +236,22 @@ do_validate_sending(){
 do_configure(){
     # pre {{{
 
+    if ((is_configure_force)) ; then
+        unset email_account email_password
+    fi
+
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
         message_intro="$( printf "$( eval_gettext "This tool allows you to send emails in a practical way from your command line or scripts, it can also make much easier the process of reporting bugs to Elive, and if your computer detects a possible error or disks full it can send an email to yourself so you will be notified, you will always be prompted when there's an email going to be sent automatically. Do you want to continue?" )" "" )"
 
-        if ! $guitool --question --text="$message_intro" ; then
-            el_error "You didn't want to set up your email sending?"
-            exit 1
+        if ! ((is_message_showed_welcome)) ; then
+            if $guitool --question --text="$message_intro" ; then
+                is_message_showed_welcome=1
+            else
+                el_error "You didn't want to set up your email sending? ok..."
+                exit 1
+            fi
         fi
 
         local message_login
@@ -346,6 +397,7 @@ main(){
                 ;;
             c)
                 el_debug "configure mode"
+                is_configure_force=1
                 do_configure
                 do_validate_sending
                 exit

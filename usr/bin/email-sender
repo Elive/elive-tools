@@ -420,6 +420,11 @@ main(){
         is_stdin=1
     fi
 
+    # do not fill /tmp with visual trash
+    TMPDIR="/tmp/.$(basename $0)-${USER}"
+    mkdir -p "$TMPDIR"
+    export TMPDIR
+
     # }}}
 
     # Usage

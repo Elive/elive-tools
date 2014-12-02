@@ -40,12 +40,17 @@ table td {
     background-color: #ebebeb;
 }
 
-pre {
-    line-height: .1;
-    font-size:12px;
+pre, code {
+    line-height: 1em;
+    font-size: 11px;
     font-weight: bold;
     font-family: monospace;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
 }
+
+pre br { display: none; }
 
 table {
     mso-table-lspace: 0pt;

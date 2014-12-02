@@ -34,7 +34,7 @@ do_email_send(){
         do_configure
     fi
 
-    if ! el_check_variables "to,message" ; then
+    if ! el_check_variables "to" ; then
         el_error "missing arguments"
         exit 1
     fi
@@ -63,10 +63,12 @@ do_email_send(){
     if [[ -z "$username" ]] || echo "$username" | grep -qsiE "Elive.User" ; then
         username="$USER"
     fi
+    # upcase it
+    username="$(echo "$username" | sed 's/[^ _-]*/\u&/g' )"
 
     if [[ -z "$subject" ]] ; then
         local message_subject
-        message_subject="$( printf "$( eval_gettext "A message from %s in %s's computer" )" "$username" "$(hostname)" )"
+        message_subject="$( printf "$( eval_gettext "A message from %s in %s's computer" )" "$username" "$(hostname | sed 's/[^ _-]*/\u&/g' )" )"
 
         subject="$message_subject"
     fi
@@ -77,6 +79,19 @@ do_email_send(){
 
     if [[ -z "$template" ]] ; then
         template="default"
+    fi
+
+    # default message if no messages
+    if ! el_check_variables "message" 1>/dev/null 2>/dev/null ; then
+        if [[ -n "${attachments[@]}" ]] ; then
+            local message_message_default
+            message_message_default="$( printf "$( eval_gettext "Please check the attached files." )" )"
+
+            message="$message_message_default"
+        else
+            el_error "missing arguments: message"
+            exit 1
+        fi
     fi
 
 
@@ -133,7 +148,7 @@ do_email_send(){
             -e "s|XXXyearXXX|$(date +%Y)|g" \
             -e "s|XXXusernameXXX|$username|g" \
             -e "s|XXXyearXXX|$(date +%Y)|g" \
-            -e "s|XXXhostnameXXX|$(hostname)|g" \
+            -e "s|XXXhostnameXXX|$(hostname | sed 's/[^ _-]*/\u&/g' )|g" \
             -e "s|XXXyearXXX|$(date +%Y)|g" \
             -e "s|XXXtitleXXX|$title|g" \
             -e "s|XXXsubjectXXX|$subject|g" \
@@ -199,9 +214,15 @@ do_validate_sending(){
         if echo "$result" | grep -qs "testing elive email ($random)" ; then
             # succeed
             local message_success_sending
-            message_success_sending="$( printf "$( eval_gettext "Email settings correctly working, you will found a testing email in your account, you can delete it." )" "" )"
+            message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will found a testing email in your account, you can delete it." )" "" )"
 
             $guitool --info --text="$message_success_sending"
+
+            # save our conf because we know that it works now
+            echo "email_account=\"$email_account\"" >> "$conf"
+            echo "email_password=\"$email_password\"" >> "$conf"
+            echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
+
             return 0
         else
             sleep 1
@@ -262,7 +283,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails you need first to set up your configuration. Do you want to continue?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails you need first to configure your email. Do you want to continue?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then
@@ -327,9 +348,6 @@ do_configure(){
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
 
-            echo "email_account=\"$email_account\"" >> "$conf"
-            echo "email_password=\"$email_password\"" >> "$conf"
-            echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
             ;;
         #*@yahoo*)
             # Well, we don't know how to verify if the sending works from a yahoo one so let's disable it for now

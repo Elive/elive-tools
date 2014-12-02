@@ -157,7 +157,7 @@ do_email_send(){
             > "$tempfile_body"
 
         # SEND !
-        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_bcc[@]/#/-b}" --
+        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" != 0 ]] ; then
             is_message_showed_welcome=1
             do_configure
@@ -511,7 +511,7 @@ main(){
                 ;;
             X)
                 el_array_member_add "$OPTARG" "${targets_bcc[@]}" ; targets_bcc=("${_out[@]}")
-                el_explain 2 "CC: $OPTARG"
+                el_explain 2 "BCC: $OPTARG"
 
                 ;;
             \?)

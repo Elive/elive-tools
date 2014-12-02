@@ -190,11 +190,16 @@ do_validate_sending(){
     el_check_files "$conf_mutt"
 
     if ! el_dependencies_check "mutt" ; then
-        el_dependencies_install "mutt"
+        el_dependencies_install "mutt,libsasl2-modules"
     fi
 
     if ! el_dependencies_check "curl" ; then
         el_dependencies_install "curl"
+    fi
+
+    # seems like we need this package in order to send emails from gmail
+    if [[ ! -e "/usr/share/doc/libsasl2-modules/changelog.Debian.gz" ]] ; then
+        el_dependencies_install "libsasl2-modules"
     fi
 
     if [[ -z "$random" ]] ; then

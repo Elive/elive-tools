@@ -83,11 +83,13 @@ do_email_send(){
 
     # default message if no messages
     if ! el_check_variables "message" 1>/dev/null 2>/dev/null ; then
+
         if [[ -n "${attachments[@]}" ]] ; then
             local message_message_default
             message_message_default="$( printf "$( eval_gettext "Please check the attached files." )" )"
 
             message="$message_message_default"
+
         else
             el_error "missing arguments: message"
             exit 1
@@ -155,7 +157,7 @@ do_email_send(){
             > "$tempfile_body"
 
         # SEND !
-        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" --
+        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" != 0 ]] ; then
             is_message_showed_welcome=1
             do_configure
@@ -167,7 +169,7 @@ do_email_send(){
     else
 
         # SEND !
-        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" --
+        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" != 0 ]] ; then
             is_message_showed_welcome=1
             do_configure
@@ -389,6 +391,8 @@ usage(){
 [sending options]:
 -a attach_file (can be called multiple times, optional)
 -t to
+-x CC: (extra recipients in CC form)
+-X BCC: (extra recipients in blind-CC form)
 -s subject (optional)
 -S super-subject (title message, optional)
 -m message (can be file or text passed)
@@ -415,6 +419,7 @@ main(){
     # user conf
     conf="$HOME/.config/email-sender"
     conf_mutt="$HOME/.mutt/accounts/elive-sender"
+
     if [[ -s "$conf" ]] ; then
         source "$conf"
     fi
@@ -436,13 +441,11 @@ main(){
     fi
 
 
-    while getopts ":a:cCdhm:s:S:pt:T:v" opt; do
+    while getopts ":a:cCdhm:s:S:pt:T:vx:X:" opt; do
         case $opt in
             a)
                 el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")
                 el_explain 2 "attached file: $OPTARG"
-
-                echo -e "${attachments[@]}"
 
                 ;;
             c)
@@ -487,10 +490,6 @@ main(){
                 el_explain 2 "Title is __${title}__"
 
                 ;;
-            v)
-                export EL_DEBUG=2
-
-                ;;
             t)
                 to="$OPTARG"
                 el_explain 2 "target (to) is __${to}__"
@@ -499,6 +498,20 @@ main(){
             T)
                 template="$OPTARG"
                 el_explain 2 "template is __${template}__"
+
+                ;;
+            v)
+                export EL_DEBUG=2
+
+                ;;
+            x)
+                el_array_member_add "$OPTARG" "${targets_cc[@]}" ; targets_cc=("${_out[@]}")
+                el_explain 2 "CC: $OPTARG"
+
+                ;;
+            X)
+                el_array_member_add "$OPTARG" "${targets_bcc[@]}" ; targets_bcc=("${_out[@]}")
+                el_explain 2 "CC: $OPTARG"
 
                 ;;
             \?)

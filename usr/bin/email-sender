@@ -20,7 +20,7 @@ do_email_send(){
     # pre {{{
 
     if ! el_dependencies_check "mutt" ; then
-        el_dependencies_install "mutt"
+        el_dependencies_install "mutt,libsasl2-modules,ca-certificates"
     fi
 
     # check if we have a valid setup and otherwise set it up first
@@ -190,7 +190,7 @@ do_validate_sending(){
     el_check_files "$conf_mutt"
 
     if ! el_dependencies_check "mutt" ; then
-        el_dependencies_install "mutt,libsasl2-modules"
+        el_dependencies_install "mutt,libsasl2-modules,ca-certificates"
     fi
 
     if ! el_dependencies_check "curl" ; then
@@ -198,7 +198,10 @@ do_validate_sending(){
     fi
 
     # seems like we need this package in order to send emails from gmail
-    if [[ ! -e "/usr/share/doc/libsasl2-modules/changelog.Debian.gz" ]] ; then
+    if [[ ! -d "/usr/share/doc/libsasl2-modules" ]] ; then
+        el_dependencies_install "libsasl2-modules"
+    fi
+    if [[ ! -d "/usr/share/doc/ca-certificates" ]] ; then
         el_dependencies_install "libsasl2-modules"
     fi
 

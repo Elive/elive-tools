@@ -473,7 +473,9 @@ EOF
     if [[ "$UID" = 0 ]] ; then
         bash "$temp"
     else
-        el_dependencies_check gksu
+        if ! el_dependencies_check gksu ; then
+            el_dependencies_install "gksu"
+        fi
         # multiple gksu attempts
         for i in 1 2 3
         do
@@ -536,7 +538,9 @@ el_aptget_update(){
                 fi
             else
                 if [[ -n "$DISPLAY" ]] ; then
-                    el_dependencies_check gksu
+                    if ! el_dependencies_check gksu ; then
+                        el_dependencies_install "gksu"
+                    fi
                     #gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     # multiple gksu attempts
                     for i in 1 2 3
@@ -768,7 +772,9 @@ el_sudo(){
         sudo -H "$@"
     else
         if [[ -n "$DISPLAY" ]] ; then
-            el_dependencies_check gksu
+            if ! el_dependencies_check gksu ; then
+                el_dependencies_install "gksu"
+            fi
 
             # multiple gksu attempts
             for i in 1 2 3
@@ -1208,7 +1214,9 @@ el_group_add(){
 
     # }}}
     if ! el_group_check "${group}" ; then
-        el_dependencies_check gksu
+        if ! el_dependencies_check gksu ; then
+            el_dependencies_install "gksu"
+        fi
         # multiple gksu attempts
         for i in 1 2 3
         do
@@ -1225,7 +1233,9 @@ el_group_add(){
 
         # try again if not reached
         if ! el_group_check "${group}" ; then
-            el_dependencies_check gksu
+            if ! el_dependencies_check gksu ; then
+                el_dependencies_install "gksu"
+            fi
             # multiple gksu attempts
             for i in 1 2 3
             do

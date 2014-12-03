@@ -1,0 +1,61 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file
+
+    file="$1"
+
+    # }}}
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) filename"
+        echo -e "\nThis tool converts subtitles that uses european encoding to the standard utf-8, it also removes the crappy newlines created by microsoft winblows"
+        exit 1
+    fi
+
+    if el_check_files "$file" ; then
+        el_error "no file assigned to use"
+        exit 1
+    fi
+
+    if ! echo "$file" | grep -iqs "\.srt$" ; then
+        el_error "We can't convert this file, it must be a .srt one"
+        exit 1
+    fi
+
+
+    # conver to utf8
+    if file "$file" | grep -qs ": ISO-" ; then
+        if iso-to-utf8 "$file" "${file}_new.srt" ; then
+            mv "${file}_new.srt" "${file}"
+        fi
+
+        el_explain 0 "converted subtitle to utf8"
+    else
+        if file "$file" | grep -qs ": UTF-8" ; then
+            el_explain 0 "subtitle already in utf8 mode"
+        else
+            el_warning 0 "this file was not in iso or utf8 mode, ignoring conversion"
+        fi
+    fi
+
+    # remove windows crappy lines
+    if file "$file" | grep -qs "CRLF" ; then
+        dos2unix "$file"
+        el_explain 0 "removed crappy newlines from windows systems"
+    else
+        el_explain 0 "newlines from windows already removed"
+    fi
+
+
+    }
+
+    #
+    #  MAIN
+    #
+    main "$@"
+
+    # vim: set foldmethod=marker :

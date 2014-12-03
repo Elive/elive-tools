@@ -1,0 +1,35 @@
+#!/bin/bash
+source $HOME/Git/git/share/tools/functions
+make_environment
+
+check_dependencies iconv
+
+# Nota: para editar en vim ese char number, si es el numero 828, hacer por ejemplo 828go
+
+if [[ -z $2 ]] ; then
+    echo -e "`basename $0` file-iso-from file-utf8-to"
+    exit 1
+fi
+
+main(){
+    local charnum
+    if ! iconv -f utf8 -t ISO-8859-15 "$1" -o "$2" ; then
+
+        el_error "There's errors in codifications, we will start a vim session for every wrong character found (^C to cancel), fix them and save + exit from vim (typing:  esc, :wq)"
+        read nada
+        while true
+        do
+            unset charnum
+
+            charnum="$( iconv -f utf8 -t ISO-8859-15 "$1" -o "$2" 2>&1 | tr ' ' '\n' | grep "[[:digit:]]" | head -1 )"
+            if [[ -z $charnum ]] ; then
+                break
+            fi
+            vim -c "$(( ${charnum} + 1 ))go" "$1"
+        done
+    fi
+}
+
+main "$@"
+
+

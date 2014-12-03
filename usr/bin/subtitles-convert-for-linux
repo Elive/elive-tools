@@ -16,7 +16,7 @@ main(){
         exit 1
     fi
 
-    if el_check_files "$file" ; then
+    if ! el_check_files "$file" ; then
         el_error "no file assigned to use"
         exit 1
     fi
@@ -44,7 +44,7 @@ main(){
 
     # remove windows crappy lines
     if file "$file" | grep -qs "CRLF" ; then
-        dos2unix "$file"
+        dos2unix -q "$file"
         el_explain 0 "removed crappy newlines from windows systems"
     else
         el_explain 0 "newlines from windows already removed"

@@ -473,7 +473,10 @@ EOF
     if [[ "$UID" = 0 ]] ; then
         bash "$temp"
     else
-        el_dependencies_check gksu
+        if ! el_dependencies_check gksu ; then
+            urxvt -e bash -c "su -c 'apt-get update' root"
+            urxvt -e bash -c "su -c 'apt-get install gksu' root"
+        fi
 
         # multiple gksu attempts
         for i in 1 2 3

@@ -473,9 +473,8 @@ EOF
     if [[ "$UID" = 0 ]] ; then
         bash "$temp"
     else
-        if ! el_dependencies_check gksu ; then
-            el_dependencies_install "gksu"
-        fi
+        el_dependencies_check gksu
+
         # multiple gksu attempts
         for i in 1 2 3
         do

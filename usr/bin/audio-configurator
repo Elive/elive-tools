@@ -5,7 +5,8 @@ source /usr/lib/elive-tools/functions
 export TEXTDOMAIN="elive-tools"
 
 select_card_multiple(){
-    list_cards="$( cat /proc/asound/cards | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+    # list cards, per priority
+    list_cards="$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236"  | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
     selection="$( echo "$list_cards" | $guitool --list --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" || echo cancel )"
     # remove extra leading blank chars
     read -r selection <<< "$selection"

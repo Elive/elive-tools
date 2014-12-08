@@ -357,6 +357,7 @@ do_configure(){
             echo "set smtp_url = \"smtp://${email_account%%@*}@smtp.gmail.com:587/\"" >> "${conf_mutt}"
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
+            echo "set copy = no" >> "${conf_mutt}"
 
             ;;
         #*@yahoo*)

@@ -81,13 +81,13 @@ conf_share_setup(){
 
             # check it
             if ! [[ -d "$shared_main_d" ]] ; then
-                el_error "shared dir not exist, you may want to create (and invite friends) first"
+                el_error "shared dir not exist, you may want to create it first (and invite people to the dropbox shared dir)"
                 exit
             fi
 
-            # remote working, needed for use as an identifier in the shares
+            # remote working place, needed for use as an identifier in the shares
             if [[ -z "$remote_working" ]] ; then
-                if [[ "$( git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
                     echo -e "\nWhich is the remote URL that you work (push) mainly with (optionally) friends?\n"
                     command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t
 
@@ -393,6 +393,7 @@ do_count_commits(){
         fi
     fi
 
+    #el_explain 3 "Recounted commits: counter is $counter, total commits is $counter_total"
 }
 
 #===  FUNCTION  ================================================================
@@ -657,6 +658,7 @@ options_main_interact(){
 
 
     read -N 1 option
+    el_debug "option picked is: '$option'"
     echo
 
 
@@ -718,7 +720,7 @@ options_main_interact(){
 
             # which remote to fetch from?
             if [[ -z "$remote_fetching" ]] ; then
-                if [[ "$( git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
                     echo -e "\nWhich remote you want to update from ?\n"
                     command git remote -v | grep "(fetch)" | awk '{print $1}'
 
@@ -970,6 +972,8 @@ options_main_interact(){
         # LAST option
         *)
             # return back to main menu because you picked a wrong option accidentally
+            echo -e "wrong option?"
+            sleep 1
             $FUNCNAME
             ;;
     esac
@@ -1010,7 +1014,6 @@ main(){
     # get the working branch name
     branch_working="$(command git symbolic-ref HEAD )"
     branch_working="${branch_working#refs/heads/}"
-    pwd="$(pwd)"
 
     local is_commit_id_last_reached
 
@@ -1028,6 +1031,22 @@ main(){
                 ;;
             f)
                 files_search="$OPTARG"
+                # cleanups {{{
+                while read -ru 3 line
+                do
+                    if [[ -d "$line" ]] ; then
+                        # append a / at the end of the entry, force it to not have wrongly duplicated sessions
+                        _files_search="${_files_search},${line%/}/"
+                    else
+                        _files_search="${_files_search},${line}"
+                    fi
+
+                done 3<<< "$( echo "$files_search" | tr ',' '\n' )"
+
+                files_search="${_files_search#,}"
+                el_debug "$files_search"
+
+                # }}}
                 options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
                 ;;
             \?|*)
@@ -1047,11 +1066,10 @@ main(){
 
     # - input parameters }}}
     # configurations saved {{{
-    #conf_d="${pwd}/.$(basename $0)"
     conf_d="$HOME/.config/$(basename $0)"
 
     # compatibility replacements
-    repo_id="$(pwd | sed -e 's|/|%|g' )"
+    repo_id="$( pwd | sed -e 's|/|%|g' )"
     files_search_regexed="$( echo "$files_search" | sed -e 's|/|#|g' )"
 
     # checks and versions {{{
@@ -1060,7 +1078,7 @@ main(){
         mkdir -p "$conf_d"
     fi
 
-    el_check_variables "pwd,tool_version"
+    el_check_variables "tool_version"
 
     tool_version_watcher="$( tail -1 "$conf_d/version.txt" 2>/dev/null )"
 
@@ -1112,6 +1130,7 @@ main(){
         commit_id="$( tail -1 "$conf_commit_last_f" )"
     fi
 
+
     # remote fetching
     if [[ -s "$conf_remote_fetch_from_f" ]] ; then
         remote_fetching="$( tail -1 "$conf_remote_fetch_from_f" )"
@@ -1126,8 +1145,9 @@ main(){
     if [[ -s "$conf_branch_working_f" ]] ; then
         _branch_working="$( tail -1 "$conf_branch_working_f" )"
         if [[ "$branch_working" != "$_branch_working" ]] ; then
-            el_explain 0 "XXWarningXX: working branch set for this watcher is not __${_branch_working}__: ${branch_working}"
-            if el_confirm "Want to switch to $branch_working ?" ; then
+            el_explain 0 "XXWarningXX: working branch set for this watcher is not __${_branch_working}__ but is ${branch_working}"
+            if el_confirm "Want to switch to $_branch_working ?" ; then
+                branch_working="${_branch_working}"
                 command git checkout "$branch_working"
             fi
         fi
@@ -1168,23 +1188,20 @@ main(){
         # get commit
         if [[ "$line" = "commit "* ]] ; then
 
-            # get the commit id of this loop
-            commit_id="${line#commit }"
-
-
             # skip until last commit, this only runs when starting back a watcher
             if ! ((is_commit_id_last_reached)) ; then
-                if [[ -n "$commit_id" ]] ; then
-                    if [[ "$line" = "commit "$commit_id ]] ; then
-                        is_commit_id_last_reached=1
-                    else
-                        # loop until we reach the desired commit
-                        el_debug "skip commit because is not $commit_id : $line"
-                        continue
-                    fi
+                if [[ "$line" = "commit "$commit_id ]] ; then
+                    is_commit_id_last_reached=1
+                else
+                    # loop until we reach the desired commit
+                    el_debug "skip commit because is not $commit_id : $line"
+                    continue
                 fi
             fi
 
+
+            # get the commit id of this loop
+            commit_id="${line#commit }"
 
 
             # show actual commit
@@ -1192,7 +1209,11 @@ main(){
 
             # store actual position for future calls of this tool
             echo "$commit_id" > "$conf_commit_last_f"
+            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+
             echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
+            el_debug "stored counter '$counter' with '$counter_total' total at '$conf_commit_last_progress_f'"
+
 
             #
             # show main options

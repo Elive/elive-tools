@@ -27,12 +27,12 @@ exit_cleanups(){
         unset is_traveling
     fi
 
-    if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
-        rm -rf "$conf_d/$repo_id"
+    if ! [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+        rm -rf "$conf_repo_d"
     fi
 
     # tell us if we save
-    if [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+    if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
         el_explain 0 "Session __saved__"
     else
         el_explain 0 "Session not saved"
@@ -68,7 +68,7 @@ conf_share_setup(){
     # }}}
 
     # setup new shared conf
-    if ! [[ -L "$conf_d/$repo_id/shared" ]] ; then
+    if ! [[ -L "$conf_repo_d/shared" ]] ; then
         if el_confirm "Include sharing features? useful to work among other ppl in the same repo watcher" ; then
             # let's cowork!
 
@@ -105,9 +105,9 @@ conf_share_setup(){
                 mkdir -p "$shared_main_d/$remote_working/$repo_id"
             fi
 
-            ln -s "$shared_main_d/$remote_working/$repo_id" "$conf_d/$repo_id/shared"
+            ln -s "$shared_main_d/$remote_working/$repo_id" "$conf_repo_d/shared"
 
-            shared_d="$conf_d/$repo_id/shared"
+            shared_d="$conf_repo_d/shared"
             shared_personal_d="$shared_d/$git_username"
             mkdir -p "$shared_personal_d"
 
@@ -656,11 +656,25 @@ options_main_interact(){
     echo -e "${el_c_b}================================================================${el_c_n}"
 
 
+    # select an option {{{
+    #read -N 1 option
 
-    read -N 1 option
+    # alternative to previous "read", this option makes possible to skip multichars entries tripling the loop for when you use inputs like "up arrow", it basically cleans the input to a single entry and accepts only alpha/numeric values
+    local _c _d
+    while read -N 1 _c
+    do
+        while read -t 0
+        do read -N1 _d
+            _c+=$_d
+        done
+        option="$( printf "%q" "$_c" | grep --color=never -E "^[[:alnum:]]$" )"
+        break
+    done
+
     el_debug "option picked is: '$option'"
     echo
 
+    # }}}
 
     case "$option" in
         n)  # Next commit
@@ -706,8 +720,22 @@ options_main_interact(){
             ;;
         u)  # update working branch
 
-            el_explain 0 "git pull --rebase $branch_working"
-            command git pull --rebase "$branch_working"
+            # which remote to fetch from?
+            if [[ -z "$remote_fetching_working" ]] ; then
+                if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                    echo -e "\nWhich remote you want to fetch $branch_working from ?\n"
+                    command git remote -v | grep "(fetch)" | awk '{print $1}'
+
+                    read -e remote_fetching_working
+                else
+                    remote_fetching_working="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
+                fi
+
+                echo "$remote_fetching_working" > "$conf_remote_fetch_working_from_f"
+            fi
+
+            el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
+            command git pull --rebase "$remote_fetching_working" "$branch_working"
 
             # update total of commits
             do_count_commits
@@ -719,25 +747,25 @@ options_main_interact(){
         U)  # update watching branch
 
             # which remote to fetch from?
-            if [[ -z "$remote_fetching" ]] ; then
+            if [[ -z "$remote_fetching_watch" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote you want to update from ?\n"
+                    echo -e "\nWhich remote you want to fetch $branch_watch from ?\n"
                     command git remote -v | grep "(fetch)" | awk '{print $1}'
 
-                    read -e remote_fetching
+                    read -e remote_fetching_watch
                 else
-                    remote_fetching="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
+                    remote_fetching_watch="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
                 fi
 
-                echo "$remote_fetching" > "$conf_remote_fetch_from_f"
+                echo "$remote_fetching_watch" > "$conf_remote_fetch_watch_from_f"
             fi
 
 
             el_explain 0 "git checkout $branch_watch"
             command git checkout "$branch_watch"
 
-            el_explain 0 "git pull --rebase $remote_fetching $branch_watch"
-            command git pull --rebase "$remote_fetching" "$branch_watch"
+            el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
+            command git pull --rebase "$remote_fetching_watch" "$branch_watch"
 
             el_explain 0 "git checkout $branch_working"
             command git checkout "$branch_working"
@@ -947,11 +975,11 @@ options_main_interact(){
             ;;
         q)  # quit
 
-            if ! [[ -e "$conf_d/$repo_id/flags/persistent_watcher" ]] ; then
+            if ! [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
                 # TODO add another flag to not ask all the times if we select NO
                 if el_confirm "Do you want to save this session?" ; then
                     # add a mark to know that this is a persistent watcher to save
-                    touch "$conf_d/$repo_id/flags/persistent_watcher"
+                    touch "$conf_repo_d/flags/persistent_watcher"
 
                     # save some needed info
                     echo "$branch_working" > "$conf_branch_working_f"
@@ -1008,7 +1036,7 @@ usage_show(){
 
 main(){
     # version of this tool
-    tool_version="1.2"
+    tool_version="1.3"
     # pre {{{
 
     # get the working branch name
@@ -1069,23 +1097,47 @@ main(){
     conf_d="$HOME/.config/$(basename $0)"
 
     # compatibility replacements
-    repo_id="$( pwd | sed -e 's|/|%|g' )"
     files_search_regexed="$( echo "$files_search" | sed -e 's|/|#|g' )"
 
-    # checks and versions {{{
+    # checks {{{
 
     if ! el_check_dirs "$conf_d" 2>/dev/null ; then
         mkdir -p "$conf_d"
     fi
 
-    el_check_variables "tool_version"
+    if ! el_check_variables "branch_working,branch_watch" 2>/dev/null ; then
+        usage_show
+        exit
+    fi
 
-    tool_version_watcher="$( tail -1 "$conf_d/version.txt" 2>/dev/null )"
+
+    # }}}
+
+    # append keyword in conf file if we have it
+    #repo_id="${repo_id}::${branch_working}::${keyword_search}::${files_search}"
+    repo_id="${branch_watch}::${keyword_search}::${files_search_regexed}"
+    conf_repo_d="${conf_d}/${repo_id}"
+
+    mkdir -p "$conf_repo_d/flags"
+
+    conf_commit_last_f="${conf_repo_d}/last_commit_tracked"
+    conf_commit_last_progress_f="${conf_repo_d}/last_commit_tracked_progress"
+    conf_remote_fetch_working_from_f="${conf_repo_d}/remote_fetching_working_from"
+    conf_remote_fetch_watch_from_f="${conf_repo_d}/remote_fetching_watch_from"
+    conf_remote_work_from_f="${conf_repo_d}/remote_fetching_from"
+    conf_branch_working_f="${conf_repo_d}/branch_working_for"
+    tool_version_f="${conf_repo_d}/version_tool.txt"
+
+    # - configurations saved }}}
+    # version tool {{{
+    el_check_variables "tool_version"
+    tool_version_watcher="$( tail -1 "${conf_d}/version.txt" 2>/dev/null )" # old, for compatibility
+    tool_version_watcher="$( tail -1 "$tool_version_f" 2>/dev/null )"
 
     # first time? add it
     if [[ -z "$tool_version_watcher" ]] ; then
         tool_version_watcher="$tool_version"
-        echo "$tool_version" > "$conf_d/version.txt"
+        echo "$tool_version" > "${tool_version_f}"
     fi
 
     # upgrade required
@@ -1096,33 +1148,57 @@ main(){
         exit
     fi
 
-    # our tool is newer, mark our watcher to use last version, always
+    # our tool is newer, manual upgrade required
     if dpkg --compare-versions "$tool_version_watcher" lt "$tool_version" ; then
-        echo "$tool_version" > "$conf_d/version.txt"
+        # prev conf dir:
+        _conf_repo_d="${conf_repo_d}.old_v$tool_version_watcher"
+
+        # do a backup for meld if wanted
+        cp -a "${conf_repo_d}" "${_conf_repo_d}"
+        el_explain 0 "XXWarning:XX your watcher confs needs to be upgraded, you can __manually__ merge later your old dir bits (first exit saving session) using meld as:  $  __meld \"${_conf_repo_d}\" \"${conf_repo_d}\"__"
+
+        echo -e "\nPress Enter to continue..." 1>&2
+        read nothing
+
+
+        # upgrade cases (auto hooks): {{{
+        while true
+        do
+            case "$tool_version_watcher" in
+                1\.1)
+                    # this version just needs to remove a file
+                    el_explain 0 "Dummy / test upgrade state"
+                    tool_version_watcher="1.2"
+                    ;;
+                1\.2)
+                    # this version just needs to remove a file
+                    set -x
+                    rm -f "${conf_d}/version.txt"
+                    rm -f "${conf_repo_d}/remote_fetching_from"
+                    set +x
+
+                    el_explain 0 "removed wrong files (you can safely continue)"
+                    tool_version_watcher="1.3"
+                    ;;
+                *)
+                    el_explain 0 "Nothing more to __automatically__ upgrade"
+                    break
+                    ;;
+            esac
+        done
+
+        echo -e "\nPress Enter to continue..." 1>&2
+        read nothing
+
+
+        # }}}
+
+        # update version number
+        echo "$tool_version" > "$tool_version_f"
     fi
 
-    if ! el_check_variables "branch_working,branch_watch" 2>/dev/null ; then
-        usage_show
-        exit
-    fi
 
-
-
-    # - checks }}}
-
-    # append keyword in conf file if we have it
-    #repo_id="${repo_id}::${branch_working}::${keyword_search}::${files_search}"
-    repo_id="${branch_watch}::${keyword_search}::${files_search_regexed}"
-
-    mkdir -p "$conf_d/$repo_id/flags"
-
-    conf_commit_last_f="${conf_d}/$repo_id/last_commit_tracked"
-    conf_commit_last_progress_f="${conf_d}/$repo_id/last_commit_tracked_progress"
-    conf_remote_fetch_from_f="${conf_d}/$repo_id/remote_fetching_from"
-    conf_remote_work_from_f="${conf_d}/$repo_id/remote_fetching_from"
-    conf_branch_working_f="${conf_d}/$repo_id/branch_working_for"
-
-    # - configurations saved }}}
+    # }}}
     # configurations get {{{
 
     # last commit
@@ -1132,8 +1208,11 @@ main(){
 
 
     # remote fetching
-    if [[ -s "$conf_remote_fetch_from_f" ]] ; then
-        remote_fetching="$( tail -1 "$conf_remote_fetch_from_f" )"
+    if [[ -s "$conf_remote_fetch_working_from_f" ]] ; then
+        remote_fetching_working="$( tail -1 "$conf_remote_fetch_working_from_f" )"
+    fi
+    if [[ -s "$conf_remote_fetch_watch_from_f" ]] ; then
+        remote_fetching_watch="$( tail -1 "$conf_remote_fetch_watch_from_f" )"
     fi
     # remote working
     if [[ -s "$conf_remote_work_from_f" ]] ; then
@@ -1159,10 +1238,10 @@ main(){
     # - configurations get }}}
 
     # get share configurations
-    if [[ -L "$conf_d/$repo_id/shared" ]] ; then
+    if [[ -L "$conf_repo_d/shared" ]] ; then
         is_shared=1
 
-        shared_d="$conf_d/$repo_id/shared"
+        shared_d="$conf_repo_d/shared"
         shared_personal_d="$shared_d/$git_username"
 
         # start the share daemon
@@ -1175,7 +1254,7 @@ main(){
 
 
     # debug
-    if [[ "${EL_DEBUG}" -gt "2" ]] ; then
+    if [[ "${EL_DEBUG}" -ge "2" ]] ; then
         el_explain 2 "git log __${options_extra_git_before} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
         sleep 2
     fi

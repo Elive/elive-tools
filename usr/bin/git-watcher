@@ -66,6 +66,28 @@ conf_share_setup(){
     el_debug
 
     # }}}
+    # TODO: implementation:
+    # - when we run a new session on a conf that includes sharing, always (update?) scan for ahead steps from other users
+    # - run an inotify in BG that prints el_explain's everytime founds a modification of X files, + read nada
+    # - send email summarized to collaborators when we finish & save a session
+    # - mark "points" to ask collaborators to review them, a message must be included, and options should be shown as resolved/unnaccepted, etc... which reverse notification
+    # - invite: when setting up a new watcher you must invite other users by inserting their emails + a message of why you consider important to him join your watcher, + instructions of how to join him
+    # -
+    #
+    # FIXME: how to know who are collaborators? we need to have a list or... wait! we have them in the shared dir, just do a loop to them
+    #
+    # TODO: show marks / messages, reviews, etc...
+    # TODO: marks:
+    #       - later / todo
+    #       - review (accept / approve)
+    #       - ask/suggest a cherry-pick
+    #       - message to @who
+    #       - positions (marks of commits should move you [temporally] to the marked position)
+
+
+    # TODO: INBOX: show by default message to "you"
+
+
 
     # setup new shared conf
     if ! [[ -L "$conf_repo_d/shared" ]] ; then
@@ -88,7 +110,7 @@ conf_share_setup(){
             # remote working place, needed for use as an identifier in the shares
             if [[ -z "$remote_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich is the remote URL that you work (push) mainly with (optionally) friends?\n"
+                    echo -e "\nWhich is the name of the remote where you normally push your work that is shared with your collaborators?\n"
                     command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t
 
                     read -e remote_working
@@ -606,18 +628,6 @@ options_main_interact(){
 
     # }}}
 
-    # TODO: show marks / messages, reviews, etc...
-    # TODO: marks:
-    #       - later / todo
-    #       - review (accept / approve)
-    #       - ask/suggest a cherry-pick
-    #       - message to @who
-    #       - positions (marks of commits should move you [temporally] to the marked position)
-
-
-    # TODO: INBOX: show by default message to "you"
-    # TODO: when sending messages, could be there a way to receive them via email or something like this? gmail from cli? mmh..
-
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -625,9 +635,6 @@ options_main_interact(){
     #option_show "h"         "Help: how this tool works" # TODO add
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit"
-    option_show "g"         "Go to commit id"
-    option_show "u"         "Update working branch (pull --rebase)"
-    option_show "U"         "Update watching branch (pull --rebase)"
     option_show "s"         "Show commit summary"
     option_show "S"         "Show detailed info"
     option_show "h"         "Show history"
@@ -635,6 +642,9 @@ options_main_interact(){
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other commits (cherry-pick)"
+    option_show "g"         "Go to commit id"
+    option_show "u"         "Update working branch (pull --rebase)"
+    option_show "U"         "Update watching branch (pull --rebase)"
 
     if [[ -n "$user_input_backport_branches" ]] ; then
         option_show "b"         " > Backport to: $user_input_backport_branches"
@@ -647,9 +657,9 @@ options_main_interact(){
     if [[ -n "$user_input_command" ]] ; then
         option_show "r"     " > Run:  $user_input_command"
     fi
+    option_show "l"         "Login Shell (to do things manually)"
     option_show "a"         "list Around commits (from our watching thread)"
     option_show "A"         "list Around commits (from the full branch history)"
-    option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit"
     option_show "Q"         "Quit!"
@@ -975,15 +985,20 @@ options_main_interact(){
             ;;
         q)  # quit
 
+            # ask if save
             if ! [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-                # TODO add another flag to not ask all the times if we select NO
                 if el_confirm "Do you want to save this session?" ; then
                     # add a mark to know that this is a persistent watcher to save
                     touch "$conf_repo_d/flags/persistent_watcher"
 
                     # save some needed info
                     echo "$branch_working" > "$conf_branch_working_f"
+                fi
+            fi
 
+            # ask if share, only if we are saving session
+            if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+                if ! [[ -L "$conf_repo_d/shared" ]] ; then
                     # ask and conf about sharing session
                     conf_share_setup
                 fi
@@ -1235,6 +1250,11 @@ main(){
     git_username="$( command git config user.name | tail -1 )"
     git_email="$( command git config user.email | tail -1 )"
 
+    # do we are in a saved session?
+    if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+        is_saved=1
+    fi
+
     # - configurations get }}}
 
     # get share configurations
@@ -1248,10 +1268,14 @@ main(){
         run_dropbox
     fi
 
-
     # get the total of commits list
     do_count_commits
 
+    # scan if other users are ahead of you
+    if ((is_shared)) ; then
+        el_explain 2 "Scanning paralel dimensions"
+        #for user in
+    fi
 
     # debug
     if [[ "${EL_DEBUG}" -ge "2" ]] ; then
@@ -1268,8 +1292,8 @@ main(){
         if [[ "$line" = "commit "* ]] ; then
 
             # skip until last commit, this only runs when starting back a watcher
-            if ! ((is_commit_id_last_reached)) ; then
-                if [[ "$line" = "commit "$commit_id ]] ; then
+            if ! ((is_commit_id_last_reached)) && ((is_saved)) ; then
+                if [[ -n "$commit_id" ]] && [[ "$line" = "commit "$commit_id ]] ; then
                     is_commit_id_last_reached=1
                 else
                     # loop until we reach the desired commit
@@ -1315,7 +1339,7 @@ main(){
 
 
     if ! ((is_header_show)) ; then
-        el_explain 0 "No more matches found"
+        el_explain 0 "No more matches found, __ow yeah baby!__"
     fi
 
 }

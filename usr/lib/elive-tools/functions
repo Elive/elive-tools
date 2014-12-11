@@ -986,12 +986,14 @@ el_explain(){
 
     # }}}
     # hilight words {{{
-    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_b}}"
     message="${message/__/${el_c_gr}}"
-    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_b}}"
     message="${message/__/${el_c_gr}}"
-    message="${message/__/${el_c_b2}}"
+    message="${message/__/${el_c_b}}"
     message="${message/__/${el_c_gr}}"
+    message="${message/XX/${el_c_r}}"
+    message="${message/XX/${el_c_gr}}"
     message="${message/XX/${el_c_r}}"
     message="${message/XX/${el_c_gr}}"
     message="${message/XX/${el_c_r}}"

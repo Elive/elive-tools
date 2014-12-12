@@ -41,19 +41,141 @@ exit_cleanups(){
     # share session always when exiting
     if ((is_shared)) ; then
         # store actual position for future calls of this tool
-        if [[ "$commit_id" != "$( tail -1 "$shared_personal_d/last_commit_tracked" )" ]] ; then
+        if [[ "$commit_id" != "$( tail -1 "$shared_personal_d/last_commit_tracked" 2>/dev/null )" ]] ; then
+            # store our commit-id
             echo "$commit_id" > "$shared_personal_d/last_commit_tracked"
+            # store our progress
+            echo -e "$counter $counter_total" > "$shared_personal_d/last_commit_tracked_progress"
+
             #echo "$counter $counter_total" > "$shared_personal_d/last_commit_tracked_progress"
-            el_explain 0 "Session __shared__"
+            el_explain 0 "Share __saved__"
         fi
 
     else
-        el_explain 0 "Session not shared"
+        el_explain 0 "Session is not shared"
     fi
 }
 
 el_add_on_exit exit_cleanups
 
+#===  FUNCTION  ================================================================
+#          NAME:  shared_accounts_state_show
+#   DESCRIPTION:  scan and show status of other accounts
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+shared_accounts_state_show(){
+    # pre {{{
+    el_debug
+
+    local _user _dir _email
+    # }}}
+
+    # loop for each user found
+    if ((is_shared)) ; then
+        echo -e ""
+        el_explain 0 "Scanning paralel dimensions..."
+        # TODO:
+        # - see if the total-commits of any one is bigger than ours, then suggest/do an update of the repo
+        # - see which one is on the highest commit, then ask if join him
+        #
+        # - search for messages with positions (we must be updated first)
+
+        for _dir in "$shared_d"/*
+        do
+            _user="$(basename "$_dir" )"
+            _email="$(cat "$_dir/email.txt" )"
+            _commit_id="$( cat "$_dir/last_commit_tracked" )"
+            _commits_step="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $1}' )"
+            _commits_total="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $2}' )"
+
+            # skip our own user
+            # TODO: re-enable after to finish tests
+            #if [[ "${git_email}" = "$_email" ]] ; then
+                #continue
+            #fi
+
+            # header nice image
+            if [[ -n "$TERMINOLOGY" ]] ; then
+                if [[ -s "$_dir/gravatar.png" ]] ; then
+                    tycat "$_dir"/gravatar.png
+                fi
+            fi
+
+            echo -e "..:: $_user ::.."
+            echo -e ""
+            echo -e "email:   $_email"
+            echo -e "step:    ${el_c_n}[${el_c_g}${_commits_step}${el_c_n}/${el_c_y}${_commits_total}${el_c_n}]${el_c_n}  (${_commit_id:0:10})"
+
+
+            # anything to work later?
+            if [[ "$_commits_total" -gt "$_commits_total_biggest" ]] ; then
+                _commits_total_biggest="$_commits_total"
+                _commits_total_biggest_user="$_user"
+            fi
+
+            if [[ "$_commits_step" -gt "$_commits_step_biggest" ]] ; then
+                _commits_step_biggest="$_commits_step"
+                _commits_step_biggest_user="$_user"
+                _commit_id_biggest="$_commit_id"
+            fi
+
+            # done
+            echo -e ""
+        done
+    fi
+
+    # compare and update if needed
+    if [[ "$_commits_total_biggest" -gt "$counter_total" ]] ; then
+        el_explain 0 "Seems like __${_commits_total_biggest_user}__ is using an updated repo than yours"
+        if el_confirm "Update your git repo now? (git pull --rebase)" ; then
+
+            # which remote to fetch from?
+            if [[ -z "$remote_fetching_working" ]] ; then
+                if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                    echo -e "\nWhich remote you want to fetch $branch_working from ?\n"
+                    command git remote -v | grep "(fetch)" | awk '{print $1}'
+
+                    read -e remote_fetching_working
+                else
+                    remote_fetching_working="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
+                fi
+
+                echo "$remote_fetching_working" > "$conf_remote_fetch_working_from_f"
+            fi
+
+            # pull remote
+            command git pull --rebase "$remote_fetching_working" "$branch_working"
+
+            # update total of commits
+            do_count_commits
+
+            _is_shared_scanned=1
+        fi
+    fi
+
+    # walk steps?
+    if [[ "$_commits_step_biggest" -gt "$counter" ]] ; then
+        el_explain 0 "Seems like __${_commits_step_biggest_user}__ is ahead of you in steps"
+
+        if el_confirm "Join its commit-id position?" ; then
+            commit_id="$_commit_id_biggest"
+
+            # update total of commits
+            do_count_commits
+
+            _is_shared_scanned=1
+        fi
+    fi
+
+
+    echo -e "\n"
+    if ((_is_shared_scanned)) ; then
+        el_explain 0 "No more paralel words to scan, press Enter to continue..."
+        read nothing
+    fi
+
+}
 #===  FUNCTION  ================================================================
 #          NAME:  conf_share_setup
 #   DESCRIPTION:  configure shares if not configured yet
@@ -91,29 +213,53 @@ conf_share_setup(){
 
     # setup new shared conf
     if ! [[ -L "$conf_repo_d/shared" ]] ; then
-        if el_confirm "Include sharing features? useful to work among other ppl in the same repo watcher" ; then
+        if el_confirm "Enable sharing features?" ; then
             # let's cowork!
+            run_dropbox
 
             # dropbox shared dir
-            echo -e "We use dropbox for a shared control directory, insert the absolute-path address of this directory, for example: $HOME/Dropbox/developments/git-watcher (TAB to autocomplete)"
+            local _dropbox_dir
+            if [[ -z "$shared_main_d" ]] ; then
+                _dropbox_dir="$( find-approximate-matching-homedir dropbox )"
+                if [[ -n "$_dropbox_dir" ]] ; then
+                    _dropbox_dir="$_dropbox_dir/git-watcher-eworks"
+                else
+                    _dropbox_dir="$HOME/Dropbox/git-watcher-eworks"
+                fi
+            else
+                _dropbox_dir="$shared_main_d"
+            fi
+
+            echo -e "\nTo be synced with others we use Dropbox, please insert the full path of the main shared directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
             read -e shared_main_d
             # remove extra leading blank chars
             read -r shared_main_d <<< "${shared_main_d%/}"
 
 
             # check it
-            if ! [[ -d "$shared_main_d" ]] ; then
-                el_error "shared dir not exist, you may want to create it first (and invite people to the dropbox shared dir)"
-                exit
+            if [[ -d "$shared_main_d" ]] ; then
+                mkdir -p "$shared_main_d"
+                # add a small readme file
+                echo -e "This directory is used for share git-watcher projects, do not delete it, EVER! :) so it is used automagically by git-watcher tool, you don't need to do anything with it, but you can manually modify things if you know what are you doing!, there's no manual pages so use your intuition powers!" > "$shared_main_d/README.txt"
+
+                # save this conf as default
+                echo "$shared_main_d" > "$conf_d/shared_main_default_dir.txt"
             fi
 
             # remote working place, needed for use as an identifier in the shares
             if [[ -z "$remote_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich is the name of the remote where you normally push your work that is shared with your collaborators?\n"
-                    command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t
+                    echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
+                    command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
+                    echo -e "\nInsert remote repo URL (not name)"
                     read -e remote_working
+
+                    # small check, just in case
+                    if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
+                        el_error "Have you inserted the identifier instead of the remote URL? mmh... please do it again:"
+                        read -e remote_working
+                    fi
                 else
                     remote_working="$( command git remote -v | grep "(push)" | awk '{print $2}' | head -1 )"
                 fi
@@ -121,22 +267,79 @@ conf_share_setup(){
                 echo "$remote_working" > "$conf_remote_work_from_f"
             fi
 
+            # send invitations (+ instructions) via email
+            echo -e "\nGive me a list of emails (comma-separated) to send invitations to this watcher with the needed instructions (can be empty):"
+            read _emails_invitations
+            _emails_invitations="$( echo "$_emails_invitations" | tr ',' ' ' | tr ';' ' ' | tr ' ' '\n' )"
+            while read -ru 3 _email
+            do
+                [[ -z "$_email" ]] && continue
+
+                el_explain 0 "Sending email to __${_email}__"
+
+                email-sender -t "$_email" -s "$git_username wants to share a $(basename $0) with you" -S "These are the needed instructions to join the watcher:" <<EOF
+This could be one of the most amazing tools that you may have never see!
+
+First: check your email and accept the Dropbox invitation for the shared directory and then run dropbox to have a copy of this directory already updated in your computer.
+
+After that, go to the git repository that references to '${remote_working}', and run from it:
+
+<ul>$ <strong>$(basename $0) $tool_argumentsz</strong></ul>
+
+Now simply exit from it and use these options:
+<li>Save the session</li>
+<li>Enable Share features</li>
+<li>Fill up the correct sharing information</li>
+
+After to have exit from $(basename $0), run the same command again to start using it in shared mode!
+
+EOF
+
+            done 3<<< "$( echo "$_emails_invitations" | grep "@" )"
+
 
             # create location for this repository identifier
             if ! [[ -d "$shared_main_d/$remote_working/$repo_id" ]] ; then
                 mkdir -p "$shared_main_d/$remote_working/$repo_id"
+                el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id}__"
+
+                # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
+                # TODO: add sending email notifications
+
+                if el_confirm "You need to invite collaborators from Dropbox too to use this directory, open Dropbox Web now?" ; then
+                    { /etc/alternatives/x-www-browser "https://www.dropbox.com/home" & disown ; } 1>/dev/null 2>&1
+                fi
             fi
 
             ln -s "$shared_main_d/$remote_working/$repo_id" "$conf_repo_d/shared"
+            el_explain 2 "linked shared location on __$conf_repo_d/shared__"
+
 
             shared_d="$conf_repo_d/shared"
             shared_personal_d="$shared_d/$git_username"
             mkdir -p "$shared_personal_d"
 
             echo "$git_email" > "$shared_personal_d/email.txt" # and this is how we expect to be contacted
+            el_explain 2 "added your email reference in __$shared_personal_d/email.txt"
+
+            # save gravatar too, w00t!
+            curl -s "http://www.gravatar.com/avatar/"$( echo -n "$git_email" | awk '{print tolower($0)}' | tr -d '\n ' | md5sum --text | tr -d '\- ' )"?s=48&d=404" > "$shared_personal_d/gravatar.png"
+            if ! file "$shared_personal_d/gravatar.png" | grep -qsi "image" ; then
+                rm -f "$shared_personal_d/gravatar.png"
+            fi
+
+
 
             # sync our changes
             run_dropbox
+
+            # done
+            el_explain 0 "You are now ready to work with others on this shared watcher! __enjoy__"
+            el_explain 0 "The next time that you will work on this watcher, your collaborators will be __notified__ and you __can walk__ on their steps"
+
+            # save shared confs at exit
+            is_shared=1
+
         fi
     fi
 }
@@ -405,10 +608,7 @@ do_count_commits(){
 
     # do we have found new commits?
     if [[ -n "$_counter_total" ]] ; then
-        if [[ "$(( $counter_total - $_counter_total ))" = 0 ]] ; then
-            el_explain 0 "No new commits found for this watcher"
-
-        else
+        if ! [[ "$(( $counter_total - $_counter_total ))" = 0 ]] ; then
             el_explain 0 "Nice! XX$(( $counter_total - $_counter_total ))XX New commits found on this watcher!"
             echo "Press Enter to continue"
             read nothing
@@ -1052,11 +1252,17 @@ usage_show(){
 main(){
     # version of this tool
     tool_version="1.3"
+    tool_arguments="$@"
     # pre {{{
 
     # get the working branch name
-    branch_working="$(command git symbolic-ref HEAD )"
+    branch_working="$( command git symbolic-ref HEAD )"
     branch_working="${branch_working#refs/heads/}"
+
+    if [[ -z "$branch_working" ]] ; then
+        el_error "You are not in a git repository, this tool is meant to be used from a git repo"
+        exit 1
+    fi
 
     local is_commit_id_last_reached
 
@@ -1214,7 +1420,7 @@ main(){
 
 
     # }}}
-    # configurations get {{{
+    # configurations get configurations {{{
 
     # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
@@ -1258,6 +1464,10 @@ main(){
     # - configurations get }}}
 
     # get share configurations
+    if [[ -s "$conf_d/shared_main_default_dir.txt" ]] ; then
+        shared_main_d="$( cat "$conf_d/shared_main_default_dir.txt" )"
+    fi
+
     if [[ -L "$conf_repo_d/shared" ]] ; then
         is_shared=1
 
@@ -1272,10 +1482,8 @@ main(){
     do_count_commits
 
     # scan if other users are ahead of you
-    if ((is_shared)) ; then
-        el_explain 2 "Scanning paralel dimensions"
-        #for user in
-    fi
+    shared_accounts_state_show
+
 
     # debug
     if [[ "${EL_DEBUG}" -ge "2" ]] ; then
@@ -1315,7 +1523,7 @@ main(){
             el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
             echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
-            el_debug "stored counter '$counter' with '$counter_total' total at '$conf_commit_last_progress_f'"
+            el_debug "stored counter at '$counter' with '$counter_total' total in '$conf_commit_last_progress_f'"
 
 
             #
@@ -1339,7 +1547,11 @@ main(){
 
 
     if ! ((is_header_show)) ; then
-        el_explain 0 "No more matches found, __ow yeah baby!__"
+        if ((is_commit_id_last_reached)) ; then
+            el_explain 0 "No more matches found, __ow yeah baby!__"
+        else
+            el_error "Something wrong happened? seems like we cannot found your last position, so where is this commit then? $commit_id"
+        fi
     fi
 
 }

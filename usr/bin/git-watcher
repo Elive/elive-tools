@@ -17,15 +17,7 @@ exit_cleanups(){
 
     # }}}
     # do we need to recover our original position?
-    if ((is_traveling)) && [[ -n "$_commit_id" ]] ; then
-        el_explain 0 "Restoring time-traveling position!"
-
-        commit_id="$_commit_id"
-        echo "$commit_id" > "$conf_commit_last_f"
-
-        do_count_commits
-        unset is_traveling
-    fi
+    travel_restore
 
     if ! [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
         rm -rf "$conf_repo_d"
@@ -73,18 +65,13 @@ shared_accounts_state_show(){
 
     # loop for each user found
     if ((is_shared)) ; then
-        echo -e ""
-        el_explain 0 "Scanning paralel dimensions..."
-        # TODO:
-        # - see if the total-commits of any one is bigger than ours, then suggest/do an update of the repo
-        # - see which one is on the highest commit, then ask if join him
-        #
-        # - search for messages with positions (we must be updated first)
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "  ${el_c_gr}${el_c_blink}Scanning paralel dimensions...${el_c_n}"
 
         for _dir in "$shared_d"/*
         do
-            _user="$(basename "$_dir" )"
-            _email="$(cat "$_dir/email.txt" )"
+            _user="$( basename "$_dir" )"
+            _email="$( cat "$_dir/email.txt" )"
             _commit_id="$( cat "$_dir/last_commit_tracked" )"
             _commits_step="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $1}' )"
             _commits_total="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $2}' )"
@@ -103,21 +90,36 @@ shared_accounts_state_show(){
             fi
 
             echo -e "..:: $_user ::.."
-            echo -e ""
+            #echo -e ""
             echo -e "email:   $_email"
-            echo -e "step:    ${el_c_n}[${el_c_g}${_commits_step}${el_c_n}/${el_c_y}${_commits_total}${el_c_n}]${el_c_n}  (${_commit_id:0:10})"
+            echo -e "step:    ${el_c_n}[${el_c_g}${_commits_step}${el_c_n}/${el_c_y}${_commits_total}${el_c_n}]${el_c_n}  (${_commit_id:0:12})"
 
 
-            # anything to work later?
-            if [[ "$_commits_total" -gt "$_commits_total_biggest" ]] ; then
-                _commits_total_biggest="$_commits_total"
-                _commits_total_biggest_user="$_user"
-            fi
+            # only if we are not ourselves
+            if [[ "${git_email}" != "$_email" ]] ; then
+                # anything to work later?
+                if [[ "$_commits_total" -gt "$_commits_total_biggest" ]] ; then
+                    _commits_total_biggest="$_commits_total"
+                    _commits_total_biggest_user="$_user"
+                fi
 
-            if [[ "$_commits_step" -gt "$_commits_step_biggest" ]] ; then
-                _commits_step_biggest="$_commits_step"
-                _commits_step_biggest_user="$_user"
-                _commit_id_biggest="$_commit_id"
+                if [[ "$_commits_step" -gt "$_commits_step_biggest" ]] ; then
+                    _commits_step_biggest="$_commits_step"
+                    _commits_step_biggest_user="$_user"
+                    _commit_id_biggest="$_commit_id"
+                fi
+
+                # show available time-traveling capsules
+                if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/review" 2>/dev/null ; then
+                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+                    el_explain 0 "__${_user}__ has __${_ttc_counter}__ XXTime-Traveling CapsulesXX for you!"
+                fi
+
+                if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/questions" 2>/dev/null ; then
+                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+                    el_explain 0 "__${_user}__ has __${_ttc_counter}__ XXQuestionsXX in Capsules for you!"
+                fi
+
             fi
 
             # done
@@ -158,6 +160,7 @@ shared_accounts_state_show(){
     if [[ "$_commits_step_biggest" -gt "$counter" ]] ; then
         el_explain 0 "Seems like __${_commits_step_biggest_user}__ is ahead of you in steps"
 
+        # FIXME: make sure that we are not our own same user (same in other parts?)
         if el_confirm "Join its commit-id position?" ; then
             commit_id="$_commit_id_biggest"
 
@@ -169,13 +172,249 @@ shared_accounts_state_show(){
     fi
 
 
-    echo -e "\n"
     if ((_is_shared_scanned)) ; then
-        el_explain 0 "No more paralel words to scan, press Enter to continue..."
+        el_explain 0 "Finished to scan paralel worlds, press Enter to continue..."
         read nothing
     fi
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  shared_messages_create
+#   DESCRIPTION:  elaborate messages to send to other users
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+shared_messages_create(){
+    # pre {{{
+    el_debug
+    local _message_option _mark_message _entity
+
+    # }}}
+
+    # Select a user where to send message:
+    el_explain 0 "Other carbon-based life forms:"
+    echo -en "${el_c_g}"
+
+    if [[ "$( ls -1 "${shared_d}" | grep -v "$git_username" | wc -l )" -gt 1 ]] ; then
+        ls -1 "${shared_d}" | grep -v "$git_username"
+        echo -en "${el_c_n}"
+
+        echo -e "\nType an entity:"
+        read _entity
+    else
+        _entity="$( ls -1 "${shared_d}" | grep -v "$git_username" | tail -1 )"
+        el_explain 0 "Messaging to the XX${_entity}XX carbon-based life form"
+    fi
+
+    if ! [[ -d "${shared_d}/$_entity" ]] ; then
+        el_error "Carbon-based life form doesn't exist, are you in the correct planet?"
+        echo -e "\nType an entity:"
+        read _entity
+
+        if ! [[ -d "${shared_d}/$_entity" ]] ; then
+            return
+        fi
+    fi
+
+
+    # message type?
+    option_show "a" "Ask a question to ${_entity} (no importing required)"
+    option_show "i" "Importing request to backport this commit"
+    ###option_show "r" "Reply a question"
+    option_show "q" "quit this menu"
+
+    read -N 1 _message_option
+    case "$_message_option" in
+        a)
+            _message_option="questions"
+            ;;
+        i)
+            _message_option="review"
+            ;;
+        q|*)
+            return
+            ;;
+    esac
+
+    # message?
+    echo -e "\nMessage to include?  (blank = no message)"
+    read -e _mark_message
+
+    # create mark
+    mkdir -p "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}"
+
+    if [[ -n "$_mark_message" ]] ; then
+        echo "$_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
+    fi
+
 
 }
+
+#===  FUNCTION  ================================================================
+#          NAME:  scan_travels
+#   DESCRIPTION:  Scans available travels and allow to pick them
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+scan_travels(){
+    # pre {{{
+    el_debug
+    if ! ((is_shared)) ; then
+        el_explain 0 "Skipping reading capsules, this watcher is not shared"
+        return
+    fi
+
+
+    local _user _dir _email
+    # }}}
+
+    # loop for each user found
+    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+    echo -e "  ${el_c_gr}${el_c_blink}Scanning Time-Traveling Capsules...${el_c_n}"
+
+    for _dir in "$shared_d"/*
+    do
+        _user="$( basename "$_dir" )"
+        _email="$( cat "$_dir/email.txt" )"
+        _commit_id="$( cat "$_dir/last_commit_tracked" )"
+        _commits_step="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $1}' )"
+        _commits_total="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $2}' )"
+
+        # skip our own user
+        if [[ "${git_email}" = "$_email" ]] ; then
+            continue
+        fi
+
+        # show available time-traveling capsules
+        if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/review" 2>/dev/null ; then
+            _ttc_review=1
+        fi
+
+        if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/questions" 2>/dev/null ; then
+            _ttc_question=1
+        fi
+
+
+        # show info of only needed ones
+        if ((_ttc_review)) || ((_ttc_question)) ; then
+            # header nice image
+            if [[ -n "$TERMINOLOGY" ]] ; then
+                if [[ -s "$_dir/gravatar.png" ]] ; then
+                    tycat "$_dir"/gravatar.png
+                fi
+            fi
+
+            echo -e "..:: $_user ::.."
+            #echo -e ""
+            echo -e "email:   $_email"
+            echo -e "step:    ${el_c_n}[${el_c_g}${_commits_step}${el_c_n}/${el_c_y}${_commits_total}${el_c_n}]${el_c_n}  (${_commit_id:0:12})"
+        fi
+
+        if ((_ttc_review)) ; then
+            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+            el_explain 0 "XX${_user}XX wants you to consider backporting XX${_ttc_counter}XX __commits__:"
+            echo ""
+
+            while read -ru 3 dir
+            do
+                [[ -n "$dir" ]] || continue
+
+                _has_capsules=1
+
+                echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
+
+                if [[ -s "$dir/message.txt" ]] ; then
+
+                    echo -en "${el_c_b}Message:  ${el_c_m2}"
+                    cat "$dir/message.txt" 2>/dev/null
+                    echo -e "${el_c_n}"
+                fi
+
+            done 3<<< "$( find "${_dir}/ttc/to_${git_username}/review" -mindepth 1 -maxdepth 1 -type d )"
+        fi
+
+        if ((_ttc_question)) ; then
+            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+            el_explain 0 "XX${_user}XX wants you to ask you XX${_ttc_counter}XX things about specific commits:"
+            echo ""
+
+            while read -ru 3 dir
+            do
+                [[ -n "$dir" ]] || continue
+
+                _has_capsules=1
+
+                echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
+
+                if [[ -s "$dir/message.txt" ]] ; then
+
+                    echo -en "${el_c_b}Message:  ${el_c_m2}"
+                    cat "$dir/message.txt" 2>/dev/null
+                    echo -e "${el_c_n}"
+                fi
+
+            done 3<<< "$( find "${_dir}/ttc/to_${git_username}/questions" -mindepth 1 -maxdepth 1 -type d )"
+        fi
+
+
+        # done
+        echo -e ""
+    done
+
+    # finished
+    if ((_has_capsules)) ; then
+        #el_explain 0 "You can travel to their __ID__ on the __Go__ option"
+        #el_explain 0 "If you need external help you can go to it and send a message to somebody"
+        #echo -e "Press Enter to continue..."
+        #read nothing
+        go_to_commit
+    fi
+
+    }
+
+    #===  FUNCTION  ================================================================
+    #          NAME:  scan_marked_states
+    #   DESCRIPTION:  Scans and show marked states like todo's
+    #    PARAMETERS:  -
+    #       RETURNS:  -
+    #===============================================================================
+    scan_marked_states(){
+        # pre {{{
+        el_debug
+
+        # }}}
+        if ! el_check_dir_has_files "${conf_repo_d}/ttc" 2>/dev/null ; then
+        return
+    fi
+
+    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+    el_explain 0 "You have got XXTime-Traveling CapsulesXX!"
+
+
+    while read -ru 3 dir
+    do
+        [[ -d "$dir" ]] || continue
+
+        echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
+
+        if [[ -s "$dir/message.txt" ]] ; then
+
+            echo -en "${el_c_b}Message:  ${el_c_m2}"
+            cat "$dir/message.txt" 2>/dev/null
+            echo -e "${el_c_n}"
+        fi
+
+    done 3<<< "$( find "${conf_repo_d}/ttc/" -mindepth 1 -maxdepth 1 -type d )"
+
+    el_explain 0 "You can travel to their __ID__ on the __Go__ option"
+    el_explain 0 "If you need external help you can go to it and send a message to somebody"
+
+    #echo -e "Press Enter to continue..."
+    LC_ALL=C sleep 0.8
+    #read nothing
+
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  conf_share_setup
 #   DESCRIPTION:  configure shares if not configured yet
@@ -189,14 +428,10 @@ conf_share_setup(){
 
     # }}}
     # TODO: implementation:
-    # - when we run a new session on a conf that includes sharing, always (update?) scan for ahead steps from other users
     # - run an inotify in BG that prints el_explain's everytime founds a modification of X files, + read nada
     # - send email summarized to collaborators when we finish & save a session
     # - mark "points" to ask collaborators to review them, a message must be included, and options should be shown as resolved/unnaccepted, etc... which reverse notification
-    # - invite: when setting up a new watcher you must invite other users by inserting their emails + a message of why you consider important to him join your watcher, + instructions of how to join him
     # -
-    #
-    # FIXME: how to know who are collaborators? we need to have a list or... wait! we have them in the shared dir, just do a loop to them
     #
     # TODO: show marks / messages, reviews, etc...
     # TODO: marks:
@@ -304,8 +539,6 @@ EOF
                 el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id}__"
 
                 # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
-                # TODO: add sending email notifications
-
                 if el_confirm "You need to invite collaborators from Dropbox too to use this directory, open Dropbox Web now?" ; then
                     { /etc/alternatives/x-www-browser "https://www.dropbox.com/home" & disown ; } 1>/dev/null 2>&1
                 fi
@@ -377,8 +610,32 @@ go_to_commit(){
 
     is_traveling=1
 
-    echo -e "Insert the desired commit to go on this watcher history"
+    echo -e "Insert the commit-ID to go on"
     read -e commit_id
+
+    # check if space-time position exists
+    if ! command git rev-parse "$commit_id" 1>/dev/null 2>&1 ; then
+        el_error "This ID don't exist?"
+
+        echo -e "Insert the commit-ID to go on"
+        read -e commit_id
+
+        if ! command git rev-parse "$commit_id" 1>/dev/null 2>&1 ; then
+
+            el_error "Commit-id not found. Perhaps you need to update your repo first?"
+            LC_ALL=C sleep 0.4
+
+            el_explain 0 "restoring original ID..."
+            # something went wrong so make sure the user read this rare-case moment
+            sleep 2
+            commit_id="$_commit_id"
+            unset is_traveling
+
+            return
+        fi
+    fi
+
+    tycat "${conf_d}/images/ttc.gif"
 
     # mark our new position
     echo "$commit_id" > "$conf_commit_last_f"
@@ -389,12 +646,72 @@ go_to_commit(){
     # and so, what you want to do now?
     options_main_interact
 
-    # we are back! let's restore
+    # restore our original position
+    travel_restore
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  travel_restore
+#   DESCRIPTION:  restores a possible traveled position
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+travel_restore(){
+    # pre {{{
+    el_debug
+
+    # we should not be here
+    if ! ((is_traveling)) ; then
+        return
+    fi
+
+    if ! [[ -n "$_commit_id" ]] ; then
+        el_error "You have not a location of origin in your passport for traveling? (prev commit-id)"
+    fi
+
+    # }}}
+
+    tycat "${conf_d}/images/ttc.gif"
     el_explain 0 "Restoring time-traveling position!"
+
+    # marks: delete
+    if [[ -d "${conf_repo_d}/ttc/${commit_id}" ]] ; then
+
+        if el_confirm "Delete marked state?" ; then
+            if el_check_variables "conf_repo_d,commit_id" ; then
+
+                rm -rf "${conf_repo_d}/ttc/${commit_id}"
+                el_debug "deleted mark: '${conf_repo_d}/ttc/${commit_id}'"
+            else
+                el_error "Very fatal error, report it, we were going to rm -rf something wrong but this super smart application avoided it!"
+            fi
+        fi
+    fi
+
+    # requests / questions by others:
+    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    do
+        [[ -n "$dir" ]] || continue
+
+        _tts_id="$( basename "$dir" )"
+        if [[ "$commit_id" = "$_tts_id" ]] ; then
+            if el_confirm "Delete capsule?" ; then
+                echo rm -rf "$dir"
+            fi
+        fi
+    done
+    # FIXME: what about questions?
+
+
+    # we are back! let's restore
     commit_id="$_commit_id"
 
     # count our new position
     do_count_commits
+
+    # mark our back position
+    echo "$commit_id" > "$conf_commit_last_f"
 
     unset is_traveling
 }
@@ -812,7 +1129,7 @@ option_show(){
 
     # }}}
 
-    echo -e "${el_c_c}${char}  ${el_c_g}${description}${el_c_n}"
+    echo -e "${el_c_c} ${char}  ${el_c_g}${description}${el_c_n}"
 
 }
 
@@ -830,9 +1147,10 @@ options_main_interact(){
 
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+    echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$counter/$counter_total]${el_c_b}-----${el_c_n}"
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
+    option_show "r"         "Read Capsules"
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit"
     option_show "s"         "Show commit summary"
@@ -842,6 +1160,8 @@ options_main_interact(){
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other commits (cherry-pick)"
+    option_show "m"         "mark, adds a mark on this position, to review later"
+    option_show "M"         "Message, questions and requests to others"
     option_show "g"         "Go to commit id"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
@@ -852,8 +1172,8 @@ options_main_interact(){
         option_show "b"         "Backport it to another branches too (set them as comma-separated)"
     fi
     option_show "z"         "Undo last commit in your working branch"
-    option_show "m"         "run Make (useful for check if new code is compatible)"
-    option_show "c"         "set a specific Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
+    option_show "c"         "compile (make), useful for check if new code is compatible"
+    option_show "C"         "set a specific Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
     if [[ -n "$user_input_command" ]] ; then
         option_show "r"     " > Run:  $user_input_command"
     fi
@@ -887,6 +1207,14 @@ options_main_interact(){
     # }}}
 
     case "$option" in
+        r)  # read messages / capsules
+            scan_travels
+
+            # go back to main menu
+            $FUNCNAME
+
+            ;;
+
         n)  # Next commit
             #el_explain 0 "Saving last commit watched"
             return
@@ -926,6 +1254,9 @@ options_main_interact(){
             ;;
         g)  # go to commit id
             go_to_commit
+
+            # go back to main menu
+            $FUNCNAME
 
             ;;
         u)  # update working branch
@@ -1087,6 +1418,32 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
+        m)
+            el_explain 0 "TODO / mark added"
+
+            echo -e "\nMessage to include?  (blank = no message)"
+            read -e _mark_message
+
+            # create mark
+            mkdir -p "${conf_repo_d}/ttc/${commit_id}"
+
+            if [[ -n "$_mark_message" ]] ; then
+                echo "$_mark_message" >> "${conf_repo_d}/ttc/${commit_id}/message.txt"
+            fi
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
+        M)
+
+            # create messages for other users
+            shared_messages_create
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
         b)  # extra branches where to backport
             if [[ -z "$user_input_backport_branches" ]] ; then
                 echo -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
@@ -1108,21 +1465,27 @@ options_main_interact(){
             $FUNCNAME
             ;;
         z)  # undo
-            # TODO: show actual commit and ask before to undo it
-            el_explain 0 "$ git reset --hard HEAD~1"
-            command git reset --hard HEAD~1
+
+            # show our actual commit
+            show_history
+            echo ""
+
+            if el_confirm "Do you want to permanently remove the last commit?" ; then
+                el_explain 0 "$ git reset --hard HEAD~1"
+                command git reset --hard HEAD~1
+            fi
 
             # return back to main menu
             $FUNCNAME
             ;;
-        m)  # make
+        c)  # make
             make
 
             el_speak_text "make complete"
             # return back to main menu
             $FUNCNAME
             ;;
-        c)  # command specific
+        C)  # command specific
             echo -e "\nPlease enter the command that you want to use:"
             echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
             read -e user_input_command
@@ -1340,6 +1703,7 @@ main(){
     conf_repo_d="${conf_d}/${repo_id}"
 
     mkdir -p "$conf_repo_d/flags"
+    mkdir -p "$conf_repo_d/ttc"
 
     conf_commit_last_f="${conf_repo_d}/last_commit_tracked"
     conf_commit_last_progress_f="${conf_repo_d}/last_commit_tracked_progress"
@@ -1481,14 +1845,19 @@ main(){
     # get the total of commits list
     do_count_commits
 
+    # scan your own to-do marks:
+    scan_marked_states
+
     # scan if other users are ahead of you
     shared_accounts_state_show
 
 
+    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
     # debug
     if [[ "${EL_DEBUG}" -ge "2" ]] ; then
         el_explain 2 "git log __${options_extra_git_before} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
-        sleep 2
+        #sleep 2
     fi
 
 
@@ -1560,6 +1929,7 @@ main(){
 #  MAIN
 #
 main "$@"
+
 
 # vim: set foldmethod=marker :
 

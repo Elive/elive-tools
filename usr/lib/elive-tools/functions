@@ -1004,44 +1004,50 @@ el_explain(){
 
     # show only if we are on this verbose level
     if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
-        case $funclevel in
-            1)
-                echo -en "   ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            2)
-                echo -en "   ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            3)
-                echo -en "   ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            4)
-                echo -en "   ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            5)
-                echo -en "   ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            6)
-                echo -en "   ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            7)
-                echo -en "   ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            8)
-                echo -en "   ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            9)
-                echo -en "   ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            10)
-                echo -en "   ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            11)
-                echo -en "   ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-            *)
-                echo -en "   ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
-                ;;
-        esac
+
+        # show normal message unless we are at a debugging level
+        if [[ "${EL_DEBUG}" -lt 3 ]] ; then
+            echo -en "${el_c_gr}   " 1>&2
+        else
+            case $funclevel in
+                1)
+                    echo -en "   ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                2)
+                    echo -en "   ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                3)
+                    echo -en "   ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                4)
+                    echo -en "   ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                5)
+                    echo -en "   ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                6)
+                    echo -en "   ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                7)
+                    echo -en "   ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                8)
+                    echo -en "   ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                9)
+                    echo -en "   ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                10)
+                    echo -en "   ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                11)
+                    echo -en "   ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+                *)
+                    echo -en "   ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
+                    ;;
+            esac
+        fi
 
         # continuation of the message
         echo -e "${message}${el_c_n}" 1>&2

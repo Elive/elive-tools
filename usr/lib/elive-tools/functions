@@ -1007,7 +1007,7 @@ el_explain(){
 
         # show normal message unless we are at a debugging level
         if [[ "${EL_DEBUG}" -lt 3 ]] ; then
-            echo -en "${el_c_gr} " 1>&2
+            echo -en "${el_c_gr}  " 1>&2
         else
             case $funclevel in
                 1)

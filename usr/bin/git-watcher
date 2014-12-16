@@ -116,7 +116,7 @@ shared_accounts_state_show(){
                 fi
 
                 if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/questions" 2>/dev/null ; then
-                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/questions" | wc -l )"
                     el_explain 0 "__${_user}__ has __${_ttc_counter}__ XXQuestionsXX in Capsules for you!"
                 fi
 
@@ -160,7 +160,6 @@ shared_accounts_state_show(){
     if [[ "$_commits_step_biggest" -gt "$counter" ]] ; then
         el_explain 0 "Seems like __${_commits_step_biggest_user}__ is ahead of you in steps"
 
-        # FIXME: make sure that we are not our own same user (same in other parts?)
         if el_confirm "Join its commit-id position?" ; then
             commit_id="$_commit_id_biggest"
 
@@ -216,6 +215,11 @@ shared_messages_create(){
         fi
     fi
 
+    _entity_email="$( cat "${shared_d}/${_entity}/email.txt" | grep "@" )"
+    if ! echo "$_entity_email" | grep -qs "$_entity_email" ; then
+        el_error "$_entity has not a valid email?: $_entity_email"
+    fi
+
 
     # message type?
     option_show "a" "Ask a question to ${_entity} (no importing required)"
@@ -224,29 +228,70 @@ shared_messages_create(){
     option_show "q" "quit this menu"
 
     read -N 1 _message_option
-    case "$_message_option" in
-        a)
-            _message_option="questions"
-            ;;
-        i)
-            _message_option="review"
-            ;;
-        q|*)
-            return
-            ;;
-    esac
 
     # message?
     echo -e "\nMessage to include?  (blank = no message)"
     read -e _mark_message
 
+    # send email and set specific values
+    case "$_message_option" in
+        a|A)
+            _message_option="questions"
+
+            el_explain 0 "Sending email..."
+
+            email-sender -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #A961FC;\">${git_username}</i> wants to ask you:" <<EOF
+<p><strong>
+$_mark_message
+</strong></p>
+
+To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+
+<ul>
+<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
+<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+</ul>
+EOF
+
+            ;;
+        i|I)
+            _message_option="review"
+
+            el_explain 0 "Sending email..."
+
+            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #A961FC;\">${git_username}</i> wants you to consider backporting this commit into ${branch_working}" <<EOF
+<p><strong>
+$_mark_message
+</strong></p>
+
+To take your <i>Time-Traveling Capsule</i> you should:
+
+<ul>
+<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
+<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+</ul>
+
+Or without the -g option you can just read your capsules in any moment
+EOF
+            ;;
+        q|Q)
+            return
+            ;;
+        *)
+            el_error "Unknown message type option, canceling"
+            return
+            ;;
+    esac
+
     # create mark
     mkdir -p "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}"
 
     if [[ -n "$_mark_message" ]] ; then
-        echo "$_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
+        echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
     fi
 
+    # mark position too
+    echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/position.txt"
 
 }
 
@@ -260,7 +305,7 @@ scan_travels(){
     # pre {{{
     el_debug
     if ! ((is_shared)) ; then
-        el_explain 0 "Skipping reading capsules, this watcher is not shared"
+        el_explain 3 "Skipping reading capsules, this watcher is not shared"
         return
     fi
 
@@ -312,46 +357,54 @@ scan_travels(){
 
         if ((_ttc_review)) ; then
             _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
-            el_explain 0 "XX${_user}XX wants you to consider backporting XX${_ttc_counter}XX __commits__:"
-            echo ""
+            #el_explain 0 "XX${_user}XX wants you to consider backporting XX${_ttc_counter}XX __commits__:"
+            el_explain 0 "XX${el_c_underline}${_ttc_counter} Backporting requestsXX:"
 
             while read -ru 3 dir
             do
-                [[ -n "$dir" ]] || continue
+                [[ -d "$dir" ]] || continue
 
                 _has_capsules=1
+                _ttc_id_last="$( basename "$dir" )"
 
-                echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
+                echo -e "${el_c_b}ID:       ${el_c_g}${_ttc_id_last}${el_c_n}"
 
-                if [[ -s "$dir/message.txt" ]] ; then
-
-                    echo -en "${el_c_b}Message:  ${el_c_m2}"
-                    cat "$dir/message.txt" 2>/dev/null
-                    echo -e "${el_c_n}"
+                if [[ -s "$dir/position.txt" ]] ; then
+                    echo -en "${el_c_b}Position: ${el_c_y}"
+                    cat "$dir/position.txt" 2>/dev/null
                 fi
+                if [[ -s "$dir/message.txt" ]] ; then
+                    echo -e "${el_c_b}Message:  ${el_c_m2}"
+                    cat "$dir/message.txt" 2>/dev/null
+                fi
+                echo -e "${el_c_n}"
 
             done 3<<< "$( find "${_dir}/ttc/to_${git_username}/review" -mindepth 1 -maxdepth 1 -type d )"
         fi
 
         if ((_ttc_question)) ; then
-            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
-            el_explain 0 "XX${_user}XX wants you to ask you XX${_ttc_counter}XX things about specific commits:"
-            echo ""
+            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/questions" | wc -l )"
+            #el_explain 0 "XX${_user}XX wants you to ask you XX${_ttc_counter}XX things about specific commits:"
+            el_explain 0 "XX${el_c_underline}${_ttc_counter} QuestionsXX:"
 
             while read -ru 3 dir
             do
-                [[ -n "$dir" ]] || continue
+                [[ -d "$dir" ]] || continue
 
                 _has_capsules=1
+                _ttc_id_last="$( basename "$dir" )"
 
-                echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
+                echo -e "${el_c_b}ID:       ${el_c_g}${_ttc_id_last}${el_c_n}"
 
-                if [[ -s "$dir/message.txt" ]] ; then
-
-                    echo -en "${el_c_b}Message:  ${el_c_m2}"
-                    cat "$dir/message.txt" 2>/dev/null
-                    echo -e "${el_c_n}"
+                if [[ -s "$dir/position.txt" ]] ; then
+                    echo -en "${el_c_b}Position: ${el_c_y}"
+                    cat "$dir/position.txt" 2>/dev/null
                 fi
+                if [[ -s "$dir/message.txt" ]] ; then
+                    echo -e "${el_c_b}Message:  ${el_c_m2}"
+                    cat "$dir/message.txt" 2>/dev/null
+                fi
+                echo -e "${el_c_n}"
 
             done 3<<< "$( find "${_dir}/ttc/to_${git_username}/questions" -mindepth 1 -maxdepth 1 -type d )"
         fi
@@ -363,11 +416,17 @@ scan_travels(){
 
     # finished
     if ((_has_capsules)) ; then
-        #el_explain 0 "You can travel to their __ID__ on the __Go__ option"
-        #el_explain 0 "If you need external help you can go to it and send a message to somebody"
-        #echo -e "Press Enter to continue..."
-        #read nothing
-        go_to_commit
+        # fast way to read messages if only one
+        if [[ "${_ttc_counter}" = "1" ]] && [[ -n "$_ttc_id_last" ]] ; then
+            # only one question? directly go to it
+            el_explain 0 "Let's __travel__ to $_ttc_id_last"
+
+            go_to_commit "$_ttc_id_last"
+        else
+            go_to_commit
+        fi
+    else
+        el_explain 0 "No messages for you"
     fi
 
     }
@@ -398,7 +457,6 @@ scan_travels(){
         echo -e "${el_c_b}ID:       ${el_c_g}$(basename "$dir" )${el_c_n}"
 
         if [[ -s "$dir/message.txt" ]] ; then
-
             echo -en "${el_c_b}Message:  ${el_c_m2}"
             cat "$dir/message.txt" 2>/dev/null
             echo -e "${el_c_n}"
@@ -456,7 +514,7 @@ conf_share_setup(){
             local _dropbox_dir
             if [[ -z "$shared_main_d" ]] ; then
                 _dropbox_dir="$( find-approximate-matching-homedir dropbox )"
-                if [[ -n "$_dropbox_dir" ]] ; then
+                if [[ -e "$_dropbox_dir" ]] ; then
                     _dropbox_dir="$_dropbox_dir/git-watcher-eworks"
                 else
                     _dropbox_dir="$HOME/Dropbox/git-watcher-eworks"
@@ -487,8 +545,16 @@ conf_share_setup(){
                     echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
                     command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
-                    echo -e "\nInsert remote repo URL (not name)"
+                    echo -e "\nInsert remote repo:"
                     read -e remote_working
+
+                    # translate remote-id to url, which is what we need
+                    if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
+                        remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
+                        # remove extra leading blank chars
+                        read -r remote_working <<< "$remote_working"
+                    fi
+
 
                     # small check, just in case
                     if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
@@ -496,7 +562,7 @@ conf_share_setup(){
                         read -e remote_working
                     fi
                 else
-                    remote_working="$( command git remote -v | grep "(push)" | awk '{print $2}' | head -1 )"
+                    remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
                 fi
 
                 echo "$remote_working" > "$conf_remote_work_from_f"
@@ -519,7 +585,7 @@ First: check your email and accept the Dropbox invitation for the shared directo
 
 After that, go to the git repository that references to '${remote_working}', and run from it:
 
-<ul>$ <strong>$(basename $0) $tool_argumentsz</strong></ul>
+<ul>$ <strong>$(basename $0) $tool_arguments</strong></ul>
 
 Now simply exit from it and use these options:
 <li>Save the session</li>
@@ -534,9 +600,9 @@ EOF
 
 
             # create location for this repository identifier
-            if ! [[ -d "$shared_main_d/$remote_working/$repo_id" ]] ; then
-                mkdir -p "$shared_main_d/$remote_working/$repo_id"
-                el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id}__"
+            if ! [[ -d "$shared_main_d/$remote_working/$repo_id_shared" ]] ; then
+                mkdir -p "$shared_main_d/$remote_working/$repo_id_shared"
+                el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id_shared}__"
 
                 # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
                 if el_confirm "You need to invite collaborators from Dropbox too to use this directory, open Dropbox Web now?" ; then
@@ -544,7 +610,7 @@ EOF
                 fi
             fi
 
-            ln -s "$shared_main_d/$remote_working/$repo_id" "$conf_repo_d/shared"
+            ln -s "$shared_main_d/$remote_working/$repo_id_shared" "$conf_repo_d/shared"
             el_explain 2 "linked shared location on __$conf_repo_d/shared__"
 
 
@@ -569,6 +635,7 @@ EOF
             # done
             el_explain 0 "You are now ready to work with others on this shared watcher! __enjoy__"
             el_explain 0 "The next time that you will work on this watcher, your collaborators will be __notified__ and you __can walk__ on their steps"
+            el_explain 0 "Remote collaborators: just go to their git repo clone and run __$(basename $0) ${tool_arguments}__, then exit saving session and sharing"
 
             # save shared confs at exit
             is_shared=1
@@ -604,14 +671,18 @@ go_to_commit(){
     # pre {{{
     el_debug
     # }}}
+    # FIXME: if we have a capsule, print it
 
     # save our real position
     _commit_id="$commit_id"
 
-    is_traveling=1
-
-    echo -e "Insert the commit-ID to go on"
-    read -e commit_id
+    # ask for ID if we are not requesting it directly
+    if [[ -n "$1" ]] ; then
+        commit_id="$1"
+    else
+        echo -e "Insert the ID to travel"
+        read -e commit_id
+    fi
 
     # check if space-time position exists
     if ! command git rev-parse "$commit_id" 1>/dev/null 2>&1 ; then
@@ -627,13 +698,16 @@ go_to_commit(){
 
             el_explain 0 "restoring original ID..."
             # something went wrong so make sure the user read this rare-case moment
-            sleep 2
+            sleep 1
             commit_id="$_commit_id"
             unset is_traveling
 
             return
         fi
     fi
+
+    # we got an ID, so we are in
+    is_traveling=1
 
     tycat "${conf_d}/images/ttc.gif"
 
@@ -642,6 +716,78 @@ go_to_commit(){
 
     # count our new position
     do_count_commits
+
+    # shared things here? {{{
+    for dir in "${shared_d}/"*"/ttc/to_${git_username}/questions"/*
+    do
+        [[ -d "$dir" ]] || continue
+
+        _ttc_id="$( basename "$dir" )"
+        _ttc_id_user="$( echo "$dir" | sed -e "s|^.*$shared_d/||g" -e "s|/ttc/.*$||" )"
+        _ttc_id_user_email="$( cat "$shared_d/$_ttc_id_user/email.txt" )"
+
+        if [[ "$commit_id" = "$_ttc_id" ]] ; then
+            echo ""
+            el_explain 0 "You have a question here:"
+
+            echo -en "${el_c_m2}"
+            cat "$dir/message.txt"
+            echo -en "${el_c_n}"
+
+            echo -e "Reply to $_ttc_id_user ? (empty for cancel)"
+            read _mark_message
+
+            if [[ -n "$_mark_message" ]] ; then
+                mkdir -p "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}"
+
+                el_explain 0 "Sending email..."
+
+                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #A961FC;\">${git_username}</i> thinks that:" <<EOF
+<p><strong>
+$_mark_message
+</strong></p>
+From your question about:
+<ul>
+$(cat "$dir/message.txt")
+</ul>
+
+To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+
+<ul>
+<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
+<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+</ul>
+EOF
+
+
+                cat "$dir/message.txt" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+                echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+
+                rm -rf "$dir"
+            else
+                if el_confirm "Delete ${_ttc_id_user}'s question-type capsule?" ; then
+                    rm -rf "$dir"
+                fi
+            fi
+        fi
+    done
+    # requests to deal with?
+    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    do
+        [[ -d "$dir" ]] || continue
+
+        _ttc_id="$( basename "$dir" )"
+        _ttc_id_user="$( echo "$dir" | sed -e "s|^.*$shared_d/||g" -e "s|/ttc/.*$||" )"
+
+        if [[ "$commit_id" = "$_ttc_id" ]] ; then
+            if el_confirm "Delete ${_ttc_id_user}'s backport-type capsule?" ; then
+                rm -rf "$dir"
+            fi
+        fi
+    done
+
+
+    # - shared things here? }}}
 
     # and so, what you want to do now?
     options_main_interact
@@ -689,19 +835,75 @@ travel_restore(){
         fi
     fi
 
-    # requests / questions by others:
-    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    # Questions to deal with?
+    # should create a new question with the previous question pre-pended? sounds like the easiest way
+    for dir in "${shared_d}/"*"/ttc/to_${git_username}/questions"/*
     do
-        [[ -n "$dir" ]] || continue
+        [[ -d "$dir" ]] || continue
 
-        _tts_id="$( basename "$dir" )"
-        if [[ "$commit_id" = "$_tts_id" ]] ; then
-            if el_confirm "Delete capsule?" ; then
-                echo rm -rf "$dir"
+        _ttc_id="$( basename "$dir" )"
+        _ttc_id_user="$( echo "$dir" | sed -e "s|^.*$shared_d/||g" -e "s|/ttc/.*$||g" )"
+        _ttc_id_user_email="$( cat "$shared_d/$_ttc_id_user/email.txt" )"
+
+        if [[ "$commit_id" = "$_ttc_id" ]] ; then
+            echo ""
+            el_explain 0 "You have a pending message:"
+
+            echo -en "${el_c_m2}"
+            cat "$dir/message.txt"
+            echo -en "${el_c_n}"
+
+            echo -e "Reply to $_ttc_id_user ? (empty for cancel)"
+            read _mark_message
+
+            if [[ -n "$_mark_message" ]] ; then
+                mkdir -p "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}"
+
+                el_explain 0 "Sending email..."
+
+                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #A961FC;\">${git_username}</i> thinks that:" <<EOF
+<p><strong>
+$_mark_message
+</strong></p>
+From your question about:
+<ul>
+$(cat "$dir/message.txt")
+</ul>
+
+To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+
+<ul>
+<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
+<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+</ul>
+EOF
+
+
+                cat "$dir/message.txt" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+                echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+
+                rm -rf "$dir"
+            else
+                if el_confirm "Delete ${_ttc_id_user}'s question-type capsule?" ; then
+                    rm -rf "$dir"
+                fi
             fi
         fi
     done
-    # FIXME: what about questions?
+    # requests to deal with?
+    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    do
+        [[ -d "$dir" ]] || continue
+
+        _ttc_id="$( basename "$dir" )"
+        _ttc_id_user="$( echo "$dir" | sed -e "s|^.*$shared_d/||g" -e "s|/ttc/.*$||" )"
+
+        if [[ "$commit_id" = "$_ttc_id" ]] ; then
+            if el_confirm "Delete ${_ttc_id_user}'s backport-type capsule?" ; then
+                rm -rf "$dir"
+            fi
+        fi
+    done
 
 
     # we are back! let's restore
@@ -1147,7 +1349,11 @@ options_main_interact(){
 
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
-    echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$counter/$counter_total]${el_c_b}-----${el_c_n}"
+    if ((is_traveling)) ; then
+        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}transported${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$counter${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
+    else
+        echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$counter/$counter_total]${el_c_b}-----${el_c_n}"
+    fi
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
     option_show "r"         "Read Capsules"
@@ -1601,6 +1807,8 @@ usage_show(){
     option_show "-b" "Branch that you want to track changes"
     option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
     option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
+    echo -e ""
+    option_show "-g" "Go to commit-id (temporally)"
 
 
     echo -e ""
@@ -1614,7 +1822,7 @@ usage_show(){
 
 main(){
     # version of this tool
-    tool_version="1.3"
+    tool_version="1.4"
     tool_arguments="$@"
     # pre {{{
 
@@ -1632,7 +1840,7 @@ main(){
     # }}}
     # input parameters {{{
 
-    while getopts "b:k:f:" opt ; do
+    while getopts "b:k:f:g:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
@@ -1660,6 +1868,10 @@ main(){
 
                 # }}}
                 options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
+                ;;
+            g)
+                travel_commit_id="$OPTARG"
+                is_travel_wanted=1
                 ;;
             \?|*)
                 echo ""
@@ -1698,8 +1910,9 @@ main(){
     # }}}
 
     # append keyword in conf file if we have it
-    #repo_id="${repo_id}::${branch_working}::${keyword_search}::${files_search}"
-    repo_id="${branch_watch}::${keyword_search}::${files_search_regexed}"
+    working_directory_d="$( pwd | sed -e 's|/|#|g' )"
+    repo_id="${working_directory_d}::${branch_watch}::${keyword_search}::${files_search_regexed}"
+    repo_id_shared="${branch_watch}::${keyword_search}::${files_search_regexed}"
     conf_repo_d="${conf_d}/${repo_id}"
 
     mkdir -p "$conf_repo_d/flags"
@@ -1746,7 +1959,7 @@ main(){
         read nothing
 
 
-        # upgrade cases (auto hooks): {{{
+        # migration upgrade cases (auto hooks): {{{
         while true
         do
             case "$tool_version_watcher" in
@@ -1763,6 +1976,12 @@ main(){
                     set +x
 
                     el_explain 0 "removed wrong files (you can safely continue)"
+                    tool_version_watcher="1.3"
+                    ;;
+                1\.3)
+                    # we moved to a different dir structure, pwd is needed on repo_id
+                    el_explain 0 "entirely restructure was needed"
+
                     tool_version_watcher="1.3"
                     ;;
                 *)
@@ -1785,6 +2004,7 @@ main(){
 
     # }}}
     # configurations get configurations {{{
+
 
     # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
@@ -1845,21 +2065,22 @@ main(){
     # get the total of commits list
     do_count_commits
 
-    # scan your own to-do marks:
-    scan_marked_states
+    if ! ((is_travel_wanted)) ; then
+        # scan your own to-do marks:
+        scan_marked_states
 
-    # scan if other users are ahead of you
-    shared_accounts_state_show
+        # scan if other users are ahead of you
+        shared_accounts_state_show
 
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        # debug
+        if [[ "${EL_DEBUG}" -ge "2" ]] ; then
+            el_explain 2 "git log __${options_extra_git_before} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
+            #sleep 2
+        fi
 
-    # debug
-    if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-        el_explain 2 "git log __${options_extra_git_before} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
-        #sleep 2
     fi
-
 
 
     # loop
@@ -1883,6 +2104,9 @@ main(){
             # get the commit id of this loop
             commit_id="${line#commit }"
 
+            if ((is_travel_wanted)) && [[ -n "$travel_commit_id" ]] ; then
+                go_to_commit "$travel_commit_id"
+            fi
 
             # show actual commit
             show_commit_stat --no-pager

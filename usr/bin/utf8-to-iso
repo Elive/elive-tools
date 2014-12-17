@@ -1,6 +1,6 @@
 #!/bin/bash
-source $HOME/Git/git/share/tools/functions
-make_environment
+source /usr/lib/elive-tools/functions
+el_make_environment
 
 check_dependencies iconv
 

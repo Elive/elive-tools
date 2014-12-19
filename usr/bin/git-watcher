@@ -709,7 +709,7 @@ go_to_commit(){
     # we got an ID, so we are in
     is_traveling=1
 
-    tycat "${conf_d}/images/ttc.gif"
+    tycat "/usr/share/git-watcher/images/ttc.gif"
 
     # mark our new position
     echo "$commit_id" > "$conf_commit_last_f"
@@ -818,7 +818,7 @@ travel_restore(){
 
     # }}}
 
-    tycat "${conf_d}/images/ttc.gif"
+    tycat "/usr/share/git-watcher/images/ttc.gif"
     el_explain 0 "Restoring time-traveling position!"
 
     # marks: delete

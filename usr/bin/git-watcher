@@ -2139,11 +2139,13 @@ main(){
 
 
 
-    if ! ((is_header_show)) ; then
-        if ((is_commit_id_last_reached)) ; then
-            el_explain 0 "No more matches found, __ow yeah baby!__"
-        else
+    if ((is_commit_id_last_reached)) ; then
+        el_explain 0 "No more matches found, __ow yeah baby!__"
+    else
+        if ((is_header_show)) ; then
             el_error "Something wrong happened? seems like we cannot found your last position, so where is this commit then? $commit_id"
+        else
+            el_explain 0 "__No matches__ found"
         fi
     fi
 

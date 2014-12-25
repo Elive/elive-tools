@@ -806,35 +806,30 @@ el_mount(){
         return 0
     fi
 
-
-    # try again
-    #sync
-    #el_sudo service dbus restart
-    #sync
-    #/sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
-    #sync
-
-    ## try to mount
-    #if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        #timeout 60 udisks --mount "$dev" "$@"
-    #else
-        #timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    #fi
-
-    ## check if mounted
-    #sync
-    #if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
-        #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart dbus + re-read"
-        #return 0
-    #fi
-
-
     # try again
     restart_daemons
 
     sync
     /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
     sync
+
+    # try to mount
+    if [[ "$EL_DEBUG" -ge 3 ]] ; then
+        timeout 60 udisks --mount "$dev" "$@"
+    else
+        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
+    fi
+
+    # check if mounted
+    sync
+    if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev + dbus + re-read"
+        echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev  + re-read"
+        return 0
+    fi
+
+    # ok so, maybe the filesystem is not clean so try to fix that first:
+    fsck -a "$dev"
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then

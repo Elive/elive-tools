@@ -1121,7 +1121,7 @@ do_count_commits(){
             echo -en "\r${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
         fi
 
-    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+    done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} )"
     echo ""
 
 
@@ -1433,7 +1433,7 @@ options_main_interact(){
             fi
 
             # get the previous commit id
-            commit_id="$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+            commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
 
             # mark our new position
             echo "$commit_id" > "$conf_commit_last_f"
@@ -1711,8 +1711,8 @@ options_main_interact(){
         a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our watcher:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_working\"..\"$branch_watch\" $options_extra_git_after | grep --color -C 6 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 $options_extra_git_before "$branch_working".."$branch_watch" $options_extra_git_after | grep --color -C 6 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_working\"..\"$branch_watch\" ${options_extra_git_after[@]} | grep --color -C 6 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep --color -C 6 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -1723,8 +1723,8 @@ options_main_interact(){
         A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in its full branch history:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 $options_extra_git_before \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 $options_extra_git_before "$branch_watch" | grep --color -C 16 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_watch" | grep --color -C 16 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -1806,6 +1806,7 @@ usage_show(){
     echo -e "Options:"
     option_show "-b" "Branch that you want to track changes"
     option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
+    option_show "-a" "Author (committer) of commits to search, useful for track changes from somebody (name/email, one word)"
     option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
     echo -e ""
     option_show "-g" "Go to commit-id (temporally)"
@@ -1840,14 +1841,24 @@ main(){
     # }}}
     # input parameters {{{
 
-    while getopts "b:k:f:g:" opt ; do
+    while getopts "b:k:a:f:g:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
                 ;;
             k)
                 keyword_search="$OPTARG"
-                options_extra_git_before="-i --grep $keyword_search $options_extra_git_before"
+                #options_extra_git_before="-i --grep $keyword_search $options_extra_git_before"
+                #el_array_member_add "-i --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-i --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                ;;
+            a)
+                # better to be case-insensitive
+                author_search="$OPTARG"
+                # more than one word don't works in our getargs, so just use one
+                author_search="${author_search%% *}"
+                #options_extra_git_before="--committer='$author_search' $options_extra_git_before"
+                el_array_member_add "-i --committer $author_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
                 ;;
             f)
                 files_search="$OPTARG"
@@ -1867,7 +1878,8 @@ main(){
                 el_debug "$files_search"
 
                 # }}}
-                options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
+                #options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
+                el_array_member_add "-- ${files_search//,/ }" "${options_extra_git_after[@]}" ; options_extra_git_after=("${_out[@]}")
                 ;;
             g)
                 travel_commit_id="$OPTARG"
@@ -2076,7 +2088,7 @@ main(){
 
         # debug
         if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-            el_explain 2 "git log __${options_extra_git_before} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
+            el_explain 2 "git log __${options_extra_git_before[@]} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
             #sleep 2
         fi
 
@@ -2135,8 +2147,7 @@ main(){
 
         fi
 
-    done 3<<< "$( command git log $options_extra_git_before --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
-
+    done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
 
 
     if ((is_commit_id_last_reached)) ; then

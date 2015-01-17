@@ -18,13 +18,18 @@ migrate_conf_file(){
         cp "$file" "$file_bkp"
     fi
 
-    # backup the file in case user wants to restore it:
     mkdir -p "$cachedir"
-    cd "$cachedir"
-    echo "# Backuped $file to $cachedir"
 
-    echo "$file" | cpio -padu --quiet .
-    cd
+    # backup the file in case user wants to restore it:
+    # update: bad idea, it takes a lot of space and nobody knows that really
+    #cd "$cachedir"
+    #echo "# Backuped $file to $cachedir"
+
+    # backup to cachedir
+    #if ! echo "$file" | grep -qsE "/\.(kde|cache|bkp)" ; then
+        #echo "$file" | cpio -padu --quiet .
+    #fi
+    #cd
 
 
     # replacements {{{

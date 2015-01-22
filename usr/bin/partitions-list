@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 
 get_all_partitions_list(){
     # get a normal list of partitions {{{
-    for i in /dev/[shv]d[a-z][0-9]* /dev/vd[a-z]
+    for i in /dev/mapper/* /dev/[shv]d[a-z][0-9]* /dev/vd[a-z] /dev/[shv]d[a-z]
     do
         if [[ -b "$i" ]] ; then
             if udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then
@@ -268,7 +268,7 @@ main(){
 
             # get sizes
             if [[ "${line}" = *"UDISKS_PARTITION_SIZE="* ]] ; then
-                item_size="$(echo "$line" | sed -e 's|^.*UDISKS_PARTITION_SIZE=||g' )"
+                item_size="$(echo "$line" | sed -e 's|^.*UDISKS_PARTITION_SIZE=||g' | sort -ug | tail -1 )"
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
                 if [[ "$item_human_size" = .* ]] ; then
                     item_human_size="${item_human_size#.} MB"
@@ -318,7 +318,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_human_size" ]] ; then
-            item_human_size="$(lsblk -lnr -o size "${item}" )"
+            item_human_size="$(lsblk -lnr -o size "${item}" | sort -ug | tail -1 )"
         fi
         if [[ -z "$item_human_label" ]] ; then
             item_human_label="(no name)"
@@ -348,7 +348,7 @@ main(){
             unset item_filesystem
             item_type="extended"
             item_is_usable=0
-            el_debug "marking ${item} as unusable because is an extended partition"
+            el_debug "marking ${item} as unusable because is shows like an extended partition"
         fi
 
         # only show umountable partitions ? {{{
@@ -465,11 +465,12 @@ get_filesystem_file(){
     local ret
     ret="$(file -Ls "$1" )"
 
-    case $ret in
+    case "$ret" in
         *HFS*|*hfs*)
             echo "hfsplus"
             ;;
-        *extended*)
+        *extended\ partition\ table*)
+            # Note: I have a result like this which looks to be wrong, it is not an extended partition, but in any case is not an usable one:  /dev/sdb: sticky x86 boot sector; partition 1: ID=0xee, starthead 0, startsector 1, 1953525167 sectors, extended partition table (last)\011, code offset 0x0
             echo "extended"
             ;;
         *ext3*)

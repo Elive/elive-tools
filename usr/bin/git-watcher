@@ -149,7 +149,9 @@ shared_accounts_state_show(){
             fi
 
             # pull remote
-            command git pull --rebase "$remote_fetching_working" "$branch_working"
+            #command git pull --rebase "$remote_fetching_working" "$branch_working" # don't use this method, leads to diverged branches
+            command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
+
             check_if_has_diverged
 
             # update total of commits
@@ -1522,7 +1524,8 @@ options_main_interact(){
             fi
 
             el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
-            command git pull --rebase "$remote_fetching_working" "$branch_working"
+            #command git pull --rebase "$remote_fetching_working" "$branch_working"  # don't use this method, leads to diverged branches
+            command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
             check_if_has_diverged
 
             # update total of commits
@@ -1554,7 +1557,8 @@ options_main_interact(){
             command git checkout "$branch_watch"
 
             el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
-            command git pull --rebase "$remote_fetching_watch" "$branch_watch"
+            #command git pull --rebase "$remote_fetching_watch" "$branch_watch"  # buggy method
+            command git pull --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
             check_if_has_diverged
 
             el_explain 0 "git checkout $branch_working"

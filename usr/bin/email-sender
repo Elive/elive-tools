@@ -73,12 +73,16 @@ do_email_send(){
         subject="$message_subject"
     fi
 
-    if [[ -z "$title" ]] ; then
-        title="$subject"
-    fi
-
     if [[ -z "$template" ]] ; then
         template="default"
+    fi
+
+    if [[ -n "$title" ]] ; then
+        if [[ "${template}" = "none" ]] ; then
+            el_warning "You have set a title but template $template doesn't supports it"
+        fi
+    else
+        title="$subject"
     fi
 
     # default message if no messages

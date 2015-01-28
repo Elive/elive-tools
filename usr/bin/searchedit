@@ -33,8 +33,8 @@ main(){
         echo "Found:"
         echo "$matches" | grep --color=auto "$filename"
         echo ""
-        el_explain 0 "going to run __${EDITOR}__, press __Enter__ to continue"
-        read nothing
+        #el_explain 0 "going to run __${EDITOR}__, press __Enter__ to continue"
+        #read nothing
 
         $EDITOR "$matches"
     fi
@@ -42,8 +42,13 @@ main(){
     if [[ "$( echo "$matches" | wc -l )" -gt 1 ]] ; then
         echo -e "\nMatches found:"
         echo "$matches" | grep --color=auto "$filename"
-        echo -e "\nPlease be more precise"
+        echo -e "\nPlease be more precise or insert it:"
         el_explain 0 "Tip: If you recently edited the file you can also use the :MRU feature in vim"
+
+        read matches
+        if [[ -f "$matches" ]] ; then
+            $EDITOR "$matches"
+        fi
     fi
 
 }

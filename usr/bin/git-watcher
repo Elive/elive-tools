@@ -5,6 +5,8 @@ el_make_environment
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
 
+# FIXME: if watching branch == working branch = WARN it because there is going to be no commits at all between them (of course!)
+
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
 #   DESCRIPTION:  delete temporal things when exit
@@ -135,8 +137,8 @@ shared_accounts_state_show(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote you want to fetch $branch_working from ?\n"
-                    command git remote -v | grep "(fetch)" | awk '{print $1}'
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_working
                 else
@@ -1441,8 +1443,10 @@ options_main_interact(){
 
             ;;
         p)  # Prev commit
-            # FIXME BUG: this don't really not works since we still in the same "line loop" on the looping for, how to reproduce: pick previous, then pick next two times, the second time you will jump with an extra jump
-            # - instead, we should make a list of the commits in an array variable and loop in them with a while true or something like that
+            # FIXME: we can go BACKWARDS 0 and -1 -2 -3... make a check in the main "while true" loop for not be able to go before the first commit
+            # FIXME: (in E's git we have a bkp saved that includes only one commit about the XDG issue, not 2 ones, we need to "bkp g" to this state in order to reproduce this problem)
+                # so there is, go to that state and use the option "U" to update the watching branch, it founds 1 new commit, but then it should show that we are in the commit 11/13 (if we was in 11/12 previously) but instead it tells us that we are in 14/13, wrong!!!!
+
             if ((is_traveling)) ; then
                 # so we return from who called it, which is go_to_commit
                 return
@@ -1484,8 +1488,8 @@ options_main_interact(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote you want to fetch $branch_working from ?\n"
-                    command git remote -v | grep "(fetch)" | awk '{print $1}'
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_working
                 else
@@ -1510,8 +1514,9 @@ options_main_interact(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_watch" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote you want to fetch $branch_watch from ?\n"
-                    command git remote -v | grep "(fetch)" | awk '{print $1}'
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    #command git remote -v | grep "(fetch)" | awk '{print $1}'
+                    command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_watch
                 else

@@ -423,7 +423,7 @@ do_work(){
     el_explain 0 "Please logout from the shell for finish your working state"
 
     # entering in new shell
-    $SHELL
+    $SHELL || true
     # go back
     cd "$target"
 

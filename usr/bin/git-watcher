@@ -150,6 +150,7 @@ shared_accounts_state_show(){
 
             # pull remote
             command git pull --rebase "$remote_fetching_working" "$branch_working"
+            check_if_has_diverged
 
             # update total of commits
             do_count_commits
@@ -294,6 +295,25 @@ EOF
 
     # mark position too
     echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/position.txt"
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  check_if_has_diverged
+#   DESCRIPTION:  simple checker about if the branch has diverged
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+check_if_has_diverged(){
+    if command git status | grep -iqs "your branch.*have diverged" ; then
+        echo -e "" 1>&2
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        el_explain 0 "XXWarning: your branch has divergedXX"
+        el_explain 0 "You should check your git history and status XXmanuallyXX, exit from this tool and do it by yourself"
+        el_explain 0 "This can probably happen if only a __branch was updated__ without all of them, a good solution to try is to pull from the entire remote, like for example: __git pull --rebase origin__"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "" 1>&2
+    fi
 
 }
 
@@ -1407,6 +1427,7 @@ options_main_interact(){
     option_show "Q"         "Quit!"
     echo -e "${el_c_b}================================================================${el_c_n}"
 
+    check_if_has_diverged
 
     # select an option {{{
     #read -N 1 option
@@ -1446,6 +1467,7 @@ options_main_interact(){
             # FIXME: we can go BACKWARDS 0 and -1 -2 -3... make a check in the main "while true" loop for not be able to go before the first commit
             # FIXME: (in E's git we have a bkp saved that includes only one commit about the XDG issue, not 2 ones, we need to "bkp g" to this state in order to reproduce this problem)
                 # so there is, go to that state and use the option "U" to update the watching branch, it founds 1 new commit, but then it should show that we are in the commit 11/13 (if we was in 11/12 previously) but instead it tells us that we are in 14/13, wrong!!!!
+                # FIXME 2: there's also another problem: when updating with the option "U" it doesn't include the force-update that we did, and it shows a "branch diversion" message, we need to HILIGHT it and warn the user, requesting him to investigate the issue, which should be probably fixed with a simple "git pull --rebase REMOTE" (not-including the branch seems like to accept the force-update)
 
             if ((is_traveling)) ; then
                 # so we return from who called it, which is go_to_commit
@@ -1501,6 +1523,7 @@ options_main_interact(){
 
             el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
             command git pull --rebase "$remote_fetching_working" "$branch_working"
+            check_if_has_diverged
 
             # update total of commits
             do_count_commits
@@ -1532,9 +1555,11 @@ options_main_interact(){
 
             el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
             command git pull --rebase "$remote_fetching_watch" "$branch_watch"
+            check_if_has_diverged
 
             el_explain 0 "git checkout $branch_working"
             command git checkout "$branch_working"
+            check_if_has_diverged
 
 
             # update total of commits
@@ -2072,6 +2097,7 @@ main(){
             if el_confirm "Want to switch to $_branch_working ?" ; then
                 branch_working="${_branch_working}"
                 command git checkout "$branch_working"
+                check_if_has_diverged
             fi
         fi
     fi

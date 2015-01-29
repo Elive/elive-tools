@@ -5,8 +5,6 @@ el_make_environment
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
 
-# FIXME: if watching branch == working branch = WARN it because there is going to be no commits at all between them (of course!)
-
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
 #   DESCRIPTION:  delete temporal things when exit
@@ -156,6 +154,7 @@ shared_accounts_state_show(){
 
             # update total of commits
             do_count_commits
+            is_recount_position_needed=1
 
             _is_shared_scanned=1
         fi
@@ -170,6 +169,7 @@ shared_accounts_state_show(){
 
             # update total of commits
             do_count_commits
+            is_recount_position_needed=1
 
             _is_shared_scanned=1
         fi
@@ -938,6 +938,7 @@ EOF
 
     # count our new position
     do_count_commits
+    is_recount_position_needed=1
 
     # mark our back position
     echo "$commit_id" > "$conf_commit_last_f"
@@ -1085,11 +1086,11 @@ clear_screen(){
     mode="$1"
     el_check_variables "mode"
 
-    if [[ "$counter" -gt "$counter_total" ]] ; then
-        el_debug "do not clear screen if we are in the last commit"
-        echo -e "\n\n"
-        return
-    fi
+    #if [[ "$counter" -gt "$counter_total" ]] || [[ "$counter" -le 0 ]] ; then
+        #el_debug "not clearing the screen"
+        #echo -e "\n\n"
+        #return
+    #fi
 
     # }}}
     case "$mode" in
@@ -1102,19 +1103,23 @@ clear_screen(){
             ;;
     esac
 
-    # clear is not enough, if you scroll back you can see old things, reset is too slow, so let's put some huge separator instead
-    echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-    echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-    echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+    if [[ "${EL_DEBUG}" -lt "3" ]] ; then
+        # clear is not enough, if you scroll back you can see old things, reset is too slow, so let's put some huge separator instead
+        echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+        echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
-    clear
+        clear
+    else
+        echo -e "\n\n\n\n\n\n\n"
+    fi
 }
 
 #===  FUNCTION  ================================================================
@@ -1127,10 +1132,11 @@ do_count_commits(){
     # pre {{{
     el_debug
 
-    local _counter _counter_total is_commit_id_last_reached
+    local _counter _counter_total
 
     el_check_variables "branch_working,branch_watch"
 
+    unset is_commit_id_last_reached
     _counter_total="$counter_total"
     _counter="$counter"
 
@@ -1161,6 +1167,7 @@ do_count_commits(){
         fi
 
     done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} )"
+            set +x
     echo ""
 
 
@@ -1172,6 +1179,13 @@ do_count_commits(){
             read nothing
         fi
     fi
+
+    if [[ "${counter}" -gt "${counter_total}" ]] ; then
+        # show this on the counter tab instead, because this commit is out of our tracking line,
+        # we will go back later so nothing to worry about
+        counter="out of this universe"
+    fi
+
 
     el_explain 3 "Recounted commits: counter is $counter, total commits is $counter_total"
 }
@@ -1383,6 +1397,9 @@ options_main_interact(){
     # pre {{{
     el_debug
 
+    if ((is_recount_position_needed)) ; then
+        return
+    fi
     # }}}
 
     echo -e ""
@@ -1485,11 +1502,11 @@ options_main_interact(){
             # set the counter to count another commit remaining
             counter="$(( $counter - 1 ))"
 
-            # we cannot go down to 0
-            if [[ "${counter}" = "0" ]] ; then
-                break
+            # exit loop if no remaining commits
+            if [[ "$counter" -le 0 ]] ; then
+                el_explain 0 "You cannot go before the creation of the universe!"
+                sleep 2
             fi
-
 
             # cleanup
             clear_screen default
@@ -1530,6 +1547,7 @@ options_main_interact(){
 
             # update total of commits
             do_count_commits
+            is_recount_position_needed=1
 
             # return back to main menu
             $FUNCNAME
@@ -1568,6 +1586,7 @@ options_main_interact(){
 
             # update total of commits
             do_count_commits
+            is_recount_position_needed=1
 
             # return back to main menu
             $FUNCNAME
@@ -1889,7 +1908,6 @@ main(){
         exit 1
     fi
 
-    local is_commit_id_last_reached
 
     # }}}
     # input parameters {{{
@@ -1969,7 +1987,13 @@ main(){
         mkdir -p "$conf_d"
     fi
 
-    if ! el_check_variables "branch_working,branch_watch" 2>/dev/null ; then
+    if el_check_variables "branch_working,branch_watch" 2>/dev/null ; then
+        el_explain 0 "Branch tracking from: __${branch_watch}__"
+        el_explain 0 "Branch to work on:    __${branch_working}__"
+        if [[ "${branch_watch}" = "${branch_working}" ]] ; then
+            el_explain 0 "XXWarning:XX Branch tracking is the same as where you are working on, you may not see any commit because you are comparing the same thing"
+        fi
+    else
         usage_show
         exit
     fi
@@ -2111,7 +2135,7 @@ main(){
 
     # do we are in a saved session?
     if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-        is_saved=1
+        is_session_saved=1
     fi
 
     # - configurations get }}}
@@ -2151,22 +2175,44 @@ main(){
 
     fi
 
+    # FIXME: the option showing "commits not pushed yet" not works well, the comparison is wrong? it doesnt point to the correct remote maybe?
+
 
     # loop
     while true
     do
+
+        # loop!
         while read -ru 3 line
         do
             # nothing found at all, exiting
-            if [[ "$counter_total" = 0 ]] ; then
-                break 2
+            if [[ "$counter" -gt "$counter_total" ]] || [[ "$counter" -le 0 ]] ; then
+                is_recount_position_needed=1
+                counter=1
             fi
 
             # get commit
             if [[ "$line" = "commit "* ]] ; then
 
+                # recount our position against our commit-id
+                if ((is_recount_position_needed)) ; then
+                    #echo -en "\r${el_c_b}--- Traveling back in time: ${el_c_y}($counter/$counter_total)${el_c_b} ---${el_c_n}"
+                    #el_debug "recounting position needed"
+                    if [[ -n "$commit_id" ]] && [[ "$line" = "commit "$commit_id ]] ; then
+                        is_commit_id_last_reached=1
+                        unset is_recount_position_needed
+                        #echo -e "" # append a newline because the counter entered on itself
+                    else
+                        # loop until we reach the desired commit
+                        #el_debug "skipping commit because is not $commit_id : $line"
+                        counter="$(( $counter + 1 ))"
+
+                        continue
+                    fi
+                fi
+
                 # skip until last commit, this only runs when starting back a watcher
-                if ! ((is_commit_id_last_reached)) && ((is_saved)) ; then
+                if ! ((is_commit_id_last_reached)) && ((is_session_saved)) ; then
                     if [[ -n "$commit_id" ]] && [[ "$line" = "commit "$commit_id ]] ; then
                         is_commit_id_last_reached=1
                     else
@@ -2174,6 +2220,9 @@ main(){
                         el_debug "skipping commit because is not $commit_id : $line"
                         continue
                     fi
+                else
+                    # we are in a new session, simulate that we have reached the last needed position
+                    is_commit_id_last_reached=1
                 fi
 
 
@@ -2200,23 +2249,22 @@ main(){
                 options_main_interact
 
                 if ((is_recount_position_needed)) ; then
-                    unset is_recount_position_needed
-                    unset is_commit_id_last_reached
-                    # break nested loop for start again counting where we are
-                    break
+                    break 1
                 fi
 
                 el_debug "going to next loop"
                 #
                 #
 
+                # exit loop if no remaining commits
+                if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] ; then
+                    is_recount_position_needed=1
+                    break 1
+                fi
+
                 # count another commit because we go to next loop
                 counter="$(( $counter + 1 ))"
 
-                # exit loop if no remaining commits
-                if [[ "$counter" -gt "$counter_total" ]] ; then
-                    break 2
-                fi
 
                 # clear screen, but after that we did everything before to start
                 clear_screen default
@@ -2225,17 +2273,22 @@ main(){
 
         done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
 
-        el_debug "main loop restarted on the first loop to recount position"
+        if ((is_recount_position_needed)) ; then
+            counter=1
+            unset is_commit_id_last_reached
+            clear_screen default
+            #el_explain 0 "recounting..."
+        fi
     done
 
 
     if ((is_commit_id_last_reached)) ; then
-        el_explain 0 "No more matches found, __ow yeah baby!__"
+        el_explain 0 "__No more commits found__, ow yeah baby!"
     else
         if ((is_header_show)) ; then
             el_error "Something wrong happened? seems like we cannot found your last position, so where is this commit then? $commit_id"
         else
-            el_explain 0 "__No matches__ found"
+            el_explain 0 "XXNo commitsXX found"
         fi
     fi
 

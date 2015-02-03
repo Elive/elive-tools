@@ -13,7 +13,7 @@ select_card_multiple(){
 
 
     if [[ "${selection}" = "cancel" ]] ; then
-        exit 1
+        return 1
     fi
 }
 
@@ -75,12 +75,22 @@ main(){
             #sed -i 's|^defaults.pcm.card.*$|defaults.pcm.card 0|g' /usr/share/alsa/alsa.conf
         #fi
     else
+        if ! ((is_auto_mode)) ; then
+            if select_card_multiple ; then
+                is_multiple_cards=1
+            else
+                if [[ -s "$HOME/.asoundrc" ]] ; then
+                    exit 1
+                else
+                    unset is_multiple_cards
+                    is_auto_mode=1
+                fi
+            fi
+        fi
+
         if ((is_auto_mode)) ; then
             el_dependencies_check "psort"
-            selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" | tail -1 )"
-        else
-            is_multiple_cards=1
-            select_card_multiple
+            selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" | tac | head -1 )"
         fi
 
         # reconfigure alsa.conf default file to correctly work, only if is not a number value
@@ -100,7 +110,7 @@ main(){
     # set microphone default
     if ! ((is_auto_mode)) ; then
         if ((is_multiple_cards)) ; then
-            if $guitool --question --text="$( eval_gettext "Do you want to use another card as default for your microphone?" )" ; then
+            if ! $guitool --question --text="$( eval_gettext "Use the same audio card for your microphone?" )" ; then
                 select_card_multiple
 
                 cat >> "${HOME}/.asoundrc" << EOF
@@ -127,22 +137,21 @@ pcm.!default
 }
 EOF
 
-            else
+            #else
 
-                local translated_message
-                translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
+                #local translated_message
+                #translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
 
-                $guitool --info --text="$translated_message"
+                #$guitool --info --text="$translated_message"
             fi
 
             # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
-            $guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )"
+            #$guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )"
 
         fi
 
         if ! ((is_quiet_mode)) ; then
-            $guitool --info --text="$( eval_gettext "Your system is ready to use your audio card, please restart your audio applications" )"
-            $guitool --info --text="$( eval_gettext "To raise and decrease the volume use your keyboard hotkeys, if they don't works you can configure them in your Enlightenment hotkey preferences." )"
+            $guitool --info --text="$( eval_gettext "Your system is ready to use your audio card, please restart your audio applications. To raise and decrease the volume use your keyboard hotkeys, if they don't works you can configure them in your Enlightenment hotkey preferences." )"
         fi
 
     fi

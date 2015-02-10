@@ -1,5 +1,10 @@
 #!/bin/bash
-source /usr/lib/elive-tools/functions
+#source /usr/lib/elive-tools/functions
+el_explain_plain(){
+	if [[ "${EL_DEBUG}" -gt "1" ]] ; then
+	    echo -e "$@" 1>&2
+	fi
+}
 
 # this tool does caching "to ram" of application/executable and its required libs, can be also used for tracing
 
@@ -40,7 +45,8 @@ main(){
                 if ((trace)) ; then
                     echo "$j"
                 else
-                    el_explain 2 "caching __${j##*/}__"
+                    #el_explain 2 "caching __${j##*/}__"
+                    el_explain_plain "caching ${j##*/}"
                     cat "$j" > /dev/null 2>&1
                     cached_arr+=("$j")
                 fi
@@ -53,7 +59,8 @@ main(){
                 echo "$i"
             else
                 cat "$i" > /dev/null 2>&1
-                el_explain 2 "finished cache for __${i##*/}__"
+                #el_explain 2 "finished cache for __${i##*/}__"
+                el_explain_plain "finished cache for ${i##*/}"
             fi
         fi
     done
@@ -65,4 +72,3 @@ main(){
 #
 main "$@"
 
-# vim: set foldmethod=marker :

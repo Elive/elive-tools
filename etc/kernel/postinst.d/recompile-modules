@@ -76,7 +76,7 @@ while read -ru 3 dir
 do
     _namedir="${dir##*/}"
 	_name="${_namedir%-*}"
-	_version="${_namedir#*-}"
+	_version="${_namedir##*-}"
 
 	# skip unwanted ones
 	if ! echo "$_name" | grep -qsE "(vbox|nvidia|ati|radeon|fglrx|vmware)" ; then

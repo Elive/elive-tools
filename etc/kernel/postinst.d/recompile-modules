@@ -72,20 +72,17 @@ do
 done 3<<< "$( dpkg -l | grep -E "^ii\s*.*[[:print:]]-dkms\s*" | awk '{print $2}' )"
 
 # recompile each of these ones too
-while read -ru 3 dir
+for _conf in /usr/src/*/dkms.conf
 do
-    _namedir="${dir##*/}"
-	_name="${_namedir%-*}"
-	_version="${_namedir##*-}"
-
-	# skip unwanted ones
-	if ! echo "$_name" | grep -qsE "(vbox|nvidia|ati|radeon|fglrx|vmware)" ; then
+	if ! [[ -s "$_conf" ]] ; then
 		continue
 	fi
+
+	_name="$( cat "$_conf" | grep "^PACKAGE_NAME=" | sed -e 's|PACKAGE_NAME="||g' -e 's|PACKAGE_NAME=||g' -e 's|".*$||g' | head -1 )"
+	_version="$( cat "$_conf" | grep "^PACKAGE_VERSION=" | sed -e 's|PACKAGE_VERSION="||g' -e 's|PACKAGE_VERSION=||g' -e 's|".*$||g' | head -1 )"
 
 	# build !
 	echo -e "Running DKMS as: dkms install '$_name/$_version' -k '$inst_kern' "
 	dkms install "$_name/$_version" -k "$inst_kern"
 
-done 3<<< "$( find /usr/src -mindepth 1 -maxdepth 1 -type d )"
-
+done

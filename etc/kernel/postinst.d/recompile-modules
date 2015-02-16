@@ -75,11 +75,11 @@ done 3<<< "$( dpkg -l | grep -E "^ii\s*.*[[:print:]]-dkms\s*" | awk '{print $2}'
 while read -ru 3 dir
 do
     _namedir="${dir##*/}"
-	_name="${namedir%-*}"
-	_version="${namedir#*-}"
+	_name="${_namedir%-*}"
+	_version="${_namedir#*-}"
 
 	# skip unwanted ones
-	if ! echo "$_namedir" | grep -qs "(vbox|nvidia|ati|radeon|fglrx|vmware)" ; then
+	if ! echo "$_name" | grep -qsE "(vbox|nvidia|ati|radeon|fglrx|vmware)" ; then
 		continue
 	fi
 

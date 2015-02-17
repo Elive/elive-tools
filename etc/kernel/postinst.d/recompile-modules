@@ -82,7 +82,9 @@ do
 	_version="$( cat "$_conf" | grep "^PACKAGE_VERSION=" | sed -e 's|PACKAGE_VERSION="||g' -e 's|PACKAGE_VERSION=||g' -e 's|".*$||g' | head -1 )"
 
 	# build !
-	echo -e "Running DKMS as: dkms install '$_name/$_version' -k '$inst_kern' "
-	dkms install "$_name/$_version" -k "$inst_kern"
+	if [[ -n "$_name" ]] && [[ -n "$_version" ]] ; then
+		echo -e "Running DKMS as: dkms install '$_name/$_version' -k '$inst_kern' "
+		dkms install "$_name/$_version" -k "$inst_kern" || true
+	fi
 
 done

@@ -97,6 +97,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # from enlightenment values {{{
     local display e_ipc_socket
 
+    # if we are in console (out of X) we should always exit
+    if ((is_console)) ; then
+        return
+    fi
+
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
             display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"

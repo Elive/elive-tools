@@ -441,9 +441,14 @@ main(){
 
 
     if [[ "${1}" = "defaults" ]] ; then
+        # enable PCM channel first of all
+        timeout 5 aplay /dev/null 2>/dev/null
         # extra volumes up
         amixer -q set Headphone 100% 2>/dev/null
         amixer -q set Speaker 100% 2>/dev/null
+        amixer -q set PCM 100% 2>/dev/null
+        amixer -q set Front 100% 2>/dev/null
+        amixer -q set Surround 100% 2>/dev/null
         # unmute channels
         amixer -q set Master unmute 2>/dev/null
         amixer -q set PCM    unmute 2>/dev/null

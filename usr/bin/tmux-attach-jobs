@@ -17,7 +17,7 @@ shift
 win_name="$1"
 shift
 
-tmux_nb="$(tmux ls | grep "^${group_session}: " | wc -l)"
+tmux_nb="$(tmux ls 2>/dev/null | grep "^${group_session}: " | wc -l)"
 
 if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."

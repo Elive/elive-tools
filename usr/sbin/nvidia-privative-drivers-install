@@ -74,6 +74,23 @@ detect_driver_version(){
         el_explain 2 "Selected __${driver_version}__ version of driver to use"
     fi
 
+    if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
+        # pci-id with nvidia on first graphic card
+        _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
+    fi
+
+    if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
+        if ((is_mode_force)) ; then
+            if [[ -z "$driver_version" ]] ; then
+                el_warning "You have forced the install of nvidia but you didn't say which version, let's use the last one then..."
+                driver_version="last"
+            fi
+        else
+            el_error "You have no Nvidia graphic cards, use -f if you want to force the install"
+        fi
+    fi
+
+
     # }}}
 
     # xorg-driver automatic override for nvidia

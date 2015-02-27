@@ -16,6 +16,7 @@ usage(){
     echo -e "  -c: check only (tell which version of the driver we need)"
     echo -e "  -m: model (version of driver) to use"
     echo -e "      - like:  last (340?), 304, 173, 96, 71"
+    #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # TODO
     #echo -e "  -u: uninstall driver"
     echo -e "  -v: verbose mode"
 }

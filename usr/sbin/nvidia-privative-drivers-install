@@ -1,0 +1,171 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+
+usage(){
+    #
+    # if -a : should return true in case of installed or false if install failed
+    # if -i : will ask the user which version to install (suggesting the best option to use)
+    # if -f : only for debug purposes, but should install successfully too
+    #
+    echo -e "Usage: $(basename $BASH_SOURCE) [options]"
+    echo -e "  -a: auto install"
+    echo -e "  -i: interactive mode  (in terminal/console)"
+    echo -e "  -f: force install (if no nvidia cards are found)"
+    echo -e "  -q: silent mode"
+    echo -e "  -c: check only (tell which version of the driver we need)"
+    echo -e "  -m: model (version of driver) to use"
+    echo -e "      - like:  last (340?), 304, 173, 96, 71"
+    #echo -e "  -u: uninstall driver"
+    echo -e "  -v: verbose mode"
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  check_hardware
+#   DESCRIPTION:  check the hardware if has or not the graphic card
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+check_hardware(){
+    # pre {{{
+    el_debug
+    #el_security_function_loop || return
+
+    # }}}
+
+    # FIXME: what about optimus? skip? ask?
+
+    # pci-id with nvidia on first graphic card
+    _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
+
+    if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
+        el_explain 3 "nvidia card found on pci-id"
+        is_nvidia_card_found=1
+    fi
+
+    # check if hardware has nvidia
+    if lspci | grep -qsiE "VGA\s+.*\s+nvidia\s+" ; then
+        el_explain 3 "nvidia card found in lspci"
+        is_nvidia_card_found=1
+    fi
+
+    # force or exit?
+    if ! ((is_nvidia_card_found)) ; then
+        if ((is_mode_force)) ; then
+            el_warning "Forcing install of nvidia in a machine where is not detected nvidia card"
+            is_nvidia_card_found=1
+        else
+            el_error "No nvidia graphic cards found on this machine"
+            return 1
+        fi
+    fi
+}
+#===  FUNCTION  ================================================================
+#          NAME:  detect_driver_version
+#   DESCRIPTION:  detect or ask which version of the driver to use
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+detect_driver_version(){
+    # pre {{{
+    el_debug
+
+    if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
+        el_explain 2 "Selected __${driver_version}__ version of driver to use"
+    fi
+
+    # }}}
+
+    # xorg-driver automatic override for nvidia
+    if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)'
+    then
+        for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy-*/nvidia.ids | sort -V -r)
+        do
+            if [ -e "${_NVIDIA_IDS}" ]
+            then
+                if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
+                then
+                    _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                    _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
+
+                    break
+                fi
+            fi
+        done
+
+        if [ -n "${_NVIDIA_VERSION}" ]
+        then
+            LIVE_XORG_DRIVER="nvidia"
+        fi
+    fi
+
+}
+
+main(){
+    # pre {{{
+    if [[ -z "${1}" ]] ; then
+        usage
+        exit 1
+    fi
+
+
+    # }}}
+
+    # Usage
+
+    while getopts ":acifm:quv" opt; do
+        case $opt in
+            a)
+                is_mode_auto=1
+                ;;
+            c)
+                is_mode_check=1
+                ;;
+            f)
+                is_mode_force=1
+                ;;
+            i)
+                is_mode_interactive=1
+                unset is_mode_auto
+                ;;
+            v)
+                export EL_DEBUG=2
+
+                ;;
+            m)
+                driver_version="$OPTARG"
+                ;;
+            q)
+                export EL_DEBUG=0
+
+                ;;
+            #u)
+                #check_hardware
+                #uninstall_driver
+                #;;
+            \?)
+                el_error "Invalid option: -$OPTARG"
+                usage
+                exit 1
+                ;;
+            :)
+                el_error "Option -$OPTARG requires an argument."
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+
+    check_hardware
+    detect_driver_version
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

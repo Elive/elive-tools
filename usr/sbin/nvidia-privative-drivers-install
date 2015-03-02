@@ -12,6 +12,8 @@ usage(){
     echo -e "Usage: $(basename $BASH_SOURCE) [options]"
     echo -e "  -a: auto install"
     echo -e "  -i: interactive mode  (in terminal/console)"
+    # TODO: if interactive (default of live mode), we should ask first if we want to use privative drivers, then we can proceed to detect the driver needed (which is slower), so if users wants nouveau then we can skip the process
+    # add an option of "live mode" maybe, to not download packages if they are not downloaded and just proceed with asking (on such case and regarding the previous question, how much time takes to upnpack them? betatest when working)
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"

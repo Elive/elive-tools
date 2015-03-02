@@ -5,6 +5,7 @@ source /usr/lib/elive-tools/functions
 usage(){
     #
     # if -a : should return true in case of installed or false if install failed
+    #           already installed? already running?
     # if -i : will ask the user which version to install (suggesting the best option to use)
     # if -f : only for debug purposes, but should install successfully too
     #
@@ -12,10 +13,10 @@ usage(){
     echo -e "  -a: auto install"
     echo -e "  -i: interactive mode  (in terminal/console)"
     echo -e "  -f: force install (if no nvidia cards are found)"
-    echo -e "  -q: silent mode"
+    echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"
     echo -e "  -m: model (version of driver) to use"
-    echo -e "      - like:  last (340?), 304, 173, 96, 71"
+    echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx, legacy-71xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # TODO
     #echo -e "  -u: uninstall driver"
     echo -e "  -v: verbose mode"
@@ -34,7 +35,7 @@ check_hardware(){
 
     # }}}
 
-    # FIXME: what about optimus? skip? ask?
+    # FIXME: what about optimus? skip? ask? try a tower with nvidia + mobo graphic card (mine?)
 
     # pci-id with nvidia on first graphic card
     _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
@@ -69,10 +70,16 @@ check_hardware(){
 #===============================================================================
 detect_driver_version(){
     # pre {{{
+    local prev_dir file
+    prev_dir="$(pwd)"
+
     el_debug
 
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
         el_explain 2 "Selected __${driver_version}__ version of driver to use"
+        _NVIDIA_VERSION="$driver_version"
+        #_NVIDIA_MODULE="nvidia" # should be always this one in all the versions, or maybe not?
+        return
     fi
 
     if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
@@ -83,8 +90,8 @@ detect_driver_version(){
     if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
         if ((is_mode_force)) ; then
             if [[ -z "$driver_version" ]] ; then
-                el_warning "You have forced the install of nvidia but you didn't say which version, let's use the last one then..."
-                driver_version="last"
+                el_warning "You have forced the install of nvidia but you didn't say which version, let's use the 'current' one as default then..."
+                driver_version="current"
             fi
         else
             el_error "You have no Nvidia graphic cards, use -f if you want to force the install"
@@ -94,10 +101,56 @@ detect_driver_version(){
 
     # }}}
 
-    # xorg-driver automatic override for nvidia
-    if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)'
-    then
-        for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy-*/nvidia.ids | sort -V -r)
+    # try to search for ID's {{{
+    #
+    # first on your system installed id's
+    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
+    do
+        if [ -e "${_NVIDIA_IDS}" ]
+        then
+            if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
+            then
+                _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
+
+                break
+            fi
+        fi
+    done
+
+    # if nothing found, search in already-downloaded packages (if we are in live mode we should have them already there)
+    if [[ -z "$_NVIDIA_VERSION" ]] ; then
+        # installed ones
+        if ls /var/cache/apt/archives/xserver-xorg-video-nvidia*deb 1>/dev/null 2>&1 ; then
+            # unpack downloaded ones for scan
+            cd /var/cache/apt/archives/
+            el_debug "Not ID's found on installed packages, unpacking not-installed ones..."
+        else
+            # download from urls for scan
+            el_debug "Not ID's found on installed packages, downloading them..."
+            mkdir -p /var/tmp/nvidia-tmp
+            cd /var/tmp/nvidia-tmp
+
+            for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | tr '\n' ' ' )
+            do
+                url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+                while read -ru 3 line
+                do
+                    #url_package_dir="${url_repository%/}/${line%/*}/"
+                    el_debug "downloading: ${line##*/}"
+                    wget -q "${url_repository%/}/${line}"
+                done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+            done
+        fi
+        # for any of the places where we are (cd), let's scan the opened files:
+        for file in xserver-xorg-video-nvidia*deb
+        do
+            # Unpack packages to get the ID's !
+            dpkg -x "$file" ./tmp-nvidia/
+        done
+
+        # get the version
+        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
         do
             if [ -e "${_NVIDIA_IDS}" ]
             then
@@ -111,11 +164,57 @@ detect_driver_version(){
             fi
         done
 
-        if [ -n "${_NVIDIA_VERSION}" ]
-        then
-            LIVE_XORG_DRIVER="nvidia"
+        cd "$prev_dir"
+        rm -rf /var/cache/apt/archives/nvidia-tmp 2>/dev/nul
+        rm -rf /var/tmp/nvidia-tmp 2>/dev/null
+    fi
+
+    # }}}
+    # show result found {{{
+    if [[ -n "$_NVIDIA_VERSION" ]] ; then
+        el_explain 2 "Version of Nvidia for your machines is: __${_NVIDIA_VERSION}__"
+        el_explain 2 "Module to load for your nvidia card is: __${_NVIDIA_MODULE}__"
+    else
+        # if we have nothing found we should tell the user what to do
+        if ((is_mode_check)) ; then
+            el_explain 0 "Seems like we cannot detect the package of nvidia that you need for your graphic card, things that you can do:"
+            el_explain 0 " * Update your packages list (__apt-get update__) and try again"
+
+
+            el_explain 0 " * Maybe your version of nvidia is not yet included in Elive, but it should be backported soon"
+            el_explain 0 "Run the command __nvidia-detect__ to see what it says"
+        else
+            # if we cannot detect we cannot continue!
+            exit 1
         fi
     fi
+
+    # examples of results:
+    #_NVIDIA_VERSION=current
+    #_NVIDIA_MODULE=nvidia
+    #_NVIDIA_VERSION=legacy-304xx
+    #_NVIDIA_MODULE=nvidia-legacy-304xx
+
+
+    # - show result found }}}
+    # TODO: version 71xx don't have ID's, check at least if stills compiles
+
+    cd "$prev_dir"
+}
+#===  FUNCTION  ================================================================
+#          NAME:  interactive_ask_driver
+#   DESCRIPTION:  ask to the user which driver to install
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+interactive_ask_driver(){
+    # pre {{{
+    el_debug
+
+    # its useless to use zenity, we have no gui, and this is a command, not a tool of desktop...
+    # so: use "dialog" only
+
+    # }}}
 
 }
 
@@ -177,6 +276,7 @@ main(){
 
     check_hardware
     detect_driver_version
+    interactive_ask_driver
 
 
 }

@@ -2,6 +2,10 @@
 source /usr/lib/elive-tools/functions
 
 
+#===  FUNCTION  ================================================================
+#          NAME:  usage
+#   DESCRIPTION:  Shows the usage help, don't exit
+#===============================================================================
 usage(){
     #
     # if -a : should return true in case of installed or false if install failed
@@ -11,9 +15,11 @@ usage(){
     #
     echo -e "Usage: $(basename $BASH_SOURCE) [options]"
     echo -e "  -a: auto install"
-    echo -e "  -i: interactive mode  (in terminal/console)"
+    #echo -e "  -i: interactive mode  (in terminal/console)"
     # TODO: if interactive (default of live mode), we should ask first if we want to use privative drivers, then we can proceed to detect the driver needed (which is slower), so if users wants nouveau then we can skip the process
     # add an option of "live mode" maybe, to not download packages if they are not downloaded and just proceed with asking (on such case and regarding the previous question, how much time takes to upnpack them? betatest when working)
+    # if "onlyfree" in cmdline, do a first exit at start (show some info)
+    echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"
@@ -128,21 +134,25 @@ detect_driver_version(){
             cd /var/cache/apt/archives/
             el_debug "Not ID's found on installed packages, unpacking not-installed ones..."
         else
-            # download from urls for scan
-            el_debug "Not ID's found on installed packages, downloading them..."
-            mkdir -p /var/tmp/nvidia-tmp
-            cd /var/tmp/nvidia-tmp
+            if ((is_mode_live)) ; then
+                el_explain 2 "You are in mode_live, skipping the pre-download of packages for this mode..."
+            else
+                # download from urls for scan
+                el_debug "Not ID's found on installed packages, downloading them..."
+                mkdir -p /var/tmp/nvidia-tmp
+                cd /var/tmp/nvidia-tmp
 
-            for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | tr '\n' ' ' )
-            do
-                url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
-                while read -ru 3 line
+                for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
                 do
-                    #url_package_dir="${url_repository%/}/${line%/*}/"
-                    el_debug "downloading: ${line##*/}"
-                    wget -q "${url_repository%/}/${line}"
-                done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
-            done
+                    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+                    while read -ru 3 line
+                    do
+                        #url_package_dir="${url_repository%/}/${line%/*}/"
+                        el_debug "downloading: ${line##*/}"
+                        wget -q "${url_repository%/}/${line}"
+                    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+                done
+            fi
         fi
         # for any of the places where we are (cd), let's scan the opened files:
         for file in xserver-xorg-video-nvidia*deb
@@ -191,6 +201,12 @@ detect_driver_version(){
         fi
     fi
 
+    # if we only  want to check, we don't need to do anything more here, just exit
+    if ((is_mode_check)) ; then
+        echo -e "The Nvidia driver for your machine is: $_NVIDIA_VERSION"
+        exit
+    fi
+
     # examples of results:
     #_NVIDIA_VERSION=current
     #_NVIDIA_MODULE=nvidia
@@ -204,21 +220,174 @@ detect_driver_version(){
     cd "$prev_dir"
 }
 #===  FUNCTION  ================================================================
-#          NAME:  interactive_ask_driver
+#          NAME:  interactive_ask_privative
+#   DESCRIPTION:  ask to the user if wants to install the privative driver or not
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+interactive_ask_privative(){
+    # pre {{{
+    local ret
+    el_debug
+
+    local message_title
+    message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+    local message_message
+    message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of nvidia? We suggest to use them to have a better experience, it offers 3D acceleration and other features like a smoother desktop, they are also most of the times more stable than the free driver." )" "" )"
+
+
+    # }}}
+    # ask if want to install the privative one or the free {{{
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
+        ret=1
+    else
+
+        if ((is_mode_live)) ; then
+            # don't ask if mode auto, assume yes
+            if ((is_mode_auto)) ; then
+                ret=0
+            else
+                dialog --timeout 90 --clear --colors --backtitle "Elive Systems" \
+                    --title "$message_title" \
+                    --yesno "$message_message" \
+                    0 0
+                ret="$?"
+            fi
+        else
+            # we are running this command manually so we don't want to ask if we want to do what we want to do :P
+            ret="0"
+        fi
+    fi
+
+    case "$ret" in
+        0|255) # yes
+            if ((is_mode_live)) ; then
+                log_progress_msg "Installing privative Nvidia drivers"
+            fi
+            ;;
+        1) # no
+            if ((is_mode_live)) ; then
+                log_progress_msg "Using nouveau driver for your Nvidia card"
+            fi
+
+            # not needed to do anything, just exit
+            el_debug "We don't need to do anything, continue using nouveau..."
+            exit
+            ;;
+    esac
+
+    # - ask if want to install the privative one or the free }}}
+}
+#===  FUNCTION  ================================================================
+#          NAME:  interactive_ask_driver_version
 #   DESCRIPTION:  ask to the user which driver to install
 #    PARAMETERS:  -
 #       RETURNS:  -
 #===============================================================================
-interactive_ask_driver(){
+interactive_ask_driver_version(){
     # pre {{{
+    local line entry _is_preselection_set _id _desc ret
     el_debug
 
-    # its useless to use zenity, we have no gui, and this is a command, not a tool of desktop...
-    # so: use "dialog" only
-
     # }}}
+    # List available versions and ask in a dialog {{{
+
+    local message_select_driver
+    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Press the spacebar for select and enter to confirm." )" "" )"
+
+
+    if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
+        while read -ru 3 line
+        do
+            if [[ "${line}" = "xserver-xorg-video-nvidia" ]] ; then
+                continue
+            fi
+
+            _id="${line#xserver-xorg-video-nvidia}"
+            _id="${_id#-}"
+
+            if [[ -z "$_id" ]] ; then
+                _id="uknown"
+            fi
+
+            case $_id in
+                *nvidia|current)
+                    _desc="$( printf "$( eval_gettext "Last driver for the most newest cards" )" )"
+                    ;;
+                *legacy-304xx)
+                    _desc="$( printf "$( eval_gettext "Previously last driver for recent cards" )" )"
+                    ;;
+                *legacy-173xx)
+                    _desc="$( printf "$( eval_gettext "Old driver for older cards" )" )"
+                    ;;
+                *legacy-96xx)
+                    _desc="$( printf "$( eval_gettext "Older driver for oldest cards" )" )"
+                    ;;
+                *legacy-71xx)
+                    _desc="$( printf "$( eval_gettext "Oldest driver for dinousaurs" )" )"
+                    ;;
+                *legacy*)
+                    _desc="$( printf "$( eval_gettext "Old driver" )" )"
+                    ;;
+                *)
+                    _desc="$( printf "$( eval_gettext "Unknown version" )" )"
+                    ;;
+            esac
+
+            if [[ "${_NVIDIA_VERSION}" = "$_id" ]] ; then
+                if ((_is_preselection_set)) ; then
+                    echo -e "'$_id' '$_desc' off"
+                    _is_preselection_set=1
+                else
+                    echo -e "'$_id' '$_desc' on"
+                fi
+            else
+                echo -e "'$_id' '$_desc' off"
+            fi
+
+        done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
+            | xargs dialog --timeout 120 --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+
+        # get result
+        ret="$( cat "/tmp/.$(basename $0)-ret" | head -1 )"
+        rm -f "/tmp/.$(basename $0)-ret"
+
+        # remove extra leading blank chars
+        read -r ret <<< "$ret"
+
+        # update / force the version to use
+        _NVIDIA_VERSION="$ret"
+
+        if ((is_mode_live)) ; then
+            log_progress_msg "Using the '$ret' nvidia driver version"
+            sleep 1
+        else
+            el_debug "Nvidia version was '$_NVIDIA_VERSION' and now is '$ret'"
+        fi
+
+    fi
+
+
+    # - List available versions and ask in a dialog }}}
+    # select packages to install depending on which version we selected {{{
+    case $_NVIDIA_VERSION in
+        current)
+            _NVIDIA_PACKAGES="nvidia-driver nvidia-glx nvidia-settings"
+            ;;
+        *)
+            _NVIDIA_PACKAGES="nvidia-driver-$_NVIDIA_VERSION nvidia-glx-$_NVIDIA_VERSION nvidia-settings-$_NVIDIA_VERSION"
+            ;;
+    esac
+
+    el_explain 2 "Selected list of pacakges to install:\n__$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )__"
+
+
+    # - select packages to install depending on which version we selected }}}
+
+
 
 }
+
 
 main(){
     # pre {{{
@@ -227,12 +396,16 @@ main(){
         exit 1
     fi
 
+    . /lib/lsb/init-functions
+
+    _CMDLINE="$(cat /proc/cmdline)"
+
+    el_dependencies_check "dialog,apt-cache,wget"
 
     # }}}
 
     # Usage
-
-    while getopts ":acifm:quv" opt; do
+    while getopts ":acifm:lquv" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -243,16 +416,20 @@ main(){
             f)
                 is_mode_force=1
                 ;;
-            i)
-                is_mode_interactive=1
-                unset is_mode_auto
-                ;;
+            #i)
+                #is_mode_interactive=1
+                #unset is_mode_auto
+                #;;
             v)
                 export EL_DEBUG=2
 
                 ;;
             m)
                 driver_version="$OPTARG"
+                is_mode_version_set=1
+                ;;
+            l)
+                is_mode_live=1
                 ;;
             q)
                 export EL_DEBUG=0
@@ -277,8 +454,9 @@ main(){
 
 
     check_hardware
+    interactive_ask_privative
     detect_driver_version
-    interactive_ask_driver
+    interactive_ask_driver_version
 
 
 }

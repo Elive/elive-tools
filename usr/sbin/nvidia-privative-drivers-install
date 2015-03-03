@@ -243,6 +243,30 @@ interactive_ask_privative(){
     else
 
         if ((is_mode_live)) ; then
+            # TODO: deleteme in the future (request feedback experience) {{{
+            if el_check_version_development "20" ; then
+                local message_report_experience
+                message_report_experience="$( printf "$( eval_gettext "You have a Nvidia card! We are just finishing the feature to install the privative drivers in both live and installed mode, could be extremely helpful for us if you simply enter later in our chat to tell us if there's anything that didn't worked with them, you can tell us suggestions too, can you connect later and just say something like Nvidia Driver Version Number worked fine? You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
+
+                if ! dialog --timeout 90 --clear --colors --backtitle "Elive Systems" \
+                    --title "Yeppeeeeee! New features!" \
+                    --yesno "$message_report_experience" \
+                    0 0  ; then
+
+                    clear
+                    log_progress_msg "Bad boy... spank spank!"
+                    sleep 3
+                    log_progress_msg "Now im upset and im going to make you wait... forever forver"
+                    sleep 4
+                    log_progress_msg "Ok, was a joke :P continuing..."
+                    sleep 2
+                fi
+
+            fi
+
+
+            # }}}
+
             # don't ask if mode auto, assume yes
             if ((is_mode_auto)) ; then
                 ret=0

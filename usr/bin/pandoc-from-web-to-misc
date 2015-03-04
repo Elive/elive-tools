@@ -89,7 +89,7 @@ main(){
 
     if el_confirm "\nDo you want to modify the document? useful for remove useless contents" ; then
         if [[ -z "$EDITOR" ]] ; then
-            EDITOR="$( which mousepad geany gvim vim | grep -v "not found" | head -1 )"
+            EDITOR="$( which mousepad geany gvim vim | grep -v "not found" | grep "^/" | head -1 )"
         fi
 
         $EDITOR downloaded.text

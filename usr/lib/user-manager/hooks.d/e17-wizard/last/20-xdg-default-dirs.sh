@@ -88,7 +88,7 @@ migrate_conf_file(){
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_explain 0 "Migrated conf file $file as:" 2>> "$cachedir/logs.txt"
 
-        if [[ -x "$(which colordiff)" ]] ; then
+        if which colordiff 1>/dev/null 2>&1 ; then
             diff "$file_bkp" "$file" | colordiff >> "$cachedir/logs.txt"
         else
             diff "$file_bkp" "$file" >> "$cachedir/logs.txt"

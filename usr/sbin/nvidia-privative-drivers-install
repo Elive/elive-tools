@@ -24,7 +24,7 @@ usage(){
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"
     echo -e "  -m: model (version of driver) to use"
-    echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx, legacy-71xx"
+    echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # TODO
     echo -e "  -u: uninstall driver"
     echo -e "  -v: verbose mode"
@@ -215,7 +215,6 @@ detect_driver_version(){
 
 
     # - show result found }}}
-    # TODO: version 71xx don't have ID's, check at least if stills compiles
 
     cd "$prev_dir"
 }
@@ -340,12 +339,12 @@ interactive_ask_driver_version(){
 
             case $_id in
                 *nvidia|current)
-                    _desc="$( printf "$( eval_gettext "Last driver for the most newest cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Most newest graphic cards" )" )"
                     # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                     _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                     ;;
                 *legacy-304xx)
-                    _desc="$( printf "$( eval_gettext "Previously last driver for recent cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Previous driver for recent cards" )" )"
                     ;;
                 *legacy-173xx)
                     _desc="$( printf "$( eval_gettext "Old driver for older cards" )" )"
@@ -407,20 +406,24 @@ interactive_ask_driver_version(){
             _NVIDIA_PACKAGES="nvidia-driver nvidia-settings"
             ;;
         legacy-71xx)
+
+            # NOTE: The 71xx legacy drivers don't support Xorg Xserver newer than 1.4 which was
+            # shipped with Debian 5.0 (lenny).
+
             # the name of the packages are different for this one
-            # note: we don't know if it works
             _NVIDIA_PACKAGES="nvidia-glx-legacy-71xx"
 
             # tell the user to use an older kernel
-            if dpkg --compare-versions "$(uname -r)" ge "3.16" ; then
-                local message_too_much_new_kernel
-                message_too_much_new_kernel="$( printf "$( eval_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
+            #if dpkg --compare-versions "$(uname -r)" ge "3.16" ; then
+                #local message_too_much_new_kernel
+                ##message_too_much_new_kernel="$( printf "$( eva
+                ##l_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
 
-                dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
-                    --title "Too much new kernel" \
-                    --msgbox "$message_too_much_new_kernel" \
-                    0 0
-            fi
+                #dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+                    #--title "Too much new kernel" \
+                    #--msgbox "$message_too_much_new_kernel" \
+                    #0 0
+            #fi
 
 
             ;;

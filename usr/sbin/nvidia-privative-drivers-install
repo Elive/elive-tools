@@ -39,9 +39,8 @@ check_hardware(){
     #el_security_function_loop || return
 
     # }}}
-
-    # FIXME: what about optimus? skip? ask? try a tower with nvidia + mobo graphic card (mine?)
-
+    # TODO: multiple cards: tower (mine), betatest
+    # detect if we have the hardware with nvidia {{{
     # pci-id with nvidia on first graphic card
     _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
 
@@ -66,6 +65,8 @@ check_hardware(){
             return 1
         fi
     fi
+
+    # - detect if we have the hardware with nvidia }}}
 }
 #===  FUNCTION  ================================================================
 #          NAME:  detect_driver_version
@@ -211,9 +212,9 @@ detect_driver_version(){
     #_NVIDIA_MODULE=nvidia-legacy-304xx
 
 
-    # - show result found }}}
-
     cd "$prev_dir"
+
+    # - show result found }}}
 }
 #===  FUNCTION  ================================================================
 #          NAME:  interactive_ask_privative
@@ -471,8 +472,7 @@ install_driver(){
 
     # }}}
 
-    # TODO: seems like brightness not works... try to activate the brightness thingy if "laptop & nvidia" like:    Option "RegistryDwords" "EnableBrightnessControl=1"
-
+    # conf {{{
     # create conf first
     : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
@@ -483,6 +483,7 @@ install_driver(){
     echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
     echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
 
+    # - conf }}}
     # force brightness entry conf {{{
     if laptop-detect ; then
 
@@ -506,7 +507,7 @@ install_driver(){
     fi
 
     # - force brightness entry conf }}}
-
+    # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
     if [[ "$(lspci | grep -E "(VGA|3D)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D)" | grep -iE "(VGA|3D)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
 
@@ -523,8 +524,9 @@ install_driver(){
             --msgbox "$message_multiple_cards" \
             0 0
     fi
+    # - Optimus inform to user }}}
 
-    # install !
+    # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
     if lsmod | grep -qs nouveau ; then
         if ((is_mode_force)) ; then
@@ -541,6 +543,8 @@ install_driver(){
     # just in case another one is used
     rmmod nvidia 2>/dev/null
 
+    # - unload modules }}}
+    # apt-get install {{{
     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
         el_aptget_update
 
@@ -575,6 +579,8 @@ install_driver(){
     fi
 
 
+    # - apt-get install }}}
+    # load module {{{
     # load driver
     if which nvidia-modprobe 1>/dev/null 2>&1 ; then
         nvidia-modprobe
@@ -600,6 +606,7 @@ install_driver(){
 
     el_explain 2 "Install complete"
 
+    # - load module }}}
 }
 
 #===  FUNCTION  ================================================================
@@ -617,6 +624,7 @@ uninstall_driver(){
 
     # }}}
 
+    # unload module {{{
     # unload module first
     if lsmod | grep -qs nvidia ; then
         rmmod nvidia
@@ -632,10 +640,14 @@ uninstall_driver(){
     fi
 
 
+    # - unload module }}}
+    # confs {{{
     # remove any possible xorg conf (before uninstall packages)
     rm -f /etc/X11/xorg.conf.d/20-nvidia.conf 2>/dev/null
 
 
+    # - confs }}}
+    # packages {{{
     # remove all nvidia packages
     while read -ru 3 line
     do
@@ -673,7 +685,8 @@ uninstall_driver(){
         DEBIAN_FRONTEND="noninteractive" apt-get install -y xserver-xorg-video-nouveau
     fi
 
-
+    # - packages }}}
+    # end {{{
     # show final result
     if dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
         echo -e ""
@@ -683,6 +696,7 @@ uninstall_driver(){
         el_explain 0 "Driver NVIDIA uninstalled __successfully__"
     fi
 
+    # - end }}}
 }
 
 

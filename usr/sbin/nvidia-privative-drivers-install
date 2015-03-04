@@ -487,6 +487,7 @@ install_driver(){
         echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
         echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
         echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf
         echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
 
     fi

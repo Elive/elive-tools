@@ -245,7 +245,7 @@ interactive_ask_privative(){
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \
-                    --yesno "$message_report_experience" \
+                    --msgbox "$message_report_experience" \
                     0 0  ; then
 
                     clear
@@ -406,6 +406,24 @@ interactive_ask_driver_version(){
         current)
             _NVIDIA_PACKAGES="nvidia-driver nvidia-settings"
             ;;
+        legacy-71xx)
+            # the name of the packages are different for this one
+            # note: we don't know if it works
+            _NVIDIA_PACKAGES="nvidia-glx-legacy-71xx"
+
+            # tell the user to use an older kernel
+            if dpkg --compare-versions "$(uname -r)" ge "3.16" ; then
+                local message_too_much_new_kernel
+                message_too_much_new_kernel="$( printf "$( eval_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
+
+                dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+                    --title "Too much new kernel" \
+                    --msgbox "$message_too_much_new_kernel" \
+                    0 0
+            fi
+
+
+            ;;
         *)
             if apt-cache search "nvidia-settings-$_NVIDIA_VERSION" | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver nvidia-settings-$_NVIDIA_VERSION"
@@ -482,22 +500,40 @@ install_driver(){
         fi
     fi
 
-    if ! apt-get install -y $_NVIDIA_PACKAGES ; then
+    # just in case another one is used
+    rmmod nvidia 2>/dev/null
+
+    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
         el_aptget_update
 
-        if ! apt-get install -y $_NVIDIA_PACKAGES ; then
+        if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
             el_aptget_update force
 
-            if ! apt-get install -y $_NVIDIA_PACKAGES ; then
+            if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
                 while read -ru 3 package
                 do
-                    if ! apt-get install -y $package ; then
+                    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
                         echo -e "\nE: Installing nvidia packages failed, please report the previous error messages to Elive" 1>&2
-                        sleep 20
+                        sleep 10
                     fi
                 done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
             fi
         fi
+    fi
+
+
+    # add the packages to the installed system later too
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
+        # first remove any possible previous entry for nvidia
+        sed -i '/nvidia/d' /tmp/.packages-to-install 2>/dev/null
+        sed -i '/nvidia/d' /tmp/.packages-to-hold    2>/dev/null
+
+        for package in $_NVIDIA_PACKAGES
+        do
+            echo "$package" >> /tmp/.packages-to-install
+            # just like the kernel, keep them holded, we don't want surprises, if a system works it works
+            echo "$package" >> /tmp/.packages-to-hold
+        done
     fi
 
 
@@ -511,6 +547,13 @@ install_driver(){
 
     if ! lsmod | grep -qs nvidia ; then
         el_error "Unable to load NVIDIA module"
+        local message_unable_to_load
+        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the Nvidia module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the nvidia driver it will require an older version of the kernel." )" "" )"
+
+
+        echo ""
+        el_explain 0 "$message_unable_to_load"
+
         exit 1
     fi
 
@@ -563,7 +606,7 @@ uninstall_driver(){
         # if matches
         if echo "$line" | grep -qsE "(nvidia|lib.*nvidia|glx.*nvidia|xserver.*nvidia)" ; then
             # which doesn't maches
-            if ! echo "$line" | grep -qsE "(nvidia-detect|glx-alternative-nvidia|glx-diversions)" ; then
+            if ! echo "$line" | grep -qsE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" ; then
                 el_debug "Adding $line to the list of uninstall packages"
                 _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES $line"
             fi
@@ -580,14 +623,21 @@ uninstall_driver(){
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_NVIDIA_PACKAGES
         else
             el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
-            apt-get remove --purge $_NVIDIA_PACKAGES
+            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
         fi
     else
-        el_warning "We wanted to uninstall packages but none were found, already removed?"
+        el_explain 0 "Nvidia packages already removed"
     fi
 
+
+    # just in case, reinstall the nouveau driver
+    if ! dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
+        DEBIAN_FRONTEND="noninteractive" apt-get install -y xserver-xorg-video-nouveau
+    fi
+
+
     # show final result
-    if dpkg -l | grep nvidia | awk '{print $2}' | grep -qs nvidia ; then
+    if dpkg -l | awk '{print $2}' | grep nvidia | grep -qsvE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
         echo -e ""
         el_error "We still having some nvidia packages not uninstalled:"
         dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2
@@ -595,8 +645,6 @@ uninstall_driver(){
         el_explain 0 "Driver NVIDIA uninstalled __successfully__"
     fi
 
-    # we have nothing more to do so exit
-    exit
 }
 
 
@@ -663,13 +711,19 @@ main(){
     done
 
 
-    # i dont like very much this flow here, but were it must be? in each called functions with a return in the pre ? mmh... what is the good coding practices for this case?
+    check_hardware
+
     if ((is_mode_uninstall)) ; then
-        check_hardware
+        uninstall_driver
+        # nothing more to do so exit
+        exit
+    fi
+
+    if ((is_mode_version_set)) ; then
+        # uninstall possible drivers first
         uninstall_driver
     fi
 
-    check_hardware
     interactive_ask_privative
     detect_driver_version
     interactive_ask_driver_version

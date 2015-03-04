@@ -255,7 +255,7 @@ interactive_ask_privative(){
                     log_progress_msg "Now im upset and im going to make you wait... forever forever!"
                     sleep 5
                     echo
-                    log_progress_msg "Ok, that was a bad joke :P continuing..."
+                    log_progress_msg "Ok, that was a joke :P continuing..."
                     sleep 3
                     echo
                 fi
@@ -339,7 +339,7 @@ interactive_ask_driver_version(){
 
             case $_id in
                 *nvidia|current)
-                    _desc="$( printf "$( eval_gettext "Most newest graphic cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Last driver for the most newest cards" )" )"
                     # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                     _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                     ;;
@@ -376,6 +376,11 @@ interactive_ask_driver_version(){
 
         done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
             | xargs dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+        # user canceled? uninstall and exit
+        if [[ "$?" = 123 ]] ; then
+            uninstall_driver
+            exit
+        fi
 
         # get result
         ret="$( cat "/tmp/.$(basename $0)-ret" | head -1 )"
@@ -473,16 +478,16 @@ install_driver(){
 
     # create conf first
     if [[ -s "/usr/share/live/config/xserver-xorg/nvidia.conf" ]] ; then
-        cp "/usr/share/live/config/xserver-xorg/nvidia.conf" /etc/X11/xorg.conf.d/
+        cp "/usr/share/live/config/xserver-xorg/nvidia.conf" /etc/X11/xorg.conf.d/20-nvidia.conf
     else
         # generate a dummy template
-        : > /etc/X11/xorg.conf.d/nvidia.conf
+        : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
-        echo 'Section "Device"' >> /etc/X11/xorg.conf.d/nvidia.conf
-        echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/nvidia.conf
-        echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/nvidia.conf
-        echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/nvidia.conf
-        echo 'EndSection' >> /etc/X11/xorg.conf.d/nvidia.conf
+        echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
 
     fi
 
@@ -598,7 +603,7 @@ uninstall_driver(){
 
 
     # remove any possible xorg conf (before uninstall packages)
-    rm -f /etc/X11/xorg.conf.d/nvidia.conf 2>/dev/null
+    rm -f /etc/X11/xorg.conf.d/20-nvidia.conf 2>/dev/null
 
 
     # remove all nvidia packages
@@ -640,7 +645,7 @@ uninstall_driver(){
 
 
     # show final result
-    if dpkg -l | awk '{print $2}' | grep nvidia | grep -qsvE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
+    if dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
         echo -e ""
         el_error "We still having some nvidia packages not uninstalled:"
         dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2

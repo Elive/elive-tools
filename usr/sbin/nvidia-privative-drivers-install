@@ -51,7 +51,7 @@ check_hardware(){
     fi
 
     # check if hardware has nvidia
-    if lspci | grep -qsiE "VGA\s+.*\s+nvidia\s+" ; then
+    if lspci | grep -qsiE "(VGA|3D)\s+.*\s+nvidia\s+" ; then
         el_explain 3 "nvidia card found in lspci"
         is_nvidia_card_found=1
     fi
@@ -241,7 +241,7 @@ interactive_ask_privative(){
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \
-                    --msgbox "$message_report_experience" \
+                    --yesno "$message_report_experience" \
                     0 0  ; then
 
                     clear
@@ -508,9 +508,20 @@ install_driver(){
     # - force brightness entry conf }}}
 
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    # TODO finish optimus implementation
-    if laptop-detect && [[ "$(lspci | grep -i VGA | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -i VGA | grep -iE "VGA\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
-        true
+    if [[ "$(lspci | grep -E "(VGA|3D)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D)" | grep -iE "(VGA|3D)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
+
+        if laptop-detect ; then
+            local message_multiple_cards
+            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the Nvidia one when needs more performance. You can use in Elive the Nvidia one if you install Nvidia or it will use the Intel one if you don't, so we are going to use now the Nvidia one which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
+        else
+            local message_multiple_cards
+            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, we will proceed by using Nvidia but you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+        fi
+
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+            --title "Multiple Graphic Cards found" \
+            --msgbox "$message_multiple_cards" \
+            0 0
     fi
 
     # install !

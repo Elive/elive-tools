@@ -476,6 +476,7 @@ install_driver(){
     # }}}
 
     # TODO: check the debian and archlinux wiki's to see if we lack anything
+    # TODO: seems like brightness not works... try to activate the brightness thingy if "laptop & nvidia" like:    Option "RegistryDwords" "EnableBrightnessControl=1"
 
     # create conf first
     if [[ -s "/usr/share/live/config/xserver-xorg/nvidia.conf" ]] ; then

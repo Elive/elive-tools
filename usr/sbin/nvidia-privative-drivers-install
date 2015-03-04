@@ -16,17 +16,13 @@ usage(){
     echo -e "Usage: $(basename $BASH_SOURCE) [options]"
     echo -e "  -a: auto install"
     echo -e "  -d: detect only (return true or false if we have nvidia or not)"
-    #echo -e "  -i: interactive mode  (in terminal/console)"
-    # TODO: if interactive (default of live mode), we should ask first if we want to use privative drivers, then we can proceed to detect the driver needed (which is slower), so if users wants nouveau then we can skip the process
-    # add an option of "live mode" maybe, to not download packages if they are not downloaded and just proceed with asking (on such case and regarding the previous question, how much time takes to upnpack them? betatest when working)
-    # if "onlyfree" in cmdline, do a first exit at start (show some info)
     echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"
     echo -e "  -m: model (version of driver) to use"
     echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
-    #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # TODO
+    #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
     echo -e "  -u: uninstall driver"
     echo -e "  -v: verbose mode"
 }
@@ -288,7 +284,7 @@ interactive_ask_privative(){
     fi
 
     case "$ret" in
-        0|255) # yes
+        0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
                 log_progress_msg "Installing privative Nvidia drivers"
             fi
@@ -475,30 +471,50 @@ install_driver(){
 
     # }}}
 
-    # TODO: check the debian and archlinux wiki's to see if we lack anything
     # TODO: seems like brightness not works... try to activate the brightness thingy if "laptop & nvidia" like:    Option "RegistryDwords" "EnableBrightnessControl=1"
 
     # create conf first
-    if [[ -s "/usr/share/live/config/xserver-xorg/nvidia.conf" ]] ; then
-        cp "/usr/share/live/config/xserver-xorg/nvidia.conf" /etc/X11/xorg.conf.d/20-nvidia.conf
-    else
-        # generate a dummy template
-        : > /etc/X11/xorg.conf.d/20-nvidia.conf
+    : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
-        echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
+    echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
 
+    # force brightness entry conf {{{
+    if laptop-detect ; then
+
+        local message_brightness_force
+        message_brightness_force="$( printf "$( eval_gettext "Is the brightness feature working for you? To enable this option can cause problems if you don't need it, you can try to increase or decrease the brightness of your backlight with the hotkeys of your keyboard or from the Desktop gadget, if not works try to enable this option, you can experiment as much as you want by rebooting in live mode." )" "" )"
+
+        dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
+            --title "Brightness of the Screen" \
+            --yesno "$message_brightness_force" \
+            0 0
+        ret="$?"
+
+        case "$ret" in
+            0|255|123) # yes, timeout, cancel
+                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1\n&"|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                ;;
+            1) # no
+                true
+                ;;
+        esac
+    fi
+
+    # - force brightness entry conf }}}
+
+    # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
+    # TODO finish optimus implementation
+    if laptop-detect && [[ "$(lspci | grep -i VGA | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -i VGA | grep -iE "VGA\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
+        true
     fi
 
     # install !
-    # we don't really need this if we skip the need to, so its by default a good thing to ask the user
-    #export DEBIAN_FRONTEND="noninteractive"
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
-    # FIXME: needs to be better: if
     if lsmod | grep -qs nouveau ; then
         if ((is_mode_force)) ; then
             rmmod -f nouveau

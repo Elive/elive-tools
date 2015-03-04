@@ -15,6 +15,7 @@ usage(){
     #
     echo -e "Usage: $(basename $BASH_SOURCE) [options]"
     echo -e "  -a: auto install"
+    echo -e "  -d: detect only (return true or false if we have nvidia or not)"
     #echo -e "  -i: interactive mode  (in terminal/console)"
     # TODO: if interactive (default of live mode), we should ask first if we want to use privative drivers, then we can proceed to detect the driver needed (which is slower), so if users wants nouveau then we can skip the process
     # add an option of "live mode" maybe, to not download packages if they are not downloaded and just proceed with asking (on such case and regarding the previous question, how much time takes to upnpack them? betatest when working)
@@ -673,13 +674,16 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acifm:lquv" opt; do
+    while getopts ":acdifm:lquv" opt; do
         case $opt in
             a)
                 is_mode_auto=1
                 ;;
             c)
                 is_mode_check=1
+                ;;
+            d)
+                is_mode_detect=1
                 ;;
             f)
                 is_mode_force=1
@@ -719,6 +723,16 @@ main(){
         esac
     done
 
+
+
+    # only check if we have nvidia and exit
+    if ((is_mode_detect)) ; then
+        if check_hardware ; then
+            exit 0
+        else
+            exit 1
+        fi
+    fi
 
     check_hardware
 

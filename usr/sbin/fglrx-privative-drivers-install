@@ -1,6 +1,10 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# TODO words to replace/verify:
+# lspci 10de...
+# legacy-305...
+# nviiidia
 
 #===  FUNCTION  ================================================================
 #          NAME:  usage
@@ -21,7 +25,9 @@ usage(){
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the driver we need)"
     echo -e "  -m: model (version of driver) to use"
-    echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
+    echo -e "      - like:  current, legacy"
+    echo -e "        - legacy versions:  from HD 2000 to HD 4000"
+    echo -e "        - current versions: from HD 5000 to higher"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware"
     echo -e "  -u: uninstall driver"
     echo -e "  -v: verbose mode"
@@ -39,18 +45,8 @@ check_hardware(){
     #el_security_function_loop || return
 
     # }}}
-    # TODO: multiple cards: tower (mine), betatest
     # detect if we have the hardware with ati {{{
     # pci-id with ati on first graphic card
-
-    # XXX in ati is something like:  100268E0, nvidia is 10DE0DE1, but on ati is not reliable
-    _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-
-
-    if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
-        el_explain 3 "ati card found on pci-id"
-        is_ati_card_found=1
-    fi
 
     # check if hardware has ati
     # TODO: if has intel too, strongly suggests to use intel instead

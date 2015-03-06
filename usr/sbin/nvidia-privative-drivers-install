@@ -50,7 +50,8 @@ check_hardware(){
     fi
 
     # check if hardware has nvidia
-    if lspci | grep -qsiE "(VGA|3D)\s+.*\s+nvidia\s+" ; then
+    # Seems like a more reliable way than using VGA for the detect is: lspci -nn | grep '\[03'
+    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+nvidia\s+" ; then
         el_explain 3 "nvidia card found in lspci"
         is_nvidia_card_found=1
     fi
@@ -509,7 +510,7 @@ install_driver(){
     # - force brightness entry conf }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if [[ "$(lspci | grep -E "(VGA|3D)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D)" | grep -iE "(VGA|3D)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
 
         if laptop-detect ; then
             local message_multiple_cards

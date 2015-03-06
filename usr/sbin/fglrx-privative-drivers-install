@@ -1,6 +1,9 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+el_debug "not implemented fglrx installs yet"
+exit 1
+
 # TODO words to replace/verify:
 # lspci 10de...
 # legacy-305...

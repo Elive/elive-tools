@@ -20,13 +20,13 @@ usage(){
     echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no ati cards are found)"
     echo -e "  -q: quiet mode"
-    echo -e "  -c: check only (tell which version of the driver we need)"
-    echo -e "  -m: model (version of driver) to use"
+    echo -e "  -c: check only (tell which version of the drivers we need)"
+    echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, legacy"
     echo -e "        - legacy versions:  from HD 2000 to HD 4000"
     echo -e "        - current versions: from HD 5000 to higher"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware"
-    echo -e "  -u: uninstall driver"
+    echo -e "  -u: uninstall drivers"
     echo -e "  -v: verbose mode"
 }
 
@@ -101,7 +101,7 @@ detect_driver_version(){
     # checks to determine version {{{
     # manual mode
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
-        el_explain 2 "Selected __${driver_version}__ version of driver to use"
+        el_explain 2 "Selected __${driver_version}__ version of drivers to use"
         _FGLRX_VERSION="$driver_version"
         return
     fi
@@ -143,7 +143,7 @@ detect_driver_version(){
 
     # if we only  want to check, we don't need to do anything more here, just exit
     if ((is_mode_check)) ; then
-        echo -e "The detected ATI driver for your machine is probably: $_FGLRX_VERSION"
+        echo -e "The detected ATI drivers for your machine is probably: $_FGLRX_VERSION"
         exit
     fi
 
@@ -172,7 +172,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative FGRLX drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like FGLRX Driver Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
+                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative FGRLX drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like FGLRX Drivers Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \
@@ -204,7 +204,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of ATI? We don't suggest to do it unless you really know that they works good for you, most of the times the free driver is much better quality for the ATI cards and the privative ones only works good in some cards, if you select to use privative ones make sure that everything works without problems, it can even hang off your computer and give other good amount of unstability problems, the best way to know it is by trying, in live mode you can try and reboot as much as you want." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of ATI? We don't suggest you to do it unless you really know that they works good for you, most of the times the free drivers is much better quality for the ATI cards and the privative ones only works good in some cards, if you select to use the privative one you should verify that everything works without problems, because it can even block entirely your computer and give you other good amount of instability problems, the best is to simply try all the options and applications before to decide for one." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
                     --title "$message_title" \
@@ -227,7 +227,7 @@ interactive_ask_privative(){
         1) # no
             if ((is_mode_live)) ; then
                 if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                    log_progress_msg "Using the free driver..."
+                    log_progress_msg "Using the free drivers..."
                 else
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
@@ -265,7 +265,7 @@ interactive_ask_driver_version(){
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
         local message_select_driver
-        message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the driver that you want to install and press enter to confirm." )" "" )"
+        message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the drivers that you want to install and press enter to confirm." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is problably the one that you need." )" "$_FGLRX_VERSION" )"
@@ -291,7 +291,7 @@ interactive_ask_driver_version(){
         # remove extra leading blank chars
         read -r ret <<< "$ret"
 
-        log_progress_msg "Using the '$ret' ATI driver version"
+        log_progress_msg "Using the '$ret' ATI drivers version"
         # add a pause in case we selected a different than the expected one
         if [[ "${ret}" != "$_FGLRX_VERSION" ]] ; then
             sleep 2
@@ -370,10 +370,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not ATI is detected in your system, maybe your laptop uses a special ATI shared drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the ATI one when needs more performance. You can use in Elive the ATI one if you install FGLRX or it will use the Intel one if you don't, so we are going to use now the FGLRX one. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses a special ATI shared drivers, where the internal card is used for save battery and switches to the ATI when needs more performance. You can use in Elive the ATI if you install FGLRX or it will use the Intel if you don't, so we are going to use now the FGLRX. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not ATI is detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
@@ -453,7 +453,7 @@ install_driver(){
     if ! lsmod | grep -qs fglrx ; then
         el_error "Unable to load FGLRX module"
         local message_unable_to_load
-        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx driver it will require an older version of the kernel. Run this tool again with the option -u if you want to remove middle-installed things." )" "" )"
+        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel. Run this tool again with the option -u if you want to remove middle-installed things." )" "" )"
 
 
         echo ""
@@ -470,7 +470,7 @@ install_driver(){
     # - load module }}}
     # inform {{{
     local message_remember
-    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this driver, using the free version should solve the problem, or in the inverse way maybe you need the privative version, only your own experience will tell you." )" "" )"
+    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this drivers, using the free drivers should solve the problem, or in the inverse way maybe you need the privative version, only your own experience will tell you." )" "" )"
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
             --title "Ready to be run" \

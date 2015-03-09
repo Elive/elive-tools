@@ -19,11 +19,11 @@ usage(){
     echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
-    echo -e "  -c: check only (tell which version of the driver we need)"
-    echo -e "  -m: model (version of driver) to use"
+    echo -e "  -c: check only (tell which version of the drivers we need)"
+    echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
-    echo -e "  -u: uninstall driver"
+    echo -e "  -u: uninstall drivers"
     echo -e "  -v: verbose mode"
 }
 
@@ -99,7 +99,7 @@ detect_driver_version(){
     el_debug
 
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
-        el_explain 2 "Selected __${driver_version}__ version of driver to use"
+        el_explain 2 "Selected __${driver_version}__ version of drivers to use"
         _NVIDIA_VERSION="$driver_version"
         #_NVIDIA_MODULE="nvidia" # should be always this one in all the versions, or maybe not?
         return
@@ -221,7 +221,7 @@ detect_driver_version(){
 
     # if we only  want to check, we don't need to do anything more here, just exit
     if ((is_mode_check)) ; then
-        echo -e "The Nvidia driver for your machine is: $_NVIDIA_VERSION"
+        echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
         exit
     fi
 
@@ -291,7 +291,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of Nvidia? We suggest to use them to have a better experience, it offers 3D acceleration and other features like a smoother desktop, they are also most of the times more stable than the free driver." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers" )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
                     --title "$message_title" \
@@ -351,7 +351,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the driver that you want to install and press enter to confirm." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the drivers that you want to install and press enter to confirm." )" "" )"
 
 
 
@@ -371,24 +371,24 @@ interactive_ask_driver_version(){
 
             case $_id in
                 *nvidia|current)
-                    _desc="$( printf "$( eval_gettext "Last driver for the most newest cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
                     # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                     _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                     ;;
                 *legacy-304xx)
-                    _desc="$( printf "$( eval_gettext "Previous driver for recent cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
                     ;;
                 *legacy-173xx)
-                    _desc="$( printf "$( eval_gettext "Old driver for older cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Drivers for old cards" )" )"
                     ;;
                 *legacy-96xx)
-                    _desc="$( printf "$( eval_gettext "Older driver for oldest cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Drivers for oldest cards" )" )"
                     ;;
                 *legacy-71xx)
-                    _desc="$( printf "$( eval_gettext "Oldest driver for dinousaurs" )" )"
+                    _desc="$( printf "$( eval_gettext "Drivers for dinousaur devices" )" )"
                     ;;
                 *legacy*)
-                    _desc="$( printf "$( eval_gettext "Old driver" )" )"
+                    _desc="$( printf "$( eval_gettext "Old drivers" )" )"
                     ;;
                 *)
                     _desc="$( printf "$( eval_gettext "Unknown version" )" )"
@@ -421,7 +421,7 @@ interactive_ask_driver_version(){
         # remove extra leading blank chars
         read -r ret <<< "$ret"
 
-        log_progress_msg "Using the '$ret' nvidia driver version"
+        log_progress_msg "Using the '$ret' nvidia drivers version"
 
         # add a pause in case we selected a different than the expected one
         if [[ "${ret}" != "$_NVIDIA_VERSION" ]] ; then
@@ -545,10 +545,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the Nvidia one when needs more performance. You can use in Elive the Nvidia one if you install Nvidia or it will use the Intel one if you don't, so we are going to use now the Nvidia one which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the NVIDIA when needs more performance. You can use in Elive the Nvidia if you install Nvidia or it will use the Intel if you don't, so we are going to use now the Nvidia which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
@@ -628,7 +628,7 @@ install_driver(){
     if ! lsmod | grep -qs nvidia ; then
         el_error "Unable to load NVIDIA module"
         local message_unable_to_load
-        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the Nvidia module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the nvidia driver it will require an older version of the kernel. Run this tool again with the option -u if you want to remove hte middle-installed things." )" "" )"
+        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the Nvidia module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the nvidia drivers it will require an older version of the kernel. Run this tool again with the option -u if you want to remove hte middle-installed things." )" "" )"
 
 
         echo ""

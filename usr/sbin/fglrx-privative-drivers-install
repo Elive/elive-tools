@@ -425,13 +425,15 @@ install_driver(){
     if ! lsmod | grep -qs fglrx ; then
         el_error "Unable to load FGLRX module"
         local message_unable_to_load
-        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx driver it will require an older version of the kernel." )" "" )"
+        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx driver it will require an older version of the kernel. Run this tool again with the option -u if you want to remove middle-installed things." )" "" )"
 
 
         echo ""
         el_explain 0 "$message_unable_to_load"
 
-        exit 1
+        if ! ((is_mode_force)) ; then
+            exit 1
+        fi
     fi
 
     # reload devices just in case

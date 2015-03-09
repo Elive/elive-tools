@@ -444,9 +444,18 @@ install_driver(){
     # reload devices just in case
     service fglrx-atieventsd restart 1>/dev/null 2>&1
 
-    el_explain 2 "Install complete"
-
     # - load module }}}
+    # inform {{{
+    local message_remember
+    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this driver, using the free version should solve the problem, or in the inverse way maybe you need the privative version, only your own experience will tell you." )" "" )"
+
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+            --title "Ready to be run" \
+            --msgbox "$message_remember" \
+            0 0
+
+    el_explain 2 "Install complete"
+    # - inform }}}
 }
 
 #===  FUNCTION  ================================================================

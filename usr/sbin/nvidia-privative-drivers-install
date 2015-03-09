@@ -259,7 +259,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative Nvidia drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like Nvidia Driver Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
+                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the privative drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!"  )"  )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \
@@ -520,7 +520,7 @@ install_driver(){
     if laptop-detect ; then
 
         local message_brightness_force
-        message_brightness_force="$( printf "$( eval_gettext "Is the brightness feature working for you? To enable this option can cause problems if you don't need it, you can try to increase or decrease the brightness of your backlight with the hotkeys of your keyboard or from the Desktop gadget, if not works try to enable this option, you can experiment as much as you want by rebooting in live mode." )" "" )"
+        message_brightness_force="$( printf "$( eval_gettext "Is the brightness feature working for you? To enable this option can cause problems if you don't need it, you can try to increase or decrease the brightness of your backlight with the hotkeys of your keyboard or from the Desktop gadget, if not works try to enable this option, you can experiment as much as you want by rebooting in Live mode." )" "" )"
 
         dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
             --title "Brightness of the Screen" \

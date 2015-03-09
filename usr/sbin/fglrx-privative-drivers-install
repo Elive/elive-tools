@@ -172,7 +172,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative FGRLX drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like FGLRX Drivers Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
+                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the privative drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!" )"  )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \

@@ -406,6 +406,9 @@ install_driver(){
 
     # - unload modules }}}
     # apt-get install {{{
+
+    echo -e "\n\n\n\n\nInstalling... Please be patient...\n\n"
+
     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
         el_aptget_update
 

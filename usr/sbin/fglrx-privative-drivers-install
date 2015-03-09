@@ -1,13 +1,7 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
-el_debug "not implemented fglrx installs yet"
-exit 1
 
-# TODO words to replace/verify:
-# lspci 10de...
-# legacy-305...
-# nviiidia
 
 #===  FUNCTION  ================================================================
 #          NAME:  usage
@@ -86,139 +80,55 @@ detect_driver_version(){
 
     el_debug
 
-    #FIXME: rewrite for ati
-
+    # }}}
+    # checks to determine version {{{
+    # manual mode
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
         el_explain 2 "Selected __${driver_version}__ version of driver to use"
-        _NVIDIA_VERSION="$driver_version"
+        _FGLRX_VERSION="$driver_version"
         return
     fi
 
-    if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
-        # pci-id with ati on first graphic card
-        _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-    fi
 
-    if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
-        if ((is_mode_force)) ; then
-            if [[ -z "$driver_version" ]] ; then
-                el_warning "You have forced the install of fglrx but you didn't say which version, let's use the 'current' one as default then..."
+    if [[ -z "$driver_version" ]] ; then
+        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon HD.*Series" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
+
+        if [[ -n "$driver_version" ]] ; then
+            if [[ "${driver_version}" -gt "4000" ]] ; then
                 driver_version="current"
-            fi
-        else
-            el_error "You have no Nvidia graphic cards, use -f if you want to force the install"
-        fi
-    fi
-
-
-    # }}}
-
-    # try to search for ID's {{{
-    #
-    # first on your system installed id's
-    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
-    do
-        if [ -e "${_NVIDIA_IDS}" ]
-        then
-            if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
-            then
-                _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
-                _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
-
-                break
-            fi
-        fi
-    done
-
-    # if nothing found, search in already-downloaded packages (if we are in live mode we should have them already there)
-    if [[ -z "$_NVIDIA_VERSION" ]] ; then
-        # installed ones
-        if ls /var/cache/apt/archives/xserver-xorg-video-nvidia*deb 1>/dev/null 2>&1 ; then
-            # unpack downloaded ones for scan
-            cd /var/cache/apt/archives/
-            el_debug "Not ID's found on installed packages, unpacking not-installed ones..."
-        else
-            if ((is_mode_live)) ; then
-                el_explain 2 "You are in mode_live, skipping the pre-download of packages for this mode..."
             else
-                # download from urls for scan
-                el_debug "Not ID's found on installed packages, downloading them..."
-                mkdir -p /var/tmp/nvidia-tmp
-                cd /var/tmp/nvidia-tmp
-
-                for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
-                do
-                    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
-                    while read -ru 3 line
-                    do
-                        #url_package_dir="${url_repository%/}/${line%/*}/"
-                        el_debug "downloading: ${line##*/}"
-                        wget -q "${url_repository%/}/${line}"
-                    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
-                done
+                driver_version="legacy"
             fi
         fi
-        # for any of the places where we are (cd), let's scan the opened files:
-        for file in xserver-xorg-video-nvidia*deb
-        do
-            # Unpack packages to get the ID's !
-            dpkg -x "$file" ./tmp-nvidia/
-        done
-
-        # get the version
-        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
-        do
-            if [ -e "${_NVIDIA_IDS}" ]
-            then
-                if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
-                then
-                    _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
-                    _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
-
-                    break
-                fi
-            fi
-        done
-
-        cd "$prev_dir"
-        rm -rf /var/cache/apt/archives/nvidia-tmp 2>/dev/nul
-        rm -rf /var/tmp/nvidia-tmp 2>/dev/null
     fi
+
+    # PCIE? use last
+    if [[ -z "$driver_version" ]] ; then
+        if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon.*PCIE" ; then
+            driver_version="current"
+        fi
+    fi
+
+    # nothing? use default
+    if [[ -z "$driver_version" ]] ; then
+        el_warning "You have forced the install of fglrx but you didn't say which version, let's use the 'current' one as default then..."
+        driver_version="current"
+    fi
+
+    # mark it
+    if [[ -n "$driver_version" ]] ; then
+        _FGLRX_VERSION="$driver_version"
+    fi
+
 
     # }}}
-    # show result found {{{
-    if [[ -n "$_NVIDIA_VERSION" ]] ; then
-        el_explain 2 "Version of Nvidia for your machines is: __${_NVIDIA_VERSION}__"
-        el_explain 2 "Module to load for your nvidia card is: __${_NVIDIA_MODULE}__"
-    else
-        # if we have nothing found we should tell the user what to do
-        if ((is_mode_check)) ; then
-            el_explain 0 "Seems like we cannot detect the package of nvidia that you need for your graphic card, things that you can do:"
-            el_explain 0 " * Update your packages list (__apt-get update__) and try again"
-
-
-            el_explain 0 " * Maybe your version of nvidia is not yet included in Elive, but it should be backported soon"
-            el_explain 0 "Run the command __nvidia-detect__ to see what it says"
-        else
-            # if we cannot detect we cannot continue!
-            exit 1
-        fi
-    fi
+    # - show result found {{{
 
     # if we only  want to check, we don't need to do anything more here, just exit
     if ((is_mode_check)) ; then
-        echo -e "The Nvidia driver for your machine is: $_NVIDIA_VERSION"
+        echo -e "The detected ATI driver for your machine is probably: $_FGLRX_VERSION"
         exit
     fi
-
-    # examples of results:
-    #_NVIDIA_VERSION=current
-    #_NVIDIA_MODULE=nvidia
-    #_NVIDIA_VERSION=legacy-304xx
-    #_NVIDIA_MODULE=nvidia-legacy-304xx
-
-
-    cd "$prev_dir"
 
     # - show result found }}}
 }
@@ -244,7 +154,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative Nvidia drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like Nvidia Driver Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
+                message_report_experience="$( printf "$( eval_gettext "We are just finishing the feature to install the privative FGRLX drivers (in both live and installed mode), could be extremely helpful for us if you simply enter in our chat to tell us if there's anything that didn't worked with them or any suggestion. Just say something like FGLRX Driver Version Number worked fine. You can found the chat from the second icon of your dock or online from the website. Thank you!" )" "" )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
                     --title "Yeppeeeeee! New features!" \
@@ -256,7 +166,7 @@ interactive_ask_privative(){
                     log_progress_msg "Bad boy... spank spank!"
                     sleep 3
                     echo
-                    log_progress_msg "Now im upset and im going to make you wait... forever forever!"
+                    log_progress_msg "Now im upset and I will stuck you on this step... forever forever!"
                     sleep 5
                     echo
                     log_progress_msg "Ok, that was a joke :P continuing..."
@@ -274,9 +184,9 @@ interactive_ask_privative(){
                 ret=0
             else
                 local message_title
-                message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+                message_title="$( printf "$( eval_gettext "ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of Nvidia? We suggest to use them to have a better experience, it offers 3D acceleration and other features like a smoother desktop, they are also most of the times more stable than the free driver." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of ATI? We don't suggest to do it unless you really know that they works good for you, most of the times the free driver is much better quality for the ATI cards and the privative ones only works good in some cards, if you select to use privative ones make sure that everything works without problems, it can even hang off your computer and give other good amount of unstability problems, the best way to know it is by trying, in live mode you can try and reboot as much as you want." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
                     --title "$message_title" \
@@ -293,16 +203,16 @@ interactive_ask_privative(){
     case "$ret" in
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
-                log_progress_msg "Installing privative Nvidia drivers"
+                log_progress_msg "Installing privative ATI drivers"
             fi
             ;;
         1) # no
             if ((is_mode_live)) ; then
-                log_progress_msg "Using nouveau driver for your Nvidia card"
+                log_progress_msg "Using the free driver for your ATI card"
             fi
 
             # not needed to do anything, just exit
-            el_debug "We don't need to do anything, continue using nouveau..."
+            el_debug "We don't need to do anything, continue using the free drivers..."
             exit
             ;;
     esac
@@ -323,63 +233,22 @@ interactive_ask_driver_version(){
     # }}}
     # List available versions and ask in a dialog {{{
 
-    local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Press the spacebar for select and enter to confirm." )" "" )"
-
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
-        while read -ru 3 line
-        do
-            if [[ "${line}" = "xserver-xorg-video-nvidia" ]] ; then
-                continue
-            fi
+        local message_select_driver
+        message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Use the spacebar for select and the enter to confirm." )" "" )"
+        if [[ -n "$_FGLRX_VERSION" ]] ; then
+            local message_select_driver_suggested
+            message_select_driver_suggested="$( printf "$( eval_gettext "Your graphic card would be probably supported by the %s version" )" "$_FGLRX_VERSION" )"
+        fi
 
-            _id="${line#xserver-xorg-video-nvidia}"
-            _id="${_id#-}"
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver"" $message_select_driver_suggested" 0 0 0 \
+            "free driver" "$( eval_gettext "" )" on \
+            "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
+            "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \
+            2>"/tmp/.$(basename $0)-ret"
 
-            if [[ -z "$_id" ]] ; then
-                _id="uknown"
-            fi
 
-            case $_id in
-                *nvidia|current)
-                    _desc="$( printf "$( eval_gettext "Last driver for the most newest cards" )" )"
-                    # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
-                    _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
-                    ;;
-                *legacy-304xx)
-                    _desc="$( printf "$( eval_gettext "Previous driver for recent cards" )" )"
-                    ;;
-                *legacy-173xx)
-                    _desc="$( printf "$( eval_gettext "Old driver for older cards" )" )"
-                    ;;
-                *legacy-96xx)
-                    _desc="$( printf "$( eval_gettext "Older driver for oldest cards" )" )"
-                    ;;
-                *legacy-71xx)
-                    _desc="$( printf "$( eval_gettext "Oldest driver for dinousaurs" )" )"
-                    ;;
-                *legacy*)
-                    _desc="$( printf "$( eval_gettext "Old driver" )" )"
-                    ;;
-                *)
-                    _desc="$( printf "$( eval_gettext "Unknown version" )" )"
-                    ;;
-            esac
-
-            if [[ "${_NVIDIA_VERSION}" = "$_id" ]] ; then
-                if ((_is_preselection_set)) ; then
-                    echo -e "'$_id' '$_desc' off"
-                    _is_preselection_set=1
-                else
-                    echo -e "'$_id' '$_desc' on"
-                fi
-            else
-                echo -e "'$_id' '$_desc' off"
-            fi
-
-        done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
-            | xargs dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
         # user canceled? uninstall and exit
         if [[ "$?" = 123 ]] ; then
             uninstall_driver
@@ -393,16 +262,15 @@ interactive_ask_driver_version(){
         # remove extra leading blank chars
         read -r ret <<< "$ret"
 
-        log_progress_msg "Using the '$ret' nvidia driver version"
-
+        log_progress_msg "Using the '$ret' ATI driver version"
         # add a pause in case we selected a different than the expected one
-        if [[ "${ret}" != "$_NVIDIA_VERSION" ]] ; then
+        if [[ "${ret}" != "$_FGLRX_VERSION" ]] ; then
             sleep 3
         fi
 
         # update / force the version to use
         if [[ -n "$ret" ]] ; then
-            _NVIDIA_VERSION="$ret"
+            _FGLRX_VERSION="$ret"
         fi
 
     fi
@@ -410,52 +278,28 @@ interactive_ask_driver_version(){
 
     # - List available versions and ask in a dialog }}}
     # select packages to install depending on which version we selected {{{
-    case $_NVIDIA_VERSION in
+    case $_FGLRX_VERSION in
         current)
-            _NVIDIA_PACKAGES="nvidia-driver nvidia-settings"
+            _FGLRX_PACKAGES="fglrx-atieventsd fglrx-control fglrx-driver fglrx-modules-dkms libfglrx-amdxvba1 libgl1-fglrx-glx xvba-va-driver"
             ;;
-        legacy-71xx)
-
-            # NOTE: The 71xx legacy drivers don't support Xorg Xserver newer than 1.4 which was
-            # shipped with Debian 5.0 (lenny).
-
-            # the name of the packages are different for this one
-            _NVIDIA_PACKAGES="nvidia-glx-legacy-71xx"
-
-            # tell the user to use an older kernel
-            #if dpkg --compare-versions "$(uname -r)" ge "3.16" ; then
-                #local message_too_much_new_kernel
-                ##message_too_much_new_kernel="$( printf "$( eva
-                ##l_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
-
-                #dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
-                    #--title "Too much new kernel" \
-                    #--msgbox "$message_too_much_new_kernel" \
-                    #0 0
-            #fi
-
-
+        legacy)
+            _FGLRX_PACKAGES="fglrx-legacy-atieventsd fglrx-legacy-control fglrx-legacy-driver fglrx-legacy-modules-dkms libfglrx-legacy-amdxvba1 libgl1-fglrx-legacy-glx"
             ;;
         *)
-            if apt-cache search "nvidia-settings-$_NVIDIA_VERSION" | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
-                _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver nvidia-settings-$_NVIDIA_VERSION"
-            else
-                _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver"
-            fi
+            # free one? don't do anything, exit
+            exit
             ;;
     esac
 
-    el_explain 2 "Selected list of packages to install:\n__$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )__"
+    el_explain 2 "Selected list of packages to install:\n__$( echo "${_FGLRX_PACKAGES}" | tr ' ' '\n' )__"
 
 
     # - select packages to install depending on which version we selected }}}
-
-
 }
 
 #===  FUNCTION  ================================================================
 #          NAME:  install_driver
-#   DESCRIPTION:  prepare system and install the driver to use nvidia
+#   DESCRIPTION:  prepare system and install the driver to use fglrx
 #    PARAMETERS:  -
 #       RETURNS:  -
 #===============================================================================
@@ -463,13 +307,13 @@ install_driver(){
     # pre {{{
     el_debug
 
-    if ! el_check_variables "_NVIDIA_VERSION" ; then
-        el_error "We don't know which version of nvidia to use"
+    if ! el_check_variables "_FGLRX_VERSION" ; then
+        el_error "We don't know which version of fglrx to use"
         exit 1
     fi
 
-    if ! el_check_variables "_NVIDIA_PACKAGES" ; then
-        el_error "We don't know which packages of nvidia to install"
+    if ! el_check_variables "_FGLRX_PACKAGES" ; then
+        el_error "We don't know which packages of fglrx to install"
         exit 1
     fi
 
@@ -480,49 +324,25 @@ install_driver(){
 
     # conf {{{
     # create conf first
-    : > /etc/X11/xorg.conf.d/20-nvidia.conf
+    : > /etc/X11/xorg.conf.d/20-fglrx.conf
 
-    echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
-    echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-fglrx.conf
+    echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-fglrx.conf
+    echo '        Driver         "fglrx"' >> /etc/X11/xorg.conf.d/20-fglrx.conf
+    echo '        # append options here' >> /etc/X11/xorg.conf.d/20-fglrx.conf # do not remove
+    echo 'EndSection' >> /etc/X11/xorg.conf.d/20-fglrx.conf
 
     # - conf }}}
-    # force brightness entry conf {{{
-    if laptop-detect ; then
-
-        local message_brightness_force
-        message_brightness_force="$( printf "$( eval_gettext "Is the brightness feature working for you? To enable this option can cause problems if you don't need it, you can try to increase or decrease the brightness of your backlight with the hotkeys of your keyboard or from the Desktop gadget, if not works try to enable this option, you can experiment as much as you want by rebooting in live mode." )" "" )"
-
-        dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
-            --title "Brightness of the Screen" \
-            --yesno "$message_brightness_force" \
-            0 0
-        ret="$?"
-
-        case "$ret" in
-            0|255|123) # yes, timeout, cancel
-                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1\n&"|' /etc/X11/xorg.conf.d/20-nvidia.conf
-                ;;
-            1) # no
-                true
-                ;;
-        esac
-    fi
-
-    # - force brightness entry conf }}}
     # Optimus inform to user {{{
-    # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
+    # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not ati ones...
     if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" | wc -l )" -gt "1" ]] ; then
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the Nvidia one when needs more performance. You can use in Elive the Nvidia one if you install Nvidia or it will use the Intel one if you don't, so we are going to use now the Nvidia one which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not ATI is detected in your system, maybe your laptop uses a special ATI shared drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the ATI one when needs more performance. You can use in Elive the ATI one if you install FGLRX or it will use the Intel one if you don't, so we are going to use now the FGLRX one. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, we will proceed by using Nvidia but you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not ATI is detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
@@ -534,37 +354,41 @@ install_driver(){
 
     # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
-    if lsmod | grep -qs nouveau ; then
+    if lsmod | grep -qsE "(radeon|radeonhd)" ; then
         if ((is_mode_force)) ; then
-            rmmod -f nouveau
+            rmmod -f radeon
+            rmmod -f radeonhd
         else
-            rmmod nouveau
-            if lsmod | grep -qs nouveau ; then
-                echo -e "\nE: nouveau module is loaded and we cannot unload it"
-                echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
+            rmmod radeon
+            rmmod radeonhd
+
+            if lsmod | grep -qsE "(radeon|radeonhd)" ; then
+                echo -e "\nE: radeon|radeonhd module is loaded and we cannot unload it"
+                echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=radeon,radeonhd' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
             fi
         fi
     fi
 
     # just in case another one is used
-    rmmod nvidia 2>/dev/null
+    rmmod radeon 2>/dev/null
+    rmmod radeonhd 2>/dev/null
 
     # - unload modules }}}
     # apt-get install {{{
-    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
         el_aptget_update
 
-        if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+        if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
             el_aptget_update force
 
-            if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+            if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
                 while read -ru 3 package
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
-                        echo -e "\nE: Installing nvidia packages failed, please report the previous error messages to Elive" 1>&2
+                        echo -e "\nE: Installing fglrx packages failed, please report the previous error messages to Elive" 1>&2
                         sleep 10
                     fi
-                done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
+                done 3<<< "$( echo "$_FGLRX_PACKAGES")"
             fi
         fi
     fi
@@ -572,11 +396,11 @@ install_driver(){
 
     # add the packages to the installed system later too
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
-        # first remove any possible previous entry for nvidia
-        sed -i '/nvidia/d' /tmp/.packages-to-install 2>/dev/null
-        sed -i '/nvidia/d' /tmp/.packages-to-hold    2>/dev/null
+        # first remove any possible previous entry for fglrx
+        sed -i '/fglrx/d' /tmp/.packages-to-install 2>/dev/null
+        sed -i '/fglrx/d' /tmp/.packages-to-hold    2>/dev/null
 
-        for package in $_NVIDIA_PACKAGES
+        for package in $_FGLRX_PACKAGES
         do
             echo "$package" >> /tmp/.packages-to-install
             # just like the kernel, keep them holded, we don't want surprises, if a system works it works
@@ -588,17 +412,13 @@ install_driver(){
     # - apt-get install }}}
     # load module {{{
     # load driver
-    if which nvidia-modprobe 1>/dev/null 2>&1 ; then
-        nvidia-modprobe
-    else
-        # TODO: what about ohter verisons?
-        modprobe nvidia
-    fi
+    modprobe fglrx
 
-    if ! lsmod | grep -qs nvidia ; then
-        el_error "Unable to load NVIDIA module"
+
+    if ! lsmod | grep -qs fglrx ; then
+        el_error "Unable to load FGLRX module"
         local message_unable_to_load
-        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the Nvidia module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the nvidia driver it will require an older version of the kernel." )" "" )"
+        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx driver it will require an older version of the kernel." )" "" )"
 
 
         echo ""
@@ -608,7 +428,7 @@ install_driver(){
     fi
 
     # reload devices just in case
-    service nvidia-kernel restart 1>/dev/null 2>&1
+    service fglrx-atieventsd restart 1>/dev/null 2>&1
 
     el_explain 2 "Install complete"
 
@@ -617,7 +437,7 @@ install_driver(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  uninstall_driver
-#   DESCRIPTION:  uninstalls any possible nvidia drivers and make the system work back on nouveau
+#   DESCRIPTION:  uninstalls any possible fglrx drivers and make the system work back on radeon
 #    PARAMETERS:  -
 #       RETURNS:  -
 #===============================================================================
@@ -626,20 +446,22 @@ uninstall_driver(){
     local line
     el_debug
 
-    unset _NVIDIA_PACKAGES
+    unset _FGLRX_PACKAGES
 
     # }}}
 
     # unload module {{{
     # unload module first
-    if lsmod | grep -qs nvidia ; then
-        rmmod nvidia
+    if lsmod | grep -qs radeon ; then
+        rmmod radeon
+        rmmod radeonhd
 
-        if lsmod | grep -qs nvidia ; then
+        if lsmod | grep -qs radeon ; then
             if ((is_mode_force)) ; then
-                rmmod -f nvidia
+                rmmod -f radeon
+                rmmod -f radeonhd
             else
-                el_explain 0 "E: unable to unload the __nvidia module__, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
+                el_explain 0 "E: unable to unload the __radeon|radeonhd module__, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
                 exit 1
             fi
         fi
@@ -649,57 +471,52 @@ uninstall_driver(){
     # - unload module }}}
     # confs {{{
     # remove any possible xorg conf (before uninstall packages)
-    rm -f /etc/X11/xorg.conf.d/20-nvidia.conf 2>/dev/null
+    rm -f /etc/X11/xorg.conf.d/20-fglrx.conf 2>/dev/null
 
 
     # - confs }}}
     # packages {{{
-    # remove all nvidia packages
+    # remove all fglrx packages
     while read -ru 3 line
     do
         [[ -z "$line" ]] && continue
 
         # if matches
-        if echo "$line" | grep -qsE "(nvidia|lib.*nvidia|glx.*nvidia|xserver.*nvidia)" ; then
+        if echo "$line" | grep -qsE "(fglrx|lib.*fglrx|glx.*fglrx|xserver.*fglrx|xvba-va-driver)" ; then
             # which doesn't maches
-            if ! echo "$line" | grep -qsE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" ; then
+            if ! echo "$line" | grep -qsE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" ; then
                 el_debug "Adding $line to the list of uninstall packages"
-                _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES $line"
+                _FGLRX_PACKAGES="$_FGLRX_PACKAGES $line"
             fi
         fi
 
-    done 3<<< "$( dpkg -l | grep nvidia | awk '{print $2}' )"
+    done 3<<< "$( { echo "xvba-va-driver" ; dpkg -l | grep fglrx | awk '{print $2}' ; } )"
 
     # remove extra leading blank chars
-    read -r _NVIDIA_PACKAGES <<< "$_NVIDIA_PACKAGES"
+    read -r _FGLRX_PACKAGES <<< "$_FGLRX_PACKAGES"
 
-    if [[ -n "$_NVIDIA_PACKAGES" ]] ; then
+    if [[ -n "$_FGLRX_PACKAGES" ]] ; then
         if ((is_mode_auto)) ; then
-            el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_NVIDIA_PACKAGES
+            el_debug "apt-get remove --purge -y $_FGLRX_PACKAGES"
+            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_FGLRX_PACKAGES
         else
-            el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
+            el_debug "apt-get remove --purge $_FGLRX_PACKAGES"
+            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_FGLRX_PACKAGES
         fi
     else
-        el_explain 0 "Nvidia packages already removed"
+        el_explain 0 "FGLRX packages already removed"
     fi
 
-
-    # just in case, reinstall the nouveau driver
-    if ! dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
-        DEBIAN_FRONTEND="noninteractive" apt-get install -y xserver-xorg-video-nouveau
-    fi
 
     # - packages }}}
     # end {{{
     # show final result
-    if dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
+    if dpkg -l | awk '{print $2}' | grep fglrx | grep -vE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" | grep -qs fglrx ; then
         echo -e ""
-        el_error "We still having some nvidia packages not uninstalled:"
-        dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2
+        el_error "We still having some fglrx packages not uninstalled:"
+        dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2
     else
-        el_explain 0 "Driver NVIDIA uninstalled __successfully__"
+        el_explain 0 "Driver FGLRX uninstalled __successfully__"
     fi
 
     # - end }}}
@@ -773,7 +590,7 @@ main(){
 
 
 
-    # only check if we have nvidia and exit
+    # only check if we have fglrx and exit
     if ((is_mode_detect)) ; then
         if check_hardware ; then
             exit 0

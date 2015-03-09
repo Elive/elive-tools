@@ -251,7 +251,7 @@ interactive_ask_privative(){
                     log_progress_msg "Bad boy... spank spank!"
                     sleep 3
                     echo
-                    log_progress_msg "Now im upset and im going to make you wait... forever forever!"
+                    log_progress_msg "Now im upset and I will stuck you on this step... forever forever!"
                     sleep 5
                     echo
                     log_progress_msg "Ok, that was a joke :P continuing..."
@@ -319,7 +319,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Press the spacebar for select and enter to confirm." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Use the spacebar for select and the enter to confirm." )" "" )"
 
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
@@ -517,7 +517,7 @@ install_driver(){
             message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, this setup uses Intel for the default graphics which is better for battery time and switches to the Nvidia one when needs more performance. You can use in Elive the Nvidia one if you install Nvidia or it will use the Intel one if you don't, so we are going to use now the Nvidia one which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, we will proceed by using Nvidia but you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "Another graphic card that is not Nvidia is detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \

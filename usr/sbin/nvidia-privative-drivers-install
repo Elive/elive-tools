@@ -64,7 +64,7 @@ check_hardware(){
     # force or exit?
     if ! ((is_nvidia_card_found)) ; then
         if ((is_mode_force)) ; then
-            el_warning "Forcing install of nvidia in a machine where is not detected nvidia card"
+            el_warning "Force mode in a machine where is not detected nvidia card"
             is_nvidia_card_found=1
         else
             el_error "No nvidia graphic cards found on this machine"

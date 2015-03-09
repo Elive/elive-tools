@@ -62,7 +62,7 @@ check_hardware(){
     # force or exit?
     if ! ((is_ati_card_found)) ; then
         if ((is_mode_force)) ; then
-            el_warning "Forcing install of fglrx in a machine where is not detected ati card"
+            el_warning "Force mode in a machine where is not detected ati card"
             is_ati_card_found=1
         else
             el_error "No ati graphic cards found on this machine"

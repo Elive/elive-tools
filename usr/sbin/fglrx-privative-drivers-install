@@ -61,8 +61,13 @@ check_hardware(){
             is_ati_card_found=1
         else
             el_error "No ati graphic cards found on this machine"
-            return 1
+            exit 1
         fi
+    fi
+
+    # in mode check we dont want to install, just to check
+    if ((is_mode_check)) ; then
+        exit 0
     fi
 
     # - detect if we have the hardware with ati }}}
@@ -236,13 +241,13 @@ interactive_ask_driver_version(){
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
         local message_select_driver
-        message_select_driver="$( printf "$( eval_gettext "Select the version of the driver that you whish to install. Use the spacebar for select and the enter to confirm." )" "" )"
+        message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the driver that you want to install and press enter to confirm." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
-            message_select_driver_suggested="$( printf "$( eval_gettext "Your graphic card would be probably supported by the %s version" )" "$_FGLRX_VERSION" )"
+            message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is problably the one that you need." )" "$_FGLRX_VERSION" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver"" $message_select_driver_suggested" 0 0 0 \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
             "free driver" "$( eval_gettext "" )" on \
             "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
             "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \
@@ -265,6 +270,8 @@ interactive_ask_driver_version(){
         log_progress_msg "Using the '$ret' ATI driver version"
         # add a pause in case we selected a different than the expected one
         if [[ "${ret}" != "$_FGLRX_VERSION" ]] ; then
+            sleep 2
+            log_progress_msg "Note: the selected version ($ret) is not the same as the suggested one ($_FGLRX_VERSION)"
             sleep 3
         fi
 
@@ -589,15 +596,6 @@ main(){
     done
 
 
-
-    # only check if we have fglrx and exit
-    if ((is_mode_detect)) ; then
-        if check_hardware ; then
-            exit 0
-        else
-            exit 1
-        fi
-    fi
 
     check_hardware
 

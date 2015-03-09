@@ -54,6 +54,12 @@ check_hardware(){
         is_nvidia_card_found=1
     fi
 
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
+        is_nvidia_card_found=1
+        # we also want/need to force the install because there's no real hardware here
+        is_mode_force=1
+    fi
+
     # check if hardware has nvidia
     # Seems like a more reliable way than using VGA for the detect is: lspci -nn | grep '\[03'
     if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+nvidia\s+" ; then
@@ -205,8 +211,11 @@ detect_driver_version(){
             el_explain 0 " * Maybe your version of nvidia is not yet included in Elive, but it should be backported soon"
             el_explain 0 "Run the command __nvidia-detect__ to see what it says"
         else
-            # if we cannot detect we cannot continue!
-            exit 1
+            if ((is_mode_auto)) ; then
+                el_error "Unable to autodetect the version that you need, exiting"
+                # if we cannot detect we cannot continue!
+                exit 1
+            fi
         fi
     fi
 
@@ -456,8 +465,6 @@ interactive_ask_driver_version(){
 
 
     # - select packages to install depending on which version we selected }}}
-
-
 }
 
 #===  FUNCTION  ================================================================

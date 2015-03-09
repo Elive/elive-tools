@@ -59,6 +59,13 @@ check_hardware(){
         is_ati_card_found=1
     fi
 
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=fglrx" ; then
+        is_nvidia_card_found=1
+        # we also want/need to force the install because there's no real hardware here
+        is_mode_force=1
+    fi
+
+
     # force or exit?
     if ! ((is_ati_card_found)) ; then
         if ((is_mode_force)) ; then

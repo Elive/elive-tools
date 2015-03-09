@@ -313,7 +313,19 @@ interactive_ask_privative(){
             ;;
         1) # no
             if ((is_mode_live)) ; then
-                log_progress_msg "Using nouveau driver for your Nvidia card"
+
+                if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
+                    log_progress_msg "Using the free driver..."
+                else
+                    # tell the user to reboot with onlyfree option
+                    local message_onlyfree
+                    message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the nouveau module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of nouveau from the boot parameter options." )" "" )"
+
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+                        --title "Multiple Graphic Cards found" \
+                        --msgbox "$message_multiple_cards" \
+                        0 0
+                fi
             fi
 
             # not needed to do anything, just exit

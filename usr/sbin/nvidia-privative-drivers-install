@@ -38,6 +38,11 @@ check_hardware(){
     el_debug
     #el_security_function_loop || return
 
+    # we don't need to check if we have the hardware if we want to uninstall the driver
+    if ((is_mode_uninstall)) ; then
+        return
+    fi
+
     # }}}
     # TODO: multiple cards: tower (mine), betatest
     # detect if we have the hardware with nvidia {{{

@@ -41,6 +41,11 @@ check_hardware(){
     el_debug
     #el_security_function_loop || return
 
+    # we don't need to check if we have the hardware if we want to uninstall the driver
+    if ((is_mode_uninstall)) ; then
+        return
+    fi
+
     # }}}
     # detect if we have the hardware with ati {{{
     # pci-id with ati on first graphic card

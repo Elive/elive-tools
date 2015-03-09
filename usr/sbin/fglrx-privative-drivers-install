@@ -71,7 +71,7 @@ check_hardware(){
     fi
 
     # in mode check we dont want to install, just to check
-    if ((is_mode_check)) ; then
+    if ((is_mode_detect)) ; then
         exit 0
     fi
 

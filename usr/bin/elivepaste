@@ -4,7 +4,7 @@ set -e
 
 main(){
     # pre {{{
-    local url buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
+    local url urldefault buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
 
     if ! el_dependencies_check "pastebinit,file" ; then
         if ! el_dependencies_install "pastebinit,file" ; then
@@ -25,6 +25,7 @@ main(){
     max_lines="10000"
     min_lines="10"
     user="$USER"
+    urldefault="http://paste2.org"
     command="$@"
 
     conf="${HOME}/.config/elive/elivepaste/config.sh"
@@ -71,6 +72,11 @@ main(){
         buffer="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
         command="(piped)"
     else
+
+        if [[ "${1}" = *"crashdump"* ]] ; then
+            # Unfortunately at this time, pastebin.com doesn't works, says wrong api, so just notice the user with this:
+            el_explain 0 "File is a crashdump, pastebin.com does a __very readable__ syntax if you use GDB, you should paste it manually if you want it"
+        fi
 
         #if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_dependencies_check "$1" 2>/dev/null 1>/dev/null ; then
             # $1 is a file, not a command
@@ -136,13 +142,14 @@ main(){
     if ! ((direct_paste)) ; then
 
         # paste it
-        url="$( echo "${buffer}" | pastebinit -a "$user" -f "${syntax}" | head -1 )"
+        url="$( echo "${buffer}" | pastebinit -b "$urldefault" -a "$user" -f "${syntax}" | head -1 )"
 
         # checks
-        if ! echo "${url}" | grep -q "http://" ; then
+        if ! echo "${url}" | grep -q "http://" || [[ "${url}" = "$urldefault" ]] ; then
             el_error "URL not get correctly: $url"
             exit 1
         fi
+
     fi
 
     # send to channel

@@ -568,6 +568,11 @@ install_driver(){
             if lsmod | grep -qs nouveau ; then
                 echo -e "\nE: nouveau module is loaded and we cannot unload it"
                 echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
+
+                dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    --title "Unable to remove module" \
+                    --msgbox "Error: nouveau module is loaded and we cannot unload it.\n\nYou should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, in Live mode it should be already included in the default boot option, if you are just experimenting you can try to use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh, don't expect this to work since its forced)." \
+                    0 0
             fi
         fi
     fi

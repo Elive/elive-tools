@@ -174,7 +174,7 @@ interactive_ask_privative(){
                 local message_report_experience
                 message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the privative drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!" )"  )"
 
-                if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+                if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "Yeppeeeeee! New features!" \
                     --yesno "$message_report_experience" \
                     0 0  ; then
@@ -206,7 +206,7 @@ interactive_ask_privative(){
                 local message_message
                 message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of ATI? We don't suggest you to do it unless you really know that they works good for you, most of the times the free drivers is much better quality for the ATI cards and the privative ones only works good in some cards, if you select to use the privative one you should verify that everything works without problems, because it can even block entirely your computer and give you other good amount of instability problems, the best is to simply try all the options and applications before to decide for one." )" "" )"
 
-                dialog --timeout 60 --clear --colors --backtitle "Elive Systems" \
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
                     --yesno "$message_message" \
                     0 0
@@ -233,7 +233,7 @@ interactive_ask_privative(){
                     local message_onlyfree
                     message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the radeon module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of radeon from the boot parameter options." )" "" )"
 
-                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "Multiple Graphic Cards found" \
                         --msgbox "$message_multiple_cards" \
                         0 0
@@ -271,7 +271,7 @@ interactive_ask_driver_version(){
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is problably the one that you need." )" "$_FGLRX_VERSION" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
             "free driver" "$( eval_gettext "" )" on \
             "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
             "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \
@@ -376,7 +376,7 @@ install_driver(){
             message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Multiple Graphic Cards found" \
             --msgbox "$message_multiple_cards" \
             0 0
@@ -472,7 +472,7 @@ install_driver(){
     local message_remember
     message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this drivers, using the free drivers should solve the problem, or in the inverse way maybe you need the privative version, only your own experience will tell you." )" "" )"
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems" \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Ready to be run" \
             --msgbox "$message_remember" \
             0 0

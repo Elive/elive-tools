@@ -25,7 +25,8 @@ main(){
     max_lines="10000"
     min_lines="10"
     user="$USER"
-    urldefault="http://paste2.org"
+    #urldefault="http://paste2.org"
+    urldefault="http://paste.openstack.org"
     command="$@"
 
     conf="${HOME}/.config/elive/elivepaste/config.sh"

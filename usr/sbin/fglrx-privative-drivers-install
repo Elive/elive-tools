@@ -60,7 +60,7 @@ check_hardware(){
     fi
 
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=fglrx" ; then
-        is_nvidia_card_found=1
+        is_ati_card_found=1
         # we also want/need to force the install because there's no real hardware here
         is_mode_force=1
     fi
@@ -156,6 +156,18 @@ interactive_ask_privative(){
 
 
     # }}}
+    # more than one type of card found {{{
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" | wc -l )" -gt "1" ]] ; then
+        local message_multiple_cards
+        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the privative drivers we will proceed by using your ATI graphic card." )" "" )"
+
+
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+            --title "Multiple Graphic Cards found" \
+            --msgbox "$message_multiple_cards" \
+            0 0
+    fi
+    # - more than one card }}}
     # ask if want to install the privative one or the free {{{
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
         echo -e "Using free drivers only because 'onlyfree' is set in your boot parameters" 1>&2
@@ -457,11 +469,11 @@ install_driver(){
         if ! lsmod | grep -qs fglrx ; then
             el_error "Unable to load FGLRX module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, the device is busy, or the device is not found, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel." )" "" )"
         fi
 
 
-        if modprobe fglrx 2>&1 | grep -qsE "(No such device|No supported display adapters)" ; then
+        if modprobe fglrx 2>&1 | grep -qs "No supported display adapters" ; then
             message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free drivers." )" "" )"
 
         fi

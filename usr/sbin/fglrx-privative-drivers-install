@@ -277,7 +277,7 @@ interactive_ask_driver_version(){
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is problably the one that you need." )" "$_FGLRX_VERSION" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
+        dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
             "free driver" "$( eval_gettext "Suggested Free option" )" on \
             "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
             "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \

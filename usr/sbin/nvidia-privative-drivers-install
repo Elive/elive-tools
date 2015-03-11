@@ -409,7 +409,7 @@ interactive_ask_driver_version(){
         done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
             | xargs dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
         # user canceled? uninstall and exit
-        if [[ "$?" = 123 ]] ; then
+        if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
             uninstall_driver
             exit
         fi
@@ -420,6 +420,12 @@ interactive_ask_driver_version(){
 
         # remove extra leading blank chars
         read -r ret <<< "$ret"
+
+        # if users's cancel, we have no results at all
+        if [[ -z "$ret" ]] ; then
+            uninstall_driver
+            exit
+        fi
 
         log_progress_msg "Using the '$ret' nvidia drivers version"
 

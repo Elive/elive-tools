@@ -322,8 +322,8 @@ interactive_ask_privative(){
                     message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the nouveau module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of nouveau from the boot parameter options." )" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                        --title "Multiple Graphic Cards found" \
-                        --msgbox "$message_multiple_cards" \
+                        --title "Free Driver Option" \
+                        --msgbox "$message_onlyfree" \
                         0 0
                 fi
             fi

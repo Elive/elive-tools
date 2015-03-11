@@ -231,11 +231,11 @@ interactive_ask_privative(){
                 else
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the radeon module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of radeon from the boot parameter options." )" "" )"
+                    message_onlyfree="$( printf "$( eval_gettext "To better use the free drivers please reboot and select the 'only free drivers' option. Due to compatibility reasons the radeon module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of radeon from the boot parameter options." )" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                        --title "Multiple Graphic Cards found" \
-                        --msgbox "$message_multiple_cards" \
+                        --title "Free Driver Option" \
+                        --msgbox "$message_onlyfree" \
                         0 0
                 fi
             fi
@@ -296,7 +296,7 @@ interactive_ask_driver_version(){
         if [[ "${ret}" != "$_FGLRX_VERSION" ]] ; then
             sleep 2
             log_progress_msg "Note: the selected version ($ret) is not the same as the suggested one ($_FGLRX_VERSION)"
-            sleep 3
+            sleep 4
         fi
 
         # update / force the version to use
@@ -457,6 +457,7 @@ install_driver(){
 
 
         echo ""
+        # TODO: use a dialog instead, this seems to fail a lot
         el_explain 0 "$message_unable_to_load"
 
         if ! ((is_mode_force)) ; then

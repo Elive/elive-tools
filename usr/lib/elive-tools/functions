@@ -22,12 +22,12 @@ if [[ -n "$TERM" ]] ; then
         is_terminal=1
     fi
     if [[ "$TERM" = "linux" ]] ; then
-        if [[ -n "$COLUMNS" ]] ; then
-            is_terminal=1
-            is_console=1
-        else
+        if [[ -n "$E_START" ]] ; then
             # launched from e17 itself
             is_terminal=0
+        else
+            is_terminal=1
+            is_console=1
         fi
     fi
 else

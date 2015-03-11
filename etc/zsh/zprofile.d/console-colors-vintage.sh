@@ -3,7 +3,8 @@
 # Who works on console? only vintage people, so let's put for them a really vintage-looking colors feeling, it looks gorgeous! :)
 
 if [ "$TERM" = "linux" ]; then
-    echo -en "\e]P0222222" #black
+    #echo -en "\e]P0222222" #black
+    echo -en "\e]P0121212" #black
     echo -en "\e]P84d4d4d" #darkgrey
     echo -en "\e]P1803232" #darkred
     echo -en "\e]P9982b2b" #red

@@ -452,21 +452,47 @@ install_driver(){
 
     # - apt-get install }}}
     # load module {{{
+    # reload devices just in case
+    service fglrx-atieventsd restart 1>/dev/null 2>&1
+
     # load driver
-    modprobe fglrx
-
-
-    if ! lsmod | grep -qs fglrx ; then
-        el_error "Unable to load FGLRX module"
+    if ! modprobe fglrx ; then
         local message_unable_to_load
-        message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel. Run this tool again with the option -u if you want to remove middle-installed things." )" "" )"
+
+        # default message for not working drivers
+        if ! lsmod | grep -qs fglrx ; then
+            el_error "Unable to load FGLRX module"
+            local message_unable_to_load
+            message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel." )" "" )"
+        fi
 
 
-        echo ""
-        # TODO: use a dialog instead, this seems to fail a lot
-        el_explain 0 "$message_unable_to_load"
+        if modprobe fglrx 2>&1 | grep -qsE "(No such device|No supported display adapters)" ; then
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free drivers." )" "" )"
 
-        if ! ((is_mode_force)) ; then
+        fi
+
+        # module simply was not compiled
+        if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free drivers if they works for you." )" "" )"
+        fi
+
+
+        # show the message if we have any
+        if [[ -n "$message_unable_to_load" ]] ; then
+            dialog --timeout 80 --clear --colors --backtitle "Elive Systems :: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                --title "Unable to load module" \
+                --msgbox "$message_unable_to_load" \
+                0 0
+        fi
+
+
+
+        # cleanups
+        if ! ((is_mode_force)) || ((is_mode_live)) ; then
+            uninstall_driver
+            el_error "Switched to the default drivers option"
+            sleep 4
             exit 1
         fi
     fi

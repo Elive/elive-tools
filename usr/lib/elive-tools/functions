@@ -985,16 +985,16 @@ el_explain(){
     shift
     message="$@"
 
-    spaced="$verbose_level"
+    #spaced="$verbose_level"
     funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
 
-    el_check_variables "spaced,verbose_level,message"
+    el_check_variables "verbose_level,message"
     # }}}
     # tabulate output {{{
-    while [[ $spaced -gt 0 ]] ; do
-        message="  $message"
-        spaced="$(( $spaced - 1 ))"
-    done
+    #while [[ $spaced -gt 0 ]] ; do
+        #message="  $message"
+        #spaced="$(( $spaced - 1 ))"
+    #done
 
     # }}}
     # hilight words {{{
@@ -1018,47 +1018,47 @@ el_explain(){
     if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
 
         # show normal message unless we are at a debugging level
-        if [[ "${EL_DEBUG}" -lt 3 ]] ; then
-            echo -en "${el_c_gr}  " 1>&2
-        else
+        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
             case $funclevel in
                 1)
-                    echo -en "   ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 2)
-                    echo -en "   ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 3)
-                    echo -en "   ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 4)
-                    echo -en "   ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 5)
-                    echo -en "   ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 6)
-                    echo -en "   ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 7)
-                    echo -en "   ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 8)
-                    echo -en "   ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 9)
-                    echo -en "   ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 10)
-                    echo -en "   ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 11)
-                    echo -en "   ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
                 *)
-                    echo -en "   ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
+                    echo -en " ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
                     ;;
             esac
+        else
+            echo -en "${el_c_gr}  " 1>&2
         fi
 
         # continuation of the message
@@ -1170,7 +1170,11 @@ el_warning(){
     # warning {{{
 
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
-        echo -e "${el_c_y}Warning: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
+        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+            echo -e "${el_c_y}Warning: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
+        else
+            echo -e "${el_c_y}Warning: ${el_c_c}$@${el_c_n}" 1>&2
+        fi
     fi
 
     # }}}
@@ -1190,7 +1194,11 @@ el_error(){
     # error {{{
 
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
-        echo -e "${el_c_r}Error: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
+        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+            echo -e "${el_c_r}Error: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
+        else
+            echo -e "${el_c_r}Error: ${el_c_c}$@${el_c_n}" 1>&2
+        fi
     fi
 
     # }}}

@@ -159,7 +159,7 @@ interactive_ask_privative(){
     # more than one type of card found {{{
     if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" | wc -l )" -gt "1" ]] ; then
         local message_multiple_cards
-        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the privative drivers we will proceed by using your ATI graphic card." )" "" )"
+        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
@@ -178,7 +178,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the privative drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!" )"  )"
+                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the proprietary drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!" )"  )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "Yeppeeeeee! New features!" \
@@ -210,7 +210,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of ATI? We don't suggest you to do it unless you really know that they works good for you, most of the times the free drivers is much better quality for the ATI cards and the privative ones only works good in some cards, if you select to use the privative one you should verify that everything works without problems, because it can even block entirely your computer and give you other good amount of instability problems, the best is to simply try all the options and applications before to decide for one." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of ATI? We don't suggest you to do it unless you really know that they works good for you, most of the times the free drivers is much better quality for the ATI cards and the proprietary ones only works good in some cards, if you select to use the proprietary one you should verify that everything works without problems, because it can even block entirely your computer and give you other good amount of instability problems, the best is to simply try all the options and applications before to decide for one." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -227,7 +227,7 @@ interactive_ask_privative(){
     case "$ret" in
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
-                log_progress_msg "Installing privative ATI drivers"
+                log_progress_msg "Installing proprietary ATI drivers"
             fi
             ;;
         1) # no
@@ -509,7 +509,7 @@ install_driver(){
     # - load module }}}
     # inform {{{
     local message_remember
-    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this drivers, using the free drivers should solve the problem, or in the inverse way maybe you need the privative version, only your own experience will tell you." )" "" )"
+    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this drivers, using the free drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Ready to be run" \

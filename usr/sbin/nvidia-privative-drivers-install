@@ -254,7 +254,7 @@ interactive_ask_privative(){
     # more than one type of card found {{{
     if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
         local message_multiple_cards
-        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the privative drivers we will proceed by using your Nvidia graphic card." )" "" )"
+        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
 
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
@@ -273,7 +273,7 @@ interactive_ask_privative(){
             # TODO: deleteme in the future (request feedback experience) {{{
             if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
                 local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the privative drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!"  )"  )"
+                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the proprietary drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!"  )"  )"
 
                 if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "Yeppeeeeee! New features!" \
@@ -305,7 +305,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the privative drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers" )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers" )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -322,7 +322,7 @@ interactive_ask_privative(){
     case "$ret" in
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
-                log_progress_msg "Installing privative Nvidia drivers"
+                log_progress_msg "Installing proprietary Nvidia drivers"
             fi
             ;;
         1) # no

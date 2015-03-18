@@ -5,12 +5,13 @@ source /usr/lib/elive-tools/functions
 export TEXTDOMAIN="elive-tools"
 
 select_card_multiple(){
+    local _list_cards
     # list cards, per priority
-    list_cards="$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236"  | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+    _list_cards="$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236"  | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+
     selection="$( echo "$list_cards" | $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" || echo cancel )"
     # remove extra leading blank chars
     read -r selection <<< "$selection"
-
 
     if [[ "${selection}" = "cancel" ]] ; then
         return 1
@@ -44,6 +45,7 @@ main(){
         is_quiet_mode=1
         shift
     fi
+    # if first argument is the name of the card that we want to use itself
     if [[ -n "$1" ]] && [[ "$1" != -* ]] ; then
         if echo "$list_cards" | grep -qs -- "$1" ; then
             list_cards="$1"
@@ -67,7 +69,10 @@ main(){
     number_cards="$( echo -e "$list_cards" | wc -l )"
 
     if [[ "$number_cards" -lt "2" ]] ; then
-        selection="$(echo $list_cards)"
+        selection="$list_cards"
+        # remove extra leading blank chars
+        read -r selection <<< "$selection"
+
         # reconfigure alsa.conf default file to correctly work
         #if [[ "$UID" = 0 ]] ; then
             # Important: NEVER set these values to a digit, seems like glibc segfaults because of this
@@ -91,6 +96,8 @@ main(){
         if ((is_auto_mode)) ; then
             el_dependencies_check "psort"
             selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" | tac | head -1 )"
+            # remove extra leading blank chars
+            read -r selection <<< "$selection"
         fi
 
         # reconfigure alsa.conf default file to correctly work, only if is not a number value

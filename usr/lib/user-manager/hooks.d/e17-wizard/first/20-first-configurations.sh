@@ -9,10 +9,13 @@ main(){
     # }}}
 
     # Audio configurations {{{
-    rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
+    if ! [[ -s "$HOME/.asoundrc" ]] ; then
+        rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
 
-    el_explain 0 "Configuring audio cards..."
-    audio-configurator --quiet
+        el_explain 0 "Configuring audio cards..."
+        audio-configurator --quiet
+
+    fi
 
     el_explain 0 "Setting default volumes..."
     setvolume defaults

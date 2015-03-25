@@ -1423,8 +1423,8 @@ options_main_interact(){
     option_show "S"         "Show detailed info"
     option_show "h"         "Show history"
     option_show "d"         "Show diff"
-    option_show "a"         "list Around commits (from our watching thread)"
-    option_show "A"         "list Around commits (from the full branch history)"
+    option_show "a"         "list Around commits (from our working thread)"
+    option_show "A"         "list Around commits (from the watching branch)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other or multiple commits (cherry-pick)"
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
@@ -1687,8 +1687,8 @@ options_main_interact(){
             el_explain 0 "(commits from oldest to newest)"
             command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | tac | grep --color -C 6 "${commit_id:0:12}"
 
-            el_explain 0 "Give a list of spaces-separated commits to cherry-pick in earlier-order (last lines first)"
-            el_explain 0 "Use the listing-nearest feature or a shell to show list them, empty value will skip"
+            el_explain 0 "Give a list of spaces-separated commits to cherry-pick in earlier-order"
+            el_explain 0 "Use the 'listing-nearest' feature to show more commits. Empty value will skip the action"
 
             read _commits
 
@@ -1786,7 +1786,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         a)  #  list around nearest
-            el_explain 0 "nearest commits to your actual position in our watcher:"
+            el_explain 0 "nearest commits to your actual position in our working branch:"
 
             el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_working\"..\"$branch_watch\" ${options_extra_git_after[@]} | grep --color -C 6 \"${commit_id:0:12}\""
             command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep --color -C 6 "${commit_id:0:12}"
@@ -1798,7 +1798,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         A)  # list Around nearest commits full
-            el_explain 0 "nearest commits to your actual position in its full branch history:"
+            el_explain 0 "nearest commits to your actual position in the watching branch history:"
 
             el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
             command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_watch" | grep --color -C 16 "${commit_id:0:12}"

@@ -1167,7 +1167,6 @@ do_count_commits(){
         fi
 
     done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} )"
-            set +x
     echo ""
 
 
@@ -1183,7 +1182,7 @@ do_count_commits(){
     if [[ "${counter}" -gt "${counter_total}" ]] ; then
         # show this on the counter tab instead, because this commit is out of our tracking line,
         # we will go back later so nothing to worry about
-        counter="out of this universe"
+        counter="0"
     fi
 
 
@@ -1396,18 +1395,24 @@ option_show(){
 options_main_interact(){
     # pre {{{
     el_debug
+    local _counter_show
 
     if ((is_recount_position_needed)) ; then
         return
     fi
     # }}}
+    if [[ "${counter}" = "0" ]] ; then
+        _counter_show="out of this universe"
+    else
+        _counter_show="$counter"
+    fi
 
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
     if ((is_traveling)) ; then
-        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}transported${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$counter${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
+        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}transported${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$_counter_show${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
     else
-        echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$counter/$counter_total]${el_c_b}-----${el_c_n}"
+        echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$_counter_show/$counter_total]${el_c_b}-----${el_c_n}"
     fi
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
@@ -2257,7 +2262,7 @@ main(){
                 #
 
                 # exit loop if no remaining commits
-                if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] ; then
+                if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
                     is_recount_position_needed=1
                     break 1
                 fi
@@ -2272,6 +2277,11 @@ main(){
             fi
 
         done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+        # if you search with -k without matches, infinite loop happens, avoid it with this check
+        if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
+            is_recount_position_needed=1
+            break
+        fi
 
         if ((is_recount_position_needed)) ; then
             counter=1

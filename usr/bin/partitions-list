@@ -317,6 +317,10 @@ main(){
 
 
         # re- fixes
+        if [[ -z "$item_size" ]] ; then
+            item_size="$(lsblk -lnrb -o size "${item}" | sort -ug | tail -1 )"
+            item_size="${item_size:0:-3}"
+        fi
         if [[ -z "$item_human_size" ]] ; then
             item_human_size="$(lsblk -lnr -o size "${item}" | sort -ug | tail -1 )"
         fi

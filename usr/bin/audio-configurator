@@ -5,11 +5,49 @@ source /usr/lib/elive-tools/functions
 export TEXTDOMAIN="elive-tools"
 
 select_card_multiple(){
-    local _list_cards
+    local _id _description menu
     # list cards, per priority
-    _list_cards="$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236"  | while read -r line ; do [[ "$line" != *"]:"* ]] && continue ;  echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' ; echo "${line##*- }"   ; done )"
+    unset menu
 
-    selection="$( echo "$_list_cards" | $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" || echo cancel )"
+    while read -ru 3 line
+    do
+        if [[ "$line" != *"]:"* ]] ; then
+            continue
+        fi
+
+        _id="$( echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' )"
+        # remove extra leading blank chars
+        read -r _id <<< "$_id"
+        el_debug "id = '$_id'"
+
+        _description="${line##*- }"
+        # remove extra leading blank chars
+        read -r _description <<< "$_description"
+        el_debug "description = '$_description'"
+
+
+        if [[ "$_id" ]] && [[ -n "$_description" ]] ; then
+
+            # skip unwanted ones
+            if ((is_smart_mode)) ; then
+                # smart cards to skip: ThinkPad Console Audio Control
+                if [[ "$_id" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
+                    continue
+                fi
+            fi
+
+
+            menu+=("$( echo "$_id" )")
+            menu+=("$( echo "$_description" )")
+        fi
+    done 3<<< "$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" )"
+
+    if [[ "${#menu[@]}" -eq 2 ]] ; then
+        selection="$( echo "${menu[0]}" | head -1 )"
+    else
+        selection="$( $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" "${menu[@]}" || echo cancel )"
+    fi
+
     # remove extra leading blank chars
     read -r selection <<< "$selection"
 
@@ -37,6 +75,11 @@ main(){
     list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
 
     # if our first argument is the card name to use, change the list of cards to use this one
+    # try to be smart determining cards that we know that they are valid
+    if [[ "$1" = "--smart" ]] ; then
+        is_smart_mode=1
+        shift
+    fi
     if [[ "$1" = "--auto" ]] ; then
         is_auto_mode=1
         shift

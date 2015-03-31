@@ -13,7 +13,7 @@ main(){
         rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
 
         el_explain 0 "Configuring audio cards..."
-        audio-configurator --quiet
+        audio-configurator --quiet --smart
 
     fi
 

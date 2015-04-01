@@ -44,7 +44,6 @@ check_hardware(){
     fi
 
     # }}}
-    # TODO: multiple cards: tower (mine), betatest
     # detect if we have the hardware with nvidia {{{
     # pci-id with nvidia on first graphic card
     _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
@@ -305,7 +304,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers" )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -323,6 +322,17 @@ interactive_ask_privative(){
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
                 log_progress_msg "Installing proprietary Nvidia drivers"
+
+                # remember that this is not stable {{{
+                local message_remember
+                message_remember="$( printf "$( eval_gettext "If after to install the drivers you are unable to run the graphical system successfully, just reboot and select to not install them the next time." )" "" )"
+
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    --title "If the install fails..." \
+                    --msgbox "$message_remember" \
+                    0 0
+
+                # - remember that this is not stable }}}
             fi
             ;;
         1) # no

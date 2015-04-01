@@ -1563,7 +1563,7 @@ options_main_interact(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_watch" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_watch' from ?\n"
                     #command git remote -v | grep "(fetch)" | awk '{print $1}'
                     command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
@@ -1584,6 +1584,7 @@ options_main_interact(){
             command git pull --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
             check_if_has_diverged
 
+            # go back to our working one
             el_explain 0 "git checkout $branch_working"
             command git checkout "$branch_working"
             check_if_has_diverged

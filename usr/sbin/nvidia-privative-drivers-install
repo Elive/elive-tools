@@ -269,33 +269,6 @@ interactive_ask_privative(){
     else
 
         if ((is_mode_live)) ; then
-            # TODO: deleteme in the future (request feedback experience) {{{
-            if el_check_version_development "20" && ! ((is_mode_auto)) ;  then
-                local message_report_experience
-                message_report_experience="$( printf "$( eval_gettext "We have just finished the feature to install the proprietary drivers (both in Live mode and installed mode), it is extremely helpful for us if you enter in our chat to tell us if there's anything that doesn't function, or any suggestion, even to tell us which option has worked is useful for us. You can run the chat from the second icon of the bar or directly from the website. Thank you!"  )"  )"
-
-                if ! dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                    --title "Yeppeeeeee! New features!" \
-                    --yesno "$message_report_experience" \
-                    0 0  ; then
-
-                    clear
-                    echo
-                    log_progress_msg "Bad boy... spank spank!"
-                    sleep 3
-                    echo
-                    log_progress_msg "Now im upset and I will stuck you on this step... forever forever!"
-                    sleep 5
-                    echo
-                    log_progress_msg "Ok, that was a joke :P continuing..."
-                    sleep 3
-                    echo
-                fi
-
-            fi
-
-
-            # }}}
 
             # don't ask if mode auto, assume yes
             if ((is_mode_auto)) ; then

@@ -135,7 +135,7 @@ shared_accounts_state_show(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from? (empty cancels)\n"
                     command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_working
@@ -1534,7 +1534,7 @@ options_main_interact(){
             # which remote to fetch from?
             if [[ -z "$remote_fetching_working" ]] ; then
                 if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from ?\n"
+                    echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from? (empty cancels)\n"
                     command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_working

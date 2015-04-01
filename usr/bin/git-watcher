@@ -1209,7 +1209,7 @@ do_cherry_pick_menu(){
     option_show "M" "mergetool (manual / human mode)"
     option_show "h" "mergetool config"
     option_show "l" "Login Shell (to do things manually)"
-    option_show "r" "return to main menu"
+    option_show "f" "Finish - return to main menu"
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
     read -N 1 option
@@ -1296,7 +1296,7 @@ EOF
 
             $FUNCNAME
             ;;
-        r)
+        f)
             true
             ;;
     esac

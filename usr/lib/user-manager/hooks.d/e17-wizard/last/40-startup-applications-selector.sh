@@ -43,7 +43,7 @@ main(){
         # default to enabled/disabled {{{
 
         if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update)" ; then
+            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier)" ; then
                 menu+=("TRUE")
                 el_debug "state: TRUE"
             else

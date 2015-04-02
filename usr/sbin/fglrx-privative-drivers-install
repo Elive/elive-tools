@@ -54,7 +54,7 @@ check_hardware(){
     # TODO: if has intel too, strongly suggests to use intel instead
     # TODO: if something like:  01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI RV370 5B60 [Radeon X300 (PCIE)]
     #         try to catch the PCIE instead which means "new"
-    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" ; then
+    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" ; then
         el_explain 3 "ati card found in lspci"
         is_ati_card_found=1
     fi
@@ -108,7 +108,7 @@ detect_driver_version(){
 
 
     if [[ -z "$driver_version" ]] ; then
-        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon HD.*Series" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
+        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
 
         if [[ -n "$driver_version" ]] ; then
             if [[ "${driver_version}" -gt "4000" ]] ; then
@@ -157,7 +157,7 @@ interactive_ask_privative(){
 
     # }}}
     # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" | wc -l )" -gt "1" ]] ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | wc -l )" -gt "1" ]] ; then
         local message_multiple_cards
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
@@ -351,7 +351,7 @@ install_driver(){
     # - conf }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not ati ones...
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI).*Radeon\s+" | wc -l )" -gt "1" ]] ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | wc -l )" -gt "1" ]] ; then
 
         if laptop-detect ; then
             local message_multiple_cards

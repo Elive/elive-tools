@@ -44,6 +44,7 @@ select_card_multiple(){
 
     if [[ "${#menu[@]}" -eq 2 ]] ; then
         selection="$( echo "${menu[0]}" | head -1 )"
+        is_auto_mode=1
     else
         selection="$( $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" "${menu[@]}" || echo cancel )"
     fi

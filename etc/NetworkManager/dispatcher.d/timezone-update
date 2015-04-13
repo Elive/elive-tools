@@ -219,9 +219,13 @@ EOF
     # finally, save the time to hwclock if needed
     case $mode_bios in
         LOCAL)
+            el_explain 0 "Saving time using __localtime__"
+
             hwclock -w --localtime
             ;;
         UTC|*)
+            el_explain 0 "Saving time using __utc__"
+
             hwclock -w --utc
             ;;
     esac

@@ -129,7 +129,11 @@ main(){
     # first time, need to determine if use utc or not
     if [[ -z "$mode_bios" ]] ; then
         # if we have a windows, the time should be set to localtime for compatibility
-        if os-prober 2>/dev/null | grep -qs "Windows" ;  then
+        el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME..."
+
+        if os-prober 2>/dev/null | grep -qsEi "(Windows.*loader|loader.*Windows)" ;  then
+            el_explain 0 "Windows is found, so clock must be set in localtime"
+
             mode_bios="LOCAL"
         fi
 

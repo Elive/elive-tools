@@ -99,10 +99,11 @@ main(){
         fi
     done
 
+    # no cards found
     if [[ -z "$list_cards" ]] ; then
         rm -f "${HOME}/.asoundrc"
 
-        # reconfigure alsa.conf default file to correctly work, only if is not a number value
+        # reconfigure alsa.conf to defaults to correctly work, only if is not a number value
         if [[ "$UID" = 0 ]] ; then
             sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card 0|g" /usr/share/alsa/alsa.conf
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card 0|g" /usr/share/alsa/alsa.conf
@@ -115,18 +116,14 @@ main(){
 
     number_cards="$( echo -e "$list_cards" | wc -l )"
 
+    # only one card found
     if [[ "$number_cards" -lt "2" ]] ; then
         selection="$list_cards"
         # remove extra leading blank chars
         read -r selection <<< "$selection"
 
-        # reconfigure alsa.conf default file to correctly work
-        #if [[ "$UID" = 0 ]] ; then
-            # Important: NEVER set these values to a digit, seems like glibc segfaults because of this
-            #sed -i 's|^defaults.ctl.card.*$|defaults.ctl.card 0|g' /usr/share/alsa/alsa.conf
-            #sed -i 's|^defaults.pcm.card.*$|defaults.pcm.card 0|g' /usr/share/alsa/alsa.conf
-        #fi
     else
+        # more than one card found
         if ! ((is_auto_mode)) ; then
             if select_card_multiple ; then
                 is_multiple_cards=1
@@ -147,22 +144,30 @@ main(){
             read -r selection <<< "$selection"
         fi
 
-        # reconfigure alsa.conf default file to correctly work, only if is not a number value
-        if [[ "$UID" = 0 ]] && ! echo "$selection" | grep -qs "^[[:digit:]]*$" ; then
-            sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
-            sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
-        fi
     fi
 
     # cleanup, new conf
     rm -f "${HOME}/.asoundrc"
 
-    echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
-    echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+    # user's conf
+    if [[ -e "$DHOME/.shared-home" ]] ; then
+        if $guitool --question --text="$( eval_gettext "Your home is shared with another system, if you try to configure your audio card it may not work in your other system, on such case you will need to remove the .asoundrc file later. Do you want to continue?" )" ; then
+            echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+            echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+        fi
+    else
+        echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+        echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+    fi
 
+    # reconfigure alsa.conf to our audio card
+    if [[ "$UID" = 0 ]] && ! echo "$selection" | grep -qs "^[[:digit:]]*$" ; then
+        sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
+        sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
+    fi
 
     # set microphone default
-    if ! ((is_auto_mode)) ; then
+    if ! ((is_auto_mode)) && ! [[ -e "$DHOME/.shared-home" ]] ; then
         if ((is_multiple_cards)) ; then
             if ! $guitool --question --text="$( eval_gettext "Use the same audio card for your microphone?" )" ; then
                 select_card_multiple

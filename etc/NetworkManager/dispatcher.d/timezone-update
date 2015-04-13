@@ -142,6 +142,7 @@ main(){
 
         # save the mode to use
         if [[ -n "$mode_bios" ]] ; then
+            sed -e "/^bios mode:::/d" "$conf"
             echo "bios mode:::$mode_bios" >> "${conf}"
 
             ed -s /etc/adjtime << EOF

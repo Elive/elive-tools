@@ -377,7 +377,8 @@ main(){
     xdg-user-dirs-gtk-update
 
     # clean some files created by E17 which are useless:
-    rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"
+    # update: not needed anymore, we don't ship them with our e17 in any case
+    #rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"
 
     #
     # Public Share

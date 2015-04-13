@@ -128,15 +128,22 @@ main(){
 
     # first time, need to determine if use utc or not
     if [[ -z "$mode_bios" ]] ; then
-        el_explain 0 "first time, determine if we use UTC or localtime"
-
-
-        if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
-            el_explain 0 "Seems like your bios uses __UTC__ mode"
-            mode_bios="UTC"
-        else
-            el_explain 0 "Seems like your bios uses __localtime__ mode"
+        # if we have a windows, the time should be set to localtime for compatibility
+        if os-prober 2>/dev/null | grep -qs "Windows" ;  then
             mode_bios="LOCAL"
+        fi
+
+        if [[ -z "$mode_bios" ]] ; then
+            el_explain 0 "first time, determine if we use UTC or localtime"
+
+
+            if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
+                el_explain 0 "Seems like your bios uses __UTC__ mode"
+                mode_bios="UTC"
+            else
+                el_explain 0 "Seems like your bios uses __localtime__ mode"
+                mode_bios="LOCAL"
+            fi
         fi
 
 

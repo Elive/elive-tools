@@ -1757,6 +1757,32 @@ el_processes_using_mountpoint(){
     unset pids_mountpoint
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_user_email_get
+#   DESCRIPTION:  determine which is the email of the user and return it
+#       RETURNS:  email string
+#===============================================================================
+el_user_email_get(){
+    # pre {{{
+    local user_email
+
+    # }}}
+
+    # user has configured it for elive
+    user_email="$( grep "^email_acount=" "$HOME/.config/email-sender" 2>/dev/null | sed -e 's|^.*="||g' -e 's|".*$||g' | grep "@" | tail -1 )"
+
+    # get the email from his git/github account
+    if ! echo "$user_email" | grep -qs "[[:alpha:]]" ; then
+        user_email="$( git config --get user.email 2>/dev/null | grep "@" | tail -1 )"
+    fi
+
+    if echo "$user_email" | grep -qs "[[:alpha:]]" ; then
+        echo "$user_email"
+    else
+        el_error "unable to get user's email"
+    fi
+}
+
 
 ###################################################################
 #  Always run:

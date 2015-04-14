@@ -237,6 +237,8 @@ do_validate_sending(){
             echo "email_password=\"$email_password\"" >> "$conf"
             echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
 
+            chmod og-rwx "${conf}"
+
             return 0
         else
             sleep 1
@@ -362,6 +364,8 @@ do_configure(){
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
             echo "set copy = no" >> "${conf_mutt}"
+
+            chmod og-rwx "${conf_mutt}"
 
             ;;
         #*@yahoo*)

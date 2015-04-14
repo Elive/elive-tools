@@ -273,15 +273,18 @@ main(){
                 if [[ -n "$item_size" ]] ; then
                     item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 
-                    if [[ -n "$item_human_size" ]] ; then
+                    if [[ -n "$item_human_size" ]] && [[ "$item_human_size" != 0 ]] ; then
                         if [[ "$item_human_size" = .* ]] ; then
+                            # if starts with a dot, represented in GB, its like:  .120 (so 120 MB, not gb)
                             item_human_size="${item_human_size#.} MB"
                         else
+                            # else it has more than 1GB, so lets remove the last 2 numbers and show it like: 250.3 GB
                             item_human_size="${item_human_size:0:-2} GB"
                         fi
-                        item_human_size="${item_human_size#0}"
-                        item_human_size="${item_human_size#0}"
                     fi
+
+                    item_human_size="${item_human_size#0}"
+                    item_human_size="${item_human_size#0}"
                 fi
             fi
 

@@ -269,14 +269,20 @@ main(){
             # get sizes
             if [[ "${line}" = *"UDISKS_PARTITION_SIZE="* ]] ; then
                 item_size="$(echo "$line" | sed -e 's|^.*UDISKS_PARTITION_SIZE=||g' | sort -ug | tail -1 )"
-                item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
-                if [[ "$item_human_size" = .* ]] ; then
-                    item_human_size="${item_human_size#.} MB"
-                else
-                    item_human_size="${item_human_size:0:-2} GB"
+
+                if [[ -n "$item_size" ]] ; then
+                    item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
+
+                    if [[ -n "$item_human_size" ]] ; then
+                        if [[ "$item_human_size" = .* ]] ; then
+                            item_human_size="${item_human_size#.} MB"
+                        else
+                            item_human_size="${item_human_size:0:-2} GB"
+                        fi
+                        item_human_size="${item_human_size#0}"
+                        item_human_size="${item_human_size#0}"
+                    fi
                 fi
-                item_human_size="${item_human_size#0}"
-                item_human_size="${item_human_size#0}"
             fi
 
 

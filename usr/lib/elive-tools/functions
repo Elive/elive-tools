@@ -881,7 +881,7 @@ el_check_version_development(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_elive_version_get
-#   DESCRIPTION:  Get the version number of the HOST elive system
+#   DESCRIPTION:  Get the version number of the HOST (installed) elive system
 #    PARAMETERS:  -
 #       RETURNS:  version number
 #===============================================================================

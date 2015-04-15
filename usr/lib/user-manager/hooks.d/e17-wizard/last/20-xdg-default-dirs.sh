@@ -114,6 +114,12 @@ main(){
     # progress
     echo 10
 
+    # update language to the user's selected one first
+    lang="$( enlightenment_remote -lang-get )"
+    # remove extra leading blank chars
+    read -r lang <<< "$lang"
+    export LANG="$lang"
+
     # clean conf, so create it again in case that already exists
     rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
 

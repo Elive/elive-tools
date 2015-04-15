@@ -185,18 +185,23 @@ adduserelive(){
 
 ###########################################################################
 deluserelive(){
-    local uid user userlist
+    local uid user userlist line
 
-    userlist="$( while read -ru 3 line do uid="$( echo "$line" | awk -v FS=":" '{print $3}' )" user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+    while read -ru 3 line
+    do
+        uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+        user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-    if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
-        if [[ -d "$DHOME/$user" ]] ; then
-            echo "$user"
+        if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+            if [[ -d "$DHOME/$user" ]] ; then
+                userlist+=("$user")
+            fi
         fi
-    fi
-done 3<<< "$( cat "/etc/passwd")" )"
+    done 3<<< "$( cat "/etc/passwd" )"
 
-    username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
+
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
+
     [[ "$username" = "cancel" ]] && exit 1
 
 
@@ -223,23 +228,22 @@ done 3<<< "$( cat "/etc/passwd")" )"
 
 ###########################################################################
 changepass(){
-    local uid user userlist
+    local uid user userlist line
 
-    userlist="$( while read -ru 3 line
+    while read -ru 3 line
     do
         uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
         user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
         if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
             if [[ -d "$DHOME/$user" ]] ; then
-                echo "$user"
+                userlist+=("$user")
             fi
         fi
-    done 3<<< "$( cat "/etc/passwd")" )"
+    done 3<<< "$( cat "/etc/passwd" )"
 
 
-
-    username="$( echo "$userlist" | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user for change its password" )" || echo cancel )"
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user for change its password" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
     passstep

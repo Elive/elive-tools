@@ -7,6 +7,7 @@ export TEXTDOMAIN
 eliveversion="$( awk '$1 ~ /elive-version/ {($1="");print $0}' /etc/elive-version | sed 's/^\ //g' )"
 cachedir="$HOME/.cache/elive-migration-to-${eliveversion}"
 
+
 migrate_conf_file(){
     local file file_bkp
     file="$1"
@@ -14,7 +15,7 @@ migrate_conf_file(){
 
     # debug info
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        echo "# cp \"$file\" \"$file_bkp\""
+        echo "# cp \"$file\" \"$file_bkp\"" > "$TMP_PROGRESS_CONFIGURING_f"
         cp "$file" "$file_bkp"
     fi
 
@@ -23,7 +24,7 @@ migrate_conf_file(){
     # backup the file in case user wants to restore it:
     # update: bad idea, it takes a lot of space and nobody knows that really
     #cd "$cachedir"
-    #echo "# Backuped $file to $cachedir"
+    #echo "# Backuped $file to $cachedir" > "$TMP_PROGRESS_CONFIGURING_f"
 
     # backup to cachedir
     #if ! echo "$file" | grep -qsE "/\.(kde|cache|bkp)" ; then
@@ -37,7 +38,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Desktop in ${file}"
+            echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
@@ -45,7 +46,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Downloads in ${file}"
+            echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
@@ -53,7 +54,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
             el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Documents in ${file}"
+            echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
@@ -61,7 +62,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
             el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Images in ${file}"
+            echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
@@ -69,7 +70,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
             el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Music in ${file}"
+            echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
@@ -77,7 +78,7 @@ migrate_conf_file(){
         if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
             el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Videos in ${file}"
+            echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
@@ -103,6 +104,7 @@ main(){
 
     # }}}
     version="1.1"
+    TMP_PROGRESS_CONFIGURING_f="/tmp/.$(basename $0)-${USER}-progress.txt"
 
     if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
         XDG_CONFIG_HOME="${HOME}/.config"
@@ -113,8 +115,14 @@ main(){
         exit 0
     fi
 
+    # show progress (after to request instmod)
+    echo 1 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
+
+    { ( while test -f "$TMP_PROGRESS_CONFIGURING_f" ; do cat "$TMP_PROGRESS_CONFIGURING_f" || true ; sleep 1 ; done | $guitool --progress --pulsate --text="$( eval_gettext "Migrating directories and configurations to selected language, this operation can be very slow if you have much data, please be patient." )" --auto-close ) & disown ; } 2>/dev/null
+
+
     # progress
-    echo 10
+    echo 10 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
 
     # update language to the user's selected one first
     lang="$( enlightenment_remote -lang-get )"
@@ -145,7 +153,7 @@ main(){
 
         # and just in case is not a symlink:
         if [[ -e "$HOME/Downloads" ]] ; then
-            echo "# Moving files in Downloads to $( xdg-user-dir DOWNLOAD )"
+            echo "# Moving files in Downloads to $( xdg-user-dir DOWNLOAD )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Downloads/* "$( xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
 
             rmdir "$HOME/Downloads" 2>/dev/null 1>&2 || true
@@ -179,7 +187,7 @@ main(){
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
         if [[ -e "$HOME/Desktop" ]] ; then
 
-            echo "# Moving files in Desktop to $( xdg-user-dir DESKTOP )"
+            echo "# Moving files in Desktop to $( xdg-user-dir DESKTOP )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Desktop/* "$( xdg-user-dir DESKTOP )/" 2>/dev/null || true
 
             rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
@@ -227,7 +235,7 @@ main(){
 
     if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
         if [[ -e "$HOME/Documents" ]] ; then
-            echo "# Moving files in Documents to $( xdg-user-dir DOCUMENTS )"
+            echo "# Moving files in Documents to $( xdg-user-dir DOCUMENTS )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
 
             rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
@@ -243,7 +251,7 @@ main(){
 
     if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
         if [[ -e "$HOME/Music" ]] ; then
-            echo "# Moving files in Music to $( xdg-user-dir MUSIC )"
+            echo "# Moving files in Music to $( xdg-user-dir MUSIC )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
 
             rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
@@ -259,7 +267,7 @@ main(){
 
     if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
         if [[ -e "$HOME/Images" ]] ; then
-            echo "# Moving files in Images to $( xdg-user-dir PICTURES )"
+            echo "# Moving files in Images to $( xdg-user-dir PICTURES )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
 
             rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
@@ -275,7 +283,7 @@ main(){
 
     if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
         if [[ -e "$HOME/Videos" ]] ; then
-            echo "# Moving files in Videos to $( xdg-user-dir VIDEOS )"
+            echo "# Moving files in Videos to $( xdg-user-dir VIDEOS )" > "$TMP_PROGRESS_CONFIGURING_f"
             mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
 
             rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
@@ -404,8 +412,9 @@ main(){
     echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
     # progress
-    echo -e "# Done"
+    echo -e "# Done" > "$TMP_PROGRESS_CONFIGURING_f"
     sleep 1
+    rm -f "$TMP_PROGRESS_CONFIGURING_f"
 
     # if we are debugging give it a little pause to see what is going on
     if grep -qs "debug" /proc/cmdline ; then
@@ -423,7 +432,7 @@ main(){
 # mv dir/* will include hidden files:
 shopt -s dotglob
 
-main "$@" | zenity --progress --pulsate --auto-close --text="$( eval_gettext "Migrating directories and configurations to selected language, this operation can be slow, please be patient." )"
+main "$@"
 
 # put back values
 shopt -u dotglob

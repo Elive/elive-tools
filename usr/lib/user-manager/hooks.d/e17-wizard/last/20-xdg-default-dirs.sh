@@ -102,12 +102,14 @@ main(){
     local var
 
     # }}}
+    version="1.1"
+
     if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
         XDG_CONFIG_HOME="${HOME}/.config"
     fi
 
     if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] ; then
-        el_explain 0 "xdg home dirs already migrated to new language"
+        el_explain 0 "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
         exit 0
     fi
 
@@ -154,11 +156,14 @@ main(){
     fi
 
 
-    #rmdir "$( xdg-user-dir DESKTOP )" 2>/dev/null 1>&2 || true
-    # E already created the desktop dir and filled it with files, we want to keep them so:
-    mv "$( xdg-user-dir DESKTOP )" "$HOME/desktop_old_d.tmp"  || true
+    desktop_translated_name="$( xdg-user-dir DESKTOP )"
+    desktop_translated_name="${desktop_translated_name##*/}"
+
+    # E already created the desktop dir and filled it with files (or maybe not files), we want to keep them so:
+    mv "$HOME/$desktop_translated_name" "$HOME/desktop_old_d.tmp"  || true
 
     # Create a better dir structure, we need this dir in any of the cases
+    # XXX: note: we have already this structure thanks to our shipped xdg-default-dirs in /etc/xdg, nothing is wrong unless we change it
     desktop_d="$( basename "$(xdg-user-dir DOWNLOAD )")/$( basename "$(xdg-user-dir DESKTOP )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
     mkdir -p "$HOME/$desktop_d"
@@ -167,7 +172,7 @@ main(){
     sed -i "s|^XDG_DESKTOP_DIR.*$|XDG_DESKTOP_DIR=\"\$HOME/$desktop_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
 
     # move back the files created by E to the new desktop dir
-    mv "$HOME"/desktop_old_d.tmp/* "$HOME/$desktop_d/"  || true
+    mv "$HOME"/desktop_old_d.tmp/* "$HOME/$desktop_d/" 2>/dev/null || true
     rmdir "$HOME/desktop_old_d.tmp" || true
 
 
@@ -396,7 +401,7 @@ main(){
 
     # mark a state flag so that we don't run this again
     mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
-    touch "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
+    echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
     # progress
     echo -e "# Done"

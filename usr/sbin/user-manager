@@ -138,10 +138,10 @@ adduserelive(){
     username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
-    if [[ "$username" = "eliveuser" ]] ; then
-        $guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
-        exit 1
-    fi
+    #if [[ "$username" = "eliveuser" ]] ; then
+        #$guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, please use a different name" )"
+        #exit 1
+    #fi
 
     passstep
 

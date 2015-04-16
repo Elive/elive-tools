@@ -502,6 +502,13 @@ main(){
                 ;;
             t)
                 to="$OPTARG"
+
+                # check / validate, or we will have delivery errors
+                if ! echo "$to" | grep -qs "@.*\." ; then
+                    el_error "to: '$to' is not a valid email"
+                    exit 1
+                fi
+
                 el_explain 2 "target (to) is __${to}__"
 
                 ;;

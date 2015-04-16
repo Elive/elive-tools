@@ -131,7 +131,7 @@ main(){
         # if we have a windows, the time should be set to localtime for compatibility
         el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME..."
 
-        if os-prober 2>/dev/null | grep -qsEi "(Windows.*loader|loader.*Windows)" ;  then
+        if os-prober 2>/dev/null | grep -qsE "Windows" ;  then
             el_explain 0 "Windows is found, so clock must be set in localtime"
 
             mode_bios="LOCAL"

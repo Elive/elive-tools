@@ -485,6 +485,7 @@ main(){
 
                 ;;
             m)
+                # note: if you are trying to pass an array full of contents to the message, there's no bug on it, you should pass like: email-sender -m "${arr[*]}", instead of using @
                 message="$OPTARG"
                 el_explain 2 "message is __${message}__"
 

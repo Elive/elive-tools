@@ -171,7 +171,10 @@ EOF
 
     # compare our last location with our actual one
     if [[ "${timezone}" = "${timezone_last}" ]] ; then
-        if ! ((is_force)) ; then
+        if ((is_force)) || grep -qs "boot=live" /proc/cmdline ; then
+            # if we force or we are in live mode (always update times in live mode! because we reboot and the timezones files in /etc are gone)
+            true
+        else
             # nothing more to do, everything is fine
             exit
         fi

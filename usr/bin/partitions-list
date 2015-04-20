@@ -301,6 +301,8 @@ main(){
             # LVM2 ones:
             if [[ "${line}" = *"DM_LV_NAME="* ]] ; then
                 item_label="$(echo "$line" | sed -e 's|^.*DM_LV_NAME=||g' )"
+                # if it has a name, even if not formatted show it so we can select it
+                item_is_usable=1
             fi
             # vg_name comes after vl_name in the output
             if [[ "${line}" = *"DM_NAME="* ]] ; then
@@ -376,6 +378,10 @@ main(){
         # }}}
         # only show mountable partitions ? {{{
         if ((only_mountable)) ; then
+            # if not FS from a first time, mark it to not show
+            if [[ -z "$item_filesystem" ]] ; then
+                item_is_usable=0
+            fi
             # common not mountable partitions
             if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
                 item_is_usable=0

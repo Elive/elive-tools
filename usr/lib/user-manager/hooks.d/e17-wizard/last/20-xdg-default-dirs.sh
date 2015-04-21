@@ -128,10 +128,24 @@ main(){
     lang="$( enlightenment_remote -lang-get )"
     # remove extra leading blank chars
     read -r lang <<< "$lang"
-    export LANG="$lang"
+    if [[ -n "$lang" ]] ; then
+        export LANG="$lang"
+    else
+        el_warning "unable to get lang conf by E remote"
+    fi
 
     # clean conf, so create it again in case that already exists
-    rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
+    if [[ -s "${XDG_CONFIG_HOME}/user-dirs.dirs" ]] ; then
+        if $guitool --question --text="$( eval_gettext "Do you want to rename your default home directories like Music or Videos to the names used in your language?" )" ; then
+            rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
+        else
+            mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+            echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
+            rm -f "$TMP_PROGRESS_CONFIGURING_f"
+
+            exit
+        fi
+    fi
 
     # create dirs and default conf file
     xdg-user-dirs-update

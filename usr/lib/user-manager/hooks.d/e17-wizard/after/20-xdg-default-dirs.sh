@@ -135,17 +135,20 @@ main(){
     fi
 
     # clean conf, so create it again in case that already exists
-    if [[ -s "${XDG_CONFIG_HOME}/user-dirs.dirs" ]] ; then
-        if $guitool --question --text="$( eval_gettext "Do you want to rename your default home directories like Music or Videos to the names used in your language?" )" ; then
-            rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
-        else
-            mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
-            echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
-            rm -f "$TMP_PROGRESS_CONFIGURING_f"
+    rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
 
-            exit
-        fi
-    fi
+    #if [[ -s "${XDG_CONFIG_HOME}/user-dirs.dirs" ]] ; then
+        #if $guitool --question --text="$( eval_gettext "Do you want to rename your default home directories like Music or Videos to the names used in your language?" )" ; then
+            #rm -f "${XDG_CONFIG_HOME}"/user-dirs.*
+        #else
+            ## mark like we have upgraded
+            #mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+            #echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
+            #rm -f "$TMP_PROGRESS_CONFIGURING_f"
+
+            #exit
+        #fi
+    #fi
 
     # create dirs and default conf file
     xdg-user-dirs-update
@@ -182,7 +185,7 @@ main(){
     desktop_translated_name="${desktop_translated_name##*/}"
 
     # E already created the desktop dir and filled it with files (or maybe not files), we want to keep them so:
-    mv "$HOME/$desktop_translated_name" "$HOME/desktop_old_d.tmp"  || true
+    mv "$HOME/$desktop_translated_name" "$HOME/desktop_old_d.tmp" 2>/dev/null || true
 
     # Create a better dir structure, we need this dir in any of the cases
     # XXX: note: we have already this structure thanks to our shipped xdg-default-dirs in /etc/xdg, nothing is wrong unless we change it
@@ -195,7 +198,7 @@ main(){
 
     # move back the files created by E to the new desktop dir
     mv "$HOME"/desktop_old_d.tmp/* "$HOME/$desktop_d/" 2>/dev/null || true
-    rmdir "$HOME/desktop_old_d.tmp" || true
+    rmdir "$HOME/desktop_old_d.tmp" 2>/dev/null || true
 
 
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then

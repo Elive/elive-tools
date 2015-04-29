@@ -409,6 +409,24 @@ main(){
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
 
+    # create symlinks for thunar panel
+    if ! grep -qs "file://$( xdg-user-dir DOWNLOAD )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir DOWNLOAD )" >> "$HOME/.gtk-bookmarks"
+    fi
+    if ! grep -qs "file://$( xdg-user-dir DOCUMENTS )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir DOCUMENTS )" >> "$HOME/.gtk-bookmarks"
+    fi
+    if ! grep -qs "file://$( xdg-user-dir VIDEOS )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir VIDEOS )" >> "$HOME/.gtk-bookmarks"
+    fi
+    if ! grep -qs "file://$( xdg-user-dir MUSIC )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir MUSIC )" >> "$HOME/.gtk-bookmarks"
+    fi
+    if ! grep -qs "file:///tmp" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file:///tmp Temporal" >> "$HOME/.gtk-bookmarks"
+    fi
+
+
     # clean some files created by E17 which are useless:
     # update: not needed anymore, we don't ship them with our e17 in any case
     #rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"

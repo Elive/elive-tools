@@ -60,7 +60,7 @@ chroot_layers_mount(){
     el_debug
     el_security_function_loop 10 || return
 
-    dir="$1"
+    dir="${1%%/}"
     dirid="${dir//\//%}"
     id="$2"
     mode="$3"
@@ -220,7 +220,7 @@ chroot_layers_umount(){
     el_debug
     el_security_function_loop 10 || return
 
-    dir="$1"
+    dir="${1%%/}"
     dirid="${dir//\//%}"
     id="$2"
     mode="$3"

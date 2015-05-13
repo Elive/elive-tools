@@ -103,6 +103,7 @@ chroot_layers_mount(){
     if ((is_mode_bind)) ; then
         mount --bind "/proc" "${dir}/proc"
         rm -f "${dir}/etc/mtab"
+        mkdir -p "$dir/etc"
         ln -s /proc/mounts "${dir}/etc/mtab"
     else
         mount proc-$id -t proc "${dir}/proc" || true

@@ -25,7 +25,7 @@ main(){
     state="$2"
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
-    el_dependencies_check "ip,arp,showmytimezone,dig,ping"
+    el_dependencies_check "ip,arp,showmytimezone,ping"
     #el_check_variables "iface,state"
 
     if [[ ! -e "$conf" ]] ; then
@@ -72,7 +72,10 @@ main(){
 
     # let's connect to internet first, and try to do at least one ping somewhere! or arp -a will not work
     el_verify_internet 2>/dev/null 1>/dev/null
-    timeout 10 ping -c 1 google.com 1>/dev/null 2>/dev/null || timeout 10 dig NS google.com 1>/dev/null 2>/dev/null
+    if ! timeout 10 ping -c 1 google.com 1>/dev/null 2>/dev/null ; then
+        el_dependencies_check "dig"
+        timeout 10 dig NS google.com 1>/dev/null 2>/dev/null
+    fi
     sleep 1
 
     # mark a stamp, amount of users that was able to successfully connect to internet

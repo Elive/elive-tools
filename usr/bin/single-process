@@ -1,0 +1,41 @@
+#!/bin/bash
+#source /usr/lib/elive-tools/functions
+
+
+main(){
+    # pre {{{
+    if [[ -z "$1" ]] ; then
+        echo -e "Usage: $(basename $0) command args"
+        exit
+    fi
+
+    command="$1"
+    shift
+
+    # }}}
+
+
+    while ps ux | grep "$command" | grep -v "grep $command" | grep -v "$(basename $0)" | grep -v "vi.* .*$command" 1>/dev/null
+    do
+        if ! ((flag_busy)) ; then
+            echo -e "$command busy, waiting..."
+        fi
+        flag_busy=1
+        sleep 4
+    done
+
+    if ((flag_busy)) ; then
+        echo "Previous $command process finished, continuing..."
+        unset flag_busy
+    fi
+
+    "$command" "$@"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

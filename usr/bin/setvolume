@@ -392,7 +392,7 @@ main(){
     # pre {{{
     local list action actualvalue is_failed
 
-    el_dependencies_check amixer
+    el_dependencies_check "amixer,aplay"
 
     # }}}
 

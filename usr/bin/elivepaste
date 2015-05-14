@@ -4,7 +4,7 @@ set -e
 
 main(){
     # pre {{{
-    local url urldefault buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf
+    local url urldefault buffer syntax syntax_filetype max_lines user min_lines direct_paste command is_stdin arg channel message conf extension
 
     if ! el_dependencies_check "pastebinit,file" ; then
         if ! el_dependencies_install "pastebinit,file" ; then
@@ -25,8 +25,9 @@ main(){
     max_lines="10000"
     min_lines="10"
     user="$USER"
-    #urldefault="http://paste2.org"
-    urldefault="http://paste.openstack.org"
+    urldefault="http://paste2.org"
+    # openstack don't accept syntax parameter? at least not for C (edc) files
+    #urldefault="http://paste.openstack.org"
     command="$@"
 
     conf="${HOME}/.config/elive/elivepaste/config.sh"
@@ -82,6 +83,7 @@ main(){
         #if [[ -z "$2" ]] && [[ -f "${1}" ]] && ! el_dependencies_check "$1" 2>/dev/null 1>/dev/null ; then
             # $1 is a file, not a command
             buffer="$( cat "${1}" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+            extension="${1##*.}"
         #else
             #if [[ -e "$1" ]] ; then
             #buffer="$( "$@" 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
@@ -113,6 +115,16 @@ main(){
             ;;
         *)
             syntax="text"
+            ;;
+    esac
+
+    # overwrite by extension
+    case "$extension" in
+        edc)
+            syntax="c"
+            ;;
+        *)
+            true
             ;;
     esac
 

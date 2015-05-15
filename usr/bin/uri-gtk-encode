@@ -1,0 +1,7 @@
+#!/usr/bin/perl -lp
+#
+# small tool useful for convert uri's like "Vídeos" to "V%C3%ADdeos", good for .gtk-bookmarks for example
+
+use URI::Escape;
+
+$_ = uri_escape($_)

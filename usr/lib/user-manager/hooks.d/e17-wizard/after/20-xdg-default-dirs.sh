@@ -416,18 +416,22 @@ main(){
     if ! grep -qs "file://$( xdg-user-dir DOWNLOAD )" "$HOME/.gtk-bookmarks" ; then
         echo -e "file://$( xdg-user-dir DOWNLOAD )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file://$( xdg-user-dir DOCUMENTS )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir DOCUMENTS )" >> "$HOME/.gtk-bookmarks"
-    fi
-    if ! grep -qs "file://$( xdg-user-dir VIDEOS )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir VIDEOS )" >> "$HOME/.gtk-bookmarks"
-    fi
-    if ! grep -qs "file://$( xdg-user-dir MUSIC )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir MUSIC )" >> "$HOME/.gtk-bookmarks"
-    fi
+    #if ! grep -qs "file://$( xdg-user-dir DOCUMENTS )" "$HOME/.gtk-bookmarks" ; then
+        #echo -e "file://$( xdg-user-dir DOCUMENTS )" >> "$HOME/.gtk-bookmarks"
+    #fi
+    #if ! grep -qs "file://$( xdg-user-dir VIDEOS )" "$HOME/.gtk-bookmarks" ; then
+        #echo -e "file://$( xdg-user-dir VIDEOS )" >> "$HOME/.gtk-bookmarks"
+    #fi
+    #if ! grep -qs "file://$( xdg-user-dir MUSIC )" "$HOME/.gtk-bookmarks" ; then
+        #echo -e "file://$( xdg-user-dir MUSIC )" >> "$HOME/.gtk-bookmarks"
+    #fi
     if ! grep -qs "file:///tmp" "$HOME/.gtk-bookmarks" ; then
         echo -e "file:///tmp Temporal" >> "$HOME/.gtk-bookmarks"
     fi
+
+    # compatibility for new location:
+    mkdir -p "$HOME/.config/gtk-3.0"
+    cp "$HOME/.gtk-bookmarks" "$HOME/.config/gtk-3.0/gtk-bookmarks"
 
 
     # clean some files created by E17 which are useless:

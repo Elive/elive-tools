@@ -413,6 +413,8 @@ main(){
     xdg-user-dirs-gtk-update
 
     # create symlinks for thunar panel
+    rm -f "$HOME/.gtk-bookmarks"
+
     if ! grep -qs "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
         echo -e "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
     fi

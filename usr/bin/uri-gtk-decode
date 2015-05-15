@@ -4,4 +4,8 @@
 
 use URI::Escape;
 
-$_ = uri_unescape($_)
+# this version ignores the slashes:
+s{([^/]+)}{uri_unescape($1)}ge
+
+# and this version converts slashes too (not wanted)
+#$_ = uri_unescape($_)

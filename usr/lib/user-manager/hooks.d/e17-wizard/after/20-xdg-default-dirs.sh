@@ -415,17 +415,17 @@ main(){
     # create symlinks for thunar panel
     rm -f "$HOME/.gtk-bookmarks"
 
-    if ! grep -qs "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
+    if ! grep -qs "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode | sed -e 's|%2F|/|g' )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode | sed -e 's|%2F|/|g' )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
+    if ! grep -qs "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode | sed -e 's|%2F|/|g' )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode | sed -e 's|%2F|/|g' )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file://$( xdg-user-dir VIDEOS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
-        echo -e "file://$( xdg-user-dir VIDEOS | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
+    if ! grep -qs "file://$( xdg-user-dir VIDEOS | uri-gtk-encode | sed -e 's|%2F|/|g' )" "$HOME/.gtk-bookmarks" ; then
+        echo -e "file://$( xdg-user-dir VIDEOS | uri-gtk-encode | sed -e 's|%2F|/|g' )" >> "$HOME/.gtk-bookmarks"
     fi
-    #if ! grep -qs "file://$( xdg-user-dir MUSIC | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
-        #echo -e "file://$( xdg-user-dir MUSIC | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
+    #if ! grep -qs "file://$( xdg-user-dir MUSIC | uri-gtk-encode | sed -e 's|%2F|/|g' )" "$HOME/.gtk-bookmarks" ; then
+        #echo -e "file://$( xdg-user-dir MUSIC | uri-gtk-encode | sed -e 's|%2F|/|g' )" >> "$HOME/.gtk-bookmarks"
     #fi
     if ! grep -qs "file:///tmp" "$HOME/.gtk-bookmarks" ; then
         echo -e "file:///tmp Temporal" >> "$HOME/.gtk-bookmarks"

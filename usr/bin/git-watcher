@@ -605,18 +605,18 @@ conf_share_setup(){
                 email-sender -t "$_email" -s "$git_username wants to share a $(basename $0) with you" -S "These are the needed instructions to join the watcher:" <<EOF
 This could be one of the most amazing tools that you may have never see!
 
-First: check your email and accept the Dropbox invitation for the shared directory and then run dropbox to have a copy of this directory already updated in your computer.
+First you need to accept the dropbox directory shared with you (you should have an invitation in your email)
 
-After that, go to the git repository that references to '${remote_working}', and run from it:
+After, go to your git repository that references to <i>'${remote_working}'</i>, and run from it:
 
 <ul>$ <strong>$(basename $0) $tool_arguments</strong></ul>
 
-Now simply exit from it and use these options:
+After to have it loaded, exit from $(basename $0) and select the options:
 <li>Save the session</li>
 <li>Enable Share features</li>
 <li>Fill up the correct sharing information</li>
 
-After to have exit from $(basename $0), run the same command again to start using it in shared mode!
+Now just run <strong>$(basename $0) $tool_arguments</strong> again to start using it in shared mode!
 
 EOF
 
@@ -684,7 +684,8 @@ run_dropbox(){
 
     # }}}
     if ! ps ux | grep -v grep | grep -qs "$HOME/\.dropbox-dist/" ; then
-        dropbox start -i
+        el_explain 0 "Starting dropbox..."
+        dropbox start -i  2>/dev/null 1>&2
     fi
 }
 

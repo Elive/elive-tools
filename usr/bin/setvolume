@@ -244,7 +244,7 @@ mute_modes_force(){
         mute|toggle)
             el_explain 0 "volumes was originally at $volume_before and now $volume_actual"
 
-            if [[ "$volume_actual" -lt 2 ]] ; then
+            if [[ "$volume_actual" -lt 5 ]] ; then
                 $FUNCNAME unmute
             else
                 $FUNCNAME muteset

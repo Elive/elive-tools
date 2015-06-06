@@ -149,8 +149,8 @@ main(){
                 is_gdu_notif_included=1
             fi
 
-            if ! grep -qs "$file" "$HOME/.e/e/applications/startup/.order" ; then
-                echo "$file" >> "$HOME/.e/e/applications/startup/.order"
+            if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+                echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
             fi
         fi
     done 3<<< "$( echo "$answer" | tr '|' '\n' )"
@@ -164,8 +164,8 @@ main(){
                 # re-enable it
                 file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
                 if [[ -s "$file" ]] ; then
-                    if ! grep -qs "$file" "$HOME/.e/e/applications/startup/.order" ; then
-                        echo "$file" >> "$HOME/.e/e/applications/startup/.order"
+                    if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+                        echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
                     fi
                 else
                     el_error "Polkit startup file not found"
@@ -205,8 +205,8 @@ EOF
             # re-enable it
             file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
             if [[ -s "$file" ]] ; then
-                if ! grep -qs "$file" "$HOME/.e/e/applications/startup/.order" ; then
-                    echo "$file" >> "$HOME/.e/e/applications/startup/.order"
+                if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+                    echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
                 fi
             else
                 el_error "Gdu startup file not found"

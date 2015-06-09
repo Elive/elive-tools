@@ -4,6 +4,7 @@ el_make_environment
 
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
+# FIXME: if you enter twice in a git-watcher saved, your position is reseted
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups

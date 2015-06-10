@@ -4,7 +4,6 @@ el_make_environment
 
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
-# FIXME: if you enter twice in a git-watcher saved, your position is reseted
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
@@ -1134,11 +1133,11 @@ do_count_commits(){
     # pre {{{
     el_debug
 
-    local _counter _counter_total
+    local _counter _counter_total _is_commit_id_last_reached
 
     el_check_variables "branch_working,branch_watch"
 
-    unset is_commit_id_last_reached
+    unset _is_commit_id_last_reached
     _counter_total="$counter_total"
     _counter="$counter"
 
@@ -1155,9 +1154,9 @@ do_count_commits(){
             counter_total="$(( $counter_total + 1 ))"
 
             # skip until last commit
-            if [[ -n "$commit_id" ]] && ! ((is_commit_id_last_reached)) ; then
+            if [[ -n "$commit_id" ]] && ! ((_is_commit_id_last_reached)) ; then
                 if [[ "$line" = "commit "$commit_id ]] ; then
-                    is_commit_id_last_reached=1
+                    _is_commit_id_last_reached=1
                 else
                     # loop until we reach the desired commit
                     counter="$(( $counter + 1 ))"

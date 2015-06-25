@@ -200,8 +200,8 @@ detect_driver_version(){
     # }}}
     # show result found {{{
     if [[ -n "$_NVIDIA_VERSION" ]] ; then
-        el_explain 2 "Version of Nvidia for your machines is: __${_NVIDIA_VERSION}__"
-        el_explain 2 "Module to load for your nvidia card is: __${_NVIDIA_MODULE}__"
+        el_explain 0 "Version of Nvidia for your machines is: __${_NVIDIA_VERSION}__"
+        el_explain 0 "Module to load for your nvidia card is: __${_NVIDIA_MODULE}__"
     else
         # if we have nothing found we should tell the user what to do
         if ((is_mode_check)) ; then

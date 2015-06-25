@@ -535,7 +535,7 @@ install_driver(){
     if laptop-detect ; then
 
         local message_brightness_force
-        message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? You should have it working without problems but if you press the keyboard hotkeys for the brightness and it doesn't change you must try the other option which can make it working using a hack but that can include some unstability. Select YES if you don't know." )" "" )"
+        message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"
 
         dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Brightness of the Screen" \
@@ -545,10 +545,11 @@ install_driver(){
 
         case "$ret" in
             0|255|123) # yes, timeout, cancel
-                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1\n&"|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                true
                 ;;
             1) # no
                 true
+                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1\n&"|' /etc/X11/xorg.conf.d/20-nvidia.conf
                 ;;
         esac
     fi

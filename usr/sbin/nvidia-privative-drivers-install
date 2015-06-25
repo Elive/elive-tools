@@ -224,6 +224,17 @@ detect_driver_version(){
     if ((is_mode_check)) ; then
         echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
         exit
+    else
+        # suggest the version to use
+        if ! ((is_mode_auto)) ; then
+            local message_version_suggest
+            message_version_suggest="$( printf "$( eval_gettext "Your detected version of Nvidia drivers to select is '%s'." )" "$_NVIDIA_VERSION" )"
+
+            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                --title "Suggested Version" \
+                --msgbox "$message_version_suggest" \
+                0 0
+        fi
     fi
 
     # examples of results:
@@ -348,7 +359,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the drivers that you want to install and press enter to confirm." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the driver version and press enter to confirm." )" "" )"
 
 
 
@@ -363,7 +374,7 @@ interactive_ask_driver_version(){
             _id="${_id#-}"
 
             if [[ -z "$_id" ]] ; then
-                _id="uknown"
+                _id="unknown"
             fi
 
             case $_id in
@@ -405,6 +416,7 @@ interactive_ask_driver_version(){
 
         done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
             | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+
         # user canceled? uninstall and exit
         if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
             uninstall_driver

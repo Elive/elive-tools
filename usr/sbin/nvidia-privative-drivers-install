@@ -523,7 +523,7 @@ install_driver(){
     if laptop-detect ; then
 
         local message_brightness_force
-        message_brightness_force="$( printf "$( eval_gettext "Is the brightness feature working for you? To enable this option can cause problems if you don't need it, you can try to increase or decrease the brightness of your backlight with the hotkeys of your keyboard or from the Desktop gadget, if not works try to enable this option, you can experiment as much as you want by rebooting in Live mode." )" "" )"
+        message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? You should have it working without problems but if you press the keyboard hotkeys for the brightness and it doesn't change you must try the other option which can make it working using a hack but that can include some unstability. Select YES if you don't know." )" "" )"
 
         dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Brightness of the Screen" \

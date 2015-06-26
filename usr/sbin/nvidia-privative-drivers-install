@@ -549,12 +549,34 @@ install_driver(){
                 ;;
             1) # no
                 true
-                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1\n&"|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
                 ;;
         esac
     fi
 
     # - force brightness entry conf }}}
+    # force dpi size to 96 {{{
+
+    local message_dpi_force
+    message_dpi_force="$( printf "$( eval_gettext "Use the same DPI size as other Elive systems. By selecting YES your font sizes will be set to 96 DPI which is the common standard, otherwise it will use the detected dpi for your screen but this may result in an ugly configuradation of your fonts making your overall system to look more ugly. Select YES if you don't know." )" "" )"
+
+    dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+        --title "DPI defaults" \
+        --yesno "$message_dpi_force" \
+        0 0
+    ret="$?"
+
+    case "$ret" in
+        0|255|123) # yes, timeout, cancel
+            sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+            true
+            ;;
+        1) # no
+            true
+            ;;
+    esac
+
+    # - }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
     if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then

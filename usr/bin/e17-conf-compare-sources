@@ -1,0 +1,46 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local conf
+
+    # }}}
+
+    cd "$HOME/.e/e17"
+    cd standard
+
+    enlightenment_remote -save
+    sync
+
+    eet_conf_unpack_all_files
+
+    el_explain 0 "First run, saving a backup to compare later"
+    bkp save
+
+    while true
+    do
+        el_explain 0 "Done, change configurations and press Enter to compare"
+        read nothing
+
+        enlightenment_remote -save
+        sync
+
+        eet_conf_unpack_all_files
+
+        el_explain 0 "Comparing with meld..."
+
+        bkp meld
+
+        el_explain 0 "Saving a new snapshot..."
+        bkp save
+    done
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

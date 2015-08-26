@@ -10,9 +10,14 @@ main(){
     # pre {{{
     local conf
 
+    if ! el_check_variables "E_CONF_PROFILE" ; then
+        el_error "E_CONF_PROFILE variable is not set, it should point to 'standard' but it should be already set if you are previously in an E environment"
+        exit 1
+    fi
+
     # }}}
 
-    cd "$HOME/.e/e17/config/standard"
+    cd "$HOME/.e/e17/config/$E_CONF_PROFILE"
 
     enlightenment_remote -save
     sync

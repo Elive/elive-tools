@@ -25,6 +25,7 @@ main(){
     eet_conf_unpack_all_files
 
     el_explain 0 "First run, saving a backup to compare later"
+    bkp remove
     bkp save
 
     while true

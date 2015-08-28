@@ -477,13 +477,22 @@ el_dependencies_install(){
     cat > "${temp}" << EOF
 #!/bin/bash
 
-urxvt -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
 
 EOF
 
     chmod +x "${temp}"
     if [[ "$UID" = 0 ]] ; then
         bash "$temp"
+    else
+        if el_check_sudo_automated ; then
+            for i in 1 2 3
+            do
+                if sudo -H bash "$temp" ; then
+                    is_password_ok=1
+                    break
+                fi
+            done
     else
         if ! el_dependencies_check gksu ; then
             urxvt -e bash -c "su -c 'apt-get update' root"
@@ -498,6 +507,7 @@ EOF
                 break
             fi
         done
+        fi
 
         if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
             zenity --error

@@ -1,5 +1,14 @@
 #!/bin/bash
-. gettext.sh
+
+# gettext functions
+if [[ -x "/usr/bin/gettext.sh" ]] ; then
+    . gettext.sh
+else
+    # make it compatible
+    eval_gettext(){
+        echo "$@"
+    }
+fi
 
 if [[ -n "$ZSH_VERSION" ]] ; then
     # Note: seems like if you put a ? just after a char, cannot be sourced correctly from zsh

@@ -918,7 +918,11 @@ main(){
             ;;
         --check-is-mounted|-c)
             shift
-            check_is_mounted "$@"
+            if check_is_mounted "$@" ; then
+                exit 0
+            else
+                exit 1
+            fi
             ;;
         --mount|-m)
             shift

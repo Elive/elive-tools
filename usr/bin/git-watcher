@@ -1546,7 +1546,8 @@ options_main_interact(){
                 echo "$remote_fetching_working" > "$conf_remote_fetch_working_from_f"
             fi
 
-            el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
+            #el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
+            el_explain 0 "git pull --rebase \"$remote_fetching_working\" \"+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}\""
             #command git pull --rebase "$remote_fetching_working" "$branch_working"  # don't use this method, leads to diverged branches
             command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
             check_if_has_diverged
@@ -1580,7 +1581,8 @@ options_main_interact(){
             el_explain 0 "git checkout $branch_watch"
             command git checkout "$branch_watch"
 
-            el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
+            #el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
+            el_explain 0 "git pull --rebase \"$remote_fetching_watch\" \"+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}\""
             #command git pull --rebase "$remote_fetching_watch" "$branch_watch"  # buggy method
             command git pull --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
             check_if_has_diverged
@@ -2300,6 +2302,10 @@ main(){
         if ((is_header_show)) ; then
             el_error "Something wrong happened? seems like we cannot found your last position, so where is this commit then? $commit_id"
         else
+            # instead of just exit, give at least the options (if you need to update for example)
+            unset is_recount_position_needed
+            options_main_interact
+
             el_explain 0 "XXNo commitsXX found"
         fi
     fi

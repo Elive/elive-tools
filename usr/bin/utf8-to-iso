@@ -2,7 +2,7 @@
 source /usr/lib/elive-tools/functions
 el_make_environment
 
-el_check_dependencies iconv
+el_dependencies_check iconv
 
 # Nota: para editar en vim ese char number, si es el numero 828, hacer por ejemplo 828go
 

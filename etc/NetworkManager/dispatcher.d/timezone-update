@@ -5,7 +5,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local iface state conf timezone_last timezone connected_gateway connected_mac
+    local iface state conf timezone_last timezone connected_gateway connected_mac _CMDLINE
 
     # add a lock
     LOCKFILE="/tmp/.${USER}-$(basename $0).lock"
@@ -67,6 +67,7 @@ main(){
         exit
     fi
 
+    _CMDLINE="$(cat /proc/cmdline)"
 
     # }}}
 
@@ -98,7 +99,10 @@ main(){
     timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
 
     # get the bios mode
-    mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+    # not in live, so we can use the usb in different computers
+    if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "(boot=live)" ; then
+        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+    fi
 
     # get the location of our actual connection
     connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
@@ -215,11 +219,13 @@ EOF
     debconf-set-selections < "/tmp/debconf.$(basename $0)"
     rm -f "/tmp/debconf.$(basename $0)"
 
-    if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
-        if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-            if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                    if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+    service ntp stop 2>/dev/null 1>&2
+
+    if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+        if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+            if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                    if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
                         el_warning "can't set time from ntp servers"
                     fi
                 fi
@@ -227,6 +233,7 @@ EOF
         fi
     fi
 
+    service ntp restart 2>/dev/null 1>&2
 
 
 

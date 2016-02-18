@@ -20,6 +20,25 @@ if [ "$TERM" = "linux" ]; then
     echo -en "\e]PEa1cdcd" #cyan
     echo -en "\e]P7b6bdaa" #lightgrey
     echo -en "\e]PFdedede" #white
+
+    # Matrix style colors:
+    #
+    ##echo -en "\e]P789b83f" #white (dark cazador)
+    ##echo -en "\e]P73CEC3C" #white main (lighter matrix)
+    #echo -en "\e]P6bfffb2" #white hilighted (light almost white matrix)
+    #echo -en "\e]P738D838" #white (matrix)
+    #echo -en "\e]P698FF98" #white hilighted (matrix light)
+    #echo -en "\e]PC10CDCD" #blue
+    #echo -en "\e]P414FFFF" #darkblue
+    #echo -en "\e]P3E6B032" #brown
+    #echo -en "\e]PBFDDD39" #yellow
+    #echo -en "\e]P1F30B34" #darkred
+    #echo -en "\e]P9FF0E46" #red
+    #echo -en "\e]P5B1429F" #darkmagenta
+    #echo -en "\e]PDE456CD" #magenta
+    #echo -en "\e]P22ED86B" #darkgreen
+    #echo -en "\e]PA37FF7F" #green
+
     #clear #for background artifacting
 fi
 

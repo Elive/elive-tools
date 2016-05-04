@@ -183,7 +183,7 @@ EOF
             true
         else
             # nothing more to do, everything is fine
-            exit
+            exit 0
         fi
     fi
 

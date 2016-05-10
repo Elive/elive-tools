@@ -1930,7 +1930,7 @@ main(){
                 keyword_search="$OPTARG"
                 #options_extra_git_before="-i --grep $keyword_search $options_extra_git_before"
                 #el_array_member_add "-i --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
-                el_array_member_add "-i --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-i -E --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
                 ;;
             a)
                 # better to be case-insensitive

@@ -255,7 +255,15 @@ do_validate_sending(){
     message_popimap="$( printf "$( eval_gettext "Do you want to configure now the POP and IMAP options in your gmail account? You need them to be enabled." )" )"
     if $guitool --question --text="$message_popimap" ; then
         /etc/alternatives/x-www-browser "https://mail.google.com/mail/#settings/fwdandpop" &
-        sleep 15
+        sleep 25
+    fi
+
+    # configure less-secure apps
+    local message_lesssecure
+    message_lesssecure="$( printf "$( eval_gettext "You may probably need also to set your google account to allow applications considered less secure. Enable it now?" )" )"
+    if $guitool --question --text="$message_lesssecure" ; then
+        /etc/alternatives/x-www-browser "https://myaccount.google.com/security?pli=1" &
+        sleep 20
     fi
 
 

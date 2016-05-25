@@ -25,6 +25,11 @@ main(){
     state="$2"
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
+    # set some variables for compatibility expectation if we run it from commandline
+    if [[ -z "$state" ]] ; then
+        state="up"
+    fi
+
     el_dependencies_check "ip,arp,showmytimezone,ping"
     #el_check_variables "iface,state"
 
@@ -38,6 +43,7 @@ main(){
     case "$iface" in
         -f|--force)
             is_force=1
+            # this is an ugly hack, iface is the first paramter but if we call the tool from cli it is "-f" instead
             unset iface
             ;;
         -c|--clean)
@@ -96,16 +102,20 @@ main(){
     fi
 
     # get the last location
-    timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
+    if ! ((is_force)) ; then
+        timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
+    fi
 
     # get the bios mode
     # not in live, so we can use the usb in different computers
-    if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "(boot=live)" ; then
+    if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "(boot=live)" && ((is_force)) ; then
         mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
     fi
 
     # get the location of our actual connection
-    connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+    if ! ((is_force)) ; then
+        connected_timezone="$( grep "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+    fi
 
     # get the ssid identifier
     connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | tr ' ' '\n' | grep ESSID | sed -e 's|ESSID:"||g' -e 's|".*$||g' | head -1 )"
@@ -160,7 +170,7 @@ main(){
 
         # save the mode to use
         if [[ -n "$mode_bios" ]] ; then
-            sed -e "/^bios mode:::/d" "$conf"
+            sed -i "/^bios mode:::/d" "$conf"
             echo "bios mode:::$mode_bios" >> "${conf}"
 
             ed -s /etc/adjtime << EOF
@@ -177,15 +187,16 @@ EOF
 
 
     # compare our last location with our actual one
-    if [[ "${timezone}" = "${timezone_last}" ]] ; then
-        if ((is_force)) || grep -qs "boot=live" /proc/cmdline ; then
-            # if we force or we are in live mode (always update times in live mode! because we reboot and the timezones files in /etc are gone)
-            true
-        else
-            # nothing more to do, everything is fine
-            exit 0
-        fi
-    fi
+    # note: deprecated code, we still want to update some confs in any cases
+    #if [[ "${timezone}" = "${timezone_last}" ]] ; then
+        #if ((is_force)) || grep -qs "boot=live" /proc/cmdline ; then
+            ## if we force or we are in live mode (always update times in live mode! because we reboot and the timezones files in /etc are gone)
+            #true
+        #else
+            ## nothing more to do, everything is fine
+            #exit 0
+        #fi
+    #fi
 
     #
     # We changed our location
@@ -206,61 +217,67 @@ EOF
     fi
 
 
-    rm -f /etc/localtime
-    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
-    echo "$_AREA/$_ZONE" > /etc/timezone
+    if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
+        rm -f /etc/localtime
+        ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+        echo "$_AREA/$_ZONE" > /etc/timezone
 
-    # call tzdata and update things
-    # debconf set configurations
-    cat > "/tmp/debconf.$(basename $0)" << EOF
+        # call tzdata and update things
+        # debconf set configurations
+        cat > "/tmp/debconf.$(basename $0)" << EOF
 tzdata tzdata/Areas select ${_AREA}
 tzdata tzdata/Zones/${_AREA} select ${_ZONE}
 EOF
-    debconf-set-selections < "/tmp/debconf.$(basename $0)"
-    rm -f "/tmp/debconf.$(basename $0)"
+        debconf-set-selections < "/tmp/debconf.$(basename $0)"
+        rm -f "/tmp/debconf.$(basename $0)"
 
-    service ntp stop 2>/dev/null 1>&2
+        # update the time from a server
+        service ntp stop 2>/dev/null 1>&2
 
-    if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-        if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
-            if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                    if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                        el_warning "can't set time from ntp servers"
+        if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+            if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                    if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                        if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                            el_warning "can't set time from ntp servers"
+                        fi
                     fi
                 fi
             fi
         fi
+
+        service ntp restart 2>/dev/null 1>&2
+
+
+
+        # which mode of bios we have? utc or localtime?
+        mode_bios="$(head -3 /etc/adjtime  | tail -1)"
+
+        # finally, save the time to hwclock if needed
+        case $mode_bios in
+            LOCAL)
+                el_explain 0 "Saving time using __localtime__"
+
+                hwclock -w --localtime
+                ;;
+            UTC|*)
+                el_explain 0 "Saving time using __utc__"
+
+                hwclock -w --utc
+                ;;
+        esac
+
+
+        # say something
+        el_explain 0 "Changed Timezone to __${timezone}__, time is now at:"
+        date
+
     fi
 
-    service ntp restart 2>/dev/null 1>&2
-
-
-
-    # which mode of bios we have? utc or localtime?
-    mode_bios="$(head -3 /etc/adjtime  | tail -1)"
-
-    # finally, save the time to hwclock if needed
-    case $mode_bios in
-        LOCAL)
-            el_explain 0 "Saving time using __localtime__"
-
-            hwclock -w --localtime
-            ;;
-        UTC|*)
-            el_explain 0 "Saving time using __utc__"
-
-            hwclock -w --utc
-            ;;
-    esac
-
-
-    # say something
-    el_explain 0 "Changed Timezone to __${timezone}__, time is now at:"
-    date
-
-
     # update to our last location
+    if ((is_force)) ; then
+        sed -i "/^${connected_mac}:::/d" "$conf"
+    fi
     if ! grep -q "^${connected_mac}:::" "${conf}" ; then
         # but remember it only if we have an interface
         # TODO mobile connections should be never saved, since they moves!
@@ -274,8 +291,10 @@ EOF
     fi
 
 
-    sed -i '/^last:::.*$/d' "${conf}"
-    echo "last:::${timezone}" >> "${conf}"
+    if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
+        sed -i '/^last:::.*$/d' "${conf}"
+        echo "last:::${timezone}" >> "${conf}"
+    fi
 
 }
 

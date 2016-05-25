@@ -81,9 +81,9 @@ main(){
     # - DEMO outputs }}}
 
 
-    # try with geoplugin (fast)
+    # try with freegeoip (good but slow, reliable, which is more important)
     if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        data="$( curl -s --max-time 10 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
@@ -91,9 +91,9 @@ main(){
         fi
     fi
 
-    # try with freegeoip (good but slow, and sometimes it dont even works)
+    # try with geoplugin (fast)
     if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 8 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+        data="$( curl -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then

@@ -2078,6 +2078,12 @@ main(){
         exit
     fi
 
+    # check if we have checkoutable the watching branch too
+    if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qs "$branch_watch" ; then
+        el_explain 0 "Pre-checking out: __${branch_watch}__"
+        command git checkout "${branch_watch}"
+        command git checkout "${branch_working}"
+    fi
 
     # }}}
 

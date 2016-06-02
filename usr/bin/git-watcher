@@ -199,28 +199,37 @@ shared_messages_create(){
     el_explain 0 "Other carbon-based life forms:"
     echo -en "${el_c_g}"
 
-    if [[ "$( ls -1 "${shared_d}" | grep -v "$git_username" | wc -l )" -gt 1 ]] ; then
-        ls -1 "${shared_d}" | grep -v "$git_username"
-        echo -en "${el_c_n}"
+    if [[ -z "$shared_d" ]] ; then
+        # if we are not running on shared session, just insert an email
+        echo -e "\n${el_c_g}Type a destination email:${el_c_n}"
+        read _entity_email
 
-        echo -e "\nType an entity:"
-        read _entity
     else
-        _entity="$( ls -1 "${shared_d}" | grep -v "$git_username" | tail -1 )"
-        el_explain 0 "Messaging to the XX${_entity}XX carbon-based life form"
-    fi
+        if [[ "$( ls -1 "${shared_d}" | grep -v "$git_username" | wc -l )" -gt 1 ]] ; then
+            ls -1 "${shared_d}" | grep -v "$git_username"
+            echo -en "${el_c_n}"
 
-    if ! [[ -d "${shared_d}/$_entity" ]] ; then
-        el_error "Carbon-based life form doesn't exist, are you in the correct planet?"
-        echo -e "\nType an entity:"
-        read _entity
+            echo -e "\nType an entity:"
+            read _entity
+        else
+            _entity="$( ls -1 "${shared_d}" | grep -v "$git_username" | tail -1 )"
+            el_explain 0 "Messaging to the XX${_entity}XX carbon-based life form"
+        fi
 
         if ! [[ -d "${shared_d}/$_entity" ]] ; then
-            return
+            el_error "Carbon-based life form doesn't exist, are you in the correct planet?"
+            echo -e "\nType an entity:"
+            read _entity
+
+            if ! [[ -d "${shared_d}/$_entity" ]] ; then
+                return
+            fi
         fi
+
+        # get email of entity
+        _entity_email="$( cat "${shared_d}/${_entity}/email.txt" | grep "@" )"
     fi
 
-    _entity_email="$( cat "${shared_d}/${_entity}/email.txt" | grep "@" )"
     if ! echo "$_entity_email" | grep -qs "$_entity_email" ; then
         el_error "$_entity has not a valid email?: $_entity_email"
     fi
@@ -238,6 +247,36 @@ shared_messages_create(){
     echo -e "\nMessage to include?  (blank = no message)"
     read -e _mark_message
 
+    # get the remote working repo url to include in the email {{{
+    if [[ -z "$remote_working" ]] ; then
+        if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+            echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
+            command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+
+            echo -e "\nInsert remote repo:"
+            read -e remote_working
+
+            # translate remote-id to url, which is what we need
+            if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
+                remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
+                # remove extra leading blank chars
+                read -r remote_working <<< "$remote_working"
+            fi
+
+
+            # small check, just in case
+            if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
+                el_error "Have you inserted the identifier instead of the remote URL? mmh... please do it again:"
+                read -e remote_working
+            fi
+        else
+            remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
+        fi
+
+        #echo "$remote_working" > "$conf_remote_work_from_f"
+    fi
+    # }}}
+
     # send email and set specific values
     case "$_message_option" in
         a|A)
@@ -245,16 +284,16 @@ shared_messages_create(){
 
             el_explain 0 "Sending email..."
 
-            email-sender -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #A961FC;\">${git_username}</i> wants to ask you:" <<EOF
+            email-sender -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants to ask you:" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
 
-To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
+<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -264,7 +303,7 @@ EOF
 
             el_explain 0 "Sending email..."
 
-            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #A961FC;\">${git_username}</i> wants you to consider backporting this commit into ${branch_working}" <<EOF
+            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants you to consider backporting this commit into ${branch_working}" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
@@ -272,8 +311,8 @@ $_mark_message
 To take your <i>Time-Traveling Capsule</i> you should:
 
 <ul>
-<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${working_directory_d//#//})</i></li>
+<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 
 Or without the -g option you can just read your capsules in any moment
@@ -288,15 +327,17 @@ EOF
             ;;
     esac
 
-    # create mark
-    mkdir -p "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}"
+    # create shared marks
+    if ((is_shared)) ; then
+        mkdir -p "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}"
 
-    if [[ -n "$_mark_message" ]] ; then
-        echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
+        if [[ -n "$_mark_message" ]] ; then
+            echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
+        fi
+
+        # mark position too
+        echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/position.txt"
     fi
-
-    # mark position too
-    echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/position.txt"
 
 }
 
@@ -770,7 +811,7 @@ go_to_commit(){
 
                 el_explain 0 "Sending email..."
 
-                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #A961FC;\">${git_username}</i> thinks that:" <<EOF
+                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> thinks that:" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
@@ -779,11 +820,11 @@ From your question about:
 $(cat "$dir/message.txt")
 </ul>
 
-To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
+<li>copy and run the command:$  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -889,7 +930,7 @@ travel_restore(){
 
                 el_explain 0 "Sending email..."
 
-                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #A961FC;\">${git_username}</i> thinks that:" <<EOF
+                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> thinks that:" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
@@ -898,11 +939,11 @@ From your question about:
 $(cat "$dir/message.txt")
 </ul>
 
-To answer him you need to take a <i>Time-Traveling Capsule</i> to join its position, for that:
+To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>go to your git repo for '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>$ <strong>$(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
+<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -1432,6 +1473,7 @@ options_main_interact(){
     option_show "m"         "mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
     option_show "g"         "Go to commit id"
+    option_show "G"         "Go to a number of commits"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
 
@@ -1528,6 +1570,35 @@ options_main_interact(){
 
             # go back to main menu
             $FUNCNAME
+
+            ;;
+        G)  # go to a jumping mode commit
+
+            echo -e "\n${el_c_g}Type the commit number to jump:${el_c_n}"
+            read -e _n
+
+            commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
+
+            # mark our new position
+            echo "$commit_id" > "$conf_commit_last_f"
+
+            # count to the actual jump
+            counter="$_n"
+            # always remove one, because we return
+            counter="$(( $counter + -1 ))"
+
+            # exit loop if no remaining commits
+            if [[ "$counter" -le 0 ]] ; then
+                el_explain 0 "You cannot go before the creation of the universe!"
+                sleep 2
+            fi
+
+            # cleanup
+            clear_screen default
+
+            # go back to positioning loop
+            is_recount_position_needed=1
+            return
 
             ;;
         u)  # update working branch

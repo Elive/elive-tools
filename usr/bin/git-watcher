@@ -46,6 +46,11 @@ exit_cleanups(){
     else
         el_explain 0 "Session is not shared"
     fi
+
+    # do we had another branch outside git-watcher? restore it
+    if [[ -n "$branch_working_prev" ]] ; then
+        command git checkout "$branch_working_prev"
+    fi
 }
 
 el_add_on_exit exit_cleanups
@@ -293,7 +298,7 @@ To know more you need to take a <i>Time-Traveling Capsule</i> to join its univer
 
 <ul>
 <li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
-<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} ${tool_arguments} -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -312,7 +317,7 @@ To take your <i>Time-Traveling Capsule</i> you should:
 
 <ul>
 <li>cd into your git copy of: '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 
 Or without the -g option you can just read your capsules in any moment
@@ -370,7 +375,7 @@ scan_travels(){
     # pre {{{
     el_debug
     if ! ((is_shared)) ; then
-        el_explain 3 "Skipping reading capsules, this watcher is not shared"
+        el_explain 0 "Skipping scan for capsules, this watcher is not shared"
         return
     fi
 
@@ -824,7 +829,7 @@ To know more you need to take a <i>Time-Traveling Capsule</i> to join its univer
 
 <ul>
 <li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
-<li>copy and run the command:$  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>copy and run the command:$  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -943,7 +948,7 @@ To know more you need to take a <i>Time-Traveling Capsule</i> to join its univer
 
 <ul>
 <li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
-<li>copy and run the command: $  <strong>git checkout ${branch_working} ; $(basename $0) $tool_arguments -g ${commit_id}</strong></li>
+<li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -1452,7 +1457,7 @@ options_main_interact(){
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
     if ((is_traveling)) ; then
-        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}transported${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$_counter_show${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
+        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}parallel reality${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$_counter_show${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
     else
         echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$_counter_show/$counter_total]${el_c_b}-----${el_c_n}"
     fi
@@ -1957,6 +1962,7 @@ usage_show(){
     echo -e ""
     echo -e "Options:"
     option_show "-b" "Branch that you want to track changes"
+    option_show "-w" "Branch working from (forced checkout on it)"
     option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
     option_show "-a" "Author (committer) of commits to search, useful for track changes from somebody (name/email, one word)"
     option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
@@ -1992,10 +1998,13 @@ main(){
     # }}}
     # input parameters {{{
 
-    while getopts "b:k:a:f:g:" opt ; do
+    while getopts "b:w:k:a:f:g:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
+                ;;
+            w)
+                branch_working="$OPTARG"
                 ;;
             k)
                 keyword_search="$OPTARG"
@@ -2082,6 +2091,12 @@ main(){
     if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qs "$branch_watch" ; then
         el_explain 0 "Pre-checking out: __${branch_watch}__"
         command git checkout "${branch_watch}"
+        command git checkout "${branch_working}"
+    fi
+    # force checkout in the working branch
+    if ! [[ "$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )" = "$branch_working" ]] ; then
+        branch_working_prev="$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )"
+        el_explain 0 "checking on: __${branch_working}__"
         command git checkout "${branch_working}"
     fi
 

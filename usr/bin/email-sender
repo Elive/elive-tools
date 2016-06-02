@@ -302,6 +302,14 @@ do_configure(){
 
     if ((is_configure_force)) ; then
         unset email_account email_password
+    else
+        # email was already set and working, so do not configure it again
+        if [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; then
+            el_explain 2 "email was already configured and working, skipping to reconfigure it"
+            source "$conf"
+            return 0
+        fi
+
     fi
 
     # }}}

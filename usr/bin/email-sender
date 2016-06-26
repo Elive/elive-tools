@@ -458,7 +458,7 @@ main(){
     mkdir -p "$TMPDIR"
     export TMPDIR
 
-    if ! el_verify_internet ; then
+    if ! el_verify_internet 2>/dev/null ; then
         el_error "$(basename $0): You need to be connected to internet in order to send emails"
         exit 1
     fi

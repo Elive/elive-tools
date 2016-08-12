@@ -1318,11 +1318,13 @@ el_confirm(){
     # pre {{{
     local reply question flag_glob
 
-    if shopt extglob | grep -q "extglob.*off" ; then
-        flag_glob=1
-    fi
+    if [[ -n "$BASH_VERSION" ]] ; then
+        if shopt extglob | grep -q "extglob.*off" ; then
+            flag_glob=1
+        fi
 
-    shopt -s extglob
+        shopt -s extglob
+    fi
     question="$1"
 
     el_check_variables "question"

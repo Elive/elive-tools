@@ -427,17 +427,17 @@ do_work(){
     # go back
     cd "$target"
 
-    if el_confirm "Do you want to run a meld with the original directory?" ; then
-        if ! el_dependencies_check meld ; then
-            if ! el_dependencies_install meld ; then
-                el_error "Please install required dependencies"
-            fi
-        fi
-        meld "${tmpdir}" .
-    fi
-
     if el_confirm "Delete the working state?" ; then
         $SUDO_MODE rm -rf "${tmpdir}"
+    else
+        if el_confirm "Do you want to run a meld with the original directory?" ; then
+            if ! el_dependencies_check meld ; then
+                if ! el_dependencies_install meld ; then
+                    el_error "Please install required dependencies"
+                fi
+            fi
+            meld "${tmpdir}" .
+        fi
     fi
 
 }

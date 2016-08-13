@@ -12,9 +12,10 @@ read -e message
 git commit -am "$message"
 
 if el_confirm "Push now?" ; then
-    echo ""
+
     result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
     echo "$result"
+    echo ""
 
     if echo "$result" | grep -qs "Everything up-to-date" ; then
         el_warning "nothing pushed"

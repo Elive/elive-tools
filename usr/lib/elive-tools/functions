@@ -1176,6 +1176,31 @@ el_debug(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_info
+#   DESCRIPTION:  show info messages | (always)
+#    PARAMETERS:  message
+#===============================================================================
+el_info(){
+    # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
+    # }}}
+    # warning {{{
+
+    if [[ -n "$1" ]] ; then
+        # note: info messages are not errors so we don't want them in the stderr
+        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+            echo -e "${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" # 1>&2
+        else
+            echo -e "${el_c_c}$@${el_c_n}" # 1>&2
+        fi
+    fi
+
+    # }}}
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_warning
 #   DESCRIPTION:  show warning messages | EL_DEBUG -ge 1
 #    PARAMETERS:  optional (message)

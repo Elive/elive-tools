@@ -157,7 +157,7 @@ adduserelive(){
     # create user
     #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
     #$USERADD -m $username 2>/tmp/.errormessage || errorexit
-    $ADDUSER --force-badname --disabled-password --gecos 'Elive User' "$username" 2>/tmp/.errormessage || errorexit
+    $ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
 
     # set password
     if chpasswd -h 2>&1 | grep -iq md5 ; then

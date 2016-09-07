@@ -1489,10 +1489,11 @@ options_main_interact(){
     fi
     option_show "z"         "Undo last commit in your working branch"
     option_show "c"         "compile (make), useful for check if new code is compatible"
-    option_show "C"         "set a specific Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
-    if [[ -n "$user_input_command" ]] ; then
-        option_show "r"     " > Run:  $user_input_command"
-    fi
+    option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
+    ## not needed: we moved it to C
+    #if [[ -n "$user_input_command" ]] ; then
+        #option_show "r"     " > Run:  $user_input_command"
+    #fi
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit"
@@ -1849,14 +1850,12 @@ options_main_interact(){
             $FUNCNAME
             ;;
         C)  # command specific
-            echo -e "\nPlease enter the command that you want to use:"
-            echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
-            read -e user_input_command
+            if [[ -z "$user_input_command" ]] ; then
+                echo -e "\nPlease enter the command that you want to use:"
+                echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
+                read -e user_input_command
+            fi
 
-            # return back to main menu
-            $FUNCNAME
-            ;;
-        r)  # run specific command
             if [[ -n "$user_input_command" ]] ; then
                 $user_input_command
                 el_speak_text "run finished"

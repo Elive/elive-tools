@@ -4,6 +4,7 @@ el_make_environment
 
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
+# TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list)
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
@@ -1276,8 +1277,12 @@ do_cherry_pick_menu(){
 
             ;;
         c)
-            command git cherry-pick --continue
-            $FUNCNAME
+            if command git cherry-pick --continue ; then
+                # return to the main menu since we continued successfully
+                true
+            else
+                $FUNCNAME
+            fi
             ;;
         m)
             if grep -qs "mergetool.*meld-auto" "$HOME/.gitconfig" ; then

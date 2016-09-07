@@ -1278,6 +1278,14 @@ do_cherry_pick_menu(){
             ;;
         c)
             if command git cherry-pick --continue ; then
+                # store actual position for future calls of this tool
+                echo "$commit_id" > "$conf_commit_last_f"
+
+                # make a list of the commits that we have already imported
+                if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
+                    echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
+                fi
+
                 # return to the main menu since we continued successfully
                 true
             else
@@ -1376,6 +1384,13 @@ do_cherry_pick(){
 
         # store actual position for future calls of this tool
         echo "$commit_id" > "$conf_commit_last_f"
+
+        # make a list of the commits that we have already imported
+        if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
+            echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
+        fi
+
+        el_debug "stored '$commit_id' to '$conf_commit_last_f'"
     else
         el_error "Oops, cherry-pick failed! select an option now:"
 
@@ -1505,6 +1520,12 @@ options_main_interact(){
     option_show "Q"         "Quit!"
     echo -e "${el_c_b}================================================================${el_c_n}"
 
+    if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" 2>/dev/null ; then
+        echo -e ""
+        el_explain 0 "__Note__: commit __${commit_id}__ was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" | awk '{print $2}' )__"
+        echo -e ""
+    fi
+
     check_if_has_diverged
 
     # select an option {{{
@@ -1557,6 +1578,7 @@ options_main_interact(){
 
             # mark our new position
             echo "$commit_id" > "$conf_commit_last_f"
+            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
             # set the counter to count another commit remaining
             counter="$(( $counter - 1 ))"
@@ -1592,6 +1614,7 @@ options_main_interact(){
 
             # mark our new position
             echo "$commit_id" > "$conf_commit_last_f"
+            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
             # count to the actual jump
             counter="$_n"
@@ -2116,6 +2139,7 @@ main(){
     mkdir -p "$conf_repo_d/ttc"
 
     conf_commit_last_f="${conf_repo_d}/last_commit_tracked"
+    conf_imported_commits_list_f="${conf_repo_d}/commits_imported_list"
     conf_commit_last_progress_f="${conf_repo_d}/last_commit_tracked_progress"
     conf_remote_fetch_working_from_f="${conf_repo_d}/remote_fetching_working_from"
     conf_remote_fetch_watch_from_f="${conf_repo_d}/remote_fetching_watch_from"

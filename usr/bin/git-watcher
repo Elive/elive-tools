@@ -4,7 +4,7 @@ el_make_environment
 
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
-# TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list)
+# TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list) -- or at least list all the commits that we cherry-picked, if they are matched when we enter on them, show a warning message saying that we already cherry-picked it to FOO (mark this too)
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
@@ -1494,7 +1494,7 @@ options_main_interact(){
     fi
     option_show "z"         "Undo last commit in your working branch"
     option_show "c"         "compile (make), useful for check if new code is compatible"
-    option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart )"
+    option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart)"
     ## not needed: we moved it to C
     #if [[ -n "$user_input_command" ]] ; then
         #option_show "r"     " > Run:  $user_input_command"
@@ -1862,7 +1862,7 @@ options_main_interact(){
             fi
 
             if [[ -n "$user_input_command" ]] ; then
-                $user_input_command
+                bash -c "$user_input_command"
                 el_speak_text "run finished"
             fi
 

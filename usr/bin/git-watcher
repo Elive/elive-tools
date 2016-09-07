@@ -5,6 +5,7 @@ el_make_environment
 # TODO: alternative to bkp that should be faster, try git stage
 # FIXME: add variable checkers everywhere neeeded
 # TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list) -- or at least list all the commits that we cherry-picked, if they are matched when we enter on them, show a warning message saying that we already cherry-picked it to FOO (mark this too)
+# TODO: add el_package_*... like in the elive installer to check for newer version, note: the warning can be annoying if displayed multiple times
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
@@ -594,7 +595,7 @@ conf_share_setup(){
                 _dropbox_dir="$shared_main_d"
             fi
 
-            echo -e "\nTo be synced with others we use Dropbox, please insert the full path of the main shared directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
+            echo -e "\nTo be synced with others we use Dropbox, please insert the path of your main shared dropbox directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
             read -e shared_main_d
             # remove extra leading blank chars
             read -r shared_main_d <<< "${shared_main_d%/}"
@@ -1522,7 +1523,7 @@ options_main_interact(){
 
     if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" 2>/dev/null ; then
         echo -e ""
-        el_explain 0 "__Note__: commit __${commit_id}__ was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" | awk '{print $2}' )__"
+        el_explain 0 "__Note__: this commit was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" | awk '{print $2}' )__"
         echo -e ""
     fi
 

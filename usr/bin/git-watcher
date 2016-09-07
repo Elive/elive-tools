@@ -1285,6 +1285,9 @@ do_cherry_pick_menu(){
                 # make a list of the commits that we have already imported
                 if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
                     echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
+                    if ((is_shared)) ; then
+                        echo "$commit_id ${branch_working}" >> "${conf_imported_commits_list_shared_f}"
+                    fi
                 fi
 
                 # return to the main menu since we continued successfully
@@ -1389,6 +1392,9 @@ do_cherry_pick(){
         # make a list of the commits that we have already imported
         if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
             echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
+            if ((is_shared)) ; then
+                echo "$commit_id ${branch_working}" >> "${conf_imported_commits_list_shared_f}"
+            fi
         fi
 
         el_debug "stored '$commit_id' to '$conf_commit_last_f'"
@@ -1521,9 +1527,9 @@ options_main_interact(){
     option_show "Q"         "Quit!"
     echo -e "${el_c_b}================================================================${el_c_n}"
 
-    if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" 2>/dev/null ; then
+    if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" "${conf_imported_commits_list_shared_f}"  2>/dev/null ; then
         echo -e ""
-        el_explain 0 "__Note__: this commit was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" | awk '{print $2}' )__"
+        el_explain 0 "__Note__: this commit was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" "${conf_imported_commits_list_shared_f}" | tail -1 | awk '{print $2}' )__"
         echo -e ""
     fi
 
@@ -2280,6 +2286,7 @@ main(){
 
         shared_d="$conf_repo_d/shared"
         shared_personal_d="$shared_d/$git_username"
+        conf_imported_commits_list_shared_f="${shared_d}/commits_imported_list"
 
         # start the share daemon
         run_dropbox

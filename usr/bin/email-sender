@@ -247,7 +247,7 @@ do_validate_sending(){
 
 
     local message_cannot_send_email
-    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account, is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
+    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account. Is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
     $guitool --warning --text="$message_cannot_send_email"
 
     # configure pop / imap?
@@ -260,7 +260,7 @@ do_validate_sending(){
 
     # configure less-secure apps
     local message_lesssecure
-    message_lesssecure="$( printf "$( eval_gettext "You may probably need also to set your google account to allow applications considered less secure. Enable it now?" )" )"
+    message_lesssecure="$( printf "$( eval_gettext "You may need to set your google account to allow applications which are considered less secure. Enable it now?" )" )"
     if $guitool --question --text="$message_lesssecure" ; then
         /etc/alternatives/x-www-browser "https://myaccount.google.com/security?pli=1" &
         sleep 20
@@ -315,7 +315,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails you need first to configure your email. Do you want to continue?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails you first need to configure your email. Do you want to continue?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then
@@ -334,7 +334,7 @@ do_configure(){
 
 
         local message_invalid
-        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a gmail account, for example '%s', please try again." )" "john.smith@gmail.com" )"
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', please try again." )" "john.smith@gmail.com" )"
 
         # verify username inserted
         if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then

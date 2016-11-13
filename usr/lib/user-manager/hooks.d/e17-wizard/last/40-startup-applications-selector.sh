@@ -199,7 +199,7 @@ EOF
 
     # gdu
     if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
-        if zenity --question --text="$( eval_gettext "You have not included Gdu Notification, this one is useful for alert you in case that it is discovered an error in your hard disk, are you sure that you want to disable it ?" )" ; then
+        if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case there are errors discovered on your hard disk. Are you sure you want to disable it ?" )" ; then
             true
         else
             # re-enable it

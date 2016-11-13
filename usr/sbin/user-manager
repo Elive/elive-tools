@@ -66,7 +66,7 @@ messageuserdeleted(){
 ###########################################################################
 passverify(){
     if [[ "$userpass" != "$repeatpass" ]] ; then
-        $guitool --error --text="$( eval_gettext "The passwords are not equals, please try again" )"
+        $guitool --error --text="$( eval_gettext "The passwords are not the same, please try again" )"
         passstep
     fi
 }
@@ -200,7 +200,7 @@ deluserelive(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user that you want to delete" )" || echo cancel )"
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to delete" )" || echo cancel )"
 
     [[ "$username" = "cancel" ]] && exit 1
 
@@ -243,7 +243,7 @@ changepass(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select an user for change its password" )" || echo cancel )"
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user in which to change its password" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
     passstep

@@ -109,7 +109,7 @@ main(){
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card 0|g" /usr/share/alsa/alsa.conf
         fi
 
-        $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system, we suggest you to try with a newer kernel version to see if can have newer drivers for it." )"
+        $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system. We suggest you to try a different kernel version to see if it has drivers for it." )"
 
         exit
     fi
@@ -151,7 +151,7 @@ main(){
 
     # user's conf
     if [[ -e "$DHOME/.shared-home" ]] ; then
-        if $guitool --question --text="$( eval_gettext "Your home is shared with another system, if you try to configure your audio card it may not work in your other system, on such case you will need to remove the .asoundrc file later. Do you want to continue?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Your home is shared with another system, if you try to configure your audio card it may not work in your other system. In such a case you will need to remove the .asoundrc file later. Do you want to continue?" )" ; then
             echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
             echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
         fi
@@ -210,7 +210,7 @@ EOF
         fi
 
         if ! ((is_quiet_mode)) ; then
-            $guitool --info --text="$( eval_gettext "Your audio card has been configured. To raise and decrease the volume use your keyboard hotkeys, if they don't works you can configure them in your Enlightenment hotkey preferences." )"
+            $guitool --info --text="$( eval_gettext "Your audio card has been configured. To raise and lower the volume, use your keyboard hotkeys. If they do not work you can configure them in your Enlightenment hotkey preferences." )"
         fi
 
     fi

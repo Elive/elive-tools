@@ -18,6 +18,10 @@ main(){
         killall -9 tumblerd 2>/dev/null 1>/dev/null
     #fi
 
+    # make sure that previous commands has perfectly finished, and:
+    # make sure that all the syncs are finished before to try to umount, to avoid errors umounting
+    sync
+
 }
 
 #

@@ -113,6 +113,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # from enlightenment values {{{
     local display e_ipc_socket
 
+    # unset XAUTHORITY if is not from our user (bugs when we "su otheruser")
+    if [[ -n "$XAUTHORITY" ]] && [[ "$XAUTHORITY" != "$DHOME/$USER/"* ]] ; then
+        unset XAUTHORITY
+    fi
+
     # if we are in console (out of X) we should always exit
     if ((is_console)) ; then
         return

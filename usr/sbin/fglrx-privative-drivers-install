@@ -210,7 +210,7 @@ interactive_ask_privative(){
                 else
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "To better use the free drivers please reboot and select the 'only free drivers' option. Due to compatibility reasons the radeon module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of radeon from the boot parameter options." )" "" )"
+                    message_onlyfree="$( printf "$( eval_gettext "To use the free drivers please reboot and select the 'Only free drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "Free Driver Option" \
@@ -244,7 +244,7 @@ interactive_ask_driver_version(){
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
         local message_select_driver
-        message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the drivers that you want to install and press enter to confirm." )" "" )"
+        message_select_driver="$( printf "$( eval_gettext "Use the Spacebar to select the driver that you want to install, then press Enter to confirm." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is problably the one that you need." )" "$_FGLRX_VERSION" )"
@@ -442,7 +442,7 @@ install_driver(){
         if ! lsmod | grep -qs fglrx ; then
             el_error "Unable to load FGLRX module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the FGLRX module, maybe the compilation has failed, the device is busy, or the device is not found, we suggest to reboot and try with a different kernel version, specially if is an old version of the fglrx drivers it will require an older version of the kernel." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the FGLRX driver will be require from an older kernel." )" "" )"
         fi
 
 
@@ -482,7 +482,7 @@ install_driver(){
     # - load module }}}
     # inform {{{
     local message_remember
-    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience unstability issues of any kind, it can be due to this drivers, using the free drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
+    message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the free drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Ready to be run" \

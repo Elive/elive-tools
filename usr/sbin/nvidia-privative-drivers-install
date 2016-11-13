@@ -359,7 +359,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Use the spacebar for select the driver version and press enter to confirm." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Use the Spacebar to select the driver version, then press Enter to confirm." )" "" )"
 
 
 
@@ -558,7 +558,7 @@ install_driver(){
     # force dpi size to 96 {{{
 
     local message_dpi_force
-    message_dpi_force="$( printf "$( eval_gettext "Use the same DPI size as other Elive systems. By selecting YES your font sizes will be set to 96 DPI which is the common standard, otherwise it will use the detected dpi for your screen but this may result in an ugly configuradation of your fonts making your overall system to look more ugly. Select YES if you don't know." )" "" )"
+    message_dpi_force="$( printf "$( eval_gettext "Use the same DPI size as other Elive systems. By selecting YES your font size will be set to 96 DPI, which is the common standard. Otherwise it will autodetect the dpi for your screen. This may result in an odd configuration of your fonts, making your overall system to look ugly. Select YES if you don't know." )" "" )"
 
     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
         --title "DPI defaults" \
@@ -678,7 +678,7 @@ install_driver(){
         if ! lsmod | grep -qs nvidia ; then
             el_error "Unable to load NVIDIA module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "We are unable to load the NVIDIA module, maybe the compilation has failed, the device is busy, or the device is not found, we suggest to reboot and try with a different kernel version, specially if is an old version of the NVIDIA drivers it will require an older version of the kernel." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the NVIDIA driver will be require from an older kernel." )" "" )"
         fi
 
 

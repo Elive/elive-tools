@@ -235,7 +235,7 @@ do_validate_sending(){
             # save our conf because we know that it works now
             echo "email_account=\"$email_account\"" >> "$conf"
             echo "email_password=\"$email_password\"" >> "$conf"
-            echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
+            echo "# References that needs to be updated: $HOME/.mutt/accounts/elive-sender" >> "$conf"
 
             chmod og-rwx "${conf}"
 
@@ -278,7 +278,9 @@ do_validate_sending(){
         unset email_account email_password
     else
         # just ask if we want to continue
-        if ! $guitool --question --text="$message_try_or_exit" ; then
+        if $guitool --question --text="$message_try_or_exit" ; then
+            return 0
+        else
             exit 1
         fi
     fi
@@ -393,7 +395,7 @@ do_configure(){
 
             #echo "email_account=\"$email_account\"" >> "$conf"
             #echo "email_password=\"$email_password\"" >> "$conf"
-            #echo "# References that needs to be updated: $HOME/.mutt/accounts/email-sender" >> "$conf"
+            #echo "# References that needs to be updated: $HOME/.mutt/accounts/elive-sender" >> "$conf"
             #;;
 
         *)

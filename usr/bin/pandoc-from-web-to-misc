@@ -1,5 +1,29 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+#set -x
+#set -e
+
+get_baseurl(){
+    # so like:  http://something.com
+    local baseurl
+
+    # first get a better identifier for parse (.com):
+    baseurl="$( echo "$@" | sed -e "s|${http}://||g" -e 's|/.*$||g' -e 's|^.*\.|.|g' )"
+    # get .com
+    baseurl="$( echo "$@" | sed -e "s|${baseurl}/.*$|${baseurl}|g" )"
+    # get:  http://something.com
+    if [[ -n "$baseurl" ]] ; then
+        #if [[ "$baseurl" = http* ]] ; then
+            echo "$baseurl"
+        #else
+            #echo "http://$baseurl"
+        #fi
+        return 0
+    else
+        el_error "baseurl not get: $baseurl"
+        return 1
+    fi
+}
 
 main(){
     # pre {{{
@@ -7,7 +31,7 @@ main(){
 
     # }}}
 
-    tmpdir="/tmp/pandoc-${USER}"
+    tmpdir="/tmp/pandoc-${USER}-$$"
     url="$1"
 
     # Usage
@@ -25,15 +49,13 @@ main(){
     fi
 
 
-    # first get a better identifier for parse:
-    baseurl="$( echo "$url" | sed -e "s|${http}://||g" -e 's|/.*$||g' -e 's|^.*\.|.|g' )"
-    baseurl="$( echo "$url" | sed -e "s|${baseurl}/.*$|${baseurl}|g" )"
+    baseurl="$( get_baseurl "$url" )"
 
     rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
     cd "${tmpdir}"
 
-    wget "$url" -O downloaded-original.html
+    wget --timeout=320 -A Mozilla "$url" -O downloaded-original.html
 
     # fix double // for downloads
     sed -i "s|=\"//|=\"/|g" downloaded-original.html
@@ -51,37 +73,106 @@ main(){
 
     while read -ru 3 line
     do
-        [[ -z "$line" ]] && continue
+        line="$( echo "$line" | sed -e 's|).*$||g' -e 's|^.*(||g' -e 's|\].*$||g' -e 's|^.*\[||g' )"
 
-        if [[ "${line}" = /* ]] ; then
-            line="${baseurl}${line}"
-        fi
+        [[ -z "$line" ]] && continue
+        [[ "$line" = "."* ]] && continue
+        [[ "$line" != *"/"* ]] && continue
+
 
         cd files
 
-        dirfile="${line%/*}"
-        dirfile="${dirfile#*://}"
-        dirfile="${dirfile#*/}"
-        filename="${line##*/}"
+        _baseurl="$baseurl"
 
-        wget -q "$line"
+        dirfile="${line%/*}"
+        dirfile="${dirfile##*://}"
+        dirfile="${dirfile#//}"
+        dirfile="${dirfile#/}"
+        dirfile="${dirfile#*/}"
+
+        filename="${line##*/}"
+        filename="${filename%]}"
+        filename="${filename%)}"
+        filename="${filename%%&*}"
+        filename="${filename%%\?*}"
+
+        line_clean="http${line##*http}" # since the last http field
+        line_clean="${line#http/}" # this in case we did a wrong previous replacement
+        line_clean="${line_clean%%&*}" # remove parameters url
+        line_clean="${line_clean%%\?*}" # remove parameters url
+
+        # url is somewhere else
+        if [[ "$line_clean" = http* ]] && [[ "${line_clean}" != "$baseurl"* ]] ; then
+            if wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
+                _baseurl="$( get_baseurl "$line_clean" )"
+            else
+                convert -size 32x32 xc:white "$filename"
+            fi
+        fi
+
+        # this means the url can be something like:  src="//pixel.quantserve.com/pixel/p-FR2ZALpa42jxt.gif", which is not the same domain
+        if [[ "${line}" = /* ]] ; then
+            line_clean="${line_clean#/}"
+            line_clean="${line_clean#/}"
+
+            # try to download externally:
+            if wget -nc --timeout=320 -A Mozilla -q "http://${line_clean}" ; then
+                # update the baseurl for the later replacement
+                _baseurl="$( get_baseurl "$line_clean" )"
+            else
+                # try to download externally (with httpS):
+                if wget -nc --timeout=320 -A Mozilla -q "https://${line_clean}" ; then
+                    _baseurl="$( get_baseurl "$line_clean" )"
+                else
+
+                    # try to download from the same domain then
+                    line_clean="${baseurl}/${line_clean}"
+
+                    if ! wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
+                        # no way? create an empty image instead:
+                        # NOTE: we need an image in any of the cases so the epub creation will not fail (pandoc in general)
+                        convert -size 32x32 xc:white "$filename"
+                    fi
+                fi
+            fi
+        else
+            if ! wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
+                convert -size 32x32 xc:white "$filename"
+            fi
+        fi
+
+        # no file? create it
+        if ! [[ -s "$filename" ]] ; then
+            convert -size 32x32 xc:white "$filename"
+        fi
 
         mkdir -p "$dirfile"
-        mv "${filename}" "$dirfile" 2>/dev/null || mv *."${filename##*.}" "$dirfile"
+        #cp -f "${filename}" "$dirfile" 2>/dev/null || cp -f *."${filename##*.}" "$dirfile"
+        mv -f "${filename}" "$dirfile" 2>/dev/null || mv -f *."${filename##*.}" "$dirfile"
 
         cd ../
         echo "$line"
 
         # change the location of the files to here
-        sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded.text
-        sed -i "/${filename}/s|${baseurl}/|files/|g" downloaded_utf8.text
+        sed -i "/${filename}/s|${_baseurl}/|files/|g" downloaded.text
+        sed -i "/${filename}/s|${_baseurl}/|files/|g" downloaded_utf8.text
 
         # fix broken links for images
+        sed -i "/${filename}/s|](//|](files/|g" downloaded.text
+        sed -i "/${filename}/s|](//|](files/|g" downloaded_utf8.text
         sed -i "/${filename}/s|](/|](files/|g" downloaded.text
         sed -i "/${filename}/s|](/|](files/|g" downloaded_utf8.text
+        sed -i "/${filename}/s|files/files/|files/|g" downloaded.text
+        sed -i "/${filename}/s|files/files/|files/|g" downloaded_utf8.text
+
+        # just for debug purposes:
+        #if [[ "${line_clean}" = *"pyramid2"* ]] ; then
+            #read nada
+        #fi
 
 
-    done 3<<< "$( cat "downloaded-original.text" | tr '(' '\n' | tr ')' '\n' | grep -Ei "(\.gif|\.jpg|\.png|\.bmp)" | sed -e 's|).*$||g' -e 's|^.*(||g' )"
+    done 3<<< "$( cat "downloaded-original.text" | tr '(' '\n' | tr ')' '\n' | tr '[' '\n' | tr ']' '\n' | grep -Ei "(\.gif|\.jpg|\.jpeg|\.webp|\.png|\.bmp)" )"
+    # note: don't use "sort -u" because we may have same file for different places
 
     # put back any link to the correct path
     sed -i "s|](/|](${baseurl}/|g" downloaded.text
@@ -118,7 +209,10 @@ main(){
     # convert
 
     if ! pandoc downloaded.text -o "${title}.${format}" 2>/dev/null ; then
-        if pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
+        if ! pandoc downloaded_utf8.text -o "${title}.${format}" 2>/dev/null ; then
+            # logs:
+            pandoc downloaded_utf8.text -o "${title}.${format}"
+        else
             echo "command used:  pandoc downloaded_utf8.text -o \"${title}.${format}\"" 1>&2
             el_explain 0 "converted to __${format}__"
         fi

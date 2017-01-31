@@ -1902,8 +1902,8 @@ options_main_interact(){
         a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our working branch:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_working\"..\"$branch_watch\" ${options_extra_git_after[@]} | grep --color -C 6 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep --color -C 6 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} \"$branch_working\"..\"$branch_watch\" ${options_extra_git_after[@]} | grep --color -C 20 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2257,7 +2257,7 @@ main(){
     if [[ -s "$conf_branch_working_f" ]] ; then
         _branch_working="$( tail -1 "$conf_branch_working_f" )"
         if [[ "$branch_working" != "$_branch_working" ]] ; then
-            el_explain 0 "XXWarningXX: working branch set for this watcher is not __${_branch_working}__ but is ${branch_working}"
+            el_explain 0 "XXWarningXX: you have already a watcher like this, but your actual working branch is __${branch_working}__ and not __${_branch_working}__"
             if el_confirm "Want to switch to $_branch_working ?" ; then
                 branch_working="${_branch_working}"
                 command git checkout "$branch_working"

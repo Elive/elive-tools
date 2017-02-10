@@ -25,9 +25,11 @@ main(){
     max_lines="10000"
     min_lines="10"
     user="$USER"
-    urldefault="http://paste2.org"
+    #urldefault="http://paste2.org"
     # openstack don't accept syntax parameter? at least not for C (edc) files
     #urldefault="http://paste.openstack.org"
+    # we should use debian, it supports syntax, download, selection, username, etc
+    urldefault="http://paste.debian.net"
     command="$@"
 
     conf="${HOME}/.config/elive/elivepaste/config.sh"
@@ -106,6 +108,9 @@ main(){
             ;;
         *python\ script*)
             syntax="python"
+            ;;
+        *PHP*)
+            syntax="php"
             ;;
         *diff*)
             syntax="diff"

@@ -3,6 +3,76 @@ source /usr/lib/elive-tools/functions
 
 # This tool is called as:   command eth1 up
 
+update_conf_etc(){
+    if [ -n "${timezone}" ] ; then
+        _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
+        _ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
+    else
+        _AREA="Etc"
+        _ZONE="UTC"
+    fi
+
+    el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
+
+    rm -f /etc/localtime
+    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+    echo "$_AREA/$_ZONE" > /etc/timezone
+
+    # call tzdata and update things
+    # debconf set configurations
+    cat > "/tmp/debconf.$(basename $0)" << EOF
+tzdata tzdata/Areas select ${_AREA}
+tzdata tzdata/Zones/${_AREA} select ${_ZONE}
+EOF
+    debconf-set-selections < "/tmp/debconf.$(basename $0)"
+    rm -f "/tmp/debconf.$(basename $0)"
+
+    needs_update_time=1
+
+}
+
+
+update_ntp_time_from_server(){
+    # update the time from a server
+    service ntp stop 2>/dev/null 1>&2
+
+    #if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+        if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
+            if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
+                    if ! ntpdate 1.pool.ntp.org ; then
+                        el_warning "can't set time from ntp servers"
+                    fi
+                fi
+            fi
+        fi
+    #fi
+
+    service ntp restart 2>/dev/null 1>&2
+
+    # which mode of bios we have? utc or localtime?
+    mode_bios="$(head -3 /etc/adjtime  | tail -1)"
+
+    # finally, save the time to hwclock if needed
+    case $mode_bios in
+        LOCAL)
+            el_explain 0 "Saving time using __localtime__"
+
+            hwclock -w --localtime
+            ;;
+        UTC|*)
+            el_explain 0 "Saving time using __utc__"
+
+            hwclock -w --utc
+            ;;
+    esac
+
+
+    # say something
+    el_explain 0 "Changed Timezone to __${timezone}__, time is now at:"
+    date
+}
+
 
 has_windows(){
     if ! ((has_os_prober_run)) ; then
@@ -21,7 +91,6 @@ has_windows(){
 
 main(){
     # pre {{{
-    local iface state conf timezone_last timezone connected_gateway connected_mac _CMDLINE
 
     # add a lock
     LOCKFILE="/tmp/.${USER}-$(basename $0).lock"
@@ -38,7 +107,9 @@ main(){
 
 
     iface="$1"
-    state="$2"
+    shift
+    state="$1"
+    shift
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
     # set some variables for compatibility expectation if we run it from commandline
@@ -56,12 +127,12 @@ main(){
         touch "$conf"
     fi
 
-    case "$iface" in
+    case "$1" in
         -f|--force)
             is_force=1
             needs_update_time=1
             # this is an ugly hack, iface is the first paramter but if we call the tool from cli it is "-f" instead
-            unset iface
+            #unset iface
             ;;
         -c|--clean)
             mode_clean=1
@@ -127,7 +198,7 @@ main(){
         # if we already know the location of this mac, don't change the timezone (routers don't move their location, cable or wifi)
         timezone_last_current_mac="$( awk -v FS=":::" -v LAST_MAC="$connected_mac" '{if ($1 == LAST_MAC) print $2}' "${conf}" | tail -1 )"
 
-        if [[ "${timezone_last}" = "$timezone_last_current_mac" ]] ; then
+        if [[ "${timezone_last}" = "$timezone_last_current_mac" ]] && ! ((is_force)) ; then
             # we don't want to update the known timezone in the conf
             skip_update_conf_last=1
 
@@ -135,8 +206,15 @@ main(){
             if has_windows ; then
                 # we need forcely to update our time
                 needs_update_time=1
+                needs_update_conf=1
+
             else
                 el_explain 0 "Your timezone is already known as __${timezone_last}__ and you have not a shared windows so we don't need to update your conf or your time"
+                timezone="$timezone_last"
+
+                update_conf_etc
+                update_ntp_time_from_server
+
                 exit 0
             fi
         fi
@@ -246,80 +324,15 @@ EOF
         echo "last:::${timezone}" >> "${conf}"
     fi
 
-    if [ -n "${timezone}" ]
-    then
-        _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
-        _ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
-    else
-        _AREA="Etc"
-        _ZONE="UTC"
-    fi
 
-
+    # update configurations in etc
     if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
-        el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
-
-        rm -f /etc/localtime
-        ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
-        echo "$_AREA/$_ZONE" > /etc/timezone
-
-        # call tzdata and update things
-        # debconf set configurations
-        cat > "/tmp/debconf.$(basename $0)" << EOF
-tzdata tzdata/Areas select ${_AREA}
-tzdata tzdata/Zones/${_AREA} select ${_ZONE}
-EOF
-        debconf-set-selections < "/tmp/debconf.$(basename $0)"
-        rm -f "/tmp/debconf.$(basename $0)"
-
-        needs_update_time=1
-
+        update_conf_etc
     fi
-
 
 
     if ((needs_update_time)) ; then
-        # update the time from a server
-        service ntp stop 2>/dev/null 1>&2
-
-        if ! ntpdate 0.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-            if ! ntpdate pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                if ! ntpdate europe.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                    if ! ntpdate north-america.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                        if ! ntpdate 1.pool.ntp.org 2>/dev/null 1>/dev/null ; then
-                            el_warning "can't set time from ntp servers"
-                        fi
-                    fi
-                fi
-            fi
-        fi
-
-        service ntp restart 2>/dev/null 1>&2
-
-
-
-        # which mode of bios we have? utc or localtime?
-        mode_bios="$(head -3 /etc/adjtime  | tail -1)"
-
-        # finally, save the time to hwclock if needed
-        case $mode_bios in
-            LOCAL)
-                el_explain 0 "Saving time using __localtime__"
-
-                hwclock -w --localtime
-                ;;
-            UTC|*)
-                el_explain 0 "Saving time using __utc__"
-
-                hwclock -w --utc
-                ;;
-        esac
-
-
-        # say something
-        el_explain 0 "Changed Timezone to __${timezone}__, time is now at:"
-        date
-
+        update_ntp_time_from_server
     fi
 
     # update to our last location
@@ -335,6 +348,8 @@ EOF
             else
                 echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
             fi
+        else
+            el_warning "ignoring adding entry in conf, so we don't have iface (called from cli?)"
         fi
     fi
 

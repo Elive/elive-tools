@@ -246,9 +246,23 @@ do_validate_sending(){
     done
 
 
-    local message_cannot_send_email
-    message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account. Is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
-    $guitool --warning --text="$message_cannot_send_email"
+    # it was correctly configured previously
+    if grep -qs "^email_password=" "$conf" ; then
+        local message_reconfigure
+        message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+
+        if ! $guitool --question --text="$message_reconfigure" ; then
+            # we don't want to reconfigure, so just exit
+            return 0
+        fi
+    else
+
+        # it was not configured correctly before, so proceed normally with configuration
+        local message_cannot_send_email
+        message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account. Is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
+        $guitool --warning --text="$message_cannot_send_email"
+
+    fi
 
     # configure pop / imap?
     local message_popimap

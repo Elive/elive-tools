@@ -1504,7 +1504,7 @@ options_main_interact(){
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "m"         "mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
-    option_show "g"         "Go to commit id"
+    option_show "g"         "Go to commit id (space-time travel)"
     option_show "G"         "Go to a number of commits"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
@@ -1593,7 +1593,7 @@ options_main_interact(){
             # exit loop if no remaining commits
             if [[ "$counter" -le 0 ]] ; then
                 el_explain 0 "You cannot go before the creation of the universe!"
-                sleep 2
+                sleep 3
             fi
 
             # cleanup
@@ -1617,29 +1617,37 @@ options_main_interact(){
             echo -e "\n${el_c_g}Type the commit number to jump:${el_c_n}"
             read -e _n
 
-            commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
+            if echo "$_n" | grep -qs "[[:digit:]]" ; then
 
-            # mark our new position
-            echo "$commit_id" > "$conf_commit_last_f"
-            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+                commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
 
-            # count to the actual jump
-            counter="$_n"
-            # always remove one, because we return
-            counter="$(( $counter + -1 ))"
+                # mark our new position
+                echo "$commit_id" > "$conf_commit_last_f"
+                el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
-            # exit loop if no remaining commits
-            if [[ "$counter" -le 0 ]] ; then
-                el_explain 0 "You cannot go before the creation of the universe!"
+                # count to the actual jump
+                counter="$_n"
+                # always remove one, because we return
+                counter="$(( $counter + -1 ))"
+
+                # exit loop if no remaining commits
+                if [[ "$counter" -le 0 ]] ; then
+                    el_explain 0 "You cannot go before the creation of the universe!"
+                    sleep 3
+                fi
+
+                # cleanup
+                clear_screen default
+
+                # go back to positioning loop
+                is_recount_position_needed=1
+                return
+            else
+                el_error "You need to insert a numeric value in the range of the watching commits"
                 sleep 2
+                $FUNCNAME
             fi
 
-            # cleanup
-            clear_screen default
-
-            # go back to positioning loop
-            is_recount_position_needed=1
-            return
 
             ;;
         u)  # update working branch
@@ -2122,10 +2130,15 @@ main(){
     fi
 
     # check if we have checkoutable the watching branch too
+    # update: we may not need to checkoutable, just access (like when a branch is just fetched)
     if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qs "$branch_watch" ; then
-        el_explain 0 "Pre-checking out: __${branch_watch}__"
-        command git checkout "${branch_watch}"
-        command git checkout "${branch_working}"
+        #el_explain 0 "Pre-checking out: __${branch_watch}__"
+        #command git checkout "${branch_watch}"
+        #command git checkout "${branch_working}"
+        if ! [[ -s ".git/refs/remotes/$branch_watch" ]] ; then
+            el_error "Branch ${branch_watch} seems like to not have any data, you need to be able to checkout it or at least to have it fetched"
+        fi
+
     fi
     # force checkout in the working branch
     if ! [[ "$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )" = "$branch_working" ]] ; then

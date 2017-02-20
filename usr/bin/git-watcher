@@ -1006,7 +1006,7 @@ show_history(){
     local lines
 
     # }}}
-    el_explain 0 "Showing history:"
+    el_explain 0 "History:"
 
     lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
 
@@ -1018,7 +1018,9 @@ show_history(){
         command git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
     else
         el_explain 0 "Recent history in your working branch:"
-        command git --no-pager log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -8
+        command git --no-pager log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -12
+        # seems like we miss a newline:
+        echo
 
     fi
 }
@@ -1730,7 +1732,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         S)  # show detailed info
-            echo -e "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            echo -e "\n\n\n\n\n\n\n\n\n\n\n"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -1740,7 +1742,9 @@ options_main_interact(){
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
             # show status
+            el_explain 0 "Status:"
             command git status
+
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 

@@ -69,8 +69,7 @@ update_ntp_time_from_server(){
 
 
     # say something
-    el_explain 0 "Changed Timezone to __${timezone}__, time is now at:"
-    date
+    el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
 }
 
 
@@ -212,13 +211,15 @@ main(){
                 needs_update_time=1
 
             else
+                timezone="$timezone_last"
+
                 if ((is_force)) ; then
-                    timezone="$timezone_last"
 
                     update_conf_etc
                     update_ntp_time_from_server
                 else
-                    el_explain 0 "Your timezone is already known as __${timezone_last}__ and you have not a shared windows so we don't need to update your conf or your time"
+                    el_explain 0 "Your timezone is already known as __${timezone_last}__ and you have not a shared windows so we don't need to update your conf"
+                    update_ntp_time_from_server
                 fi
 
                 exit 0

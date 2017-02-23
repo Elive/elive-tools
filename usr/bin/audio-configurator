@@ -129,7 +129,7 @@ main(){
                 is_multiple_cards=1
             else
                 if [[ -s "$HOME/.asoundrc" ]] ; then
-                    exit 1
+                    exit
                 else
                     unset is_multiple_cards
                     is_auto_mode=1

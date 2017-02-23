@@ -114,9 +114,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     local display e_ipc_socket
 
     # unset XAUTHORITY if is not from our user (bugs when we "su otheruser")
-    if [[ -n "$XAUTHORITY" ]] && [[ "$XAUTHORITY" != "$DHOME/$USER/"* ]] ; then
-        unset XAUTHORITY
-    fi
+    # update: we should never unset the XAUTHORITY, verify that this was really wrong before..
+    # more exactly: if we run a script from user, that sudo another script that runs a zenity, we will unset the XAUTHORITY and we will never be able to show the zenity message
+    #if [[ -n "$XAUTHORITY" ]] && [[ "$XAUTHORITY" != "$HOME/"* ]] ; then
+        #unset XAUTHORITY
+    #fi
 
     # if we are in console (out of X) we should always exit
     if ((is_console)) ; then
@@ -125,7 +127,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | sort -g | tail -1 2>/dev/null )"
+            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | xargs -r0 stat -c %y\ %n | sort -n | tail -1 2>/dev/null )"
+
+            if [[ -z "$display" ]] ; then
+                el_warning "unable to get display values from running enlightenment session"
+            fi
 
             e_ipc_socket="${display%|*}"
 

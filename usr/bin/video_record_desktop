@@ -74,10 +74,10 @@ main(){
 
     mplayer -fs "${tempfile}"
 
-    if el_confirm "Delete video?" ; then
-        rm -f "${tempfile}"
-    else
+    if el_confirm "Save video?" ; then
         el_explain 0 "\nVideo saved at __${tempfile} with $(du -hs "$tempfile" | awk '{print $1}' )__"
+    else
+        rm -f "${tempfile}"
     fi
 }
 

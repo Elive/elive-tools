@@ -1507,7 +1507,7 @@ options_main_interact(){
     option_show "m"         "mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
     option_show "g"         "Go to commit id (space-time travel)"
-    option_show "G"         "Go to a number of commits"
+    option_show "G"         "Go to a counter position"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
 
@@ -1616,7 +1616,7 @@ options_main_interact(){
             ;;
         G)  # go to a jumping mode commit
 
-            echo -e "\n${el_c_g}Type the commit number to jump:${el_c_n}"
+            echo -e "\n${el_c_g}Type a number of the counter to jump:${el_c_n}"
             read -e _n
 
             if echo "$_n" | grep -qs "[[:digit:]]" ; then

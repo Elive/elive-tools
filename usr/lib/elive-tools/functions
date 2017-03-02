@@ -169,7 +169,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             fi
             if [[ -z "${E_IPC_SOCKET}" ]] ; then
                 if [[ "$UID" != 0 ]] ; then
-                    el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the owner of this graphical session (Ignore this message)"
+                    el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
                 fi
             fi
         fi

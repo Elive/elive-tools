@@ -127,7 +127,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s | xargs -r0 stat -c %y\ %n | sort -n | tail -1 2>/dev/null )"
+            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n | sort -n | tail -1 2>/dev/null )"
 
             if [[ -z "$display" ]] ; then
                 el_warning "unable to get display values from running enlightenment session"

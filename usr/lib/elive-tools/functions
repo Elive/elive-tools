@@ -1828,7 +1828,8 @@ el_processes_using_mountpoint(){
         for (( pid=${#pids_mountpoint[@]}-1 ; pid>=0 ; pid-- ))
         do
             el_debug "Killing process: ${pids_mountpoint[pid]}"
-            kill "${pids_mountpoint[pid]}" || kill -9 "${pids_mountpoint[pid]}"
+            kill "${pids_mountpoint[pid]}" 2>/dev/null
+            kill -9 "${pids_mountpoint[pid]}" 2>/dev/null
             sleep 1
         done
     fi

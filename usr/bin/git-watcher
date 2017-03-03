@@ -1,9 +1,11 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 el_make_environment
+#set -x
+#set -v
+#set -T
 
 # TODO: alternative to bkp that should be faster, try git stage
-# FIXME: add variable checkers everywhere neeeded
 # TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list) -- or at least list all the commits that we cherry-picked, if they are matched when we enter on them, show a warning message saying that we already cherry-picked it to FOO (mark this too)
 # TODO: add el_package_*... like in the elive installer to check for newer version, note: the warning can be annoying if displayed multiple times
 
@@ -501,25 +503,25 @@ scan_travels(){
         el_explain 0 "No messages for you"
     fi
 
-    }
+}
 
-    #===  FUNCTION  ================================================================
-    #          NAME:  scan_marked_states
-    #   DESCRIPTION:  Scans and show marked states like todo's
-    #    PARAMETERS:  -
-    #       RETURNS:  -
-    #===============================================================================
-    scan_marked_states(){
-        # pre {{{
-        el_debug
+#===  FUNCTION  ================================================================
+#          NAME:  scan_marked_states
+#   DESCRIPTION:  Scans and show marked states like todo's
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+scan_marked_states(){
+    # pre {{{
+    el_debug
 
-        # }}}
-        if ! el_check_dir_has_files "${conf_repo_d}/ttc" 2>/dev/null ; then
+    # }}}
+    if ! el_check_dir_has_files "${conf_repo_d}/ttc" 2>/dev/null ; then
         return
     fi
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-    el_explain 0 "You have got XXTime-Traveling CapsulesXX!"
+    el_explain 0 "You have XXNew MessagesXX"
 
 
     while read -ru 3 dir
@@ -534,13 +536,19 @@ scan_travels(){
             echo -e "${el_c_n}"
         fi
 
+        el_explain 0 "You can travel to its __ID__ on the __g__ option"
+        el_explain 0 "If you need external help you can go to it and send a message to somebody"
+
+        if el_confirm "Delete it?" ; then
+            rm -rf "$dir"
+        fi
+
+
     done 3<<< "$( find "${conf_repo_d}/ttc/" -mindepth 1 -maxdepth 1 -type d )"
 
-    el_explain 0 "You can travel to their __ID__ on the __Go__ option"
-    el_explain 0 "If you need external help you can go to it and send a message to somebody"
 
     #echo -e "Press Enter to continue..."
-    LC_ALL=C sleep 0.8
+    #LC_ALL=C sleep 0.8
     #read nothing
 
 }
@@ -1047,7 +1055,7 @@ show_states(){
                 #echo '---------'
 
                 echo -e "${el_c_b}Watchers Tracking:${el_c_n}"
-                echo -e "on Branch: | only Keyword: | on Files: | Authored by: | Remaining:"
+                echo -e "on Branch: | only Keyword: | on Files: | Authored by: | Progress:"
                 echo -e "|"
 
                 is_header_show=1
@@ -1062,7 +1070,8 @@ show_states(){
             _author_search="$(  echo "$line" | awk -F "::" '{print $5}' )"
 
             #_commits_total="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $2}' )" )"
-            _commits_remaining="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $1}' )" )"
+            # FIXME: is not remaining but actual progress?
+            _commits_remaining="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | tr ' ' '/'  )" )"
             #_commits_done="$( echo "$_commits_total - $_commits_remaining" | bc -l 2>/dev/null )"
 
             #if [[ -n "$_commits_done" ]] ; then
@@ -1255,12 +1264,12 @@ do_cherry_pick_menu(){
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
     option_show "a" "Abort cherry-pick"
-    option_show "c" "Continue operation (cherry-pick) in progress"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
     option_show "h" "mergetool config"
     option_show "l" "Login Shell (to do things manually)"
-    option_show "f" "Finish - return to main menu"
+    option_show "c" "Continue operation (cherry-pick) in progress"
+    option_show "f" "Finish - return to main menu even if uncomplete"
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
     read -N 1 option
@@ -1367,6 +1376,10 @@ EOF
             ;;
     esac
 
+    # remove unwanted .orig files remaining
+    if command git status -su | grep -e"\.orig$" ; then
+        command git status -su | grep -e"\.orig$" | cut -f2 -d" " | xargs rm -f 2>/dev/null
+    fi
 
 }
 #===  FUNCTION  ================================================================
@@ -1531,7 +1544,7 @@ options_main_interact(){
 
     if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" "${conf_imported_commits_list_shared_f}"  2>/dev/null ; then
         echo -e ""
-        el_explain 0 "__Note__: this commit was already imported, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" "${conf_imported_commits_list_shared_f}" | tail -1 | awk '{print $2}' )__"
+        el_explain 0 "XXNoteXX: this commit was __already imported__, to the branch __$(grep "^$commit_id" "${conf_imported_commits_list_f}" "${conf_imported_commits_list_shared_f}" 2>/dev/null | tail -1 | awk '{print $2}' )__"
         echo -e ""
     fi
 
@@ -1619,7 +1632,7 @@ options_main_interact(){
             echo -e "\n${el_c_g}Type a number of the counter to jump:${el_c_n}"
             read -e _n
 
-            if echo "$_n" | grep -qs "[[:digit:]]" ; then
+            if echo "$_n" | grep -v "[[:alpha:]]" | grep -qs "[[:digit:]]" ; then
 
                 commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
 
@@ -1890,9 +1903,14 @@ options_main_interact(){
             $FUNCNAME
             ;;
         c)  # make
-            make
+            if make ; then
+                el_explain 0 "__Compiled Correctly__"
+            else
+                el_explain 0 "XXCompilation FailedXX"
+            fi
 
-            el_speak_text "make complete"
+
+            #el_speak_text "make complete"
             # return back to main menu
             $FUNCNAME
             ;;
@@ -1926,8 +1944,9 @@ options_main_interact(){
         A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in the watching branch history:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 ${options_extra_git_before[@]} \"$branch_watch\" | grep --color -C 16 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_watch" | grep --color -C 16 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} \"$branch_watch\" | grep --color -C 20 \"${commit_id:0:12}\""
+
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} "$branch_watch" | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 

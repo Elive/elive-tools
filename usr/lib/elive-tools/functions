@@ -1800,6 +1800,11 @@ el_processes_using_mountpoint(){
     el_check_variables "dir"
     el_check_dirs "$dir"
 
+    if [[ -b "$dir" ]] ; then
+        el_error "$dir is not a directory but a block device, try to use mounts-manager --get-mountpoint"
+        return 1
+    fi
+
     # }}}
 
     for pid in $( fuser -m "$dir" 2>/dev/null | tr ' ' '\n' | grep -v "$dir" | grep -v "$$" )

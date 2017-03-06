@@ -1927,8 +1927,11 @@ options_main_interact(){
             fi
 
             if [[ -n "$user_input_command" ]] ; then
-                bash -c "$user_input_command"
-                el_speak_text "run finished"
+                if ! bash -c "$user_input_command" ; then
+                    el_speak_text "error, compilation failed"
+                else
+                    el_speak_text "compilation finished successfully"
+                fi
             fi
 
             # return back to main menu

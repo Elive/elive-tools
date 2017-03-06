@@ -1263,7 +1263,7 @@ do_cherry_pick_menu(){
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
-    option_show "a" "Abort cherry-pick"
+    option_show "n" "abort cherry-pick and go Next commit"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
     option_show "h" "mergetool config"
@@ -1281,7 +1281,7 @@ do_cherry_pick_menu(){
 
             $FUNCNAME
             ;;
-        a)
+        n|a) # shortcut to "a" too if we want to call it as "abort"
             command git cherry-pick --abort
 
             el_explain 0 "Aborted cherry-pick..."

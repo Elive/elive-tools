@@ -1263,7 +1263,7 @@ do_cherry_pick_menu(){
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
-    option_show "n" "abort cherry-pick and go Next commit"
+    option_show "n" "Next commit, (abort cherry-pick)"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
     option_show "h" "mergetool config"
@@ -1897,6 +1897,11 @@ options_main_interact(){
             if el_confirm "Do you want to permanently remove the last commit?" ; then
                 el_explain 0 "$ git reset --hard HEAD~1"
                 command git reset --hard HEAD~1
+                # delete it from the list of the ones we have imported too
+                sed -i "s|$commit_id ${branch_working}||g" "$conf_imported_commits_list_f"
+                sed -i "s|${commit_id}.*$||g" "$conf_imported_commits_list_shared_f"
+                sed -i "/^$/d" "$conf_imported_commits_list_f"
+                sed -i "/^$/d" "$conf_imported_commits_list_shared_f"
             fi
 
             # return back to main menu

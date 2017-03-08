@@ -398,6 +398,7 @@ EOF
 # if we have the original and updated functions, use them (so: we are in elive)
 if [[ -s /usr/lib/elive-tools/functions ]] ; then
     source /usr/lib/elive-tools/functions
+    el_make_environment
 fi
 
 
@@ -657,7 +658,11 @@ main(){
 
     tool="$(basename $0)"
     namedir="${PWD//\//%}"
-    bkpdir_main="${HOME}/.${tool}"
+    if [[ -n $XDG_CACHE_HOME ]] ; then
+        bkpdir_main="${XDG_CACHE_HOME}/${tool}"
+    else
+        bkpdir_main="${HOME}/.cache/${tool}"
+    fi
     bkpdir_backups="${bkpdir_main}/backups"
     bkpdir_works="${bkpdir_main}/working"
     bkpdir_id="${bkpdir_backups}/${namedir}.rdiff"

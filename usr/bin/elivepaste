@@ -56,7 +56,7 @@ main(){
     do
         case "$arg" in
             -c)
-                channel="$2"
+                channel="${2#\#}"
                 shift 2
                 ;;
             -m)

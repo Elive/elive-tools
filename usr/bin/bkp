@@ -395,12 +395,15 @@ EOF
 }
 
 
+# if we have the original and updated functions, use them (so: we are in elive)
+if [[ -s /usr/lib/elive-tools/functions ]] ; then
+    source /usr/lib/elive-tools/functions
+fi
 
 
 
 
-# I assume that this is not needed anymore at all
-#el_make_environment
+
 
 do_work(){
     # this feature does a temporal copy of the directory for work from it,

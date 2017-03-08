@@ -195,14 +195,14 @@ main(){
     fi
 
     # get the last location
-    if ! ((is_force)) ; then
+    if ! ((is_force)) && ! ((is_live)) ; then
         timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
 
         # if we already know the location of this mac, don't change the timezone (routers don't move their location, cable or wifi)
         timezone_last_current_mac="$( awk -v FS=":::" -v LAST_MAC="$connected_mac" '{if ($1 == LAST_MAC) print $2}' "${conf}" | tail -1 )"
 
         # the next one is if we don't want to re-use conf, so: force (this should be the default)
-        if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" = "$timezone_last_current_mac" ]] && ! ((is_force)) ; then
+        if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" = "$timezone_last_current_mac" ]] ; then
         #if [[ "${timezone_last}" = "$timezone_last_current_mac" ]] ; then
 
             # we don't want to update the known timezone in the conf
@@ -216,14 +216,14 @@ main(){
             else
                 timezone="$timezone_last"
 
-                if ((is_force)) ; then
+                #if ((is_force)) ; then
 
-                    update_conf_etc
-                    update_ntp_time_from_server
-                else
+                    #update_conf_etc
+                    #update_ntp_time_from_server
+                #else
                     el_explain 0 "Your timezone is already known as __${timezone_last}__ and you have not a shared windows so we don't need to update your conf"
                     update_ntp_time_from_server
-                fi
+                #fi
 
                 exit 0
             fi
@@ -232,10 +232,8 @@ main(){
 
     # get the bios mode
     # not in live, so we can use the usb in different computers
-    if ((is_live)) ; then
-        if ! ((is_force)) ; then
-            mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
-        fi
+    if ! ((is_force)) && ! ((is_live)) ; then
+        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
     fi
 
     # get the location of our actual connection
@@ -251,6 +249,7 @@ main(){
         timezone="${connected_timezone}"
     else
         timezone="$(showmytimezone)"
+
         if [[ "${timezone}" = "Etc/UTC" ]] || [[ "${timezone}" = "Etc/GMT"* ]] ; then
             if [[ -n "${timezone_last}" ]] ; then
                 el_warning "we have not detected the timezone correctly, switching to last"
@@ -335,13 +334,18 @@ EOF
     fi
 
 
-    # update configurations in etc
-    if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
+    # always update it if we are in live
+    if ((is_live)) ; then
         update_conf_etc
+    else
+        # update configurations in etc if we need to
+        if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
+            update_conf_etc
+        fi
     fi
 
 
-    if ((needs_update_time)) ; then
+    if ((needs_update_time)) || ((is_live)) ; then
         update_ntp_time_from_server
     fi
 

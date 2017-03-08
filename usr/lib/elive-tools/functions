@@ -413,6 +413,23 @@ el_make_environment(){ # make ready our environment (source variables and functi
         export PS4='+ [$(basename ${BASH_SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
+    # XDG default directories
+    if [[ -z "${XDG_CONFIG_HOME}" ]] || [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+        XDG_CONFIG_HOME="${HOME}/.config"
+        if [[ ! -d "$XDG_CONFIG_HOME" ]] ; then
+            mkdir -p "$XDG_CONFIG_HOME"
+        fi
+    fi
+
+    if [[ -z "${XDG_CACHE_HOME}" ]] || [[ ! -d "$XDG_CACHE_HOME" ]] ; then
+        XDG_CACHE_HOME="${HOME}/.cache"
+        if [[ ! -d "$XDG_CACHE_HOME" ]] ; then
+            mkdir -p "$XDG_CACHE_HOME"
+        fi
+    fi
+
+
+
 }
 
 #-------------------------------------------------------------------------------

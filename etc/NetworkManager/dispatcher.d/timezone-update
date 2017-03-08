@@ -105,6 +105,9 @@ main(){
         echo $$ > $LOCKFILE
     fi
 
+    if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
 
     iface="$1"
     shift
@@ -174,7 +177,7 @@ main(){
     sleep 1
 
     # mark a stamp, amount of users that was able to successfully connect to internet
-    if grep -qs "boot=live" /proc/cmdline && ! el_flag check stamp-connected ; then
+    if ((is_live)) && ! el_flag check stamp-connected ; then
         { curl --connect-timeout 30 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.1/055-live-connected-success.html 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         el_flag add stamp-connected
     fi
@@ -229,7 +232,7 @@ main(){
 
     # get the bios mode
     # not in live, so we can use the usb in different computers
-    if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "(boot=live)" ; then
+    if ((is_live)) ; then
         if ! ((is_force)) ; then
             mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
         fi
@@ -312,7 +315,7 @@ EOF
     # compare our last location with our actual one
     # note: deprecated code, we still want to update some confs in any cases
     #if [[ "${timezone}" = "${timezone_last}" ]] ; then
-        #if ((is_force)) || grep -qs "boot=live" /proc/cmdline ; then
+        #if ((is_force)) || ((is_live)) ; then
             ## if we force or we are in live mode (always update times in live mode! because we reboot and the timezones files in /etc are gone)
             #true
         #else

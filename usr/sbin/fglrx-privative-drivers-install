@@ -178,7 +178,7 @@ interactive_ask_privative(){
 
             # warn if low memory that the process can fail!
             memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
-            if [[ "${memory}" -lt "640" ]] ; then
+            if [[ "${memory}" -lt "640000" ]] ; then
 
                 local message_low_memory
                 message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
@@ -313,7 +313,7 @@ interactive_ask_driver_version(){
     case $_FGLRX_VERSION in
         current)
             # warning, do not install xvba-va-driver -> conflicts
-            if [[ "${memory}" -lt "640" ]] ; then
+            if [[ "${memory}" -lt "640000" ]] ; then
                 # install a basic fglrx setup if low memory
                 _FGLRX_PACKAGES="fglrx-driver fglrx-modules-dkms libgl1-fglrx-glx"
             else
@@ -323,7 +323,7 @@ interactive_ask_driver_version(){
             # basic packages tested:
             ;;
         legacy)
-            if [[ "${memory}" -lt "640" ]] ; then
+            if [[ "${memory}" -lt "640000" ]] ; then
                 _FGLRX_PACKAGES="fglrx-legacy-driver fglrx-legacy-modules-dkms libgl1-fglrx-legacy-glx"
             else
                 _FGLRX_PACKAGES="fglrx-legacy-atieventsd fglrx-legacy-control fglrx-legacy-driver fglrx-legacy-modules-dkms libfglrx-legacy-amdxvba1 libgl1-fglrx-legacy-glx"

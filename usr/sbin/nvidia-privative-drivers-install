@@ -281,6 +281,19 @@ interactive_ask_privative(){
 
         if ((is_mode_live)) ; then
 
+            # warn if low memory that the process can fail!
+            memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
+            if [[ "${memory}" -lt "640" ]] ; then
+
+                local message_low_memory
+                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
+
+                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    --title "Low Memory Computer" \
+                    --msgbox "$message_low_memory" \
+                    0 0
+            fi
+
             # don't ask if mode auto, assume yes
             if ((is_mode_auto)) ; then
                 ret=0
@@ -634,6 +647,7 @@ install_driver(){
                 while read -ru 3 package
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
+                        sleep 4
                         echo -e "\nE: Installing nvidia packages failed, please report the previous error messages to Elive" 1>&2
                         sleep 10
                     fi
@@ -672,10 +686,12 @@ install_driver(){
     fi
 
     if ! modprobe nvidia ; then
+        sleep 4
         local message_unable_to_load
 
         # default message for not working drivers
         if ! lsmod | grep -qs nvidia ; then
+            sleep 4
             el_error "Unable to load NVIDIA module"
 
             message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the NVIDIA driver will be require from an older kernel." )" "" )"
@@ -683,12 +699,14 @@ install_driver(){
 
 
         if modprobe nvidia 2>&1 | grep -qs "No supported display adapters" ; then
+            sleep 4
             message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free drivers." )" "" )"
 
         fi
 
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
+            sleep 4
             message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free drivers if they works for you." )" "" )"
         fi
 

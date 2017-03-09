@@ -139,7 +139,7 @@ main(){
 
         if ((is_auto_mode)) ; then
             el_dependencies_check "psort"
-            selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" | tac | head -1 )"
+            selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | tac | head -1 )"
             # remove extra leading blank chars
             read -r selection <<< "$selection"
         fi

@@ -33,20 +33,24 @@ main(){
         rate="$( eyeD3 "$file" | strings | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
 
 
-        if [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; then
+        if { [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; }  || [[ -z "$rate" ]] ; then
             #echo convert "$file"
             el_explain 0 "converting $(basename "$file" )"
 
             # v4 for a much more quality (flac converter)
             cat "$file" > /dev/null
-            lame --quiet -vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"
+            if lame --quiet -vbr-new -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" ; then
+                mv "$dest/__$( basename "$file" )" "$dest/$( basename "$file" )"
+            else
+                rm -f "$dest/__$( basename "$file" )" 2>/dev/null
+            fi
 
-
-            # file is bigger OR file is less than 800 kb (which should be broken in conversion) --> copy back the original one
+            # file is bigger than original OR file is less than 800 kb (which should be broken in conversion) --> copy back the original one
             if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -lt "$( du -s "$file" | awk '{print $1}' )" ]] \
                 || [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                 # add a visual mark (ls) to see that we have converted it
-                chmod +x "$dest/$( basename "$file" )"
+                #chmod +x "$dest/$( basename "$file" )"
+                true
             else
                 if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                     el_explain 0 "Oops, resulting file was bigger, using copy instead"

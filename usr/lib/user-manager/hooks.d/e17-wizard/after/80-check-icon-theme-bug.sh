@@ -4,11 +4,10 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local file
+    #local file
 
     # }}}
 
-    set -x
     if [[ -d "$HOME/.e/e17" ]] ; then
         cd "$HOME/.e/e17/config/standard"
 
@@ -22,7 +21,6 @@ main(){
 
         rm -f e.cfg.src
     fi
-    set +x
 
 
     # if we are debugging give it a little pause to see what is going on

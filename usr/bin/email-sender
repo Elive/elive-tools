@@ -537,7 +537,8 @@ main(){
             m)
                 # note: if you are trying to pass an array full of contents to the message, there's no bug on it, you should pass like: email-sender -m "${arr[*]}", instead of using @
                 message="$OPTARG"
-                el_explain 2 "message is __${message}__"
+                message_excerpt="${message:0:200}"
+                el_explain 2 "message is __${message_excerpt} ... (cut)__"
                 # sometimetimes the stdin detection can fail, but if we have the message parameter is for sure that we don't want the stdin input, so we are defining it
                 unset is_stdin
 
@@ -561,6 +562,7 @@ main(){
                     exit 1
                 fi
 
+                el_explain 2 "" # add a little space to separate visuallly sendings from automated tools
                 el_explain 2 "target (to) is __${to}__"
 
                 ;;

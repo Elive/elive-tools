@@ -171,11 +171,31 @@ do_email_send(){
             if [[ "$?" = 0 ]] ; then
                 el_explain 2 "email sent"
             else
-                is_message_showed_welcome=1
-                do_configure
-                do_validate_sending
-                # send again -this- email
-                $FUNCNAME
+                el_warning "unable to send email, let's wait 2 minutes and we will try again"
+                sleep 120
+                # try again
+                cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+
+                if [[ "$?" = 0 ]] ; then
+                    el_explain 2 "email sent"
+                else
+                    # reconfigure or exit {{{
+                    local message_reconfigure
+                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+
+                    if ! $guitool --question --text="$message_reconfigure" ; then
+                        # we don't want to reconfigure, so just exit
+                        el_error "unable to send email, please run again the tool or reconfigure your account"
+                        exit 0
+                    fi
+
+                    # }}}
+                    is_message_showed_welcome=1
+                    do_configure
+                    do_validate_sending
+                    # send again -this- email
+                    $FUNCNAME
+                fi
             fi
         fi
 
@@ -193,11 +213,31 @@ do_email_send(){
             if [[ "$?" = 0 ]] ; then
                 el_explain 2 "email sent"
             else
-                is_message_showed_welcome=1
-                do_configure
-                do_validate_sending
-                # send again -this- email
-                $FUNCNAME
+                el_warning "unable to send email, let's wait 2 minutes and we will try again"
+                sleep 120
+                # try again
+                cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+
+                if [[ "$?" = 0 ]] ; then
+                    el_explain 2 "email sent"
+                else
+                    # reconfigure or exit {{{
+                    local message_reconfigure
+                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+
+                    if ! $guitool --question --text="$message_reconfigure" ; then
+                        # we don't want to reconfigure, so just exit
+                        el_error "unable to send email, please run again the tool or reconfigure your account"
+                        exit 0
+                    fi
+
+                    # }}}
+                    is_message_showed_welcome=1
+                    do_configure
+                    do_validate_sending
+                    # send again -this- email
+                    $FUNCNAME
+                fi
             fi
         fi
     fi

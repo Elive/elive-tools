@@ -161,25 +161,34 @@ do_email_send(){
             > "$tempfile_body"
 
         # SEND !
-        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+        cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" != 0 ]] ; then
-            is_message_showed_welcome=1
-            do_configure
-            do_validate_sending
-            # send again -this- email
-            $FUNCNAME
+            # try again
+            cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+            if [[ "$?" != 0 ]] ; then
+                is_message_showed_welcome=1
+                do_configure
+                do_validate_sending
+                # send again -this- email
+                $FUNCNAME
+            fi
         fi
 
     else
 
         # SEND !
-        cat "$tempfile_body" | mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+        cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+
         if [[ "$?" != 0 ]] ; then
-            is_message_showed_welcome=1
-            do_configure
-            do_validate_sending
-            # send again -this- email
-            $FUNCNAME
+            # try again
+            cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+            if [[ "$?" != 0 ]] ; then
+                is_message_showed_welcome=1
+                do_configure
+                do_validate_sending
+                # send again -this- email
+                $FUNCNAME
+            fi
         fi
     fi
 
@@ -230,9 +239,12 @@ do_validate_sending(){
             local message_success_sending
             message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will found a testing email in your account, you can delete it." )" "" )"
 
-            $guitool --info --text="$message_success_sending"
+            if ! { [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; } ; then
+                $guitool --info --text="$message_success_sending"
+            fi
 
             # save our conf because we know that it works now
+            rm -f "$conf" 2>/dev/null
             echo "email_account=\"$email_account\"" >> "$conf"
             echo "email_password=\"$email_password\"" >> "$conf"
             echo "# References that needs to be updated: $HOME/.mutt/accounts/elive-sender" >> "$conf"
@@ -396,6 +408,7 @@ do_configure(){
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
             echo "set copy = no" >> "${conf_mutt}"
+            echo "set timeout = 60" >> "${conf_mutt}"
 
             chmod og-rwx "${conf_mutt}"
 
@@ -449,7 +462,7 @@ usage(){
 - You can use this tool with -m 'message' or concatenating from the standard input
 "
 
-exit
+    exit
 
 }
 
@@ -525,6 +538,8 @@ main(){
                 # note: if you are trying to pass an array full of contents to the message, there's no bug on it, you should pass like: email-sender -m "${arr[*]}", instead of using @
                 message="$OPTARG"
                 el_explain 2 "message is __${message}__"
+                # sometimetimes the stdin detection can fail, but if we have the message parameter is for sure that we don't want the stdin input, so we are defining it
+                unset is_stdin
 
                 ;;
             s)
@@ -584,8 +599,16 @@ main(){
     # is our message from stdin ? use it
     if ((is_stdin)) ; then
         #message="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
-        cat 2>&1 > "$tempfile_tmp"
-        message="$tempfile_tmp"
+        #cat 2>&1 > "$tempfile_tmp"
+        #message="$tempfile_tmp"
+        message="$(</dev/stdin)"
+
+        # check and unset
+        if [[ -n "$message" ]] ; then
+            echo "$message" > "$tempfile_tmp"
+        else
+            unset is_stdin
+        fi
     fi
 
 

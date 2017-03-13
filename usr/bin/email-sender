@@ -587,9 +587,9 @@ main(){
             m)
                 # note: if you are trying to pass an array full of contents to the message, there's no bug on it, you should pass like: email-sender -m "${arr[*]}", instead of using @
                 message="$OPTARG"
-                message_excerpt="${message:0:200}"
+                message_excerpt="${message:0:300}"
 
-                if [[ "$( echo "$message" | wc -m )" -lt 200 ]] ; then
+                if [[ "$( echo "$message" | wc -m )" -lt 300 ]] ; then
                     el_explain 2 "message is __${message} ... (cut)__"
                 else
                     el_explain 2 "message is __${message_excerpt} ... (cut)__"

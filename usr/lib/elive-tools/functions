@@ -893,7 +893,7 @@ el_check_translations_required_notify(){
         if [[ -s "${stat}" ]] ; then
             percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
 
-            if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 20 ]] ; then
+            if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 6 ]] ; then
                 is_translation_required=1
             else
                 return

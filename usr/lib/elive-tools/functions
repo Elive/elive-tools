@@ -514,7 +514,16 @@ el_dependencies_install(){
     cat > "${temp}" << EOF
 #!/bin/bash
 
+if [[ -x "\$( which urxvt )" ]] ; then
 urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+else
+    if [[ -n "\$TERM" ]] ; then
+        su -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
+    else
+        el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
+        sleep 4
+    fi
+fi
 
 EOF
 
@@ -532,16 +541,34 @@ EOF
             done
     else
         if ! el_dependencies_check gksu ; then
+            if [[ -x "$( which urxvt )" ]] ; then
             urxvt -e bash -c "su -c 'apt-get update' root"
             urxvt -e bash -c "su -c 'apt-get install -y gksu' root"
+            else
+                if [[ -n "$TERM" ]] ; then
+                    # if we are in this condition maybe we are in a non-desktop install, so we don't want these things
+                    true
+                else
+                    su -c 'apt-get update ; apt-get install -y gksu' root
+                fi
+            fi
         fi
 
         # multiple gksu attempts
         for i in 1 2 3
         do
+            if [[ -x "$( which gksu )" ]] ; then
             if gksu "$temp" ; then
                 is_password_ok=1
                 break
+            fi
+            else
+                if [[ -n "$TERM" ]] ; then
+                    el_info "Going to install some dependencies, please insert root password"
+                    su -c "$temp" root
+                else
+                    el_error "unable to run $temp, we don't have gksu, graphical system, or even a terminal where to do it"
+                fi
             fi
         done
         fi

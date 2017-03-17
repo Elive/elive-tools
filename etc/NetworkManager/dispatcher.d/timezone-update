@@ -48,7 +48,8 @@ update_ntp_time_from_server(){
         fi
     #fi
 
-    service ntp restart 2>/dev/null 1>&2
+    # we don't need it at all, because we just managed to get the time, so don't waste resources
+    #service ntp restart 2>/dev/null 1>&2
 
     # which mode of bios we have? utc or localtime?
     mode_bios="$(head -3 /etc/adjtime  | tail -1)"

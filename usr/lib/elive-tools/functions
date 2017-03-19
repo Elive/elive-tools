@@ -1681,6 +1681,8 @@ el_step_requires_fixme(){
     else
         cd "${prev_dir}"
         el_set_display_variables
+        local _dummy
+        _dummy="$( eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
         $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
         exit 1
     fi
@@ -1801,6 +1803,9 @@ el_request_report_bug(){
     if el_check_version_development_is_days_recent 30 ; then
 
         if [[ -n "$DISPLAY" ]] ; then
+            local _dummy
+            _dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
+
             local message_report_bug
             message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
@@ -1816,6 +1821,8 @@ el_request_report_bug(){
                 fi
 
                 # explain some details while reporting it
+                local _dummy
+                _dummy="$( eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 local message_instructions
                 message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 sleep 6

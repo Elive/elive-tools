@@ -605,6 +605,9 @@ el_aptget_update(){
 
     if ((want_update)) ; then
         # only run update if we have not updated already 4 hours ago
+        local _dummy
+        _dummy="$( printf "$( eval_gettext "Updating list of packages" )" )"
+        # note: to have translated the next message we need a different declaration ^ so that the string is considered into the including for translate (without TEXTDOMAIN)
         message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
 
         if ! el_verify_internet 2>/dev/null 1>&2 ; then

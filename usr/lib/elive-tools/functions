@@ -886,12 +886,12 @@ el_sudo(){
 
 }
 #===  FUNCTION  ================================================================
-#          NAME:  el_check_translations_required_notify
-#   DESCRIPTION:  check the amount of translations made for actual application,
-#		  telling the user that he can help improving them
+#          NAME:  el_check_translations_required
+#   DESCRIPTION:  check the amount of translations made for actual application
 #    PARAMETERS:  -
+#   RETURNS:      true or false
 #===============================================================================
-el_check_translations_required_notify(){
+el_check_translations_required(){
     # pre {{{
     local textdomaindir stat percentage_untranslated is_translation_required
 
@@ -904,17 +904,17 @@ el_check_translations_required_notify(){
 
     # dont annoy users in the stable released
     if ! el_check_version_development ; then
-        return
+        return 1
     fi
 
     # }}}
 
     if [[ -n "$TEXTDOMAIN" ]] ; then
         # we already said it ?
-        if el_flag check "translation_required_${TEXTDOMAIN}" ; then
-            return
-        fi
-        el_flag add "translation_required_${TEXTDOMAIN}"
+        #if el_flag check "translation_required_${TEXTDOMAIN}" ; then
+            #return 1
+        #fi
+        #el_flag add "translation_required_${TEXTDOMAIN}"
 
         # deprecated location
         #stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
@@ -925,16 +925,19 @@ el_check_translations_required_notify(){
 
             if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 6 ]] ; then
                 is_translation_required=1
-            else
-                return
             fi
         fi
     fi
 
     if ((is_translation_required)) ; then
-        el_notify_user "Translations Improvements" "This application is not fully translated to your language, you can help us translating Elive directly from the 'eltrans' application.\n\nThank you"
+        return 0
+    else
+        return 1
     fi
 
+}
+el_check_translations_required_notify(){
+    el_warning "deprecated function $FUNCNAME from elive-tools functions, please use el_check_translations_required instead"
 }
 
 #===  FUNCTION  ================================================================

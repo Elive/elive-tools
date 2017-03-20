@@ -409,7 +409,12 @@ check_files_owner_compatibility(){
         if [[ -d "$dir" ]] ; then
             el_debug "checking for files not owned by you in '$dir'"
 
-            if find "$dir" ! -user "$USER" 1>/dev/null 2>&1 ; then
+            if [[ "$( find "$dir" ! -user "$USER" 2>/dev/null | wc -l )" -gt 0 ]] ; then
+                echo ""
+                echo ""
+                el_error "These files can give problems:"
+                find "$dir" ! -user "$USER" 2>/dev/null
+
                 echo ""
                 EL_DEBUG=2 el_warning "Files owned by someone else found"
                 el_info "We suggest to configure your sudo to NOPASSWD so this tool can use it, this is important because you are trying to deal with a directory that has files owned not by you and this can cause problems like owners changed on these files when restoring it"

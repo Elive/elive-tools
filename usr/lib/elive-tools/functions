@@ -911,10 +911,10 @@ el_check_translations_required(){
 
     if [[ -n "$TEXTDOMAIN" ]] ; then
         # we already said it ?
-        #if el_flag check "translation_required_${TEXTDOMAIN}" ; then
-            #return 1
-        #fi
-        #el_flag add "translation_required_${TEXTDOMAIN}"
+        if el_flag check "translation_required_${TEXTDOMAIN}" ; then
+            return 1
+        fi
+        el_flag add "translation_required_${TEXTDOMAIN}"
 
         # deprecated location
         #stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"

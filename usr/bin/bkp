@@ -401,8 +401,41 @@ if [[ -s /usr/lib/elive-tools/functions ]] ; then
     el_make_environment
 fi
 
+check_files_owner_compatibility(){
+    local dir
+    # check for files that are not owned by you so it can cause problems using this tool
+    for dir in "$@"
+    do
+        if [[ -d "$dir" ]] ; then
+            el_debug "checking for files not owned by you in '$dir'"
 
+            if find "$dir" ! -user "$USER" 1>/dev/null 2>&1 ; then
+                echo ""
+                EL_DEBUG=2 el_warning "Files owned by someone else found"
+                el_info "We suggest to configure your sudo to NOPASSWD so this tool can use it, this is important because you are trying to deal with a directory that has files owned not by you and this can cause problems like owners changed on these files when restoring it"
+                el_info "Configuration example: add your user to the sudo group and an entry to your /etc/sudoers like:"
+                #el_info "$USER ALL=NOPASSWD: /usr/bin/apt-get install"
+                #el_info "$USER ALL=NOPASSWD: /usr/bin/apt-get*"
+                el_info "$USER ALL=NOPASSWD: /usr/bin/bkp"
+                echo ""
 
+                # we have informed so we can finish here
+                break
+            fi
+        fi
+    done
+}
+
+do_sudo(){
+    # run something as sudo, but if fails warn it
+    if ! $SUDO_MODE "$@" ; then
+        el_error "Unable to run \"$@\""
+        el_info "this could be caused by lack of permissions in the files, a solution is to configured a NOPASSWD mode of sudo for your user and this will will use it"
+        return 1
+    else
+        return 0
+    fi
+}
 
 
 
@@ -414,7 +447,7 @@ do_work(){
     dir="$(pwd)"
     tmpdir="${bkpdir_works}/${namedir}"
 
-    $SUDO_MODE rm -rf "${tmpdir}"
+    do_sudo rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
     rmdir "${tmpdir}" # remove last dir in order to really-copy here
 
@@ -432,7 +465,7 @@ do_work(){
     cd "$target"
 
     if el_confirm "Delete the working state?" ; then
-        $SUDO_MODE rm -rf "${tmpdir}"
+        do_sudo rm -rf "${tmpdir}"
     else
         if el_confirm "Do you want to run a meld with the original directory?" ; then
             if ! el_dependencies_check meld ; then
@@ -453,11 +486,11 @@ do_purge_olds(){
 
     # remove backups
     if [[ -d "${bkpdir_backups}" ]] ; then
-        $SUDO_MODE rm -rf "${bkpdir_backups}/%"*
+        do_sudo rm -rf "${bkpdir_backups}/%"*
     fi
     # remove working states
     if [[ -d "${bkpdir_works}" ]] ; then
-        $SUDO_MODE rm -rf "${bkpdir_works}/%"*
+        do_sudo rm -rf "${bkpdir_works}/%"*
     fi
 
 
@@ -498,9 +531,10 @@ do_save(){
     echo -ne "Saving..."
 
     #      rsync -av --delete "${target}/" "${bkpdir_id}/"
-    $SUDO_MODE rdiff-backup "${1}/" "${2}/"
+    check_files_owner_compatibility "${1}/"
+    do_sudo rdiff-backup "${1}/" "${2}/"
 
-    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$2" | wc -l )"
+    version="$( do_sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
 
     echo -e "\r${el_c_g}Saved${el_c_n}  [${version}]"
     #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
@@ -522,14 +556,16 @@ do_get(){
         history_num="1"
     fi
 
-    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    $SUDO_MODE rm -rf "${1}.get"
-    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.get/"
+    do_sudo rm -rf "${1}.get"
 
-    $SUDO_MODE rsync -av --delete "${1}.get/" "${2}/"
+    #check_files_owner_compatibility "${1}" # we don't need to check a dir to restore, so we have checked it at saving
+    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+
+    do_sudo rsync -av --delete "${1}.get/" "${2}/"
 
     cd "${2}"
 
@@ -537,9 +573,9 @@ do_get(){
 
 
 do_list(){
-    $SUDO_MODE rdiff-backup -l "${1}"
+    do_sudo rdiff-backup -l "${1}"
     echo ""
-    $SUDO_MODE rdiff-backup --parsable-output -l "${1}"
+    do_sudo rdiff-backup --parsable-output -l "${1}"
 }
 
 
@@ -556,18 +592,18 @@ do_meld(){
         history_num="1"
     fi
 
-    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    $SUDO_MODE rm -rf "${1}.differ"
-    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    do_sudo rm -rf "${1}.differ"
+    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    $SUDO_MODE meld "${1}.differ/" "${2}/"
+    do_sudo meld "${1}.differ/" "${2}/"
 
-    $SUDO_MODE rm -rf "${1}.differ"
+    do_sudo rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -586,12 +622,12 @@ do_diff(){
         history_num="1"
     fi
 
-    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    $SUDO_MODE rm -rf "${1}.differ"
-    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    do_sudo rm -rf "${1}.differ"
+    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -600,7 +636,7 @@ do_diff(){
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
     diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
 
-    $SUDO_MODE rm -rf "${1}.differ"
+    do_sudo rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -619,12 +655,12 @@ do_diff_reverse(){
         history_num="1"
     fi
 
-    version="$( $SUDO_MODE rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
-    $SUDO_MODE rm -rf "${1}.differ"
-    $SUDO_MODE rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    do_sudo rm -rf "${1}.differ"
+    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -633,7 +669,7 @@ do_diff_reverse(){
     echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
     diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
 
-    $SUDO_MODE rm -rf "${1}.differ"
+    do_sudo rm -rf "${1}.differ"
 
     cd "${2}"
 }
@@ -641,8 +677,8 @@ do_diff_reverse(){
 
 do_remove(){
     if [[ -d "${1}" ]] ; then
-        $SUDO_MODE rm -rf "${1}"
-        $SUDO_MODE rm -rf "${1}."*
+        do_sudo rm -rf "${1}"
+        do_sudo rm -rf "${1}."*
 
         echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
     else
@@ -679,7 +715,7 @@ main(){
     fi
 
     # do we have automated access to sudo ? use sudo
-    if el_check_sudo_automated ; then
+    if el_check_sudo_automated 2>/dev/null ; then
         SUDO_MODE="sudo"
     else
         SUDO_MODE=""

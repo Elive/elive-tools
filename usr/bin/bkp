@@ -633,8 +633,15 @@ do_diff(){
 
     diff -Naur "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
 
-    echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
-    diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+    #if [[ -n "$( which lsdiff )" ]] ; then
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
+        #diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+    #else
+        local _different_files
+        _different_files="$( diff -Naur "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_differen_files"
+        diff -Naur "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+    #fi
 
     do_sudo rm -rf "${1}.differ"
 
@@ -666,8 +673,15 @@ do_diff_reverse(){
 
     diff -Naur "${2}/" "${1}.differ/" | strings | sed -e "s|+++ ${1}.differ|+++ a|g" -e "s|--- ${2}|--- b|g" | colordiff
 
-    echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
-    diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+    #if [[ -n "$( which lsdiff )" ]] ; then
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
+        #diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+    #else
+        local _different_files
+        _different_files="$( diff -Naur "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_differen_files"
+        diff -Naur "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+    #fi
 
     do_sudo rm -rf "${1}.differ"
 

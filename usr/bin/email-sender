@@ -87,7 +87,7 @@ do_email_send(){
 
     # User on Hostname (default headertext)
     if [[ -z "$headertext" ]] ; then
-        headertext="$( echo "${username} on $(hostname | sed 's/[^ _-]*/\u&/g' )|g" )"
+        headertext="$( echo "${username} on $(hostname | sed 's/[^ _-]*/\u&/g' )" )"
     fi
 
     # default message if no messages

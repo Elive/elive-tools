@@ -456,7 +456,7 @@ do_work(){
     mkdir -p "${tmpdir}"
     rmdir "${tmpdir}" # remove last dir in order to really-copy here
 
-    cp -a "${dir}" "${tmpdir}"
+    cp -aL "${dir}" "${tmpdir}"
 
     cd "${tmpdir}"
 

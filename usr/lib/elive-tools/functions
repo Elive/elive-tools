@@ -1933,12 +1933,12 @@ el_request_donation(){
     # }}}
 
     local _dummy
-    _dummy="$( eval_gettext "Elive enjoys making the life of the users more easy, there's thousands of features and helpers that makes the overall experience more complete and compatible. Unfortunately Elive only survives by donations and actually they are only enough to pay the work of one person, which is making Elive since 13 years now." )"
+    _dummy="$( eval_gettext "Elive enjoys making the life of the users more easy, there's thousands of features and helpers that makes the overall experience more complete and compatible. Unfortunately Elive only survives by donations and actually they are only enough to pay the work of only one person, which is making Elive since 13 years now." )"
     local _dummy2
     _dummy2="$( eval_gettext "Would you like to support Elive with a donation?" )"
 
     local _dummy3
-    _dummy3="$( eval_gettext "To make a donation only takes one or two minutes, but with your support it guarantees that there will be more versions of Elive in the future and more improved!" )"
+    _dummy3="$( eval_gettext "To make a donation only takes one or two minutes, and it guarantees that there will be more versions of Elive in the future and more improved!" )"
 
     # show it
     $guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )"

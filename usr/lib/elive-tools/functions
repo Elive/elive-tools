@@ -1941,12 +1941,12 @@ el_request_donation(){
     _dummy3="$( eval_gettext "To make a donation only takes one or two minutes, but with your support it guarantees that there will be more versions of Elive in the future and more improved!" )"
 
     # show it
-    $guitool --info --text="$( eval_gettext "$_dummy" )"
+    $guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )"
 
-    if $guitool --question --text="$( eval_gettext "$_dummy2" )" ; then
+    if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy2" )" ; then
         /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
     else
-        if $guitool --question --text="$( eval_gettext "$_dummy3" )" ; then
+        if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy3" )" ; then
             /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
         fi
     fi

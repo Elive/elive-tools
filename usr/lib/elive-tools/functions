@@ -1920,6 +1920,40 @@ el_user_email_get(){
     fi
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_request_donation
+#   DESCRIPTION:  ask to the user to make a donation to elive
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+el_request_donation(){
+    # pre {{{
+    local arg
+
+    # }}}
+
+    local _dummy
+    _dummy="$( printf "$( eval_gettext "Elive enjoys making the life of the users more easy, there's thousands of features and helpers that makes the overall experience more complete and compatible. Unfortunately Elive only survives by donations and actually they are only enough to pay the work of the founder." )" )"
+    local _dummy2
+    _dummy2="$( printf "$( eval_gettext "Would you like to support Elive with a donation?" )" )"
+
+    local _dummy3
+    _dummy3="$( printf "$( eval_gettext "To make a donation only takes one or two minutes, but with your support it guarantees that there will be more versions of Elive in the future and more improved!" )" )"
+
+    # show it
+    $guitool --info --text="$( eval_gettext "$_dummy" )"
+
+    if $guitool --question --text="$( eval_gettext "$_dummy2" )" ; then
+        /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
+    else
+        if $guitool --question --text="$( eval_gettext "$_dummy3" )" ; then
+            /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
+        fi
+    fi
+
+
+}
+
 
 ###################################################################
 #  Always run:

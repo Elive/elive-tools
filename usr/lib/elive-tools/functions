@@ -515,10 +515,10 @@ el_dependencies_install(){
 #!/bin/bash
 
 if [[ -x "\$( which urxvt )" ]] ; then
-urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get-wait -f install ; echo ; echo ; if ! apt-get-wait install -y $depends ; then el_aptget_update force ; if ! apt-get-wait install -y $depends ; then apt-get-wait -f install ; el_aptget_update force ; apt-get-wait install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
 else
     if [[ -n "\$TERM" ]] ; then
-        su -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
+        su -c "source /usr/lib/elive-tools/functions ; el_aptget_update ; apt-get-wait -f install ; echo ; echo ; if ! apt-get-wait install -y $depends ; then el_aptget_update force ; if ! apt-get-wait install -y $depends ; then apt-get-wait -f install ; el_aptget_update force ; apt-get-wait install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
     else
         el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
         sleep 4
@@ -542,14 +542,14 @@ EOF
     else
         if ! el_dependencies_check gksu ; then
             if [[ -x "$( which urxvt )" ]] ; then
-            urxvt -e bash -c "su -c 'apt-get update' root"
-            urxvt -e bash -c "su -c 'apt-get install -y gksu' root"
+            urxvt -e bash -c "su -c 'apt-get-wait update' root"
+            urxvt -e bash -c "su -c 'apt-get-wait install -y gksu' root"
             else
                 if [[ -n "$TERM" ]] ; then
                     # if we are in this condition maybe we are in a non-desktop install, so we don't want these things
                     true
                 else
-                    su -c 'apt-get update ; apt-get install -y gksu' root
+                    su -c 'apt-get-wait update ; apt-get-wait install -y gksu' root
                 fi
             fi
         fi
@@ -616,28 +616,28 @@ el_aptget_update(){
 
         if [[ "$UID" = 0 ]] ; then
             if [[ -n "$DISPLAY" ]] ; then
-                { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                { apt-get-wait update || apt-get-wait update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
-                apt-get update || apt-get update
+                apt-get-wait update || apt-get-wait update
             fi
         else
             if el_check_sudo_automated ; then
                 if [[ -n "$DISPLAY" ]] ; then
-                    { sudo apt-get update || sudo apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    { sudo apt-get-wait update || sudo apt-get-wait update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
-                    sudo apt-get update || sudo apt-get update
+                    sudo apt-get-wait update || sudo apt-get-wait update
                 fi
             else
                 if [[ -n "$DISPLAY" ]] ; then
                     if ! el_dependencies_check gksu ; then
                         el_dependencies_install "gksu"
                     fi
-                    #gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    #gksu apt-get-wait update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     # multiple gksu attempts
                     for i in 1 2 3
                     do
                         if gksu "$temp" ; then
-                            if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
+                            if gksu apt-get-wait update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
                                 is_password_ok=1
                                 break
                             fi
@@ -649,7 +649,7 @@ el_aptget_update(){
                     fi
 
                 else
-                    su -c "apt-get update || apt-get update" root
+                    su -c "apt-get-wait update || apt-get-wait update" root
                 fi
             fi
         fi

@@ -17,10 +17,29 @@ if el_confirm "Push now?" ; then
     echo "$result"
     echo ""
 
+    # bad connection, try again
+    if echo "$result" | grep -qs "Could not resolve hostname" ; then
+        sleep 2
+        result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
+        echo "$result"
+        echo ""
+        el_error "failed connection, try again?"
+    fi
+
+    # nothing added?
     if echo "$result" | grep -qs "Everything up-to-date" ; then
         el_error "nothing pushed"
-    else
+    fi
+
+    # pushed correctly
+    if echo "$result" | grep -qs "Writing objects.*done" ; then
         el_info "pushed"
+    fi
+
+    if LC_ALL=C command git status 2>&1 | grep -qs "Untracked files" ; then
+        command git status
+        echo ""
+        el_warning "Untracked files remaining"
     fi
 else
     echo ""

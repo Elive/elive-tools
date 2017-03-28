@@ -40,15 +40,10 @@ main(){
     fi
 
     if [[ "$( echo "$matches" | wc -l )" -gt 1 ]] ; then
-        echo -e "\nMatches found:"
+        echo -e "\nMultiple matches found:"
         echo "$matches" | grep --color=auto "$filename"
-        echo -e "\nPlease be more precise or insert it:"
-        el_explain 0 "Tip: If you recently edited the file you can also use the :MRU feature in vim"
 
-        read matches
-        if [[ -f "$matches" ]] ; then
-            $EDITOR "$matches"
-        fi
+        $EDITOR $matches
     fi
 
 }

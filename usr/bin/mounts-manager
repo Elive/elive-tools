@@ -791,6 +791,7 @@ el_mount(){
     # re-read partition table and try again
     sync
     /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
+    /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
     sync
 
     # try to mount
@@ -812,6 +813,7 @@ el_mount(){
 
     sync
     /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
+    /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
     sync
 
     # try to mount
@@ -852,6 +854,7 @@ el_mount(){
     if [[ "$UID" = 0 ]] ; then
         sync ; sleep 1
         /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
+        /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
         uuid="$( lsblk -nio UUID "$dev" )"
         target="/mnt/${uuid}_elive"
         mkdir -p "$target"

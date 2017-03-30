@@ -4,6 +4,9 @@ source /usr/lib/elive-tools/functions
 . gettext.sh
 export TEXTDOMAIN="elive-tools"
 
+# set user home
+[[ -z $HOME ]] && export HOME="/home/$(id -un)"
+
 select_card_multiple(){
     local _id _description menu
     # list cards, per priority

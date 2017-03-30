@@ -1,6 +1,8 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 # gettext not works here because we are on first page
+# set user home, so there's a bug
+[[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
 main(){
     # pre {{{

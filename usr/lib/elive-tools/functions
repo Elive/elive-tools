@@ -104,6 +104,7 @@ fi
 # extra vars
 source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
+[[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
 
 #-------------------------------------------------------------------------------

@@ -27,12 +27,12 @@ if el_confirm "Push now?" ; then
     fi
 
     # nothing added?
-    if echo "$result" | grep -qs "\.\..*-> " ; then
+    if echo "$result" | grep -qs "Everything up-to-date" ; then
         el_error "nothing pushed"
     fi
 
     # pushed correctly
-    if echo "$result" | grep -qs "Writing objects.*done" ; then
+    if echo "$result" | grep -qs "\.\..*-> " ; then
         el_info "pushed"
     fi
 

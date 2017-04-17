@@ -2,25 +2,41 @@
 source /usr/lib/elive-tools/functions
 main(){
     # pre {{{
-    local message result
+    local message result arg
 
+    for arg in "$@" ; do
+        case $arg in
+            -p|--push)
+                shift
+                is_push=1
+                ;;
+            -m|--message)
+                shift
+                message="$1"
+                shift
+                ;;
+        esac
+    done
     # }}}
 
     command git diff
     command git status
 
-    if [[ -n "$1" ]] ; then
-        message="$@"
-    else
-        echo -e ""
-        echo -e "Going to commit everything listed, press ^C for cancel"
-        echo -e "Message?"
-        read -e message
+    if [[ -z "$message" ]] ; then
+        if [[ -n "$1" ]] ; then
+            message="$@"
+        else
+            echo -e ""
+            echo -e "Going to commit everything listed, press ^C for cancel"
+            echo -e "Message?"
+            read -e message
+        fi
     fi
 
-        command git commit -am "$message"
 
-    if el_confirm "Push now?" ; then
+    command git commit -am "$message"
+
+    if ((is_push)) || el_confirm "Push now?" ; then
 
         result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
         echo "$result"

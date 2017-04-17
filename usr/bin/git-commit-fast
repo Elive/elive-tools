@@ -1,46 +1,64 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+main(){
+    # pre {{{
+    local message result
 
-git diff
-git status
+    # }}}
 
-echo -e ""
-echo -e "Going to commit everything listed, press ^C for cancel"
-echo -e "Message?"
-read -e message
+    command git diff
+    command git status
 
-git commit -am "$message"
+    if [[ -n "$1" ]] ; then
+        message="$@"
+    else
+        echo -e ""
+        echo -e "Going to commit everything listed, press ^C for cancel"
+        echo -e "Message?"
+        read -e message
+    fi
 
-if el_confirm "Push now?" ; then
+        command git commit -am "$message"
 
-    result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
-    echo "$result"
-    echo ""
+    if el_confirm "Push now?" ; then
 
-    # bad connection, try again
-    if echo "$result" | grep -qs "Could not resolve hostname" ; then
-        sleep 2
         result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
         echo "$result"
         echo ""
-        el_error "failed connection, try again?"
-    fi
 
-    # nothing added?
-    if echo "$result" | grep -qs "Everything up-to-date" ; then
-        el_error "nothing pushed"
-    fi
+        # bad connection, try again
+        if echo "$result" | grep -qs "Could not resolve hostname" ; then
+            sleep 2
+            result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
+            echo "$result"
+            echo ""
+            el_error "failed connection, try again?"
+        fi
 
-    # pushed correctly
-    if echo "$result" | grep -qs "\.\..*-> " ; then
-        el_info "pushed"
-    fi
+        # nothing added?
+        if echo "$result" | grep -qs "Everything up-to-date" ; then
+            el_error "nothing pushed"
+        fi
 
-    if LC_ALL=C command git status 2>&1 | grep -qs "Untracked files" ; then
-        command git status
+        # pushed correctly
+        if echo "$result" | grep -qs "\.\..*-> " ; then
+            el_info "pushed"
+        fi
+
+        if LC_ALL=C command git status 2>&1 | grep -qs "Untracked files" ; then
+            command git status
+            echo ""
+            el_warning "Untracked files remaining"
+        fi
+    else
         echo ""
-        el_warning "Untracked files remaining"
     fi
-else
-    echo ""
-fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

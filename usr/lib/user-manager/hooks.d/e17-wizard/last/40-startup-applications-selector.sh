@@ -157,7 +157,7 @@ main(){
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
         if ! grep -qs "elxstrt.desktop" "$HOME/.e/e17/applications/startup/.order" ; then
-            echo "elxstrt.desktop" >> "$HOME/.e/e17/applications/startup/.order"
+            echo "$HOME/.local/share/applications/elxstrt.desktop" >> "$HOME/.e/e17/applications/startup/.order"
         fi
     fi
 

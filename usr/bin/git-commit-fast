@@ -19,7 +19,7 @@ main(){
     done
     # }}}
 
-    command git diff
+    command git --no-pager diff
     command git status
 
     if [[ -z "$message" ]] ; then

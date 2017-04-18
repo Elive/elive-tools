@@ -14,6 +14,9 @@ main(){
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
     RAM_TOTAL_SIZE_mb="${RAM_TOTAL_SIZE_mb%.*}"
 
+    if grep -qs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
 
     # }}}
 
@@ -138,8 +141,7 @@ main(){
     fi
 
     # live (auto) mode?
-    if grep -qs "boot=live" /proc/cmdline ; then
-
+    if ((is_live)) ; then
         # create result variable
         for line in "${menu_auto[@]}"
         do
@@ -181,31 +183,33 @@ main(){
     done 3<<< "$( echo "$answer" | tr '|' '\n' )"
 
     # polkit auth
-    if ! ((is_polkit_auth_included)) ; then
-        if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
-            if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent, but is very important for the correct work of your system, it allows you to use media devices or mount hard disks. But Elive can add a special configuration that can allows you to still use perfectly the disks, are you sure that you want to disable it ?" )" ; then
-                is_polkit_auth_disabled_wanted=1
-            else
-                # re-enable it
-                file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
-                if [[ -s "$file" ]] ; then
-                    if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
-                        echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
-                    fi
-                else
-                    el_error "Polkit startup file not found"
-                    sleep 2
-                fi
-            fi
-        else
-            is_polkit_auth_disabled_wanted=1
-        fi
 
-        # we don't want the daemon running, but user needs to access to disks, ask him
-        if ((is_polkit_auth_disabled_wanted)) ; then
-            if zenity --question --text="$( eval_gettext "Do you want to have full access to the hard disks for this user ?" )" ; then
-                #cat > /var/lib/polkit-1/localauthority/10-vendor.d/10-live-cd.pkla << EOF
-                cat > /tmp/.$(basename $0 )-${USER}.txt << EOF
+    if ! ((is_live)) ; then
+        if ! ((is_polkit_auth_included)) ; then
+            if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
+                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent, but is very important for the correct work of your system, it allows you to use media devices or mount hard disks. But Elive can add a special configuration that can allows you to still use perfectly the disks, are you sure that you want to disable it ?" )" ; then
+                    is_polkit_auth_disabled_wanted=1
+                else
+                    # re-enable it
+                    file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
+                    if [[ -s "$file" ]] ; then
+                        if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+                            echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
+                        fi
+                    else
+                        el_error "Polkit startup file not found"
+                        sleep 2
+                    fi
+                fi
+            else
+                is_polkit_auth_disabled_wanted=1
+            fi
+
+            # we don't want the daemon running, but user needs to access to disks, ask him
+            if ((is_polkit_auth_disabled_wanted)) ; then
+                if zenity --question --text="$( eval_gettext "Do you want to have full access to the hard disks for this user ?" )" ; then
+                    #cat > /var/lib/polkit-1/localauthority/10-vendor.d/10-live-cd.pkla << EOF
+                    cat > /tmp/.$(basename $0 )-${USER}.txt << EOF
 # Policy to allow the user $USER to bypass policykit
 [Elive special user permissions]
 Identity=unix-user:${USER}
@@ -215,27 +219,30 @@ ResultInactive=no
 ResultActive=yes
 EOF
 
-                el_dependencies_check "gksu"
-                gksu "cp /tmp/.$( basename $0 )-${USER}.txt /var/lib/polkit-1/localauthority/10-vendor.d/10-elive-user-${USER}.pkla"
+                    el_dependencies_check "gksu"
+                    gksu "cp /tmp/.$( basename $0 )-${USER}.txt /var/lib/polkit-1/localauthority/10-vendor.d/10-elive-user-${USER}.pkla"
+                fi
             fi
         fi
     fi
 
 
     # gdu
-    if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
-        if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case there are errors discovered on your hard disk. Are you sure you want to disable it ?" )" ; then
-            true
-        else
-            # re-enable it
-            file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
-            if [[ -s "$file" ]] ; then
-                if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
-                    echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
-                fi
+    if ! ((is_live)) ; then
+        if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
+            if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case there are errors discovered on your hard disk. Are you sure you want to disable it ?" )" ; then
+                true
             else
-                el_error "Gdu startup file not found"
-                sleep 2
+                # re-enable it
+                file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
+                if [[ -s "$file" ]] ; then
+                    if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+                        echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
+                    fi
+                else
+                    el_error "Gdu startup file not found"
+                    sleep 2
+                fi
             fi
         fi
     fi

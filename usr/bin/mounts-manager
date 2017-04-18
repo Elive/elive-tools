@@ -400,6 +400,19 @@ get_mountpoint(){
         return 1
     fi
 
+    # redirect to the correct device if we found it easly
+    if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+        dev="${dev##*/}"
+
+        if [[ -b "/dev/mapper/${dev}" ]] ; then
+            dev="$/dev/mapper/${dev}"
+        else
+            if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
+                dev="/dev/mapper/${dev}_crypt"
+            fi
+        fi
+    fi
+
 
     mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     read -r mountpoint <<< "$mountpoint"
@@ -467,6 +480,18 @@ check_is_mounted(){
         if [[ ! -b "$device" ]] ; then
             el_error "$FUNCNAME, device $device doesn't seems to exist"
             return 1
+        fi
+        # redirect to the correct device if we found it easly
+        if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+            dev="${dev##*/}"
+
+            if [[ -b "/dev/mapper/${dev}" ]] ; then
+                dev="$/dev/mapper/${dev}"
+            else
+                if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
+                    dev="/dev/mapper/${dev}_crypt"
+                fi
+            fi
         fi
     else
         is_mountpoint=1
@@ -541,6 +566,18 @@ el_umount(){
             if [[ ! -b "$device" ]] ; then
                 el_error "$FUNCNAME, device $device doesn't seems to exist"
                 return 1
+            fi
+            # redirect to the correct device if we found it easly
+            if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+                dev="${dev##*/}"
+
+                if [[ -b "/dev/mapper/${dev}" ]] ; then
+                    dev="$/dev/mapper/${dev}"
+                else
+                    if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
+                        dev="/dev/mapper/${dev}_crypt"
+                    fi
+                fi
             fi
         else
             is_mountpoint=1
@@ -767,6 +804,18 @@ el_mount(){
     if [[ "$dev" != "/dev/"* ]] || [[ ! -b "$dev" ]] ; then
         el_error "Argument passed to $FUNCNAME is not a device: $dev"
         return 1
+    fi
+    # redirect to the correct device if we found it easly
+    if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+        dev="${dev##*/}"
+
+        if [[ -b "/dev/mapper/${dev}" ]] ; then
+            dev="$/dev/mapper/${dev}"
+        else
+            if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
+                dev="/dev/mapper/${dev}_crypt"
+            fi
+        fi
     fi
 
     if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then

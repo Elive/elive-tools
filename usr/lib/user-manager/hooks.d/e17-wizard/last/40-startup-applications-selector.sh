@@ -61,7 +61,7 @@ main(){
         fi
 
         # auto menu for live mode
-        if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|elive-)" ; then
+        if echo "$filename" | grep -qsEi "^(polkit|elive-)" ; then
             menu_auto+=("$file")
         fi
         # - default to enabled/disabled }}}

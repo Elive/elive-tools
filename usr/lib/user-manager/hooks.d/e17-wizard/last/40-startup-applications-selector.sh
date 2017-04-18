@@ -152,6 +152,13 @@ main(){
         answer="$( zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
     fi
 
+    # include the legacy elxstrt always
+    if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
+        if ! grep -qs "elxstrt.desktop" "$HOME/.e/e17/applications/startup/.order" ; then
+            echo "elxstrt.desktop" >> "$HOME/.e/e17/applications/startup/.order"
+        fi
+    fi
+
 
     while read -ru 3 file
     do

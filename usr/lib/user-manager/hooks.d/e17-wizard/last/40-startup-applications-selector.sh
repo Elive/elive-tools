@@ -8,7 +8,7 @@ export TEXTDOMAIN
 
 main(){
     # pre {{{
-    local file menu message_gui
+    local file menu menu_auto message_gui
 
     RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
@@ -60,6 +60,10 @@ main(){
             fi
         fi
 
+        # auto menu for live mode
+        if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|elive-)" ; then
+            menu_auto+=("$file")
+        fi
         # - default to enabled/disabled }}}
 
         # include file
@@ -133,7 +137,21 @@ main(){
         message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Elive has already selected the best option for you." )" )"
     fi
 
-    answer="$( zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+    # live (auto) mode?
+    if grep -qs "boot=live" /proc/cmdline ; then
+
+        # create result variable
+        for line in "${menu_auto[@]}"
+        do
+            answer="${line}|${answer%|}"
+        done
+
+    else
+
+        # interactive mode, default
+        answer="$( zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+    fi
+
 
     while read -ru 3 file
     do

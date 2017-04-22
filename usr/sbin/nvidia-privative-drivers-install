@@ -406,7 +406,7 @@ interactive_ask_driver_version(){
                     _desc="$( printf "$( eval_gettext "Drivers for oldest cards" )" )"
                     ;;
                 *legacy-71xx)
-                    _desc="$( printf "$( eval_gettext "Drivers for dinousaur devices" )" )"
+                    _desc="$( printf "$( eval_gettext "Drivers for dinosaur devices" )" )"
                     ;;
                 *legacy*)
                     _desc="$( printf "$( eval_gettext "Old drivers" )" )"
@@ -596,10 +596,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the NVIDIA when needs more performance. You can use in Elive the Nvidia if you install Nvidia or it will use the Intel if you don't, so we are going to use now the Nvidia which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the Nvidia when needs more performance. You can use in Elive the Nvidia if you install Nvidia or it will use the Intel if you don't, so we are going to use now the Nvidia which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \

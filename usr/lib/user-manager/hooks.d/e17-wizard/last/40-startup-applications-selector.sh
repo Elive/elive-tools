@@ -251,9 +251,9 @@ EOF
     if test -s "$HOME/.e/e17/applications/startup/.order" ; then
         while read -ru 3 line
         do
-            executable="$( echo "$line" | grep "^Exec=" | sed -e 's|^Exec=||g' | tail -1 )"
+            executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
             if [[ -s "$executable" ]] ; then
-                bash -c "$executable"
+                bash -c "$executable & disown"
             else
                 if el_check_version_development ; then
                     zenity --error --text="Unable to execute ${execute}, please report this bug to Elive" &

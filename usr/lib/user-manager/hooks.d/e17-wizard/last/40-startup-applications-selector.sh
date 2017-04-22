@@ -252,12 +252,8 @@ EOF
         while read -ru 3 line
         do
             executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
-            if [[ -s "$executable" ]] ; then
+            if [[ -n "$executable" ]] ; then
                 bash -c "$executable & disown"
-            else
-                if el_check_version_development ; then
-                    zenity --error --text="Unable to execute ${execute}, please report this bug to Elive" &
-                fi
             fi
         done 3<<< "$( cat "$HOME/.e/e17/applications/startup/.order")"
     fi

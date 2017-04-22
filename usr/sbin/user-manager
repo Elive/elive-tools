@@ -263,7 +263,7 @@ changepass(){
 
 ###########################################################################
 firstoption(){
-    selection="$( $guitool --list --text="$( eval_gettext "Selection an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" || echo cancel )"
+    selection="$( $guitool --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" || echo cancel )"
 
     [[ "$selection" = "cancel" ]] && exit 1
     [[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }

@@ -1690,8 +1690,8 @@ el_step_requires_fixme(){
         cd "${prev_dir}"
         el_set_display_variables
         local _dummy
-        _dummy="$( eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
-        $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or uncomplete code found, report this if you found it neccessary. Exiting..." )"
+        _dummy="$( eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
+        $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
         exit 1
     fi
 

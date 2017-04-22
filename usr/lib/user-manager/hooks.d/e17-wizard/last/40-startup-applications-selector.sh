@@ -247,6 +247,20 @@ EOF
         fi
     fi
 
+    # RUN the already selected .desktops to launch at start, otherwise we will have problems like authentications in the first boot (gparted or mounting disks failing)
+    if test -s "$HOME/.e/e17/applications/startup/.order" ; then
+        while read -ru 3 line
+        do
+            executable="$( echo "$line" | grep "^Exec=" | sed -e 's|^Exec=||g' | tail -1 )"
+            if [[ -s "$executable" ]] ; then
+                bash -c "$executable"
+            else
+                if el_check_version_development ; then
+                    zenity --error --text="Unable to execute ${execute}, please report this bug to Elive" &
+                fi
+            fi
+        done 3<<< "$( cat "$HOME/.e/e17/applications/startup/.order")"
+    fi
 
     # if we are debugging give it a little pause to see what is going on
     if grep -qs "debug" /proc/cmdline ; then

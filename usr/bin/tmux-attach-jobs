@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [[ -z "$3" ]]; then
     #echo "Specify session name as the first argument"
@@ -17,7 +18,8 @@ shift
 win_name="$1"
 shift
 
-tmux_nb="$(tmux ls 2>/dev/null | grep "^${group_session}: " | wc -l)"
+# note since there may be some missing env variables that will give us an empty result (if run from cronjobs for example), let's run this from a bash sub-wrapper
+tmux_nb="$(bash -c "tmux ls 2>/dev/null" | grep "^${group_session}: " | wc -l)"
 
 if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."
@@ -31,13 +33,14 @@ else
     # Make sure we are not already in a tmux session
     if [[ -z "$TMUX" ]]; then
         # Kill defunct sessions first
-        old_sessions=$(tmux ls 2>/dev/null | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
+        old_sessions=$(bash -c "tmux ls 2>/dev/null" | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
         for old_session_id in $old_sessions; do
             tmux kill-session -t $old_session_id
         done
 
         # run things in a new window
-        tmux new-window -t ${group_session}:+ -n "$win_name" "$@"
+        #tmux new-window -t ${group_session}:+ -n "$win_name" "$@"
+        tmux new-window -t ${group_session} -n "$win_name" "$@"
 
         echo "Jobs run in a background tmux"
         echo "Tip: run 'tmux ls' to list tmux sessions or go to it with 'tmux attach -t $group_session'"

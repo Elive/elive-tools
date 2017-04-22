@@ -334,7 +334,7 @@ do_validate_sending(){
 
     # configure pop / imap?
     local message_popimap
-    message_popimap="$( printf "$( eval_gettext "Do you want to configure now the POP and IMAP options in your gmail account? You need them to be enabled." )" )"
+    message_popimap="$( printf "$( eval_gettext "Do you want to configure now the POP and IMAP options in your Gmail account? You need them to be enabled." )" )"
     if $guitool --question --text="$message_popimap" ; then
         /etc/alternatives/x-www-browser "https://mail.google.com/mail/#settings/fwdandpop" &
         sleep 25

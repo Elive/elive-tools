@@ -26,7 +26,7 @@ main(){
 
             if echo "$percent" | grep -qs "[[:digit:]]" ; then
                 local message_translated
-                message_translated="$( printf "$( eval_gettext "Elive is translated %s %% to your language, you can improve these translations by using the application called eltrans and helping everybody to enjoy them." )" "$percent" )"
+                message_translated="$( printf "$( eval_gettext "Elive is translated %s %% to your language, you can improve these translations by using the application called eltrans and it will help everybody to enjoy them." )" "$percent" )"
 
                 if [[ "$percent" -ge 0 ]] && [[ "$percent" -le 100 ]] ; then
                     zenity --info --text="$message_translated"

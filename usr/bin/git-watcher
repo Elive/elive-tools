@@ -1263,7 +1263,7 @@ do_cherry_pick_menu(){
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
-    option_show "n" "Next commit, (abort cherry-pick)"
+    option_show "n" "Abort / Next commit"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
     option_show "h" "mergetool config"

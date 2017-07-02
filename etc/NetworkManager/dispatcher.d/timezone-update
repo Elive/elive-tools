@@ -1,6 +1,9 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+. /lib/lsb/init-functions
+
+
 # This tool is called as:   command eth1 up
 
 update_conf_etc(){
@@ -13,6 +16,7 @@ update_conf_etc(){
     fi
 
     el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
+    log_progress_msg "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
 
     rm -f /etc/localtime
     ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
@@ -71,6 +75,7 @@ update_ntp_time_from_server(){
 
     # say something
     el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
+    log_progress_msg "Changed Timezone to __${timezone}__, time is now __$(date)__"
 }
 
 
@@ -331,6 +336,7 @@ EOF
     # update times
     if [[ -z "$timezone_last" ]] ; then
         el_explain 0 "Updating last timezone to __${timezone}__"
+        log_progress_msg "Updating last timezone to __${timezone}__"
         echo "last:::${timezone}" >> "${conf}"
     fi
 
@@ -380,7 +386,10 @@ EOF
 #
 #  MAIN
 #
+log_daemon_msg "Starting $(basename $0)"
+
 main "$@"
 
+log_end_msg 0
 # vim: set foldmethod=marker :
 

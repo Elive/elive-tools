@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 
 get_all_partitions_list(){
     # get a normal list of partitions {{{
-    for i in /dev/mapper/* /dev/[shv]d[a-z][0-9]* /dev/vd[a-z] /dev/[shv]d[a-z]
+    for i in /dev/mapper/* /dev/[shv]d[a-z][0-9]* /dev/xvd[a-z][0-9]* /dev/vd[a-z] /dev/[shv]d[a-z] /dev/nvme[0-9]*n /dev/nvme[0-9]*n[0-9]*
     do
         if [[ -b "$i" ]] ; then
             if udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then
@@ -524,8 +524,19 @@ get_filesystem_file(){
 
 get_filesystem_id(){
     local ret
-    ret="$(sfdisk --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
-    [[ -z "$ret" ]] && ret="$(sfdisk --force --print-id "$( echo "$1" | sed 's/[0-9]/ &/')" 2>/dev/null )" || true
+    if [[ "$1" = /dev/nvme* ]] ; then
+        ret="$(sfdisk --print-id $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+    else
+        ret="$(sfdisk --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+    fi
+
+    if [[ -z "$ret" ]] ; then
+        if [[ "$1" = /dev/nvme* ]] ; then
+            ret="$(sfdisk --force --print-id $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+        else
+            ret="$(sfdisk --force --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+        fi
+    fi
 
     #   if [ "$?" != "0" ]; then
     #      echo "auto"

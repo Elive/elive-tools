@@ -49,6 +49,29 @@ restart_daemons(){
     # - restart daemons }}}
 }
 #===  FUNCTION  ================================================================
+#          NAME:  refresh_partition_table
+#   DESCRIPTION:  refresh disks data
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+refresh_partition_table(){
+    # pre {{{
+    local dev
+    el_debug
+    el_security_function_loop || return
+
+    dev="$1"
+    el_check_variables "dev"
+
+    # }}}
+    if [[ "$1" = /dev/nvme* ]] ; then
+        /sbin/partprobe "${dev%%p[0-9]*}" 2>/dev/null || true
+    else
+        /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
+    fi
+    sync
+}
+#===  FUNCTION  ================================================================
 #          NAME:  chroot_layers_mount
 #   DESCRIPTION:  mount the layers needed for a working chroot
 #    PARAMETERS:  $1 directory, $2 name-id-to-use, $3 = mode (opt)
@@ -838,10 +861,7 @@ el_mount(){
 
 
     # re-read partition table and try again
-    sync
-    /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
-    /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
-    sync ; sleep 2
+    refresh_partition_table
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -859,11 +879,7 @@ el_mount(){
 
     # try again
     restart_daemons
-
-    sync
-    /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
-    /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
-    sync ; sleep 2
+    refresh_partition_table
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -901,10 +917,8 @@ el_mount(){
 
     # if root, try to mount it in any of the cases
     if [[ "$UID" = 0 ]] ; then
-        sync ; sleep 1
-        /sbin/sfdisk -R "${dev%%[0-9]*}" 2>/dev/null || true
-        /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
-        sync ; sleep 2
+        refresh_partition_table
+
         uuid="$( lsblk -nio UUID "$dev" )"
         target="/mnt/${uuid}_elive"
         mkdir -p "$target"

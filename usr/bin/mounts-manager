@@ -81,7 +81,7 @@ chroot_layers_mount(){
 
     # }}}
 
-    if el_flag check "chroot_layer_prepared__$dirid" ; then
+    if el_flag check "chroot_layer_prepared_$dirid" ; then
         el_explain 3 "chroot layers already mounted"
         return
     fi
@@ -204,7 +204,7 @@ chroot_layers_mount(){
     el_explain 2 "Layers for chroot ready"
 
     # add a flag
-    el_flag add "chroot_layer_prepared__$dirid"
+    el_flag add "chroot_layer_prepared_$dirid"
 
 
 }
@@ -242,7 +242,7 @@ chroot_layers_umount(){
 
     # }}}
 
-    if ! el_flag check "chroot_layer_prepared__$dirid" ; then
+    if ! el_flag check "chroot_layer_prepared_$dirid" ; then
         el_explain 3 "chroot layers already umounted"
         return
     fi
@@ -373,7 +373,7 @@ chroot_layers_umount(){
     el_explain 2 "Layers for chroot umounted"
 
     # remove the flag
-    el_flag del "chroot_layer_prepared__$dirid"
+    el_flag del "chroot_layer_prepared_$dirid"
 
 }
 

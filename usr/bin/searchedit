@@ -29,6 +29,11 @@ main(){
 
     matches="$( find . -type f -iname '*'$filename'*' \( -not -path '*'.git'*' -not -path '*'.svn'*' \) )"
 
+    if [[ -z "$matches" ]] ; then
+        el_error "no matches found, maybe it's a symlink?"
+        exit 1
+    fi
+
     if [[ "$( echo "$matches" | wc -l )" -eq 1 ]] ; then
         echo "Found:"
         echo "$matches" | grep --color=auto "$filename"

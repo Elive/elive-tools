@@ -364,7 +364,9 @@ main(){
     if ((has_glxinfo_ecomorph_compatibility)) &&  ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal &&  ! grep "system.hardware.product" /tmp/.lshal | grep -qi "vmware" ;  then
 
         if zenity --question --text="$( eval_gettext "Activate visual effects?" )" ; then
-            zenity --info --text="$( eval_gettext "This feature can be a bit unstable. If you are a C coder, you can help get it working for the next stable release. You can also support Elive by donating to our crowdfunding. Thank you!" )"
+
+            zenity --info --text="$( eval_gettext "This feature can be a bit unstable, if you see any problem or strange behaviours in your desktop try to deactivate the Ecomorph module." )"
+            zenity --info --text="$( eval_gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
 
             el_speak_text "starting metamorphosization"
 

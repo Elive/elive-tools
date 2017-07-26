@@ -1959,6 +1959,66 @@ el_request_donation(){
 
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_config_get
+#   DESCRIPTION:  gets all the previously saved configurations for the $0 tool
+#    PARAMETERS:  -
+#       RETURNS:  sources the file configuration, so it gets the variables
+#          NOTE:  this tool cannot work with array variables
+#===============================================================================
+el_config_get(){
+    # pre {{{
+    local TMP_CONF_f
+    TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+
+    # create conf file
+    if ! [[ -s "$TMP_CONF_f" ]] ; then
+        el_debug "configuration file empty"
+        return
+    fi
+
+    # }}}
+    source "$TMP_CONF_f" 1>/dev/null 2>&1
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_config_save
+#   DESCRIPTION:  saves a configuration to re-use if we run again the installer
+#    PARAMETERS:  varname (not value)
+#       RETURNS:  -
+#===============================================================================
+el_config_save(){
+    # pre {{{
+    # note: by some reason this needs to be alone and first or may not work:
+    local _configuration
+    _configuration="$1"
+
+    local TMP_CONF_f
+    TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+
+    if ! el_check_variables "_configuration,TMP_CONF_f" 1>/dev/null 2>&1 ; then
+        el_warning "variable to save by $FUNCNAME is empty: $_configuration"
+        return
+    fi
+
+    # create conf file
+    if ! [[ -s "$TMP_CONF_f" ]] ; then
+        touch "$TMP_CONF_f"
+        #chmod +x "$TMP_CONF_f"
+        # TODO: test if not +x can be sourced
+        # TODO: test if works with arrays too
+    fi
+
+    # }}}
+
+    # remove old possible entries
+    sed -i "/^${_configuration}=/d" "$TMP_CONF_f"
+
+    # append configuration
+    echo "${_configuration}=\"${!_configuration}\"" >> "$TMP_CONF_f"
+}
+
+
 
 ###################################################################
 #  Always run:

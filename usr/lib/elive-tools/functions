@@ -1973,7 +1973,7 @@ el_config_get(){
 
     # create conf file
     if ! [[ -s "$TMP_CONF_f" ]] ; then
-        el_debug "configuration file empty"
+        # nothing to get
         return
     fi
 

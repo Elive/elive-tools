@@ -109,3 +109,4 @@ if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then
 fi
 
 unset want_exit
+rm -f "$LOCKFILE"

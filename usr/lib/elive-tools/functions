@@ -1733,7 +1733,7 @@ el_flag(){
             rm -f "${TMP_FLAGS_d}/$name"
 
             if ! el_check_dir_has_files "${TMP_FLAGS_d}" 2>/dev/null ; then
-                rmdir "${TMP_FLAGS_d}"
+                rmdir "${TMP_FLAGS_d}" 2>/dev/null || true
             fi
             el_debug "removed flag $name"
             ;;

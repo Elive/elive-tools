@@ -2041,6 +2041,26 @@ fi
 # - arrays ?
 # - run web
 # - trap signals (exit statuses, etc)
+#EXAMPLES (of correct managing of traps):
+    #set -E  # inherit errors to parent, good for deep traping, suggested
+    #trap "error_signal_debug" ERR  # the ERR traps any error, so "ls idontexist" would send this signal too, which is not suggested to have in the exit_error function, but at least good for a debug purpose and know that something failed somewhere
+    #trap "exit_error" 1 2 3 6 9 11 13 14 15
+    #trap "exit_ok" 0 EXIT
+    #el_add_on_exit exit_ok  # or you can use this feature, so it calls commands when something is finished, good to add "rm thisfile" everywhere arounds the code
+    #error_signal_debug(){
+        #_trapped="$?"
+        #if [[ -n "$_trapped" ]] ; then
+            #el_warning "trapped signal: '${_trapped}' from '${FUNCNAME[1]}' in lines '${BASH_LINENO[*]}'"
+        #fi
+    #}
+    #exit_error(){
+        #_trapped="$?"
+        #cleanups
+        #exit $_trapped
+    #}
+    #exit_ok(){
+        #echo "good bye"
+    #}
 # - report, something for inform the user about something important, which interfaces and cases ?
 # -
 # -

@@ -268,7 +268,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
     stamp_hour_prev_offline="/tmp/.stamps-${USER}/verify_internet-last_run_hour_offline"
-    mkdir -p "$(dirname "${stamp_hour_prev}" )"
+    mkdir -p "$( dirname "${stamp_hour_prev}" )"
 
     date_hour_now="$( date +%s )"
     date_hour_prev="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
@@ -1717,9 +1717,8 @@ el_flag(){
 
     TMP_FLAGS_d="${TMP_FLAGS_d:-"/tmp/.$(basename $0)-flags-$USER"}"
 
-    if [[ ! -d "${TMP_FLAGS_d}" ]] ; then
-        mkdir -p "$TMP_FLAGS_d"
-    fi
+    # always create dir, flush FS's problems
+    mkdir -p "$TMP_FLAGS_d"
 
     el_check_variables "action,name"
 

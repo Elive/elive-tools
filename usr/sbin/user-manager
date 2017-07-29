@@ -185,7 +185,7 @@ adduserelive(){
 
 ###########################################################################
 deluserelive(){
-    local uid user userlist line
+    local uid user userlist line pid
 
     while read -ru 3 line
     do
@@ -215,6 +215,15 @@ deluserelive(){
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "Do you like to remove all %s files of the %s user?" )" "$DHOME/$username" "$username" )"
+
+    # before to delete an user, all the processes needs to be closed or it will fail
+    for i in 1 2 3 4 5
+    do
+        while read -ru 3 pid
+        do
+            kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
+        done 3<<< "$( LC_ALL=C ps aux | grep -E "^${username}\s+" | awk '{print $2}' )"
+    done
 
     if $guitool --question --text="$translated_message" ; then
         $USERDEL -r "$username" 2>"${temp_error}" || errorexit

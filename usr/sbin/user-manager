@@ -192,7 +192,7 @@ deluserelive(){
         uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
         user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-        if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+        if [[ "${uid}" -ge "$FIRST_UID" ]] && [[ "${uid}" -le "$LAST_UID" ]] ; then
             if [[ -d "$DHOME/$user" ]] ; then
                 userlist+=("$user")
             fi
@@ -235,7 +235,7 @@ changepass(){
         uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
         user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
 
-        if [[ "${uid}" -gt "$FIRST_UID" ]] && [[ "${uid}" -lt "$LAST_UID" ]] ; then
+        if [[ "${uid}" -ge "$FIRST_UID" ]] && [[ "${uid}" -le "$LAST_UID" ]] ; then
             if [[ -d "$DHOME/$user" ]] ; then
                 userlist+=("$user")
             fi

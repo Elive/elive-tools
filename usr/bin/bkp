@@ -591,6 +591,12 @@ do_meld(){
         echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
     fi
 
+    if ! el_dependencies_check meld ; then
+        if ! el_dependencies_install meld ; then
+            el_error "Please install required dependencies"
+        fi
+    fi
+
     if [[ -n "$3" ]] ; then
         history_num="$3"
     else

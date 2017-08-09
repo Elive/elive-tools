@@ -201,7 +201,7 @@ main(){
     fi
 
     # get the last location
-    if ! ((is_force)) && ! ((is_live)) ; then
+    if ! ((is_force)) ; then
         timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
 
         # if we already know the location of this mac, don't change the timezone (routers don't move their location, cable or wifi)

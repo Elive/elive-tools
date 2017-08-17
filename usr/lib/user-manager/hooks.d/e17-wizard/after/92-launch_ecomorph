@@ -361,6 +361,18 @@ main(){
     fi
 
     # }}}
+    lshal 2>/dev/null > /tmp/.lshal || true
+    if ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
+        hald &
+        sync
+        LC_ALL=C sleep 1
+
+        lshal 2>/dev/null > /tmp/.lshal || true
+
+        # save some memory
+        killall hald 2>/dev/null 1>&2 || true
+    fi
+
     if ((has_glxinfo_ecomorph_compatibility)) &&  ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal &&  ! grep "system.hardware.product" /tmp/.lshal | grep -qi "vmware" ;  then
 
         if zenity --question --text="$( eval_gettext "Activate visual effects?" )" ; then

@@ -1,4 +1,5 @@
 #!/bin/bash
+# IMPORTANT: this tool can fails if you are trying to install a package that includes a dpkg/apt-get command in the installation process, for example installing a package that includes a daemon like eliveinstaller-5g which runs apt-get remove later, but this should never happen... these commands are not supposed to run on these processes
 
 waiter(){
     i=0
@@ -19,10 +20,5 @@ waiter(){
 
 
 waiter
-sleep 2
-waiter
-sleep 2
-waiter
-
 
 /usr/bin/apt-get "$@"

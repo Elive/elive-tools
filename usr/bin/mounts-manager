@@ -861,7 +861,7 @@ el_mount(){
 
 
     # re-read partition table and try again
-    refresh_partition_table
+    refresh_partition_table "$dev"
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -879,7 +879,7 @@ el_mount(){
 
     # try again
     restart_daemons
-    refresh_partition_table
+    refresh_partition_table "$dev"
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -917,7 +917,7 @@ el_mount(){
 
     # if root, try to mount it in any of the cases
     if [[ "$UID" = 0 ]] ; then
-        refresh_partition_table
+        refresh_partition_table "$dev"
 
         uuid="$( lsblk -nio UUID "$dev" )"
         target="/mnt/${uuid}_elive"

@@ -2,6 +2,17 @@
 Type=Application
 Encoding=UTF-8
 Name=Users manager
+Name[az]=İstifadəçi meneceri
+Name[bn]=ব্যবহারকারী ম্যানেজার null
+Name[eo]=Uzanto direktisto
+Name[et]=Kasutajate haldur
+Name[hu]=Felhasználók kezelője
+Name[ko]=사용자 관리자 null
+Name[ms]=Pengurus pengguna
+Name[nb]=Brukersjef
+Name[sr]=Менаџер корисника null
+Name[te]=వినియోగదారులు మేనేజర్ null
+Name[tr]=Kullanıcı yöneticisi
 Name[vi]=Người sử dụng quản lý
 Name[uk]=Користувач Manager
 Name[tl]=Users manager

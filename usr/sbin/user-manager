@@ -118,20 +118,38 @@ delgroups(){
     done
 }
 
-#sudoersadd(){
-#if ! grep -q "$username" /etc/sudoers ; then
-#echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
-#fi
-#chmod 0440 /etc/sudoers
-#}
+sudoersadd(){
+    local username
+    username="$1"
 
-#sudoersdel(){
-#if grep -q $username /etc/sudoers ; then
-#sed -i "s/^.*$username.*$//" /etc/sudoers
-#fi
-#sed -i '/^$/d' /etc/sudoers
-#chmod 0440 /etc/sudoers
-#}
+    # add sudoers configuration
+    if ! grep -qsE "^${username}\s+" /etc/sudoers ; then
+        echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
+    fi
+
+    # add to group
+    "$ADDUSER" "$username" "sudo" || true
+
+    # default timeout value
+    if ! grep -qs "Defaults:ALL timestamp_timeout=10" "/etc/sudoers.d/timeout_inmediate" ; then
+        echo "Defaults:ALL timestamp_timeout=10" > "/etc/sudoers.d/timeout_inmediate"
+        chmod 0440 "/etc/sudoers.d/timeout_inmediate"
+    fi
+
+    # fix permissions
+    chmod 0440 /etc/sudoers
+}
+
+sudoersdel(){
+    local username
+    username="$1"
+
+    if grep -qsE "^${username}\s+" /etc/sudoers ; then
+        sed -i "/^${username}/d" /etc/sudoers
+    fi
+    #sed -i '/^$/d' /etc/sudoers
+    chmod 0440 /etc/sudoers
+}
 
 ###########################################################################
 adduserelive(){
@@ -174,7 +192,9 @@ adduserelive(){
 
     #chown -R "$username:$USERGROUP" "$DHOME/$username"
 
-    #$guitool --question --text='Do you like to add this user to the sudoers file ? If yes, this user will be able to manage and configure all system settings' && sudoersadd
+    if $guitool --question --text="$( eval_gettext "Do you want to activate sudo privileges for this user?" )" ; then
+        sudoersadd "$username"
+    fi
 
     # deprecated, we use e17-wizard startup now
     #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
@@ -231,7 +251,8 @@ deluserelive(){
         $USERDEL "$username" 2>"${temp_error}" || errorexit
     fi
 
-    #sudoersdel
+    sudoersdel "$username"
+
     messageuserdeleted
 }
 

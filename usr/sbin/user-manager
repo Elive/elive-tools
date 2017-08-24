@@ -269,15 +269,49 @@ changepass(){
     exit
 }
 
+###########################################################################
+autologinconf(){
+    local uid user userlist line
+
+    while read -ru 3 line
+    do
+        uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
+        user="$( echo "$line" | awk -v FS=":" '{print $1}' )"
+
+        if [[ "${uid}" -ge "$FIRST_UID" ]] && [[ "${uid}" -le "$LAST_UID" ]] ; then
+            if [[ -d "$DHOME/$user" ]] ; then
+                userlist+=("$user")
+            fi
+        fi
+    done 3<<< "$( cat "/etc/passwd" )"
+
+
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically login with." )" || echo cancel )"
+
+    if [[ "$username" = "cancel" ]] ; then
+        sed -i "/autologin-user=/d" "/etc/lightdm/lightdm.conf"
+        $guitool --info --text="$( eval_gettext "Autologin disabled" )"
+    else
+        /usr/lib/i386-linux-gnu/lightdm/lightdm-set-defaults --autologin "${username}"
+
+        local message_autologin_set
+        message_autologin_set="$( printf "$( eval_gettext "Autologin set to %s" )" "$username" )"
+
+        $guitool --info --text="$message_autologin_set"
+    fi
+
+    exit 0
+}
 
 ###########################################################################
 firstoption(){
-    selection="$( $guitool --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" || echo cancel )"
+    selection="$( $guitool --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" '4' "$( eval_gettext "Autologin configuration" )" || echo cancel )"
 
     [[ "$selection" = "cancel" ]] && exit 1
     [[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }
     [[ "$selection" = "2" ]] && { deluserelive ; exit 0 ; }
     [[ "$selection" = "3" ]] && { changepass ; exit 0 ; }
+    [[ "$selection" = "4" ]] && { autologinconf ; exit 0 ; }
 }
 
 

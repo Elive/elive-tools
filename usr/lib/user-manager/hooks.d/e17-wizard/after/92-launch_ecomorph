@@ -390,6 +390,7 @@ main(){
             enlightenment_remote -module-load ecomorph
             sleep 1
             # module is loaded but ecomorph not started, so we can do it from here
+            killall ecomorph 2>/dev/null || true
             ecomorph ini inotify text regex move cube rotate switcher shift ring scale expo animation scaleaddon wobbly cubereflex thumbnail   &>/dev/null &disown
 
             sleep 20

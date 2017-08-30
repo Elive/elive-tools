@@ -735,7 +735,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
     local var found_no
 
     if [[ -z "$1" ]] ; then
-        echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
 
         return 1
     fi
@@ -802,7 +802,7 @@ el_check_dir_has_files(){
     while read -ru 3 dir
     do
         if [[ -z "$1" ]] ; then
-            echo -e "E: $FUNCNAME called without parameters (nothing to check?)"
+            echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
 
             return 1
         fi

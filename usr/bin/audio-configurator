@@ -144,7 +144,15 @@ main(){
 
                 done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tac  )"
 
-                selection="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's|^.* :: ||g' )"
+                # select the card that has most tracks
+                # first detect the max number of tracks
+                selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+                # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
+                selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+
+                if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
+                    $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but if has not been the case please reconfigure your audio card from the applications menus of Elive." )"
+                fi
 
             else
                 selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | tac | head -1 )"

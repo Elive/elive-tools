@@ -127,7 +127,32 @@ main(){
 
     else
         # more than one card found
-        if ! ((is_auto_mode)) ; then
+        if ((is_auto_mode)) ; then
+
+            el_dependencies_check "psort"
+
+            # detect the optimal card based in their number of tracks
+            if ((is_smart_mode)) ; then
+                read -r selection <<< "$selection"
+
+                while read -ru 3 line ; do
+                    rm -f "${HOME}/.asoundrc"
+                    echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
+                    echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
+
+                    array_cards="$( echo -e "${array_cards}" ; amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+
+                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tac  )"
+
+                selection="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's|^.* :: ||g' )"
+
+            else
+                selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | tac | head -1 )"
+                read -r selection <<< "$selection"
+            fi
+
+
+        else
             if select_card_multiple ; then
                 is_multiple_cards=1
             else
@@ -138,13 +163,6 @@ main(){
                     is_auto_mode=1
                 fi
             fi
-        fi
-
-        if ((is_auto_mode)) ; then
-            el_dependencies_check "psort"
-            selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | tac | head -1 )"
-            # remove extra leading blank chars
-            read -r selection <<< "$selection"
         fi
 
     fi

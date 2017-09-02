@@ -919,7 +919,24 @@ el_mount(){
     if [[ "$UID" = 0 ]] ; then
         refresh_partition_table "$dev"
 
-        uuid="$( lsblk -nio UUID "$dev" )"
+        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | tail -1 )"
+
+        if [[ -z "$uuid" ]] ; then
+            # second alternative, but this is buggy, it can show multiple ones and sometimes not works like test it for /dev/sda
+            if LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 | grep -qs "DEVTYPE=disk" ; then
+                el_error "Unable to mount $dev because is a DISK"
+                return 1
+            fi
+
+            # try to get the UUID by other method
+            uuid="$( lsblk -nio UUID "$dev" | grep "[[:alnum:]]" | tail -1 )"
+        fi
+
+        if [[ -z "$uuid" ]] ; then
+            el_error "Unable to mount $dev because we cannot get the UUID of it"
+            return 1
+        fi
+
         target="/mnt/${uuid}_elive"
         mkdir -p "$target"
 

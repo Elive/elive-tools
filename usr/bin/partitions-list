@@ -263,6 +263,12 @@ main(){
                 if ! [[ -b "/dev/disk/by-uuid/$item_uuid" ]] ; then
                     el_debug "detected uuid ${item_uuid} for ${item} but it doesn't exist in /dev, removing uuid from list"
                     unset item_uuid
+
+                    # full debug:
+                    if [[ "$EL_DEBUG" -gt 2 ]] ; then
+                        el_debug "$(basename $0) checking '${item}', it is not a partition? (no UUID):"
+                        LC_ALL=C /sbin/udevadm info --query=all --name="$item" 1>&2
+                    fi
                 fi
             fi
 
@@ -322,14 +328,6 @@ main(){
             if [[ "${line}" = "DEVTYPE=disk" ]] ; then
                 item_is_usable=0
                 el_debug "ignoring partition ${item} because is considered a disk"
-            fi
-
-            if ! [[ "${line}" = "DEVTYPE=partition" ]] ; then
-                el_debug "$(basename $0) checking '${line}', it is not a partition type?:"
-                # full debug:
-                if [[ "$EL_DEBUG" -gt 2 ]] ; then
-                    LC_ALL=C /sbin/udevadm info --query=all --name="$item" 1>&2
-                fi
             fi
 
         done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 )"

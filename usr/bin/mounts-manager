@@ -462,6 +462,17 @@ get_mountpoint(){
         fi
     fi
 
+    # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example)
+    if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+
+        if [[ -z "$uuid" ]] ; then
+            el_error "Unable to mount $dev because has not an uuid"
+            return 1
+        fi
+    fi
+
+
 
     # get the mountpoint
     if [[ -n "$mountpoint" ]] ; then
@@ -919,7 +930,7 @@ el_mount(){
     if [[ "$UID" = 0 ]] ; then
         refresh_partition_table "$dev"
 
-        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | tail -1 )"
+        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
         #if [[ -z "$uuid" ]] ; then
@@ -934,7 +945,7 @@ el_mount(){
         #fi
 
         if [[ -z "$uuid" ]] ; then
-            el_error "Unable to mount $dev because we cannot get the UUID of it"
+            el_error "Unable to mount $dev because has not an uuid"
             return 1
         fi
 

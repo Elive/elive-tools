@@ -192,7 +192,7 @@ main(){
     connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
     #connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     # note: arp -a is slow, use arp -n instead
-    connected_mac="$(arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
+    connected_mac="$( /usr/sbin/arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
 
     # make sure that we have a mac
     if [[ -z "$connected_mac" ]] ; then

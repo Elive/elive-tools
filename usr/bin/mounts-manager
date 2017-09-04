@@ -833,7 +833,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid filesystem
+    local dev uuid filesystem devtype
     el_security_function_loop 10 || return
 
     dev="$1"
@@ -866,13 +866,32 @@ el_mount(){
         restart_daemons
     fi
 
-    # get FS
-    filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
     # ignore unmountable partitions:
-    if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
-        return 1
+    if LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep -qs "DEVNAME=" ; then
+
+        # get FS
+        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
+            el_debug "Unable to mount $dev because is not a mountable partition"
+            return 1
+        fi
+
+        # get uuid
+        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$uuid" ]] ; then
+            el_debug "Unable to mount $dev because has not an uuid"
+            return 1
+        fi
+
+        # get type
+        devtype="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ "$devtype" = "disk" ]] ; then
+            el_debug "Unable to mount $dev because is a disk type"
+            return 1
+        fi
     fi
+
 
 
     # try to mount

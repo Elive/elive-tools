@@ -408,7 +408,7 @@ chroot_layers_umount(){
 #===============================================================================
 get_mountpoint(){
     # pre {{{
-    local dev is_mounted mountpoint is_temporally_mounted fs
+    local dev is_mounted mountpoint is_temporally_mounted filesystem
     el_debug
     el_security_function_loop 10 || return
 
@@ -468,16 +468,16 @@ get_mountpoint(){
         uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
         if [[ -z "$uuid" ]] ; then
-            el_debug "Unable to mount $dev because has not an uuid"
+            #el_debug "Unable to mount $dev because has not an uuid"
             return 1
         fi
 
         # get FS
-        fs="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
         # ignore unmountable partitions:
-        if echo "$fs" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
-            el_debug "This partition is not a mountable one"
+        if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
+            #el_debug "This partition is not a mountable one"
             return 1
         fi
     fi
@@ -833,7 +833,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid fs
+    local dev uuid filesystem
     el_security_function_loop 10 || return
 
     dev="$1"
@@ -865,6 +865,15 @@ el_mount(){
     if LC_ALL=C udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         restart_daemons
     fi
+
+    # get FS
+    filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+
+    # ignore unmountable partitions:
+    if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
+        return 1
+    fi
+
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -957,14 +966,6 @@ el_mount(){
 
         if [[ -z "$uuid" ]] ; then
             el_debug "Unable to mount $dev because has not an uuid"
-            return 1
-        fi
-
-        # get FS
-        fs="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-
-        # ignore unmountable partitions:
-        if echo "$fs" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
             return 1
         fi
 

@@ -368,7 +368,7 @@ main(){
         #item_type="locked"
         #fi
         if [[ -z "$item_type" ]] && [[ -z "$item_uuid" ]] && [[ -z "$item_label" ]] && [[ -z "$item_filesystem" ]] ; then
-            item_human_label="(empty partition)"
+            item_human_label="(unformatted)"
         fi
 
         # extended partitions

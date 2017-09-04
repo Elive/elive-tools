@@ -823,7 +823,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid
+    local dev uuid fs
     el_security_function_loop 10 || return
 
     dev="$1"
@@ -930,6 +930,7 @@ el_mount(){
     if [[ "$UID" = 0 ]] ; then
         refresh_partition_table "$dev"
 
+        # get UUID
         uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
@@ -946,6 +947,14 @@ el_mount(){
 
         if [[ -z "$uuid" ]] ; then
             el_error "Unable to mount $dev because has not an uuid"
+            return 1
+        fi
+
+        # get FS
+        fs="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+
+        # ignore unmountable partitions:
+        if echo "$fs" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
             return 1
         fi
 

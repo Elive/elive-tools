@@ -462,7 +462,7 @@ get_mountpoint(){
         fi
     fi
 
-    # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example)
+    # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example, or not-formatted (without uuid) partitions)
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 

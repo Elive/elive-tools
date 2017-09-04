@@ -236,6 +236,9 @@ main(){
                 item_is_usable=1
                 item_type="filesystem"
             fi
+            if [[ "${line}" = "DEVTYPE=partition" ]] ; then
+                item_is_usable=1
+            fi
             # swap partitions
             if [[ "${line}" = *"ID_FS_TYPE=swap" ]] ; then
                 item_is_usable=1
@@ -265,10 +268,11 @@ main(){
                     unset item_uuid
 
                     # full debug:
-                    if [[ "$EL_DEBUG" -gt 2 ]] ; then
-                        el_debug "$(basename $0) checking '${item}', it is not a partition? (no UUID):"
-                        LC_ALL=C /sbin/udevadm info --query=all --name="$item" 1>&2
-                    fi
+                    # UPDATE: not-formated partitions has not uuid (so they needs to be considered real partitions if we want to select them as available, but they are not possible to be mounted)
+                    #if [[ "$EL_DEBUG" -gt 2 ]] ; then
+                        #el_debug "$(basename $0) checking '${item}', it is not a partition? (no UUID):"
+                        #LC_ALL=C /sbin/udevadm info --query=all --name="$item" 1>&2
+                    #fi
                 fi
             fi
 
@@ -373,17 +377,12 @@ main(){
             el_debug "marking ${item} as unusable because is shows like an extended partition"
         fi
 
-        # only show umountable partitions ? {{{
-        if ((only_umountable)) ; then
-            # common not umountable partitions
-            if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
-                item_is_usable=0
-            fi
-        fi
-
-        # }}}
         # only show mountable partitions ? {{{
         if ((only_mountable)) ; then
+            # if no uuid is because the partiton is not formated
+            if [[ -z "$item_uuid" ]] ; then
+                item_is_usable=0
+            fi
             # if not FS from a first time, mark it to not show
             if [[ -z "$item_filesystem" ]] ; then
                 item_is_usable=0

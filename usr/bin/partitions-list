@@ -236,7 +236,7 @@ main(){
                 item_is_usable=1
                 item_type="filesystem"
             fi
-            if [[ "${line}" = "DEVTYPE=partition" ]] ; then
+            if [[ "${line}" = *"DEVTYPE=partition"* ]] ; then
                 item_is_usable=1
             fi
             # swap partitions
@@ -323,15 +323,17 @@ main(){
 
 
             # END checks
-            # suspended device?
-            if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
-                item_is_usable=0
-                el_warning "seems like the device $item is in suspension, make it running if you want to use it"
-            fi
-            # some lvm devices are considered usable if they are not detected as devtype=disk, in any case, its not a partition
-            if [[ "${line}" = "DEVTYPE=disk" ]] ; then
-                item_is_usable=0
-                el_debug "ignoring partition ${item} because is considered a disk"
+            if ((only_mountable)) ; then
+                # suspended device?
+                if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
+                    item_is_usable=0
+                    el_warning "seems like the device $item is in suspension, make it running if you want to use it"
+                fi
+                # some lvm devices are considered usable if they are not detected as devtype=disk, but in any case is not a mountable option
+                if [[ "${line}" = *"DEVTYPE=disk"* ]] ; then
+                    item_is_usable=0
+                    el_debug "ignoring partition ${item} because is considered a disk"
+                fi
             fi
 
         done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 )"

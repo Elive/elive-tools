@@ -163,7 +163,7 @@ get_all_partitions_list(){
 
 main(){
     # pre {{{
-    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_fake_raid partitions_soft_raid partitions_lvm2_lv partitions_raw
+    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_fake_raid partitions_soft_raid partitions_lvm2_lv partitions_raw arg
     #local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line disk
 
     # ways to get partitions:
@@ -188,33 +188,55 @@ main(){
 
     # }}}
 
-    case $1 in
-        --show-all)
-            get_all_partitions_list
-            ;;
-        --show-all-mountable)
-            only_mountable=1
-            get_all_partitions_list
-            ;;
-        --show-all-umountable)
-            only_umountable=1
-            get_all_partitions_list
-            ;;
-        --show-only)
-            shift
-            el_array_member_add "$1" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
-            shift
-            ;;
-        *)
-            echo -e "Usage: $(basename $0) [option]" 1>&2
-            echo -e "--show-all" 1>&2
-            echo -e "--show-all-mountable" 1>&2
-            echo -e "--show-all-umountable" 1>&2
-            echo -e "--show-only /dev/partition - to obtain data from a partition" 1>&2
-            echo -e "\nStructure and Fields:" 1>&2
-            echo -e "1         2       3             4        5              6       7             8" 1>&2
-            echo -e "device :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
-    esac
+    for arg in "$@"
+    do
+        case "$arg" in
+            --show-all)
+                is_show_all=1
+                shift
+                ;;
+            --show-all-mountable)
+                is_show_all=1
+                is_show_only_mountable=1
+                get_all_partitions_list
+                shift
+                ;;
+            #--show-all-umountable)
+                #is_show_all=1
+                #is_show_only_umountable=1
+                #get_all_partitions_list
+                #shift
+                #;;
+            --show-only-mountable)
+                # to be used with --show-only
+                is_show_only_mountable=1
+                shift
+                ;;
+            #--show-only-umountable)
+                #is_show_only_umountable=1
+                #shift
+                #;;
+            --show-only=*)
+                el_array_member_add "${arg#--show-only=}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
+                shift
+                ;;
+            *)
+                echo -e "Usage: $(basename $0) [option]" 1>&2
+                echo -e "--show-all" 1>&2
+                echo -e "--show-all-mountable" 1>&2
+                #echo -e "--show-all-umountable" 1>&2
+                echo -e "--show-only=/dev/partition - to obtain data from a partition" 1>&2
+                echo -e "\nStructure and Fields:" 1>&2
+                echo -e "1         2       3             4        5              6       7             8" 1>&2
+                echo -e "device :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
+                shift
+                ;;
+        esac
+    done
+
+    if ((is_show_all)) ; then
+        get_all_partitions_list
+    fi
 
     # get extra data for each partition {{{
     for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}" "${partitions_fake_raid[@]}"
@@ -323,7 +345,7 @@ main(){
 
 
             # END checks
-            if ((only_mountable)) ; then
+            if ((is_show_only_mountable)) ; then
                 # suspended device?
                 if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
                     item_is_usable=0
@@ -380,7 +402,7 @@ main(){
         fi
 
         # only show mountable partitions ? {{{
-        if ((only_mountable)) ; then
+        if ((is_show_only_mountable)) ; then
             # if no uuid is because the partiton is not formated
             if [[ -z "$item_uuid" ]] ; then
                 item_is_usable=0

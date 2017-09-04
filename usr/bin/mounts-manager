@@ -885,11 +885,12 @@ el_mount(){
         fi
 
         # get type
-        devtype="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        if [[ "$devtype" = "disk" ]] ; then
-            el_debug "Unable to mount $dev because is a disk type"
-            return 1
-        fi
+        # UPDATE: do not enable, LVM2 devices shows as "disk" but they are mountable, so we should refer them by their uuid or fs
+        #devtype="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #if [[ "$devtype" = "disk" ]] ; then
+            #el_debug "Unable to mount $dev because is a disk type"
+            #return 1
+        #fi
     fi
 
 

@@ -351,11 +351,11 @@ main(){
                     item_is_usable=0
                     el_warning "seems like the device $item is in suspension, make it running if you want to use it"
                 fi
-                # some lvm devices are considered usable if they are not detected as devtype=disk, but in any case is not a mountable option
-                if [[ "${line}" = *"DEVTYPE=disk"* ]] ; then
-                    item_is_usable=0
-                    el_debug "ignoring partition ${item} because is considered a disk"
-                fi
+                # UPDATE: some lvm2 devices shows as disk but they are usable and mountable, so do not enable this option, we should reffer to these items by their fs or uuid
+                #if [[ "${line}" = *"DEVTYPE=disk"* ]] ; then
+                    #item_is_usable=0
+                    #el_debug "ignoring partition ${item} because is considered a disk"
+                #fi
             fi
 
         done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 )"

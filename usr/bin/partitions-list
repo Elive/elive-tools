@@ -517,8 +517,9 @@ get_filesystem_file(){
         *HFS*|*hfs*)
             echo "hfsplus"
             ;;
-        *extended\ partition\ table*)
+        *extended\ partition\ table*|*"ID=0x5"*)
             # Note: I have a result like this which looks to be wrong, it is not an extended partition, but in any case is not an usable one:  /dev/sdb: sticky x86 boot sector; partition 1: ID=0xee, starthead 0, startsector 1, 1953525167 sectors, extended partition table (last)\011, code offset 0x0
+            # Note: ID=0x5 are represented for extended partitions over a GPT structure, but also are considered /dev/sda as disks, in any case since they are "layers" but not partitions is better to not have them showing up
             echo "extended"
             ;;
         *ext3*)

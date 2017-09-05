@@ -258,7 +258,7 @@ main(){
                 item_is_usable=1
                 item_type="filesystem"
             fi
-            if [[ "${line}" = *"DEVTYPE=partition"* ]] ; then
+            if [[ "${line}" = *"DEVTYPE=partition" ]] ; then
                 item_is_usable=1
             fi
             # swap partitions
@@ -270,7 +270,8 @@ main(){
             fi
             # special partitions
             if [[ "${line}" = *"ID_FS_TYPE=crypto_"* ]] ; then
-                item_is_usable=1
+                # an encrypted partition is like an extended partition which requires a password, which contains other partitions inside, it should be not considered a real partition and its dangerous to have it selectable, so ignore it:
+                item_is_usable=0
             fi
 
             # get label

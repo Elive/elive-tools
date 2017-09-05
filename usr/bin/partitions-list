@@ -195,6 +195,11 @@ main(){
                 is_show_all=1
                 shift
                 ;;
+            --show-all-raw)
+                is_show_all=1
+                is_show_all_raw=1
+                shift
+                ;;
             --show-all-mountable)
                 is_show_all=1
                 is_show_only_mountable=1
@@ -223,6 +228,7 @@ main(){
             *)
                 echo -e "Usage: $(basename $0) [option]" 1>&2
                 echo -e "--show-all" 1>&2
+                echo -e "--show-all-raw  shows also 'layers' partitions like encrypted or extended" 1>&2
                 echo -e "--show-all-mountable" 1>&2
                 #echo -e "--show-all-umountable" 1>&2
                 echo -e "--show-only=/dev/partition - to obtain data from a partition" 1>&2
@@ -271,7 +277,12 @@ main(){
             # special partitions
             if [[ "${line}" = *"ID_FS_TYPE=crypto_"* ]] ; then
                 # an encrypted partition is like an extended partition which requires a password, which contains other partitions inside, it should be not considered a real partition and its dangerous to have it selectable, so ignore it:
-                item_is_usable=0
+                # but we need it to show up for the installer (unlocking encrypted ones)
+                if ((is_show_all_raw)) ; then
+                    item_is_usable=1
+                else
+                    item_is_usable=0
+                fi
             fi
 
             # get label
@@ -349,7 +360,12 @@ main(){
             if ((is_show_only_mountable)) ; then
                 # suspended device?
                 if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
-                    item_is_usable=0
+
+                    if ((is_show_all_raw)) ; then
+                        item_is_usable=1
+                    else
+                        item_is_usable=0
+                    fi
                     el_warning "seems like the device $item is in suspension, make it running if you want to use it"
                 fi
                 # UPDATE: some lvm2 devices shows as disk but they are usable and mountable, so do not enable this option, we should reffer to these items by their fs or uuid
@@ -398,8 +414,13 @@ main(){
         if [[ "$item_filesystem" = "extended" ]] ; then
             unset item_filesystem
             item_type="extended"
-            item_is_usable=0
-            el_debug "marking ${item} as unusable because is shows like an extended partition"
+
+            if ((is_show_all_raw)) ; then
+                item_is_usable=1
+            else
+                el_debug "marking ${item} as unusable because is shows like an extended partition"
+                item_is_usable=0
+            fi
         fi
 
         # only show mountable partitions ? {{{
@@ -414,7 +435,12 @@ main(){
             fi
             # common not mountable partitions
             if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
-                item_is_usable=0
+
+                if ((is_show_all_raw)) ; then
+                    item_is_usable=1
+                else
+                    item_is_usable=0
+                fi
             fi
             # never consider macosx partitions mountable in our tools, the are useless for us
             if echo "$item_filesystem" | grep -qsiE "^(hfs|hfsplus)$" ; then

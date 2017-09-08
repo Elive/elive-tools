@@ -1,0 +1,11 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+killall -9 enlightenment_start
+rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+
+#killall -9 Xorg &
+
+
+#wait
+

@@ -1968,16 +1968,13 @@ el_request_donation(){
 el_config_get(){
     # pre {{{
     local TMP_CONF_f
-    TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-
-    # create conf file
-    if ! [[ -s "$TMP_CONF_f" ]] ; then
-        # nothing to get
-        return
-    fi
+    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
 
     # }}}
-    source "$TMP_CONF_f" 1>/dev/null 2>&1
+    if [[ -s "$TMP_CONF_f" ]] ; then
+        source "$TMP_CONF_f" 1>/dev/null 2>&1
+    fi
 }
 
 #===  FUNCTION  ================================================================
@@ -1993,7 +1990,8 @@ el_config_save(){
     _configuration="$1"
 
     local TMP_CONF_f
-    TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
 
     if ! el_check_variables "_configuration,TMP_CONF_f" 1>/dev/null 2>&1 ; then
         el_warning "variable to save by $FUNCNAME is empty: $_configuration"
@@ -2002,6 +2000,8 @@ el_config_save(){
 
     # create conf file
     if ! [[ -s "$TMP_CONF_f" ]] ; then
+        mkdir -p "$( dirname "$TMP_CONF_f" )"
+
         touch "$TMP_CONF_f"
         #chmod +x "$TMP_CONF_f"
         # TODO: test if not +x can be sourced

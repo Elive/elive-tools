@@ -80,25 +80,33 @@ main(){
 
     # if our first argument is the card name to use, change the list of cards to use this one
     # try to be smart determining cards that we know that they are valid
-    while [[ -n "$1" ]]
+    for arg in "$@"
     do
-        if [[ "$1" = "--smart" ]] ; then
+        if [[ "$arg" = "--smart" ]] ; then
             is_smart_mode=1
             shift
         fi
-        if [[ "$1" = "--auto" ]] ; then
+        if [[ "$arg" = "--auto" ]] ; then
             is_auto_mode=1
             shift
         fi
-        if [[ "$1" = "--quiet" ]] ; then
+        if [[ "$arg" = "--quiet" ]] ; then
             is_quiet_mode=1
             shift
         fi
         # if first argument is the name of the card that we want to use itself
-        if [[ -n "$1" ]] && [[ "$1" != -* ]] ; then
-            if echo "$list_cards" | grep -qs -- "$1" ; then
-                list_cards="$1"
+        if [[ -n "$arg" ]] && [[ "$arg" != -* ]] ; then
+            if echo "$list_cards" | grep -qs -- "$arg" ; then
+                list_cards="$arg"
             fi
+        fi
+        if [[ "$arg" = "--help" ]] ; then
+            echo -e "Usage: $(basename $0) without arguments allows you to select the audio card to use"
+            echo -e "--smart: performs a smart way to detect the correct audio card to use"
+            echo -e "--auto: automatically selects the audio card to use"
+            echo -e "--quiet: silent mode, not interactive at all"
+            echo -e "NAME: this allows to configure the audio card to the given parameter name of the audio card to use"
+            exit
         fi
     done
 

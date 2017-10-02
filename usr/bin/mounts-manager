@@ -902,6 +902,7 @@ el_mount(){
         timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
     fi
 
+
     # check if mounted
     sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -971,6 +972,7 @@ el_mount(){
 
         # get UUID
         uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
         #if [[ -z "$uuid" ]] ; then
@@ -1000,6 +1002,14 @@ el_mount(){
         sync
         sleep 1
         sync
+
+        # hibernated NTFS requires hack
+        # check if mounted
+        sync
+        if ! check_is_mounted "$dev" 2>/dev/null 1>&2 && [[ "$filesystem" = ntfs ]] ; then
+            mount -t ntfs-3g -o remove_hiberfile "$dev" "$target"
+        fi
+
         if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
             echo "$dev mounted in: $(get_mountpoint "$dev" )"
             return 0

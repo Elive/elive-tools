@@ -2017,6 +2017,22 @@ el_config_save(){
     echo "${_configuration}=\"${!_configuration}\"" >> "$TMP_CONF_f"
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_config_restart
+#   DESCRIPTION:  remove all configurations
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+el_config_restart(){
+    # pre {{{
+    local TMP_CONF_f
+    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
+
+    # }}}
+    rm -f "$TMP_CONF_f"
+}
+
 
 
 ###################################################################

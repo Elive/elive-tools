@@ -1160,82 +1160,55 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
-    if ! ((is_terminal)) ; then
-        return
-    fi
+    local count counter funcnames sourcenames arg
+
     # }}}
-    # debug {{{
-    local funclevel
-
-    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
-    funclevel="$funclevels"
-
-    # level 3 is debug
-    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-        if [[ -n "$1" ]] ; then
-            echo -e "${el_c_gr}D:     ${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
-        else
-            # function showing only
-            # show {{{
-
-            case $funclevel in
-                1)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                2)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_b}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                3)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                4)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_c}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                5)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                6)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_g}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                7)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                8)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_y}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                9)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                10)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_r}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                11)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m2}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-                *)
-                    echo -en "${el_c_gr}F: ${el_c_gr}[${el_c_m}${funclevel}${el_c_gr}] " 1>&2
-                    ;;
-            esac
-
-            # continuation of the message
-            echo -e "${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO} ${el_c_c}$@${el_c_n}" 1>&2
-
-            # }}}
+    # get the list of function names array {{{
+    counter="${#FUNCNAME[*]}"
+    count=0
+    for arg in "${FUNCNAME[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            if [[ "$arg" != "source" ]] ; then
+                funcnames="$arg > $funcnames"
+            fi
         fi
+    done
+    funcnames="${funcnames% >*}"
 
-
+    counter="${#BASH_SOURCE[*]}"
+    count=0
+    for arg in "${BASH_SOURCE[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            #if [[ "$arg" != "source" ]] ; then
+                #sourcenames="$arg > $sourcenames"
+                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+            #fi
+        fi
+    done
+    if [[ -n "$sourcenames" ]] ; then
+        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcenames="${sourcenames% }"
+        #read -r sourcenames <<< "$sourcenames"
+    else
+        sourcenames="$0"
     fi
 
-    # more debug, show function-call array
-    if [[ "${EL_DEBUG}" -ge 4 ]] ; then
-        # show the array of calls
-        funclevel="${funclevels}"
-        echo -en "${el_c_gr}calls:" 1>&2
-        while [[ $funclevel -gt 0 ]] ; do
-            echo -en " -> ${FUNCNAME[$funclevel]}" 1>&2
-            funclevel="$(( $funclevel - 1 ))"
-        done
-        echo -e "${el_c_n}" 1>&2
+    # }}}
+    # show debug {{{
+
+    if [[ "${EL_DEBUG}" -ge 2 ]] ; then
+        if ((is_terminal)) ; then
+            #echo -e "${el_c_gr}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_gr}$@${el_c_n}" 1>&2
+            echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+        else
+            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                $guitool --info "$@"
+            fi
+        fi
     fi
 
     # }}}
@@ -1248,18 +1221,53 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    if ! ((is_terminal)) ; then
-        return
-    fi
-    # }}}
-    # warning {{{
+    local count counter funcnames sourcenames arg
 
-    if [[ -n "$1" ]] ; then
-        # note: info messages are not errors so we don't want them in the stderr
-        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-            echo -e "${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" # 1>&2
+    # }}}
+    # get the list of function names array {{{
+    counter="${#FUNCNAME[*]}"
+    count=0
+    for arg in "${FUNCNAME[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            if [[ "$arg" != "source" ]] ; then
+                funcnames="$arg > $funcnames"
+            fi
+        fi
+    done
+    funcnames="${funcnames% >*}"
+
+    counter="${#BASH_SOURCE[*]}"
+    count=0
+    for arg in "${BASH_SOURCE[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            #if [[ "$arg" != "source" ]] ; then
+                #sourcenames="$arg > $sourcenames"
+                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+            #fi
+        fi
+    done
+    if [[ -n "$sourcenames" ]] ; then
+        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcenames="${sourcenames% }"
+        #read -r sourcenames <<< "$sourcenames"
+    else
+        sourcenames="$0"
+    fi
+
+    # }}}
+    # show info {{{
+
+    if [[ "${EL_DEBUG}" -ge 2 ]] ; then
+        if ((is_terminal)) ; then
+            echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
         else
-            echo -e "${el_c_c}$@${el_c_n}" # 1>&2
+            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                $guitool --info "$@"
+            fi
         fi
     fi
 
@@ -1273,19 +1281,49 @@ el_info(){
 #===============================================================================
 el_warning(){
     # pre {{{
-    if ! ((is_terminal)) ; then
-        return
-    fi
+    local count counter funcnames sourcenames arg
+
     # }}}
-    # warning {{{
+    # get the list of function names array {{{
+    counter="${#FUNCNAME[*]}"
+    count=0
+    for arg in "${FUNCNAME[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            if [[ "$arg" != "source" ]] ; then
+                funcnames="$arg > $funcnames"
+            fi
+        fi
+    done
+    funcnames="${funcnames% >*}"
+
+    counter="${#BASH_SOURCE[*]}"
+    count=0
+    for arg in "${BASH_SOURCE[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            #if [[ "$arg" != "source" ]] ; then
+                #sourcenames="$arg > $sourcenames"
+                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+            #fi
+        fi
+    done
+    if [[ -n "$sourcenames" ]] ; then
+        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcenames="${sourcenames% }"
+        #read -r sourcenames <<< "$sourcenames"
+    else
+        sourcenames="$0"
+    fi
+
+    # }}}
+    # show warning {{{
 
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
         if ((is_terminal)) ; then
-            if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_y}Warning: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
-            else
-                echo -e "${el_c_y}Warning: ${el_c_c}$@${el_c_n}" 1>&2
-            fi
+            echo -e "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 $guitool --warning "$@"
@@ -1303,19 +1341,49 @@ el_warning(){
 #===============================================================================
 el_error(){
     # pre {{{
-    if ! ((is_terminal)) ; then
-        return
-    fi
+    local count counter funcnames sourcenames arg
+
     # }}}
-    # error {{{
+    # get the list of function names array {{{
+    counter="${#FUNCNAME[*]}"
+    count=0
+    for arg in "${FUNCNAME[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            if [[ "$arg" != "source" ]] ; then
+                funcnames="$arg > $funcnames"
+            fi
+        fi
+    done
+    funcnames="${funcnames% >*}"
+
+    counter="${#BASH_SOURCE[*]}"
+    count=0
+    for arg in "${BASH_SOURCE[@]}"
+    do
+        count="$(( $count + 1 ))"
+        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+            #if [[ "$arg" != "source" ]] ; then
+                #sourcenames="$arg > $sourcenames"
+                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+            #fi
+        fi
+    done
+    if [[ -n "$sourcenames" ]] ; then
+        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcenames="${sourcenames% }"
+        #read -r sourcenames <<< "$sourcenames"
+    else
+        sourcenames="$0"
+    fi
+
+    # }}}
+    # show error {{{
 
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         if ((is_terminal)) ; then
-            if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_r}Error: ${el_c_c}[${el_c_b2}${FUNCNAME[1]}${el_c_c}:${el_c_b2}${BASH_LINENO}${el_c_c}] ${el_c_c}$@${el_c_n}" 1>&2
-            else
-                echo -e "${el_c_r}Error: ${el_c_c}$@${el_c_n}" 1>&2
-            fi
+            echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 $guitool --error "$@"

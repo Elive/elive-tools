@@ -1397,8 +1397,6 @@ el_warning(){
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
-                # always report warnings with debug (function calls)
-                el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}"
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$@${el_c_n}" 1>&2
             fi
@@ -1407,6 +1405,11 @@ el_warning(){
                 timeout 40 $guitool --warning "$@"
             fi
         fi
+    fi
+
+    if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+        # always report warnings with debug (their function calls)
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}"
     fi
 
     # }}}
@@ -1469,8 +1472,6 @@ el_error(){
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
-                # always report warnings with debug (function calls)
-                el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}"
             else
                 echo -e "${el_c_r}E: ${el_c_r}$@${el_c_n}" 1>&2
             fi
@@ -1479,6 +1480,11 @@ el_error(){
                 timeout 50 $guitool --error "$@"
             fi
         fi
+    fi
+
+    if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+        # always report warnings with debug (function calls)
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}

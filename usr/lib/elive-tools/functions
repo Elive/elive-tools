@@ -493,7 +493,6 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
 
@@ -578,7 +577,7 @@ EOF
         done
         fi
 
-        if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
             timeout 20 $guitool --error
         fi
     fi
@@ -620,20 +619,20 @@ el_aptget_update(){
         fi
 
         if [[ "$UID" = 0 ]] ; then
-            if [[ -n "$DISPLAY" ]] ; then
+            if [[ "${DISPLAY}" = ":0.0" ]] ; then
                 { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
                 apt-get update || apt-get update
             fi
         else
             if el_check_sudo_automated ; then
-                if [[ -n "$DISPLAY" ]] ; then
+                if [[ "${DISPLAY}" = ":0.0" ]] ; then
                     { sudo apt-get update || sudo apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
                     sudo apt-get update || sudo apt-get update
                 fi
             else
-                if [[ -n "$DISPLAY" ]] ; then
+                if [[ "${DISPLAY}" = ":0.0" ]] ; then
                     if ! el_dependencies_check gksu ; then
                         el_dependencies_install "gksu"
                     fi
@@ -649,7 +648,7 @@ el_aptget_update(){
                         fi
                     done
 
-                    if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+                    if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
                         timeout 20 $guitool --error
                     fi
 
@@ -868,7 +867,7 @@ el_sudo(){
     if el_check_sudo_automated 2>/dev/null 1>&2 ; then
         sudo -H "$@"
     else
-        if [[ -n "$DISPLAY" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" ]] ; then
             if ! el_dependencies_check gksu ; then
                 el_dependencies_install "gksu"
             fi
@@ -882,7 +881,7 @@ el_sudo(){
                 fi
             done
 
-            if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+            if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
                 timeout 20 $guitool --error
             fi
         else
@@ -1204,11 +1203,16 @@ el_debug(){
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
-            #echo -e "${el_c_gr}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_gr}$@${el_c_n}" 1>&2
-            if [[ -n "$@" ]] ; then
-                echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+                if [[ -n "$@" ]] ; then
+                    echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+                else
+                    echo -e "${el_c_gr}C: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
+                fi
             else
-                echo -e "${el_c_gr}C: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+                if [[ -n "$@" ]] ; then
+                    echo -e "${el_c_c}D: ${el_c_c}$@${el_c_n}" 1>&2
+                fi
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
@@ -1269,7 +1273,11 @@ el_info(){
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
-            echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+                echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
+            else
+                echo -e "${el_c_c2}I: ${el_c_c2}$@${el_c_n}" 1>&2
+            fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 timeout 30 $guitool --info "$@"
@@ -1329,7 +1337,11 @@ el_warning(){
 
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
         if ((is_terminal)) ; then
-            echo -e "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+                echo -e "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
+            else
+                echo -e "${el_c_y2}W: ${el_c_y2}$@${el_c_n}" 1>&2
+            fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 timeout 40 $guitool --warning "$@"
@@ -1392,7 +1404,11 @@ el_error(){
 
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         if ((is_terminal)) ; then
-            echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+                echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
+            else
+                echo -e "${el_c_r}E: ${el_c_r}$@${el_c_n}" 1>&2
+            fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 timeout 50 $guitool --error "$@"
@@ -1457,7 +1473,7 @@ el_group_add(){
             fi
         done
 
-        if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
             local message_wrong_password
             message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
 
@@ -1479,7 +1495,7 @@ el_group_add(){
                 fi
             done
 
-            if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
+            if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
                 timeout 40 $guitool --error
             fi
         fi
@@ -1544,7 +1560,7 @@ el_confirm(){
     else
         el_set_display_variables
 
-        if [[ -n "$DISPLAY" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" ]] ; then
             if $guitool --question --text="$question" ; then
                 return 0
             else
@@ -1773,7 +1789,7 @@ el_step_requires_fixme(){
         el_set_display_variables
         local _dummy
         _dummy="$( eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
-        if [[ -n "$DISPLAY" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" ]] ; then
             timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
         fi
         exit 1
@@ -1815,7 +1831,7 @@ el_report_to_elive(){
     # not configured? ask for it
     if [[ -z "$send_debug_reports" ]] ; then
         # ask for reports
-        if [[ -n "$DISPLAY" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" ]] ; then
             local message_ask_email
             message_ask_email="$( printf "$( eval_gettext "There's an error catched from %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
             send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
@@ -2003,7 +2019,7 @@ el_request_report_bug(){
     # check if we should ignore this function
     if el_check_version_development_is_days_recent 30 ; then
 
-        if [[ -n "$DISPLAY" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" ]] ; then
             local _dummy
             _dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
@@ -2128,7 +2144,7 @@ el_request_donation(){
     # pre {{{
     local arg
 
-    if ! [[ "$DISPLAY" ]] ; then
+    if ! [[ "${DISPLAY}" = ":0.0" ]] ; then
         return
     fi
 

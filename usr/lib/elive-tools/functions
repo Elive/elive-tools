@@ -1882,6 +1882,10 @@ el_report_to_elive(){
         return
     fi
 
+    if [[ -n "$NOREPORTS" ]] ; then
+        return
+    fi
+
     message="$@"
     # remove special chars like colors, don't depend on colors-remove:
     message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
@@ -1924,7 +1928,7 @@ el_report_to_elive(){
         else
             # don't ask the user for his contact if he's running on live mode
             send_debug_reports="yes"
-            #send_debug_reports_email="Live" # let's better use anonymous+id
+            send_debug_reports_email="Live"
         fi
     fi
 

@@ -1409,7 +1409,7 @@ el_warning(){
 
     if [[ -n "${BASH_SOURCE[@]}" ]] ; then
         # always report warnings with debug (their function calls)
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} # $( pstree -A -l -n -s $$ | grep "$0" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' )] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}
@@ -1484,7 +1484,7 @@ el_error(){
 
     if [[ -n "${BASH_SOURCE[@]}" ]] ; then
         # always report warnings with debug (function calls)
-        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}"
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} # $( pstree -A -l -n -s $$ | grep "$0" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' )] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}
@@ -1882,6 +1882,10 @@ el_report_to_elive(){
         return
     fi
 
+    # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
+    #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
+        #return
+    #fi
     if [[ -n "$NOREPORTS" ]] ; then
         return
     fi
@@ -2096,7 +2100,9 @@ el_request_report_bug(){
     # task list sorted by created time
     url='http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc'
     # check if we should ignore this function
-    if el_check_version_development_is_days_recent 30 ; then
+    #if el_check_version_development_is_days_recent 30 ; then
+    # TODO: set 10 only for now, change it to 30 when migrating from NOREPORTS to EL_REPORTS=yes
+    if el_check_version_development_is_days_recent 15 ; then
 
         if [[ "${DISPLAY}" = ":0.0" ]] ; then
             local _dummy

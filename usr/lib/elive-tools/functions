@@ -246,7 +246,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
         fi
 
         # wanna debug more?
-        if [[ "${EL_DEBUG}" -gt "2" ]] ; then
+        if [[ "${EL_DEBUG}" -gt "3" ]] ; then
             el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.google.com 2>&1 )"
             if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
                 el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
@@ -301,7 +301,9 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
         fi
 
         if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
-            el_debug "carrier for $interface marks that we are connected"
+            if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+                el_debug "carrier for $interface marks that we are connected"
+            fi
 
             OnLine=1;
             break
@@ -317,7 +319,9 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             # if anything tell us that we are connected and we was before, we should still be
             el_dependencies_check "route"
             if [[ -n "$OnLine" ]] || /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
-                el_debug "seems like we still online, using cache + small checks"
+                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+                    el_debug "seems like we still online, using cache + small checks"
+                fi
                 return 0
             fi
         fi
@@ -330,10 +334,14 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             # if all the other checks tell us that we really are not connected, say that we are not, in cache mode
             if el_verify_internet_ping 2 ; then
                 echo "$date_hour_now" > "$stamp_hour_prev"
-                el_debug "connection to internet found at ping level"
+                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+                    el_debug "connection to internet found at ping level"
+                fi
                 return 0
             else
-                el_debug "we was OFFline at least 20 minutes ago, ping dont answer in 2 seconds, we should still off"
+                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+                    el_debug "we was OFFline at least 20 minutes ago, ping dont answer in 2 seconds, we should still off"
+                fi
                 return 1
             fi
         fi
@@ -346,7 +354,9 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # do a ping check
     if el_verify_internet_ping $timeout ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
-        el_debug "connection to internet found at ping level"
+        if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+            el_debug "connection to internet found at ping level"
+        fi
         return 0
     else
         if [[ "${mode}" = "fast" ]] ; then
@@ -364,17 +374,23 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # check for connection to internet using curl instead
-    el_debug "let's do a last check using a curl to google"
+    if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+        el_debug "let's do a last check using a curl to google"
+    fi
 
     el_dependencies_check "curl"
     if timeout 9 curl --connect-timeout 8 www.google.com 2>/dev/null | grep -qsi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
-        el_debug "connection to internet finally using curl"
+        if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+            el_debug "connection to internet finally using curl"
+        fi
 
         return 0
     else
         echo "$date_hour_now" > "$stamp_hour_prev_offline"
-        el_debug "Connection to internet not found"
+        if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+            el_debug "Connection to internet not found"
+        fi
 
         return 1
     fi
@@ -1163,6 +1179,15 @@ el_debug(){
     # pre {{{
     local count counter funcnames sourcenames arg
 
+    # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
+    if [[ -n "$ZSH_VERSION" ]] || [[ "$0" = "bash" ]] ; then
+        true
+    else
+        if [[ -z "${BASH_SOURCE[@]}" ]] ; then
+            return
+        fi
+    fi
+
     # }}}
     # get the list of function names array {{{
     counter="${#FUNCNAME[*]}"
@@ -1851,7 +1876,8 @@ el_report_to_elive(){
         # ask for reports
         if [[ "${DISPLAY}" = ":0.0" ]] ; then
             local message_ask_email
-            message_ask_email="$( printf "$( eval_gettext "There's an error catched from %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
+            # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
+            message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
             send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
 
             # set conf

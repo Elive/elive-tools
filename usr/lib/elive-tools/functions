@@ -1891,27 +1891,34 @@ el_report_to_elive(){
 
     # not configured? ask for it
     if [[ -z "$send_debug_reports" ]] ; then
+
         # ask for reports
-        if [[ "${DISPLAY}" = ":0.0" ]] ; then
-            local message_ask_email
-            # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
-            message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
-            send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
+        if ! grep -qs "boot=live" /proc/cmdline ; then
+            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+                local message_ask_email
+                # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
+                message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
+                send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
 
-            # set conf
-            if echo "$send_debug_reports_email" | grep -qs "@.*\." ; then
-                send_debug_reports="yes"
-            else
-                send_debug_reports="no"
+                # set conf
+                if echo "$send_debug_reports_email" | grep -qs "@.*\." ; then
+                    send_debug_reports="yes"
+                else
+                    send_debug_reports="no"
+                fi
+
+                # save conf
+                mkdir -p "$HOME/.config/elive"
+                sed -i -e "/send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
+                sed -i -e "/send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
+
+                echo -e "send_debug_reports=\"$send_debug_reports\"" >> "$HOME/.config/elive/settings"
+                echo -e "send_debug_reports_email=\"$send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
             fi
-
-            # save conf
-            mkdir -p "$HOME/.config/elive"
-            sed -i -e "/send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
-            sed -i -e "/send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
-
-            echo -e "send_debug_reports=\"$send_debug_reports\"" >> "$HOME/.config/elive/settings"
-            echo -e "send_debug_reports_email=\"$send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
+        else
+            # don't ask the user for his contact if he's running on live mode
+            send_debug_reports="yes"
+            #send_debug_reports_email="Live" # let's better use anonymous+id
         fi
     fi
 

@@ -1171,7 +1171,7 @@ el_debug(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] ; then
+            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
                 funcnames="$arg > $funcnames"
             fi
         fi
@@ -1191,8 +1191,13 @@ el_debug(){
         fi
     done
     if [[ -n "$sourcenames" ]] ; then
-        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        else
+            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        fi
         sourcenames="${sourcenames% }"
+        sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
         sourcenames="$0"
@@ -1203,11 +1208,11 @@ el_debug(){
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 if [[ -n "$@" ]] ; then
-                    echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+                    echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
                 else
-                    echo -e "${el_c_gr}C: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
+                    echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
                 fi
             else
                 if [[ -n "$@" ]] ; then
@@ -1241,7 +1246,7 @@ el_info(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] ; then
+            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
                 funcnames="$arg > $funcnames"
             fi
         fi
@@ -1261,8 +1266,13 @@ el_info(){
         fi
     done
     if [[ -n "$sourcenames" ]] ; then
-        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        else
+            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        fi
         sourcenames="${sourcenames% }"
+        sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
         sourcenames="$0"
@@ -1274,7 +1284,7 @@ el_info(){
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
+                echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
             else
                 echo -e "${el_c_c2}I: ${el_c_c2}$@${el_c_n}" 1>&2
             fi
@@ -1305,7 +1315,7 @@ el_warning(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] ; then
+            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
                 funcnames="$arg > $funcnames"
             fi
         fi
@@ -1325,8 +1335,13 @@ el_warning(){
         fi
     done
     if [[ -n "$sourcenames" ]] ; then
-        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        else
+            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        fi
         sourcenames="${sourcenames% }"
+        sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
         sourcenames="$0"
@@ -1337,8 +1352,8 @@ el_warning(){
 
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
         if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
-                echo -e "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$@${el_c_n}" 1>&2
             fi
@@ -1371,7 +1386,7 @@ el_error(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] ; then
+            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
                 funcnames="$arg > $funcnames"
             fi
         fi
@@ -1391,8 +1406,13 @@ el_error(){
         fi
     done
     if [[ -n "$sourcenames" ]] ; then
-        sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        else
+            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        fi
         sourcenames="${sourcenames% }"
+        sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
         sourcenames="$0"
@@ -1404,8 +1424,8 @@ el_error(){
 
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
-                echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
             else
                 echo -e "${el_c_r}E: ${el_c_r}$@${el_c_n}" 1>&2
             fi
@@ -1437,10 +1457,8 @@ el_group_check(){
     # }}}
 
     if [[ " $(id -Gn "$USER") " = *" $group "* ]] ; then
-
         return 0
     else
-
         return 1
     fi
 
@@ -1883,23 +1901,23 @@ el_report_to_elive(){
     fi
 
 
-    eliveversion="$(el_elive_version_get)"
+    eliveversion="$( el_elive_version_get 2>/dev/null )"
 
     # }}}
     # send {{{
     # only report recent things
     if el_verify_internet fast 1>/dev/null 2>&1 ; then
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 2>/dev/null ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             LC_ALL=C sleep 1
 
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                 LC_ALL=C sleep 1
 
-                if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 ; then
+                if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     LC_ALL=C sleep 1
 
-                    if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 ; then
+                    if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                         true
                     fi
                 fi

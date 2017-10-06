@@ -1273,7 +1273,7 @@ el_info(){
 
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
             else
                 echo -e "${el_c_c2}I: ${el_c_c2}$@${el_c_n}" 1>&2

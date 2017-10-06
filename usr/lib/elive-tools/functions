@@ -428,10 +428,10 @@ el_make_environment(){ # make ready our environment (source variables and functi
         #PATH="$HOME/bin:$PATH"
     #fi
 
-    if [[ -n "${BASH_SOURCE}" ]] ; then
-        #export PS4='+ ($(basename ${BASH_SOURCE}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
-        #export PS4='+ [$(basename ${BASH_SOURCE})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
-        export PS4='+ [$(basename ${BASH_SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+    if [[ -n "${0}" ]] ; then
+        #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
+        #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
+        export PS4='+ [$(basename ${0} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
     # XDG default directories
@@ -1067,6 +1067,23 @@ el_check_version_development_is_days_recent(){
         return 1
     fi
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_is_shell
+#   DESCRIPTION:  check if we are running from a shell
+#    PARAMETERS:  -
+#       RETURNS:  true if we are a shell, false if we are not
+#===============================================================================
+el_check_is_shell(){
+    # pre {{{
+    el_security_function_loop || return
+
+    # }}}
+    if [[ -n "$ZSH_VERSION" ]] || [[ "$0" = "bash" ]] ; then
+        return 0
+    else
+        return 1
+    fi
+}
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_explain
@@ -1180,9 +1197,10 @@ el_debug(){
     local count counter funcnames sourcenames arg
 
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
-    if [[ -n "$ZSH_VERSION" ]] || [[ "$0" = "bash" ]] ; then
+    if el_check_is_shell ; then
         true
     else
+        # check if we have the variable set, because we need to use it (so this may not work in ZSH)
         if [[ -z "${BASH_SOURCE[@]}" ]] ; then
             return
         fi
@@ -2229,6 +2247,18 @@ el_config_get(){
     TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
 
     # }}}
+    # checks {{{
+    if el_check_is_shell ; then
+        el_debug "ignoring el_config_* because we are from a shell"
+        return
+    fi
+    # variable must be set
+    if [[ -z "${0}" ]] ; then
+        el_error "\$0 is not set"
+        return
+    fi
+
+    # }}}
     if [[ -s "$TMP_CONF_f" ]] ; then
         source "$TMP_CONF_f" 1>/dev/null 2>&1
     fi
@@ -2245,6 +2275,18 @@ el_config_save(){
     # note: by some reason this needs to be alone and first or may not work:
     local _configuration
     _configuration="$1"
+    # checks {{{
+    if el_check_is_shell ; then
+        el_debug "ignoring el_config_* because we are from a shell"
+        return
+    fi
+    # variable must be set
+    if [[ -z "${0}" ]] ; then
+        el_error "\$0 is not set"
+        return
+    fi
+
+    # }}}
 
     local TMP_CONF_f
     #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
@@ -2266,7 +2308,6 @@ el_config_save(){
     fi
 
     # }}}
-
     # remove old possible entries
     sed -i "/^${_configuration}=/d" "$TMP_CONF_f"
 
@@ -2283,11 +2324,25 @@ el_config_save(){
 el_config_restart(){
     # pre {{{
     local TMP_CONF_f
-    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+
     TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
 
     # }}}
-    rm -f "$TMP_CONF_f"
+    # checks {{{
+    if el_check_is_shell ; then
+        el_debug "ignoring el_config_* because we are from a shell"
+        return
+    fi
+    # variable must be set
+    if [[ -z "${0}" ]] ; then
+        el_error "\$0 is not set"
+        return
+    fi
+
+    # }}}
+    if [[ -s "$TMP_CONF_f" ]] ; then
+        rm -f "$TMP_CONF_f"
+    fi
 }
 
 
@@ -2297,7 +2352,7 @@ el_config_restart(){
 ###################################################################
 # Generic checks
 if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-    if [[ "$@" != *"bash" ]] && [[ "$0" != *"bin/zsh" ]] && [[ -e "$@" ]] && grep -q el_step_requires_fixme "$0" ; then
+    if [[ "$0" != *"bash" ]] && [[ "$0" != *"bin/zsh" ]] && [[ -e "$@" ]] && grep -q el_step_requires_fixme "$0" ; then
         el_warning "Missing features, please report this to Elive"
     fi
 fi

@@ -1249,7 +1249,7 @@ el_debug(){
     # }}}
     # show debug {{{
 
-    if [[ "${EL_DEBUG}" -ge 2 ]] ; then
+    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 if [[ -n "$@" ]] ; then

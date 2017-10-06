@@ -699,6 +699,7 @@ el_package_newer_check(){
 #-------------------------------------------------------------------------------
 el_check_variables(){ # check if we have set these variables, if not, notify and exit
     # example $0 foo,bar,we
+    # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
     local found_no var
 
     while read -ru 3 var
@@ -977,7 +978,8 @@ el_elive_version_get(){
     el_security_function_loop || return
 
     # }}}
-    version="$(cat "/etc/elive-version" | grep elive-version | sed 's/^.*version:\ //' )"
+    version="$( grep "^elive-version: " "/etc/elive-version" )"
+    version="${version#elive-version: }"
 
     if [[ -n "$version" ]] ; then
         echo "$version"
@@ -1203,7 +1205,11 @@ el_debug(){
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
             #echo -e "${el_c_gr}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_gr}$@${el_c_n}" 1>&2
-            echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+            if [[ -n "$@" ]] ; then
+                echo -e "${el_c_c}D: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+            else
+                echo -e "${el_c_gr}C: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+            fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
                 $guitool --info "$@"
@@ -1329,6 +1335,8 @@ el_warning(){
                 $guitool --warning "$@"
             fi
         fi
+        # always report warnings
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}"
     fi
 
     # }}}
@@ -1381,6 +1389,7 @@ el_error(){
     # }}}
     # show error {{{
 
+
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         if ((is_terminal)) ; then
             echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
@@ -1389,6 +1398,8 @@ el_error(){
                 $guitool --error "$@"
             fi
         fi
+        # always report errors
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}
@@ -1602,8 +1613,8 @@ el_security_function_loop(){
         if ((is_loop_infinite)) ; then
             # note: we set it as a warning instead of error because it is really a way that solves errors making the application working, at least for "smart" applications (no linear procedure but a set of tasks and where the application is meant to know what to do)
             if [[ "${EL_DEBUG}" -ge "1" ]] ; then
-                el_warning "Entered in an Infinite Loop, let's jump it"
-                el_explain 1 "__Note:__ Declarative programming requires this feature for work correctly, in short, if the application works correctly then everything is fine."
+                echo -e "${el_c_y}W: Entered in an Infinite Loop, let's jump it${el_c_n}" 1>&2
+                #echo -e "Note: Declarative type of programming requires this feature for work correctly, in short, if the application works correctly then everything is fine." 1>&2
 
                 # show the array of calls
                 funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
@@ -1620,7 +1631,7 @@ el_security_function_loop(){
         else
             if [[ "${EL_DEBUG}" -ge "2" ]] ; then
                 if [[ -z "$recursives_allowed" ]] ; then
-                    el_warning "Detected a possible infinite loop"
+                    echo -e "${el_c_y}W: Detected a possible infinite loop${el_c_n}" 1>&2
                 fi
 
                 # show the array of calls
@@ -1765,6 +1776,82 @@ el_step_requires_fixme(){
 
     cd "${prev_dir}"
 
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_report_to_elive
+#   DESCRIPTION:  function to send easly and painless reports to elive
+#    PARAMETERS:  $1 = message
+#       RETURNS:  -
+#===============================================================================
+el_report_to_elive(){
+    # pre {{{
+    local message message_stripped return_status id eliveversion
+    el_security_function_loop || return
+
+    if ! el_check_version_development_is_days_recent 7 ; then
+        return
+    fi
+
+    message="$@"
+    # remove special chars like colors, don't depend on colors-remove:
+    message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
+
+    el_check_variables "message,message_stripped"
+
+    if [[ -s "/etc/elive/settings" ]] ; then
+        source "/etc/elive/settings" 1>/dev/null 2>&1
+    fi
+
+    # protocol 1.0 values (in order):
+    #v_version v_id v_type v_filetype v_topic v_sizeb v_from_name v_from_email v_return_status v_custom
+
+    # }}}
+    # set values{{{
+    case "$message_stripped" in
+        "E: "*)  return_status=1  ; ;;
+        "W: "*)  return_status=2  ; ;;
+        "I: "*)  return_status=3  ; ;;
+        "D: "*)  return_status=4  ; ;;
+    esac
+
+    # create an unique identifier to differentiate betweem same-reports
+    #id="$( dd if=/dev/urandom bs=1k count=2 2>/dev/null | sha1sum | awk '{print $1}' )"
+    if el_check_sudo_automated ; then
+        id="$( timeout 3 sudo blkid | grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"
+    else
+        id="$( ip a | grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
+    fi
+
+    if [[ -z "$send_debug_reports_email" ]] ; then
+        send_debug_reports_email="anonymous|$id"
+    fi
+
+
+    eliveversion="$(el_elive_version_get)"
+
+    # }}}
+    # send {{{
+    # only report recent things
+    if el_verify_internet fast 1>/dev/null 2>&1 ; then
+        # send
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 2>/dev/null ; then
+            LC_ALL=C sleep 1
+
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 ; then
+                LC_ALL=C sleep 1
+
+                if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 ; then
+                    LC_ALL=C sleep 1
+
+                    if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 ; then
+                        true
+                    fi
+                fi
+            fi
+        fi
+    fi
+    # }}}
 }
 
 #===  FUNCTION  ================================================================

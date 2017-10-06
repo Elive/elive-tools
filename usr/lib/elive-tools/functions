@@ -579,7 +579,7 @@ EOF
         fi
 
         if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
-            $guitool --error
+            timeout 20 $guitool --error
         fi
     fi
     rm -f "${temp}"
@@ -650,7 +650,7 @@ el_aptget_update(){
                     done
 
                     if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
-                        $guitool --error
+                        timeout 20 $guitool --error
                     fi
 
                 else
@@ -883,7 +883,7 @@ el_sudo(){
             done
 
             if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
-                $guitool --error
+                timeout 20 $guitool --error
             fi
         else
             su -c "$@" root
@@ -1212,7 +1212,7 @@ el_debug(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                $guitool --info "$@"
+                timeout 30 $guitool --info "$@"
             fi
         fi
     fi
@@ -1272,7 +1272,7 @@ el_info(){
             echo -e "${el_c_c2}I: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                $guitool --info "$@"
+                timeout 30 $guitool --info "$@"
             fi
         fi
     fi
@@ -1332,7 +1332,7 @@ el_warning(){
             echo -e "${el_c_y2}W: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                $guitool --warning "$@"
+                timeout 40 $guitool --warning "$@"
             fi
         fi
         # always report warnings
@@ -1395,7 +1395,7 @@ el_error(){
             echo -e "${el_c_r}E: ${el_c_gr}[${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                $guitool --error "$@"
+                timeout 50 $guitool --error "$@"
             fi
         fi
         # always report errors
@@ -1458,7 +1458,10 @@ el_group_add(){
         done
 
         if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
-            $guitool --error --text="$( eval_gettext "Wrong password" )"
+            local message_wrong_password
+            message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
+
+            timeout 40 $guitool --error --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
         fi
 
 
@@ -1477,7 +1480,7 @@ el_group_add(){
             done
 
             if ! ((is_password_ok)) && [[ -n "$DISPLAY" ]] ; then
-                $guitool --error
+                timeout 40 $guitool --error
             fi
         fi
 
@@ -1770,7 +1773,9 @@ el_step_requires_fixme(){
         el_set_display_variables
         local _dummy
         _dummy="$( eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
-        $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
+        if [[ -n "$DISPLAY" ]] ; then
+            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
+        fi
         exit 1
     fi
 
@@ -1812,7 +1817,7 @@ el_report_to_elive(){
         if [[ -n "$DISPLAY" ]] ; then
             local message_ask_email
             message_ask_email="$( printf "$( eval_gettext "There's an error catched from %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
-            send_debug_reports_email="$( $guitool --entry --text="$message_ask_email" )"
+            send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
 
             # set conf
             if echo "$send_debug_reports_email" | grep -qs "@.*\." ; then
@@ -2021,7 +2026,7 @@ el_request_report_bug(){
                 local message_instructions
                 message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 sleep 6
-                $guitool --info --text="$message_instructions"
+                timeout 240 $guitool --info --text="$message_instructions"
 
             fi
         else
@@ -2122,6 +2127,10 @@ el_request_donation(){
     # pre {{{
     local arg
 
+    if ! [[ "$DISPLAY" ]] ; then
+        return
+    fi
+
     # }}}
 
     local _dummy
@@ -2133,12 +2142,11 @@ el_request_donation(){
     _dummy3="$( eval_gettext "To make a donation only takes you one or two minutes and it guarantees that there will be more versions of Elive in the future and more improved!" )"
 
     # show it
-    $guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )"
-
-    if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy2" )" ; then
+    #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )"
+    if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy $_dummy2" )" ; then
         /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
     else
-        if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy3" )" ; then
+        if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy $_dummy3" )" ; then
             /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
         fi
     fi

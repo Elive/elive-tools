@@ -1794,7 +1794,8 @@ el_report_to_elive(){
     local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email
     el_security_function_loop || return
 
-    if ! el_check_version_development_is_days_recent 7 1>/dev/null 2>&1 ; then
+    # at least one month old, we can parse the results from the server to show only recent ones too
+    if ! el_check_version_development_is_days_recent 30 1>/dev/null 2>&1 ; then
         return
     fi
 

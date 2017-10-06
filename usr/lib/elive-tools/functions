@@ -1824,7 +1824,7 @@ el_report_to_elive(){
     fi
 
     if [[ -z "$send_debug_reports_email" ]] ; then
-        send_debug_reports_email="anonymous|$id"
+        send_debug_reports_email="anonymous:${id}"
     fi
 
 

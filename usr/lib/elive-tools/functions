@@ -954,7 +954,7 @@ el_check_translations_required_notify(){
 #===============================================================================
 el_check_version_development(){
     if [[ -e "/etc/elive-version" ]] ; then
-        if [[ "$( grep stable-release /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
+        if [[ "$( grep "^stable-release" /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
             return 1
         else
             return 0
@@ -1011,7 +1011,7 @@ el_check_version_development_is_days_recent(){
 
     # calculate date builded {{{
 
-    date_builded="$( grep date-builded /etc/elive-version | sed -e 's|date-builded: ||g' )"
+    date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
 
     date_builded_y="${date_builded%%-*}"
 
@@ -1786,10 +1786,10 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email
     el_security_function_loop || return
 
-    if ! el_check_version_development_is_days_recent 7 ; then
+    if ! el_check_version_development_is_days_recent 7 1>/dev/null 2>&1 ; then
         return
     fi
 
@@ -1801,6 +1801,39 @@ el_report_to_elive(){
 
     if [[ -s "/etc/elive/settings" ]] ; then
         source "/etc/elive/settings" 1>/dev/null 2>&1
+    fi
+    if [[ -s "$HOME/.config/elive/settings" ]] ; then
+        source "$HOME/.config/elive/settings"
+    fi
+
+    # not configured? ask for it
+    if [[ -z "$send_debug_reports" ]] ; then
+        # ask for reports
+        if [[ -n "$DISPLAY" ]] ; then
+            local message_ask_email
+            message_ask_email="$( printf "$( eval_gettext "There's an error catched from %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
+            send_debug_reports_email="$( $guitool --entry --text="$message_ask_email" )"
+
+            # set conf
+            if echo "$send_debug_reports_email" | grep -qs "@.*\." ; then
+                send_debug_reports="yes"
+            else
+                send_debug_reports="no"
+            fi
+
+            # save conf
+            mkdir -p "$HOME/.config/elive"
+            sed -i -e "/send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
+            sed -i -e "/send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
+
+            echo -e "send_debug_reports=\"$send_debug_reports\"" >> "$HOME/.config/elive/settings"
+            echo -e "send_debug_reports_email=\"$send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
+        fi
+    fi
+
+    # user don't wants to report, so ignore it
+    if [[ "$send_debug_reports" = "no" ]] || [[ -z "$send_debug_reports" ]] ; then
+        return
     fi
 
     # protocol 1.0 values (in order):

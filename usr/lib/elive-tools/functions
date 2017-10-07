@@ -1411,7 +1411,7 @@ el_warning(){
         # always report warnings with debug (their function calls)
         local execution_stack
         execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---el_report_to_elive||g' )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
         el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$@${el_c_n}"
     fi
 
@@ -1489,7 +1489,7 @@ el_error(){
         # always report warnings with debug (function calls)
         local execution_stack
         execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---el_report_to_elive||g' )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
         el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$@${el_c_n}"
     fi
 
@@ -1979,7 +1979,7 @@ el_report_to_elive(){
     # only report recent things
     if el_verify_internet fast 1>/dev/null 2>&1 ; then
         execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---el_report_to_elive||g' )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
         # send
         if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             LC_ALL=C sleep 1

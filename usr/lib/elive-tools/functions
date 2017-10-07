@@ -1874,7 +1874,7 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack
     el_security_function_loop || return
 
     # at least one month old, we can parse the results from the server to show only recent ones too
@@ -1942,7 +1942,7 @@ el_report_to_elive(){
     fi
 
     # protocol 1.0 values (in order):
-    #v_version v_id v_type v_filetype v_topic v_sizeb v_from_name v_from_email v_return_status v_custom
+    #v_version v_id v_type v_filetype v_topic v_sizeb v_from_name v_from_email v_return_status v_custom v_stack_tree
 
     # }}}
     # set values{{{
@@ -1972,17 +1972,19 @@ el_report_to_elive(){
     # send {{{
     # only report recent things
     if el_verify_internet fast 1>/dev/null 2>&1 ; then
+        execution_stack="$( pstree -A -l -n -s $$ )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' )"
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             LC_ALL=C sleep 1
 
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                 LC_ALL=C sleep 1
 
-                if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     LC_ALL=C sleep 1
 
-                    if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+                    if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         true
                     fi
                 fi

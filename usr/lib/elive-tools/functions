@@ -1004,6 +1004,65 @@ el_elive_version_get(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_check_version_is_days_recent
+#   DESCRIPTION:  check if this version is less than $1 ~days old
+#    PARAMETERS:  $1 = days old to check
+#       RETURNS:  true if is less than $1 old, false if we are older than it
+#===============================================================================
+el_check_version_is_days_recent(){
+    # pre {{{
+    local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference
+    el_debug
+    el_security_function_loop || return
+
+    days_required="$1"
+
+    # }}}
+
+    # calculate date builded {{{
+
+    date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
+
+    date_builded_y="${date_builded%%-*}"
+
+    date_builded_m="${date_builded%-*}"
+    date_builded_m="${date_builded_m#*-}"
+    date_builded_m="${date_builded_m#0}"
+
+    date_builded_d="${date_builded##*-}"
+    date_builded_d="${date_builded_d#0}"
+
+    date_builded_total_days="$(( ${date_builded_m} * 30 + ${date_builded_d} ))"
+    date_builded_total_days="$(( ${date_builded_y} * 365 + ${date_builded_total_days} ))"
+
+    # - calculate date builded }}}
+    # calculate date today {{{
+
+    date_today="$( date +%F )"
+
+    date_today_y="${date_today%%-*}"
+
+    date_today_m="${date_today%-*}"
+    date_today_m="${date_today_m#*-}"
+    date_today_m="${date_today_m#0}"
+
+    date_today_d="${date_today##*-}"
+    date_today_d="${date_today_d#0}"
+
+    date_today_total_days="$(( ${date_today_m} * 30 + ${date_today_d} ))"
+    date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
+
+    # - calculate date today }}}
+    el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
+    days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
+
+    if [[ "$days_difference" -le "$days_required" ]] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+#===  FUNCTION  ================================================================
 #          NAME:  el_check_version_development_is_days_recent
 #   DESCRIPTION:  check if this development version is less than $1 ~days old
 #    PARAMETERS:  $1 = days old to check

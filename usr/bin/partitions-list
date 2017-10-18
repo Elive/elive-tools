@@ -197,7 +197,15 @@ main(){
                 ;;
             --show-all-raw)
                 is_show_all=1
-                is_show_all_raw=1
+                is_show_raw=1
+                shift
+                ;;
+            --show-raw)
+                is_show_raw=1
+                shift
+                ;;
+            --show-disks)
+                is_show_disks=1
                 shift
                 ;;
             --show-all-mountable)
@@ -212,7 +220,7 @@ main(){
                 #get_all_partitions_list
                 #shift
                 #;;
-            --show-only-mountable)
+            --show-only-mountable|--only-mountable)
                 # to be used with --show-only
                 is_show_only_mountable=1
                 shift
@@ -267,6 +275,11 @@ main(){
             if [[ "${line}" = *"DEVTYPE=partition" ]] ; then
                 item_is_usable=1
             fi
+            if [[ "${line}" = *"DEVTYPE=disk" ]] ; then
+                if ((is_show_disks)) ; then
+                    item_is_usable=1
+                fi
+            fi
             # swap partitions
             if [[ "${line}" = *"ID_FS_TYPE=swap" ]] ; then
                 item_is_usable=1
@@ -278,7 +291,7 @@ main(){
             if [[ "${line}" = *"ID_FS_TYPE=crypto_"* ]] ; then
                 # an encrypted partition is like an extended partition which requires a password, which contains other partitions inside, it should be not considered a real partition and its dangerous to have it selectable, so ignore it:
                 # but we need it to show up for the installer (unlocking encrypted ones)
-                if ((is_show_all_raw)) ; then
+                if ((is_show_raw)) ; then
                     item_is_usable=1
                 else
                     item_is_usable=0
@@ -361,7 +374,7 @@ main(){
                 # suspended device?
                 if [[ "${line}" = *"DM_SUSPENDED=1" ]] ; then
 
-                    if ((is_show_all_raw)) ; then
+                    if ((is_show_raw)) ; then
                         item_is_usable=1
                     else
                         item_is_usable=0
@@ -415,7 +428,7 @@ main(){
             unset item_filesystem
             item_type="extended"
 
-            if ((is_show_all_raw)) ; then
+            if ((is_show_raw)) ; then
                 item_is_usable=1
             else
                 el_debug "marking ${item} as unusable because is shows like an extended partition"
@@ -436,7 +449,7 @@ main(){
             # common not mountable partitions
             if echo "$item_filesystem" | grep -qsiE "^(swap|extended|crypto_LUKS)$" ; then
 
-                if ((is_show_all_raw)) ; then
+                if ((is_show_raw)) ; then
                     item_is_usable=1
                 else
                     item_is_usable=0

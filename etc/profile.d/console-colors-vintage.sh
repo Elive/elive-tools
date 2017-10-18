@@ -26,9 +26,7 @@
 
 # colorscheme based in Elive terminal colorschemes (similar to molokai/monokai)
 if [ "$TERM" = "linux" ]; then
-    #echo -en "\e]P0010101" # black
-    #echo -en "\e]P0373737" # black
-    echo -en "\e]P0212121" # black
+    echo -en "\e]P0010101" # black
     echo -en "\e]P1e50000" # red
     echo -en "\e]P287cc00" # green
     echo -en "\e]P3fc8700" # brown

@@ -1467,6 +1467,22 @@ el_warning(){
     fi
 
     if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+        # set colors for our reports
+        local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2
+        el_c_n="\033[0;39m" # Normal color  (orig: normal)
+        el_c_r="\033[1;31m" # Red color  (orig: red)
+        el_c_r2="\033[0;31m" # Red2 color  (orig: red)
+        el_c_g="\033[1;32m" # Green color  (orig: green)
+        el_c_g2="\033[0;32m" # Green2 color  (orig. green2)
+        el_c_y="\033[1;33m" # Yellow color  (orig. yellow)
+        el_c_y2="\033[0;33m" # Yellow2 color  (orig. yellow)
+        el_c_m="\033[1;35m" # Magenta color
+        el_c_m2="\033[0;35m" # Magenta2 color
+        el_c_c="\033[1;36m" # Cyan color
+        el_c_c2="\033[0;36m" # Cyan2 color
+        el_c_b="\033[1;34m" # Blue color
+        el_c_b2="\033[0;34m" # Blue2 color
+
         # always report warnings with debug (their function calls)
         local execution_stack
         execution_stack="$( pstree -A -l -n -s $$ )"
@@ -1545,6 +1561,22 @@ el_error(){
     fi
 
     if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+        # set colors for our reports
+        local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2
+        el_c_n="\033[0;39m" # Normal color  (orig: normal)
+        el_c_r="\033[1;31m" # Red color  (orig: red)
+        el_c_r2="\033[0;31m" # Red2 color  (orig: red)
+        el_c_g="\033[1;32m" # Green color  (orig: green)
+        el_c_g2="\033[0;32m" # Green2 color  (orig. green2)
+        el_c_y="\033[1;33m" # Yellow color  (orig. yellow)
+        el_c_y2="\033[0;33m" # Yellow2 color  (orig. yellow)
+        el_c_m="\033[1;35m" # Magenta color
+        el_c_m2="\033[0;35m" # Magenta2 color
+        el_c_c="\033[1;36m" # Cyan color
+        el_c_c2="\033[0;36m" # Cyan2 color
+        el_c_b="\033[1;34m" # Blue color
+        el_c_b2="\033[0;34m" # Blue2 color
+
         # always report warnings with debug (function calls)
         local execution_stack
         execution_stack="$( pstree -A -l -n -s $$ )"
@@ -2186,6 +2218,23 @@ el_request_report_bug(){
     el_check_variables "message"
 
     el_set_display_variables
+
+    # set colors for our reports
+    local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2
+    el_c_n="\033[0;39m" # Normal color  (orig: normal)
+    el_c_r="\033[1;31m" # Red color  (orig: red)
+    el_c_r2="\033[0;31m" # Red2 color  (orig: red)
+    el_c_g="\033[1;32m" # Green color  (orig: green)
+    el_c_g2="\033[0;32m" # Green2 color  (orig. green2)
+    el_c_y="\033[1;33m" # Yellow color  (orig. yellow)
+    el_c_y2="\033[0;33m" # Yellow2 color  (orig. yellow)
+    el_c_m="\033[1;35m" # Magenta color
+    el_c_m2="\033[0;35m" # Magenta2 color
+    el_c_c="\033[1;36m" # Cyan color
+    el_c_c2="\033[0;36m" # Cyan2 color
+    el_c_b="\033[1;34m" # Blue color
+    el_c_b2="\033[0;34m" # Blue2 color
+
 
     # }}}
     # use el_report_to_elive {{{

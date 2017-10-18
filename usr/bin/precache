@@ -13,7 +13,7 @@ main(){
     # pre {{{
     local arg lib sorted is_trace cached_arr
 
-    if [[ "${1}" = "trace" ]] ; then
+    if [[ "${1}" = "--trace" ]] ; then
         is_trace=1
         shift
     fi

@@ -1,73 +1,84 @@
 #!/bin/bash
-#source /usr/lib/elive-tools/functions
+source /usr/lib/elive-tools/functions
+
 el_explain_plain(){
-	if [[ "${EL_DEBUG}" -gt "1" ]] ; then
-	    echo -e "$@" 1>&2
-	fi
+    if [[ "${EL_DEBUG}" -gt "1" ]] ; then
+        echo -e "$@" 1>&2
+    fi
 }
 
 # this tool does caching "to ram" of application/executable and its required libs, can be also used for tracing
 
 main(){
     # pre {{{
-    local i j k trace cached_arr
+    local arg lib sorted is_trace cached_arr
 
     if [[ "${1}" = "trace" ]] ; then
-        trace=1
+        is_trace=1
         shift
     fi
 
 
     # }}}
-    for i in "$@"
+    for arg in "$@"
     do
-        if ! [[ -f "$i" ]] ; then
-            i="$(which "$i" | grep "^/" | head -1 )"
+        if ! [[ -f "$arg" ]] ; then
+            arg="$(which "$arg" | grep "^/" | head -1 )"
 
-            if ! [[ -f "$i" ]] ; then
+            if ! [[ -f "$arg" ]] ; then
                 continue
             fi
         fi
 
+        # Include binaries / parameters
+        if [[ -e "$arg" ]] ; then
+            el_array_member_add "$arg" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
+        fi
 
-        for j in $(ldd "${i}" 2>/dev/null | sed -e '
+
+        # Include the dependant libraries
+        for lib in $(ldd "${arg}" 2>/dev/null | sed -e '
             /\//!d;
             /linux-gate/d;
             /=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};
             s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' 2>/dev/null)
         do
-            if [[ -e "$j" ]] ; then
-                for k in "${cached_arr[@]}"
-                do
-                    if [[ "${k}" = "$j" ]] ; then
-                        #if ! ((trace)) ; then
-                        #el_explain 2 "already cached: __${j##*/}__"
-                        #fi
-                        continue 2
-                    fi
-                done
 
-                if ((trace)) ; then
-                    echo "$j"
-                else
-                    #el_explain 2 "caching __${j##*/}__"
-                    el_explain_plain "caching ${j##*/}"
-                    cat "$j" > /dev/null 2>&1
-                    cached_arr+=("$j")
-                fi
+            # Try to use non-optimised libraries where possible.
+            # We assume that all HWCAP libraries will be in tls,
+            # sse2, vfp or neon.
+            # update: that's not needed for us, we want optimized ones (defaults to use)
+            #nonoptlib=$(echo "${lib}" | sed -e 's#/lib/\([^/]*/\)\?\(tls\|i686\|sse2\|neon\|vfp\).*/\(lib.*\)#/lib/\1\3#')
+            #nonoptlib=$(echo "${nonoptlib}" | sed -e 's#-linux-gnu/\(tls\|i686\|sse2\|neon\|vfp\).*/\(lib.*\)#-linux-gnu/\2#')
+
+            #if [ -e "${nonoptlib}" ]; then
+                #lib="${nonoptlib}"
+            #fi
+
+            #libname=$(basename "${lib}")
+            #dirname=$(dirname "${lib}")
+
+            if [[ -e "$lib" ]] ; then
+                el_array_member_add "$lib" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
             fi
 
         done
 
-        if [[ -e "$i" ]] ; then
-            if ((trace)) ; then
-                echo "$i"
-            else
-                cat "$i" > /dev/null 2>&1
-                #el_explain 2 "finished cache for __${i##*/}__"
-                el_explain_plain "finished cache for ${i##*/}"
-            fi
+    done
+
+    # sort the array for faster access
+    IFS=$'\n' cached_arr=($(sort <<<"${cached_arr[*]}"))
+
+    # precache final result
+    for sorted in "${cached_arr[@]}"
+    do
+        if ((is_trace)) ; then
+            echo "$sorted"
+        else
+            el_explain_plain "caching ${sorted##*/}"
         fi
+        # precache
+        cat "$sorted" > /dev/null 2>&1
     done
 
 }

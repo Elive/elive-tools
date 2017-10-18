@@ -2164,44 +2164,54 @@ el_request_report_bug(){
     el_set_display_variables
 
     # }}}
+    # use el_report_to_elive {{{
+    local execution_stack
+    execution_stack="$( pstree -A -l -n -s $$ )"
+    execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
+    el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
+
+    # - use el_report_to_elive }}}
+    # we don't need anything more since the new tool # TODO: remove old code
+    return
+
     # task list sorted by created time
-    url='http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc'
-    # check if we should ignore this function
-    #if el_check_version_development_is_days_recent 30 ; then
-    # TODO: set 10 only for now, change it to 30 when migrating from NOREPORTS to EL_REPORTS=yes
-    if el_check_version_development_is_days_recent 15 ; then
+    #url='http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc'
+    ## check if we should ignore this function
+    ##if el_check_version_development_is_days_recent 30 ; then
+    ## TODO: set 10 only for now, change it to 30 when migrating from NOREPORTS to EL_REPORTS=yes
+    #if el_check_version_development_is_days_recent 15 ; then
 
-        if [[ "${DISPLAY}" = ":0.0" ]] ; then
-            local _dummy
-            _dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
+        #if [[ "${DISPLAY}" = ":0.0" ]] ; then
+            #local _dummy
+            #_dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
-            local message_report_bug
-            message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
+            #local message_report_bug
+            #message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
-            if $guitool --question --text="$message_report_bug" ; then
-                if [[ -x /usr/bin/firefox ]] ; then
-                    firefox "$url" &
-                fi
-                if [[ -x /usr/bin/iceweasel ]] ; then
-                    iceweasel "$url" &
-                fi
-                if [[ -x /usr/bin/chromium ]] ; then
-                    chromium --temp-profile "$url" &
-                fi
+            #if $guitool --question --text="$message_report_bug" ; then
+                #if [[ -x /usr/bin/firefox ]] ; then
+                    #firefox "$url" &
+                #fi
+                #if [[ -x /usr/bin/iceweasel ]] ; then
+                    #iceweasel "$url" &
+                #fi
+                #if [[ -x /usr/bin/chromium ]] ; then
+                    #chromium --temp-profile "$url" &
+                #fi
 
-                # explain some details while reporting it
-                local _dummy
-                _dummy="$( eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
-                local message_instructions
-                message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
-                sleep 6
-                timeout 240 $guitool --info --text="$message_instructions"
+                ## explain some details while reporting it
+                #local _dummy
+                #_dummy="$( eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
+                #local message_instructions
+                #message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
+                #sleep 6
+                #timeout 240 $guitool --info --text="$message_instructions"
 
-            fi
-        else
-            el_warning "$message_report_bug --> http://bugs.elivecd.org"
-        fi
-    fi
+            #fi
+        #else
+            #el_warning "$message_report_bug --> http://bugs.elivecd.org"
+        #fi
+    #fi
 
 }
 

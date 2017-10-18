@@ -2170,7 +2170,7 @@ el_request_report_bug(){
     # use el_report_to_elive {{{
     local execution_stack
     execution_stack="$( pstree -A -l -n -s $$ )"
-    execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
+    execution_stack="$( echo "$execution_stack" | sed -e 's|^init---|---|g' -e 's|---lightdm---|---|g' -e 's|---enlightenment_s---|---|g' -e 's|---ck-launch-sessi---|---|g' -e 's|---enlightenment---|---|g'   -e 's|---el_report_to_elive||g' -e 's|---pstree||g' )"
     el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
 
     # - use el_report_to_elive }}}

@@ -394,13 +394,25 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$(lsblk -lnrb -o size "${item}" | sort -ug | tail -1 )"
-            # do not enable this line, seems like the other ones dont remove the three last numbers
-            #item_size="${item_size:0:-3}"
+            item_size="$( LC_ALL=C lsblk -lnbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
+            if [[ -n "$item_size" ]] ; then
+                item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
+
+                if [[ -n "$item_human_size" ]] && [[ "$item_human_size" != 0 ]] ; then
+                    if [[ "$item_human_size" = .* ]] ; then
+                        # if starts with a dot, represented in GB, its like:  .120 (so 120 MB, not gb)
+                        item_human_size="${item_human_size#.} MB"
+                    else
+                        # else it has more than 1GB, so lets remove the last 2 numbers and show it like: 250.3 GB
+                        item_human_size="${item_human_size:0:-2} GB"
+                    fi
+                fi
+
+                item_human_size="${item_human_size#0}"
+                item_human_size="${item_human_size#0}"
+            fi
         fi
-        if [[ -z "$item_human_size" ]] ; then
-            item_human_size="$(lsblk -lnr -o size "${item}" | sort -ug | tail -1 )"
-        fi
+
         if [[ -z "$item_human_label" ]] ; then
             item_human_label="(no name)"
         fi

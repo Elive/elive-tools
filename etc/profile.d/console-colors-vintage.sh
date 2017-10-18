@@ -26,21 +26,24 @@
 
 # colorscheme based in Elive terminal colorschemes (similar to molokai/monokai)
 if [ "$TERM" = "linux" ]; then
-    echo -en "\e]P0000000" #black
-    echo -en "\e]P8e50000" #darkgrey
-    echo -en "\e]P187cc00" #darkred
-    echo -en "\e]P9fc8700" #red
-    echo -en "\e]P26720ff" #darkgreen
-    echo -en "\e]PAfa00cc" #green
-    echo -en "\e]P300c8fc" #brown
-    echo -en "\e]PBd8d8d8" #yellow
-    echo -en "\e]P48a8a8a" #darkblue
-    echo -en "\e]PCff4040" #blue
-    echo -en "\e]P5c2fc4c" #darkmagenta
-    echo -en "\e]PDffc342" #magenta
-    echo -en "\e]P69e71ff" #darkcyan
-    echo -en "\e]PEff58e0" #cyan
-    echo -en "\e]P7a1efff" #lightgrey
-    echo -en "\e]PFffffff" #white
+    #echo -en "\e]P0010101" # black
+    #echo -en "\e]P0373737" # black
+    echo -en "\e]P0212121" # black
+    echo -en "\e]P1e50000" # red
+    echo -en "\e]P287cc00" # green
+    echo -en "\e]P3fc8700" # brown
+    echo -en "\e]P46720ff" # blue
+    echo -en "\e]P5fa00cc" # magenta
+    echo -en "\e]P600c8fc" # cyan
+    echo -en "\e]P7c8c8c8" # white
+    # -----------------------------
+    echo -en "\e]P8808080" # light black
+    echo -en "\e]P9cc8888" # light red
+    echo -en "\e]PA88cc88" # light green
+    echo -en "\e]PBccaa88" # light brown
+    echo -en "\e]PC8888cc" # light blue
+    echo -en "\e]PDcc88cc" # light magenta
+    echo -en "\e]PE88cccc" # light cyan
+    echo -en "\e]PFcccccc" # light white
     #clear #for background artifacting
 fi

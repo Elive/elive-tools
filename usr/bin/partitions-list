@@ -236,7 +236,8 @@ main(){
             *)
                 echo -e "Usage: $(basename $0) [option]" 1>&2
                 echo -e "--show-all" 1>&2
-                echo -e "--show-all-raw  shows also 'layers' partitions like encrypted or extended" 1>&2
+                echo -e "--show-raw  shows also 'layers' partitions like encrypted or extended" 1>&2
+                echo -e "--show-disks  shows also the 'disks', not only partitions" 1>&2
                 echo -e "--show-all-mountable" 1>&2
                 #echo -e "--show-all-umountable" 1>&2
                 echo -e "--show-only=/dev/partition - to obtain data from a partition" 1>&2

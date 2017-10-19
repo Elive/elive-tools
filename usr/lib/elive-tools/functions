@@ -1259,7 +1259,7 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
-    local count counter funcnames sourcenames arg
+    local count counter funcnames sourcenames arg sourcename
 
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
     if el_check_is_shell ; then
@@ -1294,21 +1294,24 @@ el_debug(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             #if [[ "$arg" != "source" ]] ; then
                 #sourcenames="$arg > $sourcenames"
+                arg="$( readlink -f "$arg" )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
             #fi
         fi
     done
+
+    sourcename="$( readlink -f "$0" )"
     if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+        if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
             sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames="$sourcename $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
         sourcenames="${sourcenames% }"
         sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
-        sourcenames="$0"
+        sourcenames="$sourcename"
     fi
 
     # }}}
@@ -1344,7 +1347,7 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    local count counter funcnames sourcenames arg
+    local count counter funcnames sourcenames arg sourcename
 
     # }}}
     # get the list of function names array {{{
@@ -1369,21 +1372,24 @@ el_info(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             #if [[ "$arg" != "source" ]] ; then
                 #sourcenames="$arg > $sourcenames"
+                arg="$( readlink -f "$arg" )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
             #fi
         fi
     done
+
+    sourcename="$( readlink -f "$0" )"
     if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
+        if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
             sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames="$sourcename $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
         sourcenames="${sourcenames% }"
         sourcenames="${sourcenames#> }"
         #read -r sourcenames <<< "$sourcenames"
     else
-        sourcenames="$0"
+        sourcenames="$sourcename"
     fi
 
     # }}}
@@ -1492,7 +1498,7 @@ el_warning(){
         # always report warnings with debug (their function calls)
         local execution_stack
         execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' -e 's|---pstree||g' -e 's|---x-window-manage||g' )"
         el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$@${el_c_n}"
     fi
 
@@ -2098,8 +2104,9 @@ el_report_to_elive(){
     # send {{{
     # only report recent things
     if el_verify_internet fast 1>/dev/null 2>&1 ; then
-        execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
+        #execution_stack="$( pstree -A -l -n -s $$ )"
+        #execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
+        execution_stack="$( readlink -f "$0" )"
         # send
         if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true

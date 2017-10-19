@@ -28,7 +28,7 @@ restart_daemons(){
             { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
             { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         else
-            el_error "We need to restart some polkitd services, please run again this tool from root"
+            el_info "Is needed to restart some polkitd services, please run again this tool from root"
         fi
     fi
 
@@ -666,7 +666,7 @@ el_umount(){
             fi
 
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
+                el_debug "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -690,7 +690,7 @@ el_umount(){
                 gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
             fi
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+                el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -711,7 +711,7 @@ el_umount(){
                 udisks --unmount "$mountpoint" 2>/dev/null 1>&2
             fi
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
+                el_debug "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -731,7 +731,7 @@ el_umount(){
                 command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
             fi
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
+                el_debug "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -756,7 +756,7 @@ el_umount(){
 
             gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+                el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -773,7 +773,7 @@ el_umount(){
             # try with udisks maybe
             udisks --unmount "$mountpoint" 2>/dev/null 1>&2
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_warning "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
+                el_debug "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -808,7 +808,7 @@ el_umount(){
         fi
 
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_error "unable to umount $dev for ${mountpoint}, I'm upset now"
+            el_debug "unable to umount $dev for ${mountpoint}, I'm upset now"
             return 1
         else
             el_debug "Umounted (forced): $@"

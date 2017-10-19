@@ -1974,6 +1974,15 @@ el_report_to_elive(){
     local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack
     el_security_function_loop || return
 
+    # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
+    #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
+        #return
+    #fi
+    if [[ -n "$NOREPORTS" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
+        return
+    fi
+
+
     # at least one month old, we can parse the results from the server to show only recent ones too
     if el_check_version_development 1>/dev/null 2>&1 ; then
         # ignore reports for more than X days old
@@ -2000,13 +2009,6 @@ el_report_to_elive(){
         fi
     fi
 
-    # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
-    #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
-        #return
-    #fi
-    if [[ -n "$NOREPORTS" ]] ; then
-        return
-    fi
 
     message="$@"
     # remove special chars like colors, don't depend on colors-remove:

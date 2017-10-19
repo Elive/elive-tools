@@ -94,7 +94,13 @@ else
     el_c_bold="\033[1m" # Bold 'color' effect
 fi
 
-# debug default level
+# Elive debug verbosity:
+# - 0 : only show errors
+# - 1 : + warnings
+# - 2 : + info messages (user always should want to see information messages, so this should be the default one)
+# - 3 : + debug
+# - 4 : + very debug
+# - 5 : + very very debug
 if grep -qs thanatest /proc/cmdline ; then
     EL_DEBUG=${EL_DEBUG:-"3"}
 else

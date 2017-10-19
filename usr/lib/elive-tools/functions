@@ -98,7 +98,7 @@ fi
 if grep -qs thanatest /proc/cmdline ; then
     EL_DEBUG=${EL_DEBUG:-"3"}
 else
-    EL_DEBUG=${EL_DEBUG:-"0"}
+    EL_DEBUG=${EL_DEBUG:-"2"}
 fi
 
 # extra vars

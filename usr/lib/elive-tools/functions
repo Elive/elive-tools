@@ -101,11 +101,11 @@ fi
 # - 3 : + debug
 # - 4 : + very debug
 # - 5 : + very very debug
-if grep -qs thanatest /proc/cmdline ; then
-    EL_DEBUG=${EL_DEBUG:-"3"}
-else
+#if grep -qs thanatest /proc/cmdline ; then
+    #EL_DEBUG=${EL_DEBUG:-"3"}
+#else
     EL_DEBUG=${EL_DEBUG:-"2"}
-fi
+#fi
 
 # extra vars
 source /etc/adduser.conf

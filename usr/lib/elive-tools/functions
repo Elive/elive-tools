@@ -1494,6 +1494,8 @@ el_warning(){
         el_c_c2="\033[0;36m" # Cyan2 color
         el_c_b="\033[1;34m" # Blue color
         el_c_b2="\033[0;34m" # Blue2 color
+        el_c_gr="\033[1;30m" # Gray color
+        el_c_gr2="\033[0;30m" # Gray2 color
 
         # always report warnings with debug (their function calls)
         local execution_stack
@@ -1588,6 +1590,8 @@ el_error(){
         el_c_c2="\033[0;36m" # Cyan2 color
         el_c_b="\033[1;34m" # Blue color
         el_c_b2="\033[0;34m" # Blue2 color
+        el_c_gr="\033[1;30m" # Gray color
+        el_c_gr2="\033[0;30m" # Gray2 color
 
         # always report warnings with debug (function calls)
         local execution_stack

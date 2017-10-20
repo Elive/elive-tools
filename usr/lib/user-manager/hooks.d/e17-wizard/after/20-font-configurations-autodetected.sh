@@ -29,10 +29,16 @@ main(){
         if [[ "$resolution" -ge 800 ]] ; then
             # resolutions between 800x* & 1024x*
             enlightenment_remote -font-set "application" "$font" 8
+            # urxvt font size:
+            sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
+            xrdb -merge "$HOME/.Xdefaults"
         else
             if [[ "$resolution" -lt 800 ]] ; then
                 # very extreme cases (very small screens)
                 enlightenment_remote -font-set "application" "$font" 7
+                # urxvt font size:
+                sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
+                xrdb -merge "$HOME/.Xdefaults"
             fi
         fi
     fi

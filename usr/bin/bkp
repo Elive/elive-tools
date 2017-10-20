@@ -24,6 +24,7 @@ el_c_bold="\033[1m" # Bold 'color' effect
 : ${EL_DEBUG:="0"} # debug default level
 
 
+# TODO FIXME: if you remove these blocks, add NOREPORTS=1
 #===  FUNCTION  ================================================================
 #          NAME:  el_confirm
 #   DESCRIPTION:  ask (console) for confirmation

@@ -1140,7 +1140,7 @@ el_check_version_development_is_days_recent(){
 #===============================================================================
 el_check_is_shell(){
     # pre {{{
-    el_security_function_loop || return
+    #el_security_function_loop || return
 
     # }}}
     if [[ -n "$ZSH_VERSION" ]] || [[ "$0" = "bash" ]] ; then

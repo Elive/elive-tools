@@ -1994,7 +1994,7 @@ el_report_to_elive(){
     #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
         #return
     #fi
-    if [[ -n "$NOREPORTS" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
+    if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
         return
     fi
 

@@ -406,6 +406,8 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
+    local tool
+    tool="$(readlink -f $0)"
     if [[ -f "/etc/adduser.conf" ]] ; then
         source /etc/adduser.conf
     fi
@@ -434,10 +436,10 @@ el_make_environment(){ # make ready our environment (source variables and functi
         #PATH="$HOME/bin:$PATH"
     #fi
 
-    if [[ -n "${0}" ]] ; then
+    if [[ -n "${tool}" ]] ; then
         #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
         #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
-        export PS4='+ [$(basename ${0} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+        export PS4='+ [$(basename ${tool} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
     # XDG default directories
@@ -1497,11 +1499,7 @@ el_warning(){
         el_c_gr="\033[1;30m" # Gray color
         el_c_gr2="\033[0;30m" # Gray2 color
 
-        # always report warnings with debug (their function calls)
-        local execution_stack
-        execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$@${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}
@@ -1594,10 +1592,7 @@ el_error(){
         el_c_gr2="\033[0;30m" # Gray2 color
 
         # always report warnings with debug (function calls)
-        local execution_stack
-        execution_stack="$( pstree -A -l -n -s $$ )"
-        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
-        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$@${el_c_n}"
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$@${el_c_n}"
     fi
 
     # }}}
@@ -1987,14 +1982,28 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tool tmp_conf_f limit_reports_amount limit_reports_seconds
     el_security_function_loop || return
+    tool="$(readlink -f $0)"
+    # max 5 reports per tool
+    limit_reports_amount=5
+    # min 4 hours passed if limit is reached to send more reports
+    limit_reports_seconds=14400
 
     # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
     #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
         #return
     #fi
     if [[ -n "$NOREPORTS" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
+        return
+    fi
+
+    # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
+    if ! [[ -s "/etc/elive-version" ]] ; then
+        return
+    fi
+    # same for specific versions of Elive
+    if grep -qs "^special-version:" "/etc/elive-version" ; then
         return
     fi
 
@@ -2024,6 +2033,26 @@ el_report_to_elive(){
             fi
         fi
     fi
+
+
+    # accept a max number of reports to send {{{
+    counter_reports_sent=0
+
+    el_config_get
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
+
+    # at least 4 hours passed to clean reports counter
+    if [[ "$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" )" | bc -l )" -gt "$limit_reports_seconds" ]] ; then
+        counter_reports_sent=0
+        el_config_save "counter_reports_sent"
+    fi
+
+    if [[ "$counter_reports_sent" -ge "$limit_reports_amount" ]] ; then
+        return
+    fi
+
+
+    # }}}
 
 
     message="$@"
@@ -2108,28 +2137,32 @@ el_report_to_elive(){
     # send {{{
     # only report recent things
     if el_verify_internet fast 1>/dev/null 2>&1 ; then
-        #execution_stack="$( pstree -A -l -n -s $$ )"
-        #execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---el_report_to_elive||g' )"
-        execution_stack="$( readlink -f "$0" )"
+        # get stack to senD
+        execution_stack="$( pstree -A -l -n -s $$ )"
+        execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
+
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "   stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL=C sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "    stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL=C sleep 1
-                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     #true
 
                     #LC_ALL=C sleep 1
-                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${execution_stack}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         #true
                     #fi
                 #fi
             fi
         fi
+
+        counter_reports_sent="$(( $counter_reports_sent + 1 ))"
+        el_config_save "counter_reports_sent"
     fi
     # }}}
 }
@@ -2434,9 +2467,10 @@ el_request_donation(){
 #===============================================================================
 el_config_get(){
     # pre {{{
-    local TMP_CONF_f
-    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
+    local tmp_conf_f tool
+    tool="$(readlink -f $0)"
+    #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
 
     # }}}
     # checks {{{
@@ -2445,14 +2479,14 @@ el_config_get(){
         return
     fi
     # variable must be set
-    if [[ -z "${0}" ]] ; then
+    if [[ -z "${tool}" ]] ; then
         el_error "\$0 is not set"
         return
     fi
 
     # }}}
-    if [[ -s "$TMP_CONF_f" ]] ; then
-        source "$TMP_CONF_f" 1>/dev/null 2>&1
+    if [[ -s "$tmp_conf_f" ]] ; then
+        source "$tmp_conf_f" 1>/dev/null 2>&1
     fi
 }
 
@@ -2465,46 +2499,48 @@ el_config_get(){
 el_config_save(){
     # pre {{{
     # note: by some reason this needs to be alone and first or may not work:
-    local _configuration
+    local _configuration tool
+    tool="$(readlink -f $0)"
     _configuration="$1"
+
     # checks {{{
     if el_check_is_shell ; then
         el_debug "ignoring el_config_* because we are from a shell"
         return
     fi
     # variable must be set
-    if [[ -z "${0}" ]] ; then
+    if [[ -z "${tool}" ]] ; then
         el_error "\$0 is not set"
         return
     fi
 
     # }}}
 
-    local TMP_CONF_f
-    #TMP_CONF_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
+    local tmp_conf_f
+    #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
 
-    if ! el_check_variables "_configuration,TMP_CONF_f" 1>/dev/null 2>&1 ; then
-        el_warning "variable to save by $FUNCNAME is empty: $_configuration"
+    if ! el_check_variables "_configuration,tmp_conf_f" 1>/dev/null 2>&1 ; then
+        el_warning "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
         return
     fi
 
     # create conf file
-    if ! [[ -s "$TMP_CONF_f" ]] ; then
-        mkdir -p "$( dirname "$TMP_CONF_f" )"
+    if ! [[ -s "$tmp_conf_f" ]] ; then
+        mkdir -p "$( dirname "$tmp_conf_f" )"
 
-        touch "$TMP_CONF_f"
-        #chmod +x "$TMP_CONF_f"
+        touch "$tmp_conf_f"
+        #chmod +x "$tmp_conf_f"
         # TODO: test if not +x can be sourced
         # TODO: test if works with arrays too
     fi
 
     # }}}
     # remove old possible entries
-    sed -i "/^${_configuration}=/d" "$TMP_CONF_f"
+    sed -i "/^${_configuration}=/d" "$tmp_conf_f"
 
     # append configuration
-    echo "${_configuration}=\"${!_configuration}\"" >> "$TMP_CONF_f"
+    echo "${_configuration}=\"${!_configuration}\"" >> "$tmp_conf_f"
 }
 
 #===  FUNCTION  ================================================================
@@ -2515,9 +2551,10 @@ el_config_save(){
 #===============================================================================
 el_config_restart(){
     # pre {{{
-    local TMP_CONF_f
+    local tmp_conf_f tool
+    tool="$(readlink -f $0)"
 
-    TMP_CONF_f="${HOME}/.config/elive/elive-tools/el_config/${0//\//%%}_conf.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
 
     # }}}
     # checks {{{
@@ -2526,14 +2563,14 @@ el_config_restart(){
         return
     fi
     # variable must be set
-    if [[ -z "${0}" ]] ; then
+    if [[ -z "${tool}" ]] ; then
         el_error "\$0 is not set"
         return
     fi
 
     # }}}
-    if [[ -s "$TMP_CONF_f" ]] ; then
-        rm -f "$TMP_CONF_f"
+    if [[ -s "$tmp_conf_f" ]] ; then
+        rm -f "$tmp_conf_f"
     fi
 }
 

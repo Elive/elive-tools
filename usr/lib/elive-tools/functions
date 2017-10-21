@@ -2480,7 +2480,7 @@ el_config_get(){
     fi
     # variable must be set
     if [[ -z "${tool}" ]] ; then
-        el_error "\$0 is not set"
+        el_debug "\$0 (tool) should be set to access to its conf ID"
         return
     fi
 
@@ -2510,7 +2510,7 @@ el_config_save(){
     fi
     # variable must be set
     if [[ -z "${tool}" ]] ; then
-        el_error "\$0 is not set"
+        el_debug "\$0 (tool) should be set to access to its conf ID"
         return
     fi
 

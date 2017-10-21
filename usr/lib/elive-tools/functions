@@ -1991,6 +1991,7 @@ el_report_to_elive(){
     limit_reports_seconds=14400
 
     # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
+    # TODO: or we can instead just call this function in parts of  the code where we want to report things (but will not have fancy colors unless we pass another parameter for 'importancy', so the generator of E: W: etc.. will deal it and put colors)
     #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
         #return
     #fi
@@ -2061,7 +2062,8 @@ el_report_to_elive(){
     # remove special chars like colors, don't depend on colors-remove:
     message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
 
-    el_check_variables "message,message_stripped"
+
+    el_check_variables "message_stripped"
 
     if [[ -s "/etc/elive/settings" ]] ; then
         source "/etc/elive/settings" 1>/dev/null 2>&1

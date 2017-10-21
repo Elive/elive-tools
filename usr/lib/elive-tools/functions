@@ -2144,11 +2144,11 @@ el_report_to_elive(){
         execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
 
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "   stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL=C sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "    stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL=C sleep 1

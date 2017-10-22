@@ -1261,7 +1261,8 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
-    local count counter funcnames sourcenames arg sourcename
+    local count counter funcnames sourcenames arg sourcename message
+    message="$@"
 
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
     if el_check_is_shell ; then
@@ -1322,19 +1323,19 @@ el_debug(){
     if [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                if [[ -n "$@" ]] ; then
-                    echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$@${el_c_n}" 1>&2
+                if [[ -n "$message" ]] ; then
+                    echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
                 else
                     echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
                 fi
             else
-                if [[ -n "$@" ]] ; then
-                    echo -e "${el_c_c}D: ${el_c_c}$@${el_c_n}" 1>&2
+                if [[ -n "$message" ]] ; then
+                    echo -e "${el_c_c}D: ${el_c_c}$message${el_c_n}" 1>&2
                 fi
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 30 $guitool --info "$@"
+                timeout 30 $guitool --info --text="$message"
             fi
         fi
     fi
@@ -1349,7 +1350,8 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    local count counter funcnames sourcenames arg sourcename
+    local count counter funcnames sourcenames arg sourcename message
+    message="$@"
 
     # }}}
     # get the list of function names array {{{
@@ -1400,13 +1402,13 @@ el_info(){
     if [[ "${EL_DEBUG}" -ge 2 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$@${el_c_n}" 1>&2
+                echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
             else
-                echo -e "${el_c_c2}I: ${el_c_c2}$@${el_c_n}" 1>&2
+                echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 30 $guitool --info "$@"
+                timeout 30 $guitool --info --text="$message"
             fi
         fi
     fi
@@ -1421,7 +1423,8 @@ el_info(){
 #===============================================================================
 el_warning(){
     # pre {{{
-    local count counter funcnames sourcenames arg
+    local count counter funcnames sourcenames arg message
+    message="$@"
 
     # }}}
     # get the list of function names array {{{
@@ -1469,13 +1472,13 @@ el_warning(){
     if [[ "${EL_DEBUG}" -ge 1 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$@${el_c_n}" 1>&2
+                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
             else
-                echo -e "${el_c_y2}W: ${el_c_y2}$@${el_c_n}" 1>&2
+                echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 120 $guitool --warning "$@"
+                timeout 120 $guitool --warning --text="$message"
             fi
         fi
     fi
@@ -1499,7 +1502,7 @@ el_warning(){
         el_c_gr="\033[1;30m" # Gray color
         el_c_gr2="\033[0;30m" # Gray2 color
 
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$@${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
     fi
 
     # }}}
@@ -1512,7 +1515,8 @@ el_warning(){
 #===============================================================================
 el_error(){
     # pre {{{
-    local count counter funcnames sourcenames arg
+    local count counter funcnames sourcenames arg message
+    message="$@"
 
     # }}}
     # get the list of function names array {{{
@@ -1561,13 +1565,13 @@ el_error(){
     if [[ "${EL_DEBUG}" -ge 0 ]] ; then
         if ((is_terminal)) ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$@${el_c_n}" 1>&2
+                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
             else
-                echo -e "${el_c_r}E: ${el_c_r}$@${el_c_n}" 1>&2
+                echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 50 $guitool --error "$@"
+                timeout 120 $guitool --error --text="$message"
             fi
         fi
     fi
@@ -1592,7 +1596,7 @@ el_error(){
         el_c_gr2="\033[0;30m" # Gray2 color
 
         # always report warnings with debug (function calls)
-        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$@${el_c_n}"
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
     fi
 
     # }}}

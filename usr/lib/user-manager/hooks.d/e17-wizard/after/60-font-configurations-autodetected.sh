@@ -3,6 +3,11 @@ main(){
     # pre {{{
     local resolution font
 
+    # check
+    if [[ "$(enlightenment_remote -ping)" != *pong ]] ; then
+        el_error "Unable to connect to DBUS enlightenment_remote"
+    fi
+
     # }}}
 
 

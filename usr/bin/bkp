@@ -579,9 +579,13 @@ do_get(){
 
 
 do_list(){
-    do_sudo rdiff-backup -l "${1}"
-    echo ""
-    do_sudo rdiff-backup --parsable-output -l "${1}"
+    if [[ -d "$1" ]] ; then
+        do_sudo rdiff-backup -l "${1}"
+        echo ""
+        do_sudo rdiff-backup --parsable-output -l "${1}"
+    else
+        el_info "no backups found for this directory"
+    fi
 }
 
 

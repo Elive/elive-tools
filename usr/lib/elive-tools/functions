@@ -1475,7 +1475,7 @@ el_warning(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 40 $guitool --warning "$@"
+                timeout 120 $guitool --warning "$@"
             fi
         fi
     fi

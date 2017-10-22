@@ -2067,8 +2067,9 @@ el_report_to_elive(){
     # remove special chars like colors, don't depend on colors-remove:
     message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
 
-
-    el_check_variables "message_stripped"
+    if [[ -z "$message" ]] || [[ -z "$message_stripped" ]] ; then
+        return
+    fi
 
     if [[ -s "/etc/elive/settings" ]] ; then
         source "/etc/elive/settings" 1>/dev/null 2>&1

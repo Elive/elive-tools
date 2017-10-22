@@ -33,7 +33,7 @@ demo_file_add_home(){
         from="$(readlink -f "$from" )"
     fi
     if [[ ! -s "$from" ]] ; then
-        el_debug "skipping $file, it seems to be empty or broken link"
+        el_warning "skipping $file, it seems to be empty or broken link"
         return
     fi
 

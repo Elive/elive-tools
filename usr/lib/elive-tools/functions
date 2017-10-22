@@ -112,6 +112,7 @@ source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
+SOURCE="$( readlink -f "$0" )"
 
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable
@@ -406,8 +407,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
-    local tool
-    tool="$(readlink -f $0)"
     if [[ -f "/etc/adduser.conf" ]] ; then
         source /etc/adduser.conf
     fi
@@ -436,10 +435,10 @@ el_make_environment(){ # make ready our environment (source variables and functi
         #PATH="$HOME/bin:$PATH"
     #fi
 
-    if [[ -n "${tool}" ]] ; then
+    if [[ -n "${SOURCE}" ]] ; then
         #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
         #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
-        export PS4='+ [$(basename ${tool} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+        export PS4='+ [$(basename ${SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
     # XDG default directories
@@ -602,7 +601,7 @@ EOF
         fi
 
         if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
-            timeout 20 $guitool --error
+            timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
         fi
     fi
     rm -f "${temp}"
@@ -673,7 +672,7 @@ el_aptget_update(){
                     done
 
                     if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
-                        timeout 20 $guitool --error
+                        timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
                     fi
 
                 else
@@ -906,7 +905,7 @@ el_sudo(){
             done
 
             if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
-                timeout 20 $guitool --error
+                timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
             fi
         else
             su -c "$@" root
@@ -1335,7 +1334,7 @@ el_debug(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 30 $guitool --info --text="$message"
+                timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message"
             fi
         fi
     fi
@@ -1408,7 +1407,7 @@ el_info(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 30 $guitool --info --text="$message"
+                timeout 40 $guitool --info --text="${SOURCE}: $message"
             fi
         fi
     fi
@@ -1478,7 +1477,7 @@ el_warning(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 120 $guitool --warning --text="$message"
+                timeout 90 $guitool --warning --text="${SOURCE}: $message"
             fi
         fi
     fi
@@ -1571,7 +1570,7 @@ el_error(){
             fi
         else
             if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 120 $guitool --error --text="$message"
+                timeout 120 $guitool --error --text="${SOURCE}: $message"
             fi
         fi
     fi
@@ -1675,7 +1674,10 @@ el_group_add(){
             done
 
             if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
-                timeout 40 $guitool --error
+                local message_wrong_password
+                message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
+
+                timeout 40 $guitool --error --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
             fi
         fi
 
@@ -1986,9 +1988,8 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tool tmp_conf_f limit_reports_amount limit_reports_seconds
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tmp_conf_f limit_reports_amount limit_reports_seconds
     el_security_function_loop || return
-    tool="$(readlink -f $0)"
     # max 5 reports per tool
     limit_reports_amount=5
     # min 4 hours passed if limit is reached to send more reports
@@ -2044,7 +2045,7 @@ el_report_to_elive(){
     counter_reports_sent=0
 
     el_config_get
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
     # at least 4 hours passed to clean reports counter
     if [[ -s "$tmp_conf_f" ]] ; then
@@ -2150,19 +2151,19 @@ el_report_to_elive(){
         execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
 
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL=C sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL=C sleep 1
-                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     #true
 
                     #LC_ALL=C sleep 1
-                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${tool}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         #true
                     #fi
                 #fi
@@ -2475,10 +2476,9 @@ el_request_donation(){
 #===============================================================================
 el_config_get(){
     # pre {{{
-    local tmp_conf_f tool
-    tool="$(readlink -f $0)"
+    local tmp_conf_f
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
     # }}}
     # checks {{{
@@ -2487,8 +2487,8 @@ el_config_get(){
         return
     fi
     # variable must be set
-    if [[ -z "${tool}" ]] ; then
-        el_debug "\$0 (tool) should be set to access to its conf ID"
+    if [[ -z "${SOURCE}" ]] ; then
+        el_debug "\$0 (source tool) should be set to access to its conf ID"
         return
     fi
 
@@ -2507,8 +2507,7 @@ el_config_get(){
 el_config_save(){
     # pre {{{
     # note: by some reason this needs to be alone and first or may not work:
-    local _configuration tool
-    tool="$(readlink -f $0)"
+    local _configuration
     _configuration="$1"
 
     # checks {{{
@@ -2517,8 +2516,8 @@ el_config_save(){
         return
     fi
     # variable must be set
-    if [[ -z "${tool}" ]] ; then
-        el_debug "\$0 (tool) should be set to access to its conf ID"
+    if [[ -z "${SOURCE}" ]] ; then
+        el_debug "\$0 (source tool) should be set to access to its conf ID"
         return
     fi
 
@@ -2526,7 +2525,7 @@ el_config_save(){
 
     local tmp_conf_f
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
     if ! el_check_variables "_configuration,tmp_conf_f" 1>/dev/null 2>&1 ; then
         el_warning "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
@@ -2559,10 +2558,9 @@ el_config_save(){
 #===============================================================================
 el_config_restart(){
     # pre {{{
-    local tmp_conf_f tool
-    tool="$(readlink -f $0)"
+    local tmp_conf_f
 
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${tool//\//%%}_conf.sh"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
     # }}}
     # checks {{{
@@ -2571,7 +2569,7 @@ el_config_restart(){
         return
     fi
     # variable must be set
-    if [[ -z "${tool}" ]] ; then
+    if [[ -z "${SOURCE}" ]] ; then
         el_error "\$0 is not set"
         return
     fi

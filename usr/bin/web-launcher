@@ -64,7 +64,7 @@ launch(){
                         "$browser" "$url"
                     fi
                     ;;
-                lynx|w3c)
+                lynx|w3m)
                     urxvt -e bash -c "$browser '$url'"
                     ;;
                 *)

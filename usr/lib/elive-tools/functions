@@ -1332,10 +1332,10 @@ el_debug(){
                     echo -e "${el_c_c}D: ${el_c_c}$message${el_c_n}" 1>&2
                 fi
             fi
-        else
-            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message"
-            fi
+        #else
+            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                #timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message"
+            #fi
         fi
     fi
 
@@ -1405,10 +1405,10 @@ el_info(){
             else
                 echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
             fi
-        else
-            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 40 $guitool --info --text="${SOURCE}: $message"
-            fi
+        #else
+            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                #timeout 40 $guitool --info --text="${SOURCE}: $message"
+            #fi
         fi
     fi
 
@@ -1475,10 +1475,10 @@ el_warning(){
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
             fi
-        else
-            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 90 $guitool --warning --text="${SOURCE}: $message"
-            fi
+        #else
+            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                #timeout 90 $guitool --warning --text="${SOURCE}: $message"
+            #fi
         fi
     fi
 
@@ -1568,10 +1568,10 @@ el_error(){
             else
                 echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
             fi
-        else
-            if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                timeout 120 $guitool --error --text="${SOURCE}: $message"
-            fi
+        #else
+            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+                #timeout 120 $guitool --error --text="${SOURCE}: $message"
+            #fi
         fi
     fi
 

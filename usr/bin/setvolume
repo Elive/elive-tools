@@ -1,5 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+#export NOREPORTS=1
 
 #===  FUNCTION  ================================================================
 #          NAME:  get_meter
@@ -123,7 +124,7 @@ get_meter(){
 
     # checks
     if [[ -z "$meter" ]] ; then
-        el_error "No meter found, is your audio card working?"
+        el_error "No meters found to configure volumes, is your audio card working?"
     fi
 
 
@@ -524,19 +525,19 @@ main(){
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
-            get_meter
+            #get_meter
             set_volume "$action"
         fi
 
         if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
-            get_meter
+            #get_meter
             set_volume "$action"
         fi
 
     else
         # mono
         if ! amixer -q set $meter $action 2>/dev/null ; then
-            get_meter
+            #get_meter
             set_volume "$action"
         fi
     fi

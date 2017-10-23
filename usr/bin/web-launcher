@@ -7,11 +7,7 @@ launch(){
     url="$1"
     shift
 
-    if [[ -n "$@" ]] ; then
-        browsers="$@"
-    else
-        browsers="chrome chromium iceweasel"
-    fi
+    browsers="$@ chrome chromium iceweasel surf"
 
     # }}}
     for browser in $browsers

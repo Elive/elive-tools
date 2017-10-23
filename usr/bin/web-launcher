@@ -1,0 +1,123 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+launch(){
+    # pre {{{
+    local url browser browsers
+    url="$1"
+    shift
+
+    if [[ -n "$@" ]] ; then
+        browsers="$@"
+    else
+        browsers="chrome chromium iceweasel"
+    fi
+
+    # }}}
+    for browser in $browsers
+    do
+        case "$browser" in
+            chrome|google-chrome)
+                if [[ -x "$( which google-chrome )" ]] ; then
+                    echo "$( which google-chrome )" --app="$url"
+                    is_launched=1
+                fi
+                ;;
+            chromium)
+                if [[ -x "$( which chromium )" ]] ; then
+                    echo "$( which chromium )" --app="$url"
+                    is_launched=1
+                fi
+                ;;
+            iceweasel)
+                if [[ -x "$( which iceweasel )" ]] ; then
+                    echo "$( which iceweasel )" "$url"
+                    is_launched=1
+                fi
+                ;;
+            firefox)
+                if [[ -x "$( which firefox )" ]] ; then
+                    echo "$( which firefox )" "$url"
+                    is_launched=1
+                fi
+                ;;
+            surf)
+                if [[ -x "$( which surf )" ]] ; then
+                    echo "$( which surf )" "$url"
+                    is_launched=1
+                fi
+                ;;
+        esac
+
+        # only launch one time
+        if ((is_launched)) ; then
+            break
+        fi
+    done
+
+    # nothing used? open with a default one
+    if ! ((is_launched)) ; then
+        browser="$( readlink -f "/etc/alternatives/x-www-browser" )"
+
+        if [[ -x "$browser" ]] ; then
+            case "$browser" in
+                links2)
+                    if [[ -n "$DISPLAY" ]] ; then
+                        "$browser" -g "$url"
+                    else
+                        "$browser" "$url"
+                    fi
+                    ;;
+                lynx|w3c)
+                    urxvt -e bash -c "$browser '$url'"
+                    ;;
+                *)
+                    "$browser" "$url"
+                    ;;
+            esac
+        else
+            el_error "no browsers installed on this computer"
+        fi
+    fi
+}
+
+main(){
+    # pre {{{
+    local url debian_version elive_version is_wheezy browsers
+
+    debian_version="$( cat "/etc/debian_version" )"
+
+    # wheezy
+    if [[ "$debian_version" = 7.* ]] ; then
+        is_wheezy=1
+    fi
+
+    url="$1"
+    shift
+    browsers="$@"
+
+    # }}}
+
+    # manage special cases
+    case "$url" in
+        *ted.com*)
+            # chromium not works on this version, only chrome and iceweasel
+            if ((is_wheezy)) ; then
+                launch "$url" chrome iceweasel
+            else
+                launch "$url" chromium chrome iceweasel
+            fi
+            ;;
+        *)
+            launch "$url" $browsers
+            ;;
+    esac
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -74,8 +74,9 @@ main(){
 
     demodir="/usr/share/elive-demo-files-skel"
 
+    # user can have the dir empty because selected to remove the files from the install
     if [[ ! -d "$demodir" ]] ; then
-        el_warning "Demo files dir empty"
+        el_debug "Demo files dir empty"
         exit
     fi
 

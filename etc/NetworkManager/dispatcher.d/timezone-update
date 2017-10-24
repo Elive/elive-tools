@@ -69,7 +69,7 @@ mode_bios_get(){
             fi
         else
             if grep -qs "bios mode" "$conf" ; then
-                el_info "Hardware clock is configured as '${mode_bios}' in your elive conf"
+                el_info "Hardware clock is configured as '${mode_bios}' in your Elive"
             fi
         fi
     fi
@@ -112,10 +112,8 @@ update_ntp_time_from_server(){
     esac
 
 
-    if ((is_timezone_changed)) ; then
-        el_explain 0 "Configured Timezone to __${timezone}__, time is now __$(date)__"
-        log_progress_msg "Configured Timezone to ${timezone}, time is now $(date)"
-    fi
+    el_explain 0 "Timezone is __${timezone}__, time is now __$(date)__"
+    log_progress_msg "Timezone is ${timezone}, time is now $(date)"
 }
 
 
@@ -276,7 +274,6 @@ main(){
     # always update the conf if we changed the place
     if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" != "$timezone_connected" ]] ; then
         needs_update_conf=1
-        is_timezone_changed=1
     fi
     # }}}
 

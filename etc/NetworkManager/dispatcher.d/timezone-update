@@ -16,7 +16,7 @@ update_conf_etc(){
     fi
 
     el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
-    log_progress_msg "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
+    log_progress_msg "Configuring machine timezone to ${timezone}, $_AREA, $_ZONE"
 
     rm -f /etc/localtime
     ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
@@ -75,7 +75,7 @@ update_ntp_time_from_server(){
 
     # say something
     el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
-    log_progress_msg "Changed Timezone to __${timezone}__, time is now __$(date)__"
+    log_progress_msg "Changed Timezone to ${timezone}, time is now $(date)"
 }
 
 
@@ -149,6 +149,9 @@ main(){
             ;;
         wlan*|ath*|ra*)
             is_wifi=1
+            ;;
+        eth*)
+            is_lan=1
             ;;
     esac
 
@@ -336,7 +339,7 @@ EOF
     # update times
     if [[ -z "$timezone_last" ]] ; then
         el_explain 0 "Updating last timezone to __${timezone}__"
-        log_progress_msg "Updating last timezone to __${timezone}__"
+        log_progress_msg "Updating last timezone to ${timezone}"
         echo "last:::${timezone}" >> "${conf}"
     fi
 

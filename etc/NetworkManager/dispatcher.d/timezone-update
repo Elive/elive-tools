@@ -59,7 +59,7 @@ update_ntp_time_from_server(){
     mode_bios="$(head -3 /etc/adjtime  | tail -1)"
 
     # finally, save the time to hwclock if needed
-    case $mode_bios in
+    case "$mode_bios" in
         LOCAL)
             el_explain 0 "Saving time using __localtime__"
 
@@ -286,20 +286,22 @@ main(){
             el_explain 0 "Windows is found, so clock must be set in localtime"
 
             mode_bios="LOCAL"
+        else
+            mode_bios="UTC"
         fi
 
-        if [[ -z "$mode_bios" ]] ; then
-            el_explain 0 "first time, determine if we use UTC or localtime"
+        # update: this is not a reliable way to know if utc/localtime, don't use it
+        #if [[ -z "$mode_bios" ]] ; then
+            #el_explain 0 "first time, determine if we use UTC or localtime"
 
-
-            if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
-                el_explain 0 "Seems like your bios uses __UTC__ mode"
-                mode_bios="UTC"
-            else
-                el_explain 0 "Seems like your bios uses __localtime__ mode"
-                mode_bios="LOCAL"
-            fi
-        fi
+            #if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
+                #el_explain 0 "Seems like your bios uses __UTC__ mode"
+                #mode_bios="UTC"
+            #else
+                #el_explain 0 "Seems like your bios uses __localtime__ mode"
+                #mode_bios="LOCAL"
+            #fi
+        #fi
 
 
         # save the mode to use

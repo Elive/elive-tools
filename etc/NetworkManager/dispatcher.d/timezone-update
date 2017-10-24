@@ -127,7 +127,9 @@ main(){
         echo $$ > $LOCKFILE
     fi
 
-    if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+    _CMDLINE="$(cat /proc/cmdline)"
+
+    if LC_ALL=C echo "$_CMDLINE" | grep -qs "boot=live" ; then
         is_live=1
     fi
 
@@ -137,20 +139,21 @@ main(){
     shift
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
-    # set some variables for compatibility expectation if we run it from commandline
+    # checks
+    # set some variables for compatibility specially if we run it from commandline
     if [[ -z "$state" ]] ; then
         state="up"
     fi
-
-    el_dependencies_check "ip,arp,showmytimezone,ping"
-    #el_check_variables "iface,state"
-
     if [[ ! -e "$conf" ]] ; then
         if [[ "${conf}" = */* ]] ; then
             mkdir -p "${conf%/*}"
         fi
         touch "$conf"
     fi
+
+    el_dependencies_check "ip,arp,showmytimezone,ping"
+    #el_check_variables "iface,state"
+
 
     case "$1" in
         -f|--force)
@@ -163,12 +166,12 @@ main(){
             mode_clean=1
             unset iface
             ;;
-        wlan*|ath*|ra*)
-            is_wifi=1
-            ;;
-        eth*)
-            is_lan=1
-            ;;
+        #wlan*|ath*|ra*)
+            #is_wifi=1
+            #;;
+        #eth*)
+            #is_lan=1
+            #;;
     esac
 
 
@@ -189,7 +192,6 @@ main(){
         exit
     fi
 
-    _CMDLINE="$(cat /proc/cmdline)"
 
     # }}}
 

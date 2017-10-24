@@ -22,8 +22,8 @@ update_conf_etc(){
 
     # localtime file
     rm -f /etc/localtime
-    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
-    echo "$_AREA/$_ZONE" > /etc/timezone
+    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" "/etc/localtime"
+    echo "$_AREA/$_ZONE" > "/etc/timezone"
 
     # call tzdata and update things
     # debconf set configurations
@@ -112,8 +112,10 @@ update_ntp_time_from_server(){
     esac
 
 
-    el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
-    log_progress_msg "Changed Timezone to ${timezone}, time is now $(date)"
+    if ((is_timezone_changed)) ; then
+        el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
+        log_progress_msg "Changed Timezone to ${timezone}, time is now $(date)"
+    fi
 }
 
 
@@ -239,16 +241,10 @@ main(){
     # get ID's {{{
     # get our connected MAC
     connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
-    #el_check_variables "connected_gateway"
     #connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     # note: arp -a is slow, use arp -n instead
-    el_check_variables "connected_gateway"
-    connected_mac="$( /usr/sbin/arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
-
-    # make sure that we have a mac
-    if [[ -z "$connected_mac" ]] ; then
-        el_error "MAC '${connected_mac}' of where we are connected is not found"
-        exit
+    if [[ -n "$connected_gateway" ]] ; then
+        connected_mac="$( /usr/sbin/arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     fi
 
     # get the bios mode
@@ -265,18 +261,22 @@ main(){
     # get the location of our actual connection {{{
     timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
 
-    el_check_variables "connected_mac"
+    if [[ -n "$connected_mac" ]] ; then
 
-    if ((is_wifi)) ; then
-        el_check_variables "connected_ssid"
-        timezone_connected="$( grep -a "^${connected_mac}:::.*:::${connected_ssid}" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+        if ((is_wifi)) && [[ -n "$connected_ssid" ]] ; then
+            timezone_connected="$( grep -a "^${connected_mac}:::.*:::${connected_ssid}" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+        else
+            timezone_connected="$( grep -a "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+        fi
     else
-        timezone_connected="$( grep -a "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+        el_error "MAC '${connected_mac}' of where we are connected is not found"
+        exit
     fi
 
     # always update the conf if we changed the place
     if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" != "$timezone_connected" ]] ; then
         needs_update_conf=1
+        is_timezone_changed=1
     fi
     # }}}
 
@@ -331,7 +331,6 @@ main(){
     # update to our last location {{{
     # TODO: if the location is wrong, ask the user if the time is correct to confirm it
     if ((is_force)) ; then
-        el_check_variables "connected_mac"
         sed -i "/^${connected_mac}:::/d" "$conf"
     fi
     if ! grep -aq "^${connected_mac}:::" "${conf}" ; then

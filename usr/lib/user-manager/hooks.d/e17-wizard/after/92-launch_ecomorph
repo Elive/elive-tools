@@ -317,7 +317,7 @@ main(){
     memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
     cpubogomips="$( grep bogomips /proc/cpuinfo | sed -e 's|^.*: ||g' -e 's|\..*$||g' | tr ' ' '\n' | grep "[[:digit:]]" | head -1 )"
 
-    if [[ "${memory}" -lt "800000" ]] || [[ "$cpubogomips" -lt 1400 ]] ; then
+    if [[ "${memory}" -lt "800000" ]] || [[ "$cpubogomips" -lt 2800 ]] ; then
         return
     fi
 

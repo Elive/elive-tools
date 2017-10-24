@@ -55,22 +55,22 @@ EOF
 
 mode_bios_get(){
     # which mode of bios we have? utc or localtime?
-    mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
-
     if [[ -z "$mode_bios" ]] ; then
-        # if we have a windows, the time should be set to localtime for compatibility
-        el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME based in you have a MS Windows system..."
+        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
 
-        if has_windows ; then
-            el_explain 0 "Windows is found, so clock must be set in localtime"
-
-            mode_bios="LOCAL"
+        if [[ -z "$mode_bios" ]] ; then
+            # if we have a windows, the time should be set to localtime for compatibility
+            if has_windows ; then
+                mode_bios="LOCAL"
+                el_info "Clock will be used as 'LOCALTIME', because you have a Windows system installed"
+            else
+                mode_bios="UTC"
+                el_info "Clock will be used as 'UTC', so you don't have a Windows system installed"
+            fi
         else
-            mode_bios="UTC"
-        fi
-    else
-        if grep -qs "bios mode" "$conf" ; then
-            el_explain 0 "Hardware clock is configured to ${mode_bios} in your elive conf"
+            if grep -qs "bios mode" "$conf" ; then
+                el_info "Hardware clock is configured as '${mode_bios}' in your elive conf"
+            fi
         fi
     fi
 }
@@ -100,12 +100,12 @@ update_ntp_time_from_server(){
     # finally, save the time to hwclock if needed
     case "$mode_bios" in
         LOCAL)
-            el_explain 0 "Saving time using __localtime__"
+            el_info "Saving time using LOCALTIME"
 
             hwclock -w --localtime
             ;;
         UTC|*)
-            el_explain 0 "Saving time using __utc__"
+            el_info "Saving time using UTC"
 
             hwclock -w --utc
             ;;
@@ -113,8 +113,8 @@ update_ntp_time_from_server(){
 
 
     if ((is_timezone_changed)) ; then
-        el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
-        log_progress_msg "Changed Timezone to ${timezone}, time is now $(date)"
+        el_explain 0 "Configured Timezone to __${timezone}__, time is now __$(date)__"
+        log_progress_msg "Configured Timezone to ${timezone}, time is now $(date)"
     fi
 }
 
@@ -215,7 +215,7 @@ main(){
     # pre hooks
     if ((mode_clean)) ; then
         rm -f "${conf}"
-        el_explain 0 "Conf file cleaned"
+        el_info "Conf file cleaned"
         exit
     fi
 

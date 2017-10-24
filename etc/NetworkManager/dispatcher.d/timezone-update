@@ -7,6 +7,8 @@ source /usr/lib/elive-tools/functions
 # This tool is called as:   command eth1 up
 
 update_conf_etc(){
+    mode_bios_get
+
     if [ -n "${timezone}" ] ; then
         _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
         _ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
@@ -18,6 +20,7 @@ update_conf_etc(){
     el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
     log_progress_msg "Configuring machine timezone to ${timezone}, $_AREA, $_ZONE"
 
+    # localtime file
     rm -f /etc/localtime
     ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
     echo "$_AREA/$_ZONE" > /etc/timezone
@@ -31,12 +34,51 @@ EOF
     debconf-set-selections < "/tmp/debconf.$(basename $0)"
     rm -f "/tmp/debconf.$(basename $0)"
 
-    needs_update_time=1
+    # elive conf file
+    if [[ -n "$mode_bios" ]] ; then
+        sed -i "/^bios mode:::/d" "$conf"
+        echo "bios mode:::$mode_bios" >> "${conf}"
+    fi
 
+    # adjtime file
+    if [[ -n "$mode_bios" ]] ; then
+        ed -s /etc/adjtime << EOF
+3d
+a
+$mode_bios
+.
+w
+EOF
+    fi
+
+}
+
+mode_bios_get(){
+    # which mode of bios we have? utc or localtime?
+    mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+
+    if [[ -z "$mode_bios" ]] ; then
+        # if we have a windows, the time should be set to localtime for compatibility
+        el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME based in you have a MS Windows system..."
+
+        if has_windows ; then
+            el_explain 0 "Windows is found, so clock must be set in localtime"
+
+            mode_bios="LOCAL"
+        else
+            mode_bios="UTC"
+        fi
+    else
+        if grep -qs "bios mode" "$conf" ; then
+            el_explain 0 "Hardware clock is configured to ${mode_bios} in your elive conf"
+        fi
+    fi
 }
 
 
 update_ntp_time_from_server(){
+    mode_bios_get
+
     # update the time from a server
     service ntp stop 2>/dev/null 1>&2
 
@@ -55,25 +97,6 @@ update_ntp_time_from_server(){
     # we don't need it at all, because we just managed to get the time, so don't waste resources
     #service ntp restart 2>/dev/null 1>&2
 
-    # which mode of bios we have? utc or localtime?
-    if ! ((is_force)) && ! ((is_live)) ; then
-        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
-    else
-        mode_bios="$(head -3 /etc/adjtime  | tail -1)"
-    fi
-    if [[ -z "$mode_bios" ]] ; then
-        # if we have a windows, the time should be set to localtime for compatibility
-        el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME..."
-
-        if has_windows ; then
-            el_explain 0 "Windows is found, so clock must be set in localtime"
-
-            mode_bios="LOCAL"
-        else
-            mode_bios="UTC"
-        fi
-    fi
-
     # finally, save the time to hwclock if needed
     case "$mode_bios" in
         LOCAL)
@@ -89,7 +112,6 @@ update_ntp_time_from_server(){
     esac
 
 
-    # say something
     el_explain 0 "Changed Timezone to __${timezone}__, time is now __$(date)__"
     log_progress_msg "Changed Timezone to ${timezone}, time is now $(date)"
 }
@@ -131,6 +153,7 @@ main(){
 
     if LC_ALL=C echo "$_CMDLINE" | grep -qs "boot=live" ; then
         is_live=1
+        is_force=1
     fi
 
     iface="$1"
@@ -158,7 +181,7 @@ main(){
     case "$1" in
         -f|--force)
             is_force=1
-            needs_update_time=1
+            needs_update_conf=1
             # this is an ugly hack, iface is the first paramter but if we call the tool from cli it is "-f" instead
             #unset iface
             ;;
@@ -166,9 +189,9 @@ main(){
             mode_clean=1
             unset iface
             ;;
-        #wlan*|ath*|ra*)
-            #is_wifi=1
-            #;;
+        wlan*|ath*|ra*)
+            is_wifi=1
+            ;;
         #eth*)
             #is_lan=1
             #;;
@@ -186,6 +209,8 @@ main(){
     esac
 
 
+
+    # pre hooks
     if ((mode_clean)) ; then
         rm -f "${conf}"
         el_explain 0 "Conf file cleaned"
@@ -194,7 +219,7 @@ main(){
 
 
     # }}}
-
+    # wait for internet {{{
     # let's connect to internet first, and try to do at least one ping somewhere! or arp -a will not work
     el_verify_internet 2>/dev/null 1>/dev/null
     if ! timeout 10 ping -c 1 google.com 1>/dev/null 2>/dev/null ; then
@@ -209,71 +234,56 @@ main(){
         el_flag add stamp-connected
     fi
 
+    # }}}
+
+    # get ID's {{{
     # get our connected MAC
     connected_gateway="$(ip route | grep default | awk '{ print $3 }' | tail -1 )"
+    #el_check_variables "connected_gateway"
     #connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     # note: arp -a is slow, use arp -n instead
+    el_check_variables "connected_gateway"
     connected_mac="$( /usr/sbin/arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
 
     # make sure that we have a mac
     if [[ -z "$connected_mac" ]] ; then
-        el_error "MAC '${connected_mac}' of where we are connected not found"
+        el_error "MAC '${connected_mac}' of where we are connected is not found"
         exit
     fi
 
-    # get the last location
-    if ! ((is_force)) ; then
-        timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
-
-        # if we already know the location of this mac, don't change the timezone (routers don't move their location, cable or wifi)
-        timezone_last_current_mac="$( awk -v FS=":::" -v LAST_MAC="$connected_mac" '{if ($1 == LAST_MAC) print $2}' "${conf}" | tail -1 )"
-
-        # the next one is if we don't want to re-use conf, so: force (this should be the default)
-        if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" = "$timezone_last_current_mac" ]] ; then
-        #if [[ "${timezone_last}" = "$timezone_last_current_mac" ]] ; then
-
-            # we don't want to update the known timezone in the conf
-            skip_update_conf_last=1
-
-            # check if we have windows first
-            if has_windows ; then
-                # we need forcely to update our time (but not the conf)
-                needs_update_time=1
-
-            else
-                timezone="$timezone_last"
-
-                #if ((is_force)) ; then
-
-                    #update_conf_etc
-                    #update_ntp_time_from_server
-                #else
-                    el_explain 0 "Your timezone is already known as __${timezone_last}__ and you have not a shared windows so we don't need to update your conf"
-                    update_ntp_time_from_server
-                #fi
-
-                exit 0
-            fi
-        fi
-    fi
-
     # get the bios mode
-    # not in live, so we can use the usb in different computers
-    if ! ((is_force)) && ! ((is_live)) ; then
-        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
-    fi
-
-    # get the location of our actual connection
-    if ! ((is_force)) ; then
-        connected_timezone="$( grep -a "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
-    fi
+    mode_bios_get
 
     # get the ssid identifier
-    connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | tr ' ' '\n' | grep ESSID | sed -e 's|ESSID:"||g' -e 's|".*$||g' | head -1 )"
+    if ((is_wifi)) ; then
+        connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | tr ' ' '\n' | grep ESSID | sed -e 's|ESSID:"||g' -e 's|".*$||g' | head -1 )"
+    fi
+
+
+    # }}}
+
+    # get the location of our actual connection {{{
+    timezone_last="$( awk -v FS=":::" '{if ($1 == "last") print $2}' "${conf}" | tail -1 )"
+
+    el_check_variables "connected_mac"
+
+    if ((is_wifi)) ; then
+        el_check_variables "connected_ssid"
+        timezone_connected="$( grep -a "^${connected_mac}:::.*:::${connected_ssid}" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+    else
+        timezone_connected="$( grep -a "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+    fi
+
+    # always update the conf if we changed the place
+    if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" != "$timezone_connected" ]] ; then
+        needs_update_conf=1
+    fi
+    # }}}
+
 
     # get the actual timezone
-    if [[ -n "$connected_timezone" ]] ; then
-        timezone="${connected_timezone}"
+    if [[ -n "$timezone_connected" ]] ; then
+        timezone="${timezone_connected}"
     else
         timezone="$(showmytimezone)"
 
@@ -295,105 +305,49 @@ main(){
     fi
 
 
-    # first time, need to determine if use utc or not
-    if [[ -z "$mode_bios" ]] ; then
-        # if we have a windows, the time should be set to localtime for compatibility
-        el_explain 0 "Detecting if your hardware clock is in UTC or LOCALTIME..."
-
-        if has_windows ; then
-            el_explain 0 "Windows is found, so clock must be set in localtime"
-
-            mode_bios="LOCAL"
-        else
-            mode_bios="UTC"
-        fi
-
-        # update: this is not a reliable way to know if utc/localtime, don't use it
-        #if [[ -z "$mode_bios" ]] ; then
-            #el_explain 0 "first time, determine if we use UTC or localtime"
-
-            #if LC_ALL=C hwclock -r -D | grep -q "^Assuming hardware clock is kept in UTC" ; then
-                #el_explain 0 "Seems like your bios uses __UTC__ mode"
-                #mode_bios="UTC"
-            #else
-                #el_explain 0 "Seems like your bios uses __localtime__ mode"
-                #mode_bios="LOCAL"
-            #fi
-        #fi
-
-
-        # save the mode to use
-        if [[ -n "$mode_bios" ]] ; then
-            sed -i "/^bios mode:::/d" "$conf"
-            echo "bios mode:::$mode_bios" >> "${conf}"
-
-            ed -s /etc/adjtime << EOF
-3d
-a
-$mode_bios
-.
-w
-EOF
-
-        fi
-
-    fi
-
-
-    # compare our last location with our actual one
-    # note: deprecated code, we still want to update some confs in any cases
-    #if [[ "${timezone}" = "${timezone_last}" ]] ; then
-        #if ((is_force)) || ((is_live)) ; then
-            ## if we force or we are in live mode (always update times in live mode! because we reboot and the timezones files in /etc are gone)
-            #true
-        #else
-            ## nothing more to do, everything is fine
-            #exit 0
-        #fi
-    #fi
-
     #
     # We changed our location
     #
 
-    # update times
-    if [[ -z "$timezone_last" ]] ; then
-        el_explain 0 "Updating last timezone to __${timezone}__"
-        log_progress_msg "Updating last timezone to ${timezone}"
-        echo "last:::${timezone}" >> "${conf}"
-    fi
-
-
     # always update it if we are in live
-    if ((is_live)) ; then
-        update_conf_etc
+    if ((is_force)) ; then
+        needs_update_conf=1
     else
         # update configurations in etc if we need to
         if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
-            update_conf_etc
+            needs_update_conf=1
         fi
     fi
 
 
-    if ((needs_update_time)) || ((is_live)) ; then
-        update_ntp_time_from_server
+    # do it
+    # by default we always need to update time
+    update_ntp_time_from_server
+
+    if ((needs_update_conf)) || ((is_force)) ; then
+        update_conf_etc
     fi
 
-    # update to our last location
+    # update to our last location {{{
+    # TODO: if the location is wrong, ask the user if the time is correct to confirm it
     if ((is_force)) ; then
+        el_check_variables "connected_mac"
         sed -i "/^${connected_mac}:::/d" "$conf"
     fi
     if ! grep -aq "^${connected_mac}:::" "${conf}" ; then
         # but remember it only if we have an interface
-        # TODO mobile connections should be never saved, since they moves!
         if [[ -n "$iface" ]] ; then
+            el_check_variables "connected_mac"
             if [[ -n "$connected_ssid" ]] ; then
                 echo "${connected_mac}:::${timezone}:::${iface}:::${connected_ssid}" >> "${conf}"
             else
-                echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
+                if ! ((is_wifi)) ; then
+                    # mobile connections without ID should be never saved, since they moves!
+                    echo "${connected_mac}:::${timezone}:::${iface}" >> "${conf}"
+                fi
             fi
         else
-            el_warning "ignoring adding entry in conf, so we don't have iface (called from cli?)"
+            el_warning "ignoring adding entry in conf, so we don't have enough ID data to include: iface '${iface},' ssid '${connected_ssid}' "
         fi
     fi
 
@@ -404,6 +358,7 @@ EOF
         echo "last:::${timezone}" >> "${conf}"
     fi
 
+    # }}}
 }
 
 #

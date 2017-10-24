@@ -509,7 +509,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
 
         if [[ "$found" != "yes" ]] ; then
             #el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
-            el_error "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"
+            el_debug "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
 

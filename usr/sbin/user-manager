@@ -279,7 +279,7 @@ changepass(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user in which to change its password" )" || echo cancel )"
+    username="$( echo "root ${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user in which to change its password" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
     passstep

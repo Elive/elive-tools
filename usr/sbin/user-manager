@@ -31,7 +31,7 @@ fi
 guitool=zenity
 temp_error="/tmp/$(basename $0)-${USER}-$$"
 
-el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},${USERDEL}"
+el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},useradd,${USERDEL}"
 
 ###########################################################################
 errorexit(){
@@ -165,7 +165,7 @@ adduserelive(){
 
     # this comes from /etc/adduser.conf
     if [[ "$USERGROUPS" = "yes" ]] ; then
-        USERGROUP=$username
+        USERGROUP="$username"
         # do not create it or adduser will fail
         #groupadd $USERGROUP 2>"${temp_error}" || errorexit
     else
@@ -175,7 +175,10 @@ adduserelive(){
     # create user
     #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
     #$USERADD -m $username 2>/tmp/.errormessage || errorexit
-    $ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
+    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
+    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
+    # update: adduser doesn't accepts names like Владимир
+    useradd -c "Elive User" -m -s "/bin/zsh" "$username"
 
     # set password
     if chpasswd -h 2>&1 | grep -iq md5 ; then

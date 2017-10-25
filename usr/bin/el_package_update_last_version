@@ -21,7 +21,7 @@ main(){
         exit
     fi
 
-    for arg in "$@"
+    for arg in "${@//,/ }"
     do
         case "$arg" in
             -f|--force)

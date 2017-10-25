@@ -12,7 +12,7 @@ usage(){
 
 main(){
     # pre {{{
-    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version is_mode_force
+    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version is_mode_force arg args packages
 
 
     # Usage
@@ -21,7 +21,7 @@ main(){
         exit
     fi
 
-    for arg in "${@//,/ }"
+    for arg in "$@"
     do
         case "$arg" in
             -f|--force)
@@ -32,131 +32,136 @@ main(){
                 exit
                 ;;
             *)
-                el_array_member_add "$arg" "${packages[@]}" ; packages=("${_out[@]}")
+                if [[ -n "$packagename" ]] ; then
+                    # this tool is made to only install one package at time, hum... so things like eliveinstaller checks the return status, and this depends on a single one
+                    el_error "this tool only allows one package argument, no more. Using the first given one"
+                else
+                    packagename="$arg"
+                fi
+                ;;
         esac
     done
 
-    for packagename in "${packages[@]}"
+    el_debug "looking for updates for the package '${packagename}' "
+    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+
+    # check if exist or apt-get update
+    if [[ -z "$url_repository" ]] ; then
+        el_aptget_update
+    fi
+    if [[ -z "$url_repository" ]] ; then
+        el_warning "Package $packagename not found in the repos, ignoring it..."
+        exit 1
+    fi
+
+
+    # check internet
+    if ! el_verify_internet ; then
+        el_explain 1 "No internet found, ignoring checking of newer packages available"
+        exit 1
+    fi
+
+    # check repo url
+    if ! el_check_variables "url_repository" ; then
+        el_error "no url found for ${packagename} package, ignoring check in $(basename $0)"
+        exit 1
+    fi
+
+    if ! el_dependencies_check "apt-get,apt-cache,zenity,dpkg" ; then
+        exit 1
+    fi
+
+
+    # force update
+    if ((is_mode_force)) ; then
+        el_aptget_update force
+    else
+        el_aptget_update
+    fi
+
+
+    # }}}
+
+    package_version_installed="$( LC_ALL=C  apt-cache policy "${packagename}" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 )"
+
+    # first pass, check if we can have a possible candidate (fuzzy mode) {{{
+    while read -ru 3 line
     do
-        url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+        url_package_dir="${url_repository%/}/${line%/*}/"
 
-        # check if exist or apt-get update
-        if [[ -z "$url_repository" ]] ; then
-            el_aptget_update
-        fi
-        if [[ -z "$url_repository" ]] ; then
-            el_warning "Package $packagename not found in the repos, ignoring it..."
-            exit 1
-        fi
-
-
-        # check internet
-        if ! el_verify_internet ; then
-            el_explain 1 "No internet found, ignoring checking of newer packages available"
-            exit 1
-        fi
-
-        # check repo url
-        if ! el_check_variables "url_repository" ; then
-            el_error "no url found for ${packagename} package, ignoring check in $(basename $0)"
-            exit 1
-        fi
-
-        if ! el_dependencies_check "apt-get,apt-cache,zenity,dpkg" ; then
-            exit 1
-        fi
-
-
-
-        # }}}
-
-        package_version_installed="$( LC_ALL=C  apt-cache policy "${packagename}" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 )"
-
-        # first pass, check if we can have a possible candidate (fuzzy mode) {{{
-        while read -ru 3 line
+        # compare all teh versions found with a simple curl with the installed version
+        while read -ru 3 version
         do
-            url_package_dir="${url_repository%/}/${line%/*}/"
+            # cleanup var and url-decode it
+            read -r version <<< "$version"
+            #version="$( hURL -us --nocolor "$version" )"
+            version="$( printf "$( echo "$version" | sed -e 's|%|\\x|g' )" )"
 
-            # compare all teh versions found with a simple curl with the installed version
-            while read -ru 3 version
-            do
-                # cleanup var and url-decode it
-                read -r version <<< "$version"
-                #version="$( hURL -us --nocolor "$version" )"
-                version="$( printf "$( echo "$version" | sed -e 's|%|\\x|g' )" )"
+            if dpkg --compare-versions "${version}" gt "${package_version_installed}" 2>/dev/null ; then
+                package_version_newer_found_maybe=1
+            fi
+        done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep '\.deb$' | cut -d'_' -f2 | sort -u )"
 
-                if dpkg --compare-versions "${version}" gt "${package_version_installed}" 2>/dev/null ; then
-                    package_version_newer_found_maybe=1
+    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+
+
+
+    # - first pass, check if we can have a possible candidate (fuzzy mode) }}}
+    # checking results and deciding {{{
+    # nothing found in a first shot?
+    if ! ((package_version_newer_found_maybe)) ; then
+        # return false if we have not updated or found anything
+        exit 1
+    fi
+
+
+    # - checking results and deciding }}}
+
+    # install new package if found
+    if el_package_newer_check "${packagename}" ; then
+
+        local message_upgrade_please message_upgrade_force
+        message_upgrade_please="$( printf "$( eval_gettext "Found a newer version of %s, update it?" )" "${packagename%:*}" )"
+
+        message_upgrade_force="$( printf "$( eval_gettext "The package %s needs to be updated." )" "${packagename%:*}" )"
+
+        if [[ -n "$DISPLAY" ]] ; then
+            if ((is_mode_force)) ; then
+                zenity --info --text="$message_upgrade_force"
+                if ! el_dependencies_install "$packagename" ; then
+                    exit 1
                 fi
-            done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep '\.deb$' | cut -d'_' -f2 | sort -u )"
-
-        done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
-
-
-
-        # - first pass, check if we can have a possible candidate (fuzzy mode) }}}
-        # checking results and deciding {{{
-        # nothing found in a first shot?
-        if ! ((package_version_newer_found_maybe)) ; then
-            # return false if we have not updated or found anything
-            exit 1
-        fi
-
-
-        # - checking results and deciding }}}
-
-        if ((is_mode_force)) ; then
-            el_aptget_update force
-        else
-            el_aptget_update
-        fi
-
-        # install new package if found
-        if el_package_newer_check "${packagename}" ; then
-
-            local message_upgrade_please message_upgrade_force
-            message_upgrade_please="$( printf "$( eval_gettext "Found a newer version of %s, update it?" )" "${packagename%:*}" )"
-
-            message_upgrade_force="$( printf "$( eval_gettext "The package %s needs to be updated." )" "${packagename%:*}" )"
-
-            if [[ -n "$DISPLAY" ]] ; then
-                if ((is_mode_force)) ; then
-                    zenity --info --text="$message_upgrade_force"
+                exit 0
+            else
+                if zenity --question --text="$message_upgrade_please" ; then
                     if ! el_dependencies_install "$packagename" ; then
                         exit 1
                     fi
                     exit 0
                 else
-                    if zenity --question --text="$message_upgrade_please" ; then
-                        if ! el_dependencies_install "$packagename" ; then
-                            exit 1
-                        fi
-                        exit 0
-                    else
-                        exit 1
-                    fi
+                    exit 1
                 fi
+            fi
 
+        else
+            if ((is_mode_force)) ; then
+                echo -e "The package $packagename needs to be updated.\nPlease insert root/admin password:"
+                su -c "apt-get install $packagename" root
+                exit 0
             else
-                if ((is_mode_force)) ; then
-                    echo -e "The package $packagename needs to be updated.\nPlease insert root/admin password:"
+                if el_confirm "$message_upgrade_please" ; then
+                    echo -e "Please insert root/admin password:"
                     su -c "apt-get install $packagename" root
                     exit 0
                 else
-                    if el_confirm "$message_upgrade_please" ; then
-                        echo -e "Please insert root/admin password:"
-                        su -c "apt-get install $packagename" root
-                        exit 0
-                    else
-                        exit 1
-                    fi
+                    exit 1
                 fi
             fi
-        else
-            exit 1
         fi
+    else
+        exit 1
+    fi
 
-    done
 
 }
 

@@ -112,7 +112,7 @@ source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
-SOURCE="$( readlink -f "$0" )"
+SOURCE="$( readlink -f "$0" || true )"
 
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable
@@ -1296,13 +1296,13 @@ el_debug(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             #if [[ "$arg" != "source" ]] ; then
                 #sourcenames="$arg > $sourcenames"
-                arg="$( readlink -f "$arg" )"
+                arg="$( readlink -f "$arg" || true )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
             #fi
         fi
     done
 
-    sourcename="$( readlink -f "$0" )"
+    sourcename="$( readlink -f "$0" || true )"
     if [[ -n "$sourcenames" ]] ; then
         if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
             sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
@@ -1375,13 +1375,13 @@ el_info(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             #if [[ "$arg" != "source" ]] ; then
                 #sourcenames="$arg > $sourcenames"
-                arg="$( readlink -f "$arg" )"
+                arg="$( readlink -f "$arg" || true )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
             #fi
         fi
     done
 
-    sourcename="$( readlink -f "$0" )"
+    sourcename="$( readlink -f "$0" || true )"
     if [[ -n "$sourcenames" ]] ; then
         if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
             sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"

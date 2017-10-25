@@ -184,7 +184,8 @@ adduserelive(){
         chpassopt=""
     fi
 
-    echo "$username:$userpass" | chpasswd $chpassopt
+    #echo "$username:$userpass" | chpasswd $chpassopt
+    bash -c 'printf "%s:%s\\n" "$1" "$2" | chpasswd -m' -- "$username" "$userpass"
 
     #elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
 
@@ -288,7 +289,8 @@ changepass(){
         chpassopt=""
     fi
 
-    echo "$username:$userpass" | chpasswd $chpassopt
+    #echo "$username:$userpass" | chpasswd $chpassopt
+    bash -c 'printf "%s:%s\\n" "$1" "$2" | chpasswd -m' -- "$username" "$userpass"
 
     $guitool --info --text="$( eval_gettext "New password changed" )"
 

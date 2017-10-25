@@ -179,6 +179,7 @@ adduserelive(){
     #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
     # update: adduser doesn't accepts names like Владимир
     useradd -c "Elive User" -m -s "/bin/zsh" "$username"
+    elive-skel newuser "$username"
 
     # set password
     if chpasswd -h 2>&1 | grep -iq md5 ; then

@@ -2326,6 +2326,7 @@ el_request_report_bug(){
                 #if [[ -x /usr/bin/iceweasel ]] ; then
                     #iceweasel "$url" &
                 #fi
+                ## use web-launcher TODO
                 #if [[ -x /usr/bin/chromium ]] ; then
                     #chromium --temp-profile "$url" &
                 #fi

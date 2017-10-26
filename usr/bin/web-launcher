@@ -1,85 +1,9 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
-launch(){
-    # pre {{{
-    local url browser browsers
-    url="$1"
-    shift
-
-    browsers="$@ chrome chromium iceweasel surf"
-
-    # }}}
-    for browser in $browsers
-    do
-        case "$browser" in
-            chrome|google-chrome)
-                if [[ -x "$( which google-chrome )" ]] ; then
-                    echo "$( which google-chrome )" --app="$url"
-                    is_launched=1
-                fi
-                ;;
-            chromium)
-                if [[ -x "$( which chromium )" ]] ; then
-                    echo "$( which chromium )" --app="$url"
-                    is_launched=1
-                fi
-                ;;
-            iceweasel)
-                if [[ -x "$( which iceweasel )" ]] ; then
-                    echo "$( which iceweasel )" "$url"
-                    is_launched=1
-                fi
-                ;;
-            firefox)
-                if [[ -x "$( which firefox )" ]] ; then
-                    echo "$( which firefox )" "$url"
-                    is_launched=1
-                fi
-                ;;
-            surf)
-                if [[ -x "$( which surf )" ]] ; then
-                    echo "$( which surf )" "$url"
-                    is_launched=1
-                fi
-                ;;
-        esac
-
-        # only launch one time
-        if ((is_launched)) ; then
-            break
-        fi
-    done
-
-    # nothing used? open with a default one
-    if ! ((is_launched)) ; then
-        browser="$( readlink -f "/etc/alternatives/x-www-browser" )"
-
-        if [[ -x "$browser" ]] ; then
-            case "$browser" in
-                links2)
-                    if [[ -n "$DISPLAY" ]] ; then
-                        "$browser" -g "$url"
-                    else
-                        "$browser" "$url"
-                    fi
-                    ;;
-                lynx|w3m)
-                    urxvt -e bash -c "$browser '$url'"
-                    ;;
-                *)
-                    "$browser" "$url"
-                    ;;
-            esac
-        else
-            el_error "no browsers installed on this computer"
-        fi
-    fi
-}
-
 main(){
     # pre {{{
-    local url debian_version elive_version is_wheezy browsers
+    local url debian_version elive_version is_wheezy browsers arg
 
     debian_version="$( cat "/etc/debian_version" )"
 
@@ -88,27 +12,138 @@ main(){
         is_wheezy=1
     fi
 
-    url="$1"
-    shift
-    browsers="$@"
-
     # }}}
+    # smart arguments parser
+    for arg in "$@"
+    do
+        case "$arg" in
+            http*|file://*|www.*)
+                el_array_member_add "$arg" "${urls[@]}" ; urls=("${_out[@]}")
+                el_debug "added url '${arg}' "
+                shift
+                ;;
+            --app=*)
+                is_mode_app=1
+                el_array_member_add "${arg#--app=}" "${urls[@]}" ; urls=("${_out[@]}")
+                el_debug "added url '${arg#--app=}' in APP mode"
+                shift
+                ;;
+            --incognito|--temp-profile)
+                is_mode_incognito=1
+                el_debug "mode incognito"
+                shift
+                ;;
+            chrome|google-chrome|chromium|firefox|iceweasel|links2|lynx|w3m|netsurf|surf)
+                el_array_member_add "${arg}" "${browsers[@]}" ; browsers=("${_out[@]}")
+                el_debug "added browser preference '${arg}' "
+                shift
+                ;;
+            *)
+                el_array_member_add "$arg" "${urls[@]}" ; urls=("${_out[@]}")
+                el_debug "added url '${arg}' (assumed)"
+                shift
+                ;;
+        esac
+    done
 
-    # manage special cases
+    # add possible ones based in preference
+    el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "surf" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "netsurf" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "links2" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "/etc/alternatives/x-www-browser" "${browsers[@]}" ; browsers=("${_out[@]}")
+
+    # manage special cases {{{
     case "$url" in
         *ted.com*)
             # chromium not works on this version, only chrome and iceweasel
             if ((is_wheezy)) ; then
-                launch "$url" chrome iceweasel
-            else
-                launch "$url" chromium chrome iceweasel
+                el_array_member_unset "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
             fi
-            ;;
-        *)
-            launch "$url" $browsers
             ;;
     esac
 
+    # }}}
+
+    for browser in "${browsers[@]}"
+    do
+        case "$browser" in
+            chrome|google-chrome|chromium)
+                if [[ -x "$( which "$browser" )" ]] ; then
+                    browser="$( which "${browser}" )"
+                    el_debug "prefered browser: $browser"
+
+                    if ((is_mode_incognito)) ; then
+                        el_array_member_add "--incognito" "${browser_options[@]}" ; browser_options=("${_out[@]}")
+                    fi
+                    break
+                fi
+                ;;
+            iceweasel|firefox)
+                if [[ -x "$( which "$browser" )" ]] ; then
+                    browser="$( which "${browser}" )"
+                    el_debug "prefered browser: $browser"
+
+                    if ((is_mode_incognito)) ; then
+                        el_array_member_add "--temp-profile" "${browser_options[@]}" ; browser_options=("${_out[@]}")
+                    fi
+                    break
+                fi
+                ;;
+            surf|netsurf)
+                if [[ -x "$( which "$browser" )" ]] ; then
+                    browser="$( which "${browser}" )"
+                    el_debug "prefered browser: $browser"
+                    break
+                fi
+                ;;
+            links2*)
+                if [[ -x "$( which "$browser" )" ]] ; then
+                    if [[ -n "$DISPLAY" ]] ; then
+                        browser="$( which "${browser}" ) -g"
+                    else
+                        browser="$( which "${browser}" )"
+                    fi
+                    el_debug "prefered browser: $browser"
+                    break
+                fi
+                ;;
+            lynx|w3m)
+                if [[ -x "$( which "$browser" )" ]] ; then
+                    browser="urxvt -e bash -c '$( which "${browser}" )'"
+                    el_debug "prefered browser: $browser"
+                    break
+                fi
+                ;;
+        esac
+    done
+
+    # nothing used? open with a default one
+    if ! [[ -n "$browser" ]] ; then
+        browser="$( readlink -f "/etc/alternatives/x-www-browser" )"
+    fi
+    if ! [[ -n "$browser" ]] ; then
+        el_error "no web browsers available found"
+    fi
+
+    # run the webs
+    for url in "${urls[@]}"
+    do
+        if ((is_mode_app)) ; then
+            ${browser} ${browser_options} --app="${url}" &
+        else
+            ${browser} ${browser_options} "${url}" &
+        fi
+
+        # don't bottleneck opening tabs
+        LC_ALL=C sleep 2
+    done
+
+    # wait that all the browsers are finished? not needed
+    #wait
 }
 
 #

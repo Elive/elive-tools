@@ -29,11 +29,13 @@ fi
 if [[ -n "$TERM" ]] ; then
     if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = terminology ]] || [[ "$TERM" = *gnome* ]] || [[ "$TERM" = *screen* ]] || [[ "$TERM" = *tmux* ]] ; then
         is_terminal=1
+        is_console=0
     fi
     if [[ "$TERM" = "linux" ]] ; then
         if [[ -n "$E_START" ]] ; then
             # launched from e17 itself
             is_terminal=0
+            is_console=0
         else
             is_terminal=1
             is_console=1

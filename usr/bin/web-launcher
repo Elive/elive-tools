@@ -22,20 +22,29 @@ main(){
                 el_debug "added url '${arg}' "
                 shift
                 ;;
+            chrome|google-chrome|chromium|firefox|iceweasel|links2|lynx|w3m|netsurf|surf)
+                el_array_member_add "${arg}" "${browsers[@]}" ; browsers=("${_out[@]}")
+                el_debug "added browser preference '${arg}' "
+                shift
+                ;;
             --app=*)
                 is_mode_app=1
                 el_array_member_add "${arg#--app=}" "${urls[@]}" ; urls=("${_out[@]}")
                 el_debug "added url '${arg#--app=}' in APP mode"
                 shift
                 ;;
-            --incognito|--temp-profile)
+            --incognito|--private-window)
                 is_mode_incognito=1
                 el_debug "mode incognito"
                 shift
                 ;;
-            chrome|google-chrome|chromium|firefox|iceweasel|links2|lynx|w3m|netsurf|surf)
-                el_array_member_add "${arg}" "${browsers[@]}" ; browsers=("${_out[@]}")
-                el_debug "added browser preference '${arg}' "
+            --temp-profile)
+                el_debug "mode temporal profile"
+                is_mode_temp_profile=1
+                shift
+                ;;
+            --*)
+                el_warning "ignoring unrecognized option $arg"
                 shift
                 ;;
             *)
@@ -86,6 +95,10 @@ main(){
                     browser="$( which "${browser}" )"
                     el_debug "prefered browser: $browser"
 
+                    # only chromium has temporal profile
+                    if ((is_mode_temp_profile)) && [[ "$browser" = "chromium" ]] ; then
+                        el_array_member_add "--temp-profile" "${browser_options[@]}" ; browser_options=("${_out[@]}")
+                    fi
                     if ((is_mode_incognito)) ; then
                         el_array_member_add "--incognito" "${browser_options[@]}" ; browser_options=("${_out[@]}")
                     fi
@@ -98,7 +111,7 @@ main(){
                     el_debug "prefered browser: $browser"
 
                     if ((is_mode_incognito)) ; then
-                        el_array_member_add "--temp-profile" "${browser_options[@]}" ; browser_options=("${_out[@]}")
+                        el_array_member_add "--private-window" "${browser_options[@]}" ; browser_options=("${_out[@]}")
                     fi
                     break
                 fi

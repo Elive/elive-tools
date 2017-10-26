@@ -48,9 +48,9 @@ main(){
 
     # add possible ones based in preference
     el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
-    el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "surf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "netsurf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "links2" "${browsers[@]}" ; browsers=("${_out[@]}")
@@ -74,7 +74,13 @@ main(){
             chrome|google-chrome|chromium)
                 # fix
                 if [[ "$browser" = "chrome" ]] ; then
-                    browser="google-chrome"
+                    if [[ -x "$( which "$browser" )" ]] ; then
+                        browser="$( which "${browser}" )"
+                    else
+                        if [[ -x "$( which "google-$browser" )" ]] ; then
+                            browser="$( which "google-${browser}" )"
+                        fi
+                    fi
                 fi
                 if [[ -x "$( which "$browser" )" ]] ; then
                     browser="$( which "${browser}" )"

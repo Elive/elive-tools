@@ -72,6 +72,10 @@ main(){
     do
         case "$browser" in
             chrome|google-chrome|chromium)
+                # fix
+                if [[ "$browser" = "chrome" ]] ; then
+                    browser="google-chrome"
+                fi
                 if [[ -x "$( which "$browser" )" ]] ; then
                     browser="$( which "${browser}" )"
                     el_debug "prefered browser: $browser"

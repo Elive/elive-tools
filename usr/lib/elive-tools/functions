@@ -1294,11 +1294,10 @@ el_debug(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            #if [[ "$arg" != "source" ]] ; then
-                #sourcenames="$arg > $sourcenames"
+            if [[ -n "$arg" ]] ; then
                 arg="$( readlink -f "$arg" || true )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
-            #fi
+            fi
         fi
     done
 
@@ -1373,11 +1372,10 @@ el_info(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            #if [[ "$arg" != "source" ]] ; then
-                #sourcenames="$arg > $sourcenames"
+            if [[ -n "$arg" ]] ; then
                 arg="$( readlink -f "$arg" || true )"
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
-            #fi
+            fi
         fi
     done
 
@@ -1446,10 +1444,9 @@ el_warning(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            #if [[ "$arg" != "source" ]] ; then
-                #sourcenames="$arg > $sourcenames"
+            if [[ -n "$arg" ]] ; then
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
-            #fi
+            fi
         fi
     done
     if [[ -n "$sourcenames" ]] ; then
@@ -1538,10 +1535,9 @@ el_error(){
     do
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            #if [[ "$arg" != "source" ]] ; then
-                #sourcenames="$arg > $sourcenames"
+            if [[ -n "$arg" ]] ; then
                 el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
-            #fi
+            fi
         fi
     done
     if [[ -n "$sourcenames" ]] ; then

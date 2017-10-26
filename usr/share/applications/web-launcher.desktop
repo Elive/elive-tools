@@ -8,4 +8,4 @@ Categories=Utilities;Development
 StartupNotify=true
 NoDisplay=true
 Icon=web-browser
-Exec=web-launcher %f
+Exec=web-launcher %F

@@ -142,8 +142,9 @@ main(){
         LC_ALL=C sleep 2
     done
 
-    # wait that all the browsers are finished? not needed
-    #wait
+    # wait that all the browsers are finished? useful for wait the process, but:
+    # note: it would be useful to wait the process that has finished, but if we are opening to a tab (like in chrome), the process is just run in BG, not waiting for it, so this is not so reliable...
+    wait
 }
 
 #

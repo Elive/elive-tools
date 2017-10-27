@@ -1500,7 +1500,7 @@ el_warning(){
         el_c_gr="\033[1;30m" # Gray color
         el_c_gr2="\033[0;30m" # Gray2 color
 
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_y2}$message${el_c_n}"
     fi
 
     # }}}

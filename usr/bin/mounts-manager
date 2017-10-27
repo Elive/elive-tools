@@ -437,7 +437,11 @@ get_mountpoint(){
     fi
 
 
-    mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    # we should never use LC_ALL because UTF-8 mountpoint names will break, but we need to grep for "mount paths:" so just use this option if we don't have other choice
+    if [[ -z "$mountpoint" ]] ; then
+        mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    fi
     read -r mountpoint <<< "$mountpoint"
     mountpoint="$(readlink -f "$mountpoint" )"
 
@@ -451,7 +455,10 @@ get_mountpoint(){
         if el_mount "$dev" 1>/dev/null ; then
 
             # get data again
-            mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+            mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+            if [[ -z "$mountpoint" ]] ; then
+                mountpoint="$( LC_ALL=C udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+            fi
             # remove extra leading blank chars
             read -r mountpoint <<< "$mountpoint"
             mountpoint="$(readlink -f "$mountpoint" )"
@@ -465,7 +472,10 @@ get_mountpoint(){
     # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example, or not-formatted (without uuid) partitions)
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         # get the uuid
-        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
 
         if [[ -z "$uuid" ]] ; then
             #el_debug "Unable to mount $dev because has not an uuid"
@@ -473,7 +483,10 @@ get_mountpoint(){
         fi
 
         # get FS
-        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$filesystem" ]] ; then
+            filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
 
         # ignore unmountable partitions:
         if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
@@ -871,14 +884,20 @@ el_mount(){
     if LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep -qs "DEVNAME=" ; then
 
         # get FS
-        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$filesystem" ]] ; then
+            filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
         if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
             el_debug "Unable to mount $dev because is not a mountable partition"
             return 1
         fi
 
         # get uuid
-        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
         if [[ -z "$uuid" ]] ; then
             el_debug "Unable to mount $dev because has not an uuid"
             return 1
@@ -972,8 +991,15 @@ el_mount(){
         refresh_partition_table "$dev"
 
         # get UUID
-        uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
+
+        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$filesystem" ]] ; then
+            filesystem="$( LC_ALL=C /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
         #if [[ -z "$uuid" ]] ; then

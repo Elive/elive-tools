@@ -122,7 +122,7 @@ detect_driver_version(){
 
     # nothing? use default
     if [[ -z "$driver_version" ]] ; then
-        el_warning "You have forced the install of fglrx but you didn't say which version, let's use the 'current' one as default then..."
+        NOREPORTS=1 el_warning "Going to install the fglrx drivers but you didn't say which version, assuming 'current' then..."
         driver_version="current"
     fi
 

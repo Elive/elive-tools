@@ -30,7 +30,7 @@ main(){
     matches="$( find . -type f -iname '*'$filename'*' \( -not -path '*'.git'*' -not -path '*'.svn'*' \) )"
 
     if [[ -z "$matches" ]] ; then
-        el_error "no matches found, maybe it's a symlink?"
+        NOREPORTS=1 el_error "no matches found, maybe it's a symlink?"
         exit 1
     fi
 

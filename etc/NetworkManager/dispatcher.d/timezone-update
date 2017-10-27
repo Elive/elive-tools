@@ -7,7 +7,7 @@ source /usr/lib/elive-tools/functions
 # This tool is called as:   command eth1 up
 
 update_conf_etc(){
-    mode_bios_get
+    bios_mode_get
 
     if [ -n "${timezone}" ] ; then
         _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
@@ -35,17 +35,17 @@ EOF
     rm -f "/tmp/debconf.$(basename $0)"
 
     # elive conf file
-    if [[ -n "$mode_bios" ]] ; then
+    if [[ -n "$bios_mode" ]] ; then
         sed -i "/^bios mode:::/d" "$conf"
-        echo "bios mode:::$mode_bios" >> "${conf}"
+        echo "bios mode:::$bios_mode" >> "${conf}"
     fi
 
     # adjtime file
-    if [[ -n "$mode_bios" ]] ; then
+    if [[ -n "$bios_mode" ]] ; then
         ed -s /etc/adjtime << EOF
 3d
 a
-$mode_bios
+$bios_mode
 .
 w
 EOF
@@ -53,23 +53,25 @@ EOF
 
 }
 
-mode_bios_get(){
+bios_mode_get(){
     # which mode of bios we have? utc or localtime?
-    if [[ -z "$mode_bios" ]] ; then
-        mode_bios="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+    if [[ -z "$bios_mode" ]] ; then
+        if ! ((is_force)) ; then
+            bios_mode="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+        fi
 
-        if [[ -z "$mode_bios" ]] ; then
+        if [[ -z "$bios_mode" ]] ; then
             # if we have a windows, the time should be set to localtime for compatibility
             if has_windows ; then
-                mode_bios="LOCALTIME"
+                bios_mode="LOCAL"
                 el_info "Clock will be used as 'LOCALTIME', because you have a Windows system installed"
             else
-                mode_bios="UTC"
+                bios_mode="UTC"
                 el_info "Clock will be used as 'UTC', so you don't have a Windows system installed"
             fi
         else
             if grep -qs "bios mode" "$conf" ; then
-                el_info "Hardware clock is configured as '${mode_bios}' in your Elive"
+                el_info "Hardware clock is configured as '${bios_mode}' in your Elive"
             fi
         fi
     fi
@@ -77,7 +79,7 @@ mode_bios_get(){
 
 
 update_ntp_time_from_server(){
-    mode_bios_get
+    bios_mode_get
 
     # update the time from a server
     service ntp stop 2>/dev/null 1>&2
@@ -98,8 +100,8 @@ update_ntp_time_from_server(){
     #service ntp restart 2>/dev/null 1>&2
 
     # finally, save the time to hwclock if needed
-    case "$mode_bios" in
-        LOCALTIME)
+    case "$bios_mode" in
+        LOCAL)
             el_info "Saving time using LOCALTIME"
 
             hwclock -w --localtime
@@ -246,7 +248,7 @@ main(){
     fi
 
     # get the bios mode
-    mode_bios_get
+    bios_mode_get
 
     # get the ssid identifier
     if ((is_wifi)) ; then
@@ -318,12 +320,12 @@ main(){
 
 
     # do it
-    # by default we always need to update time
-    update_ntp_time_from_server
-
     if ((needs_update_conf)) || ((is_force)) ; then
         update_conf_etc
     fi
+
+    # by default we always need to update time
+    update_ntp_time_from_server
 
     # update to our last location {{{
     # TODO: if the location is wrong, ask the user if the time is correct to confirm it

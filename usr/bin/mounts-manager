@@ -948,7 +948,8 @@ el_mount(){
     fi
 
     # ok so, maybe the filesystem is not clean so try to fix that first:
-    fsck -a "$dev"
+    # do not try this at home!
+    #fsck -a "$dev"
 
     # try to mount
     if [[ "$EL_DEBUG" -ge 3 ]] ; then

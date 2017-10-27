@@ -61,7 +61,7 @@ mode_bios_get(){
         if [[ -z "$mode_bios" ]] ; then
             # if we have a windows, the time should be set to localtime for compatibility
             if has_windows ; then
-                mode_bios="LOCAL"
+                mode_bios="LOCALTIME"
                 el_info "Clock will be used as 'LOCALTIME', because you have a Windows system installed"
             else
                 mode_bios="UTC"
@@ -99,7 +99,7 @@ update_ntp_time_from_server(){
 
     # finally, save the time to hwclock if needed
     case "$mode_bios" in
-        LOCAL)
+        LOCALTIME)
             el_info "Saving time using LOCALTIME"
 
             hwclock -w --localtime

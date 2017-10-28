@@ -262,7 +262,7 @@ interactive_ask_privative(){
 
     # }}}
     # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
 
@@ -283,7 +283,7 @@ interactive_ask_privative(){
 
             # warn if low memory that the process can fail!
             memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
-            if [[ "${memory}" -lt "640000" ]] ; then
+            if [[ "${memory}" -lt "640000" ]] && ! ((is_mode_auto)) ; then
 
                 local message_low_memory
                 message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
@@ -315,45 +315,47 @@ interactive_ask_privative(){
         fi
     fi
 
-    case "$ret" in
-        0|255|123) # yes, timeout, cancel
-            if ((is_mode_live)) ; then
-                log_progress_msg "Installing proprietary Nvidia drivers"
+    if ! ((is_mode_auto)) ; then
+        case "$ret" in
+            0|255|123) # yes, timeout, cancel
+                if ((is_mode_live)) ; then
+                    log_progress_msg "Installing proprietary Nvidia drivers"
 
-                # remember that this is not stable {{{
-                local message_remember
-                message_remember="$( printf "$( eval_gettext "If after to install the drivers you are unable to run the graphical system successfully, just reboot and select to not install them the next time." )" "" )"
+                    # remember that this is not stable {{{
+                    local message_remember
+                    message_remember="$( printf "$( eval_gettext "If after to install the drivers you are unable to run the graphical system successfully, just reboot and select to not install them the next time." )" "" )"
 
-                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                    --title "If the install fails..." \
-                    --msgbox "$message_remember" \
-                    0 0
-
-                # - remember that this is not stable }}}
-            fi
-            ;;
-        1) # no
-            if ((is_mode_live)) ; then
-
-                if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                    log_progress_msg "Using the free driver..."
-                else
-                    # tell the user to reboot with onlyfree option
-                    local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the nouveau module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of nouveau from the boot parameter options." )" "" )"
-
-                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                        --title "Free Driver Option" \
-                        --msgbox "$message_onlyfree" \
+                    dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                        --title "If the install fails..." \
+                        --msgbox "$message_remember" \
                         0 0
-                fi
-            fi
 
-            # not needed to do anything, just exit
-            el_debug "We don't need to do anything, continue using nouveau..."
-            exit
-            ;;
-    esac
+                    # - remember that this is not stable }}}
+                fi
+                ;;
+            1) # no
+                if ((is_mode_live)) ; then
+
+                    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
+                        log_progress_msg "Using the free driver..."
+                    else
+                        # tell the user to reboot with onlyfree option
+                        local message_onlyfree
+                        message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the nouveau module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of nouveau from the boot parameter options." )" "" )"
+
+                        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                            --title "Free Driver Option" \
+                            --msgbox "$message_onlyfree" \
+                            0 0
+                    fi
+                fi
+
+                # not needed to do anything, just exit
+                el_debug "We don't need to do anything, continue using nouveau..."
+                exit
+                ;;
+        esac
+    fi
 
     # - ask if want to install the privative one or the free }}}
 }
@@ -550,11 +552,15 @@ install_driver(){
         local message_brightness_force
         message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"
 
-        dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-            --title "Brightness of the Screen" \
-            --yesno "$message_brightness_force" \
-            0 0
-        ret="$?"
+        if ((is_mode_auto)) ; then
+            ret=0
+        else
+            dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                --title "Brightness of the Screen" \
+                --yesno "$message_brightness_force" \
+                0 0
+            ret="$?"
+        fi
 
         case "$ret" in
             0|255|123) # yes, timeout, cancel
@@ -573,11 +579,15 @@ install_driver(){
     local message_dpi_force
     message_dpi_force="$( printf "$( eval_gettext "Use the same DPI size as other Elive systems. By selecting YES your font size will be set to 96 DPI, which is the common standard. Otherwise it will autodetect the dpi for your screen. This may result in an odd configuration of your fonts, making your overall system to look ugly. Select YES if you don't know." )" "" )"
 
-    dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-        --title "DPI defaults" \
-        --yesno "$message_dpi_force" \
-        0 0
-    ret="$?"
+    if ((is_mode_auto)) ; then
+        ret=0
+    else
+        dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+            --title "DPI defaults" \
+            --yesno "$message_dpi_force" \
+            0 0
+        ret="$?"
+    fi
 
     case "$ret" in
         0|255|123) # yes, timeout, cancel
@@ -592,7 +602,7 @@ install_driver(){
     # - }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
 
         if laptop-detect ; then
             local message_multiple_cards
@@ -620,10 +630,12 @@ install_driver(){
                 echo -e "\nE: nouveau module is loaded and we cannot unload it"
                 echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
 
-                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                    --title "Unable to remove module" \
-                    --msgbox "Error: nouveau module is loaded and we cannot unload it.\n\nYou should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, in Live mode it should be already included in the default boot option, if you are just experimenting you can try to use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh, don't expect this to work since its forced)." \
-                    0 0
+                if ! ((is_mode_auto)) ; then
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                        --title "Unable to remove module" \
+                        --msgbox "Error: nouveau module is loaded and we cannot unload it.\n\nYou should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, in Live mode it should be already included in the default boot option, if you are just experimenting you can try to use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh, don't expect this to work since its forced)." \
+                        0 0
+                fi
             fi
         fi
     fi
@@ -712,7 +724,7 @@ install_driver(){
 
 
         # show the message if we have any
-        if [[ -n "$message_unable_to_load" ]] ; then
+        if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                 --title "Unable to load module" \
                 --msgbox "$message_unable_to_load" \

@@ -91,7 +91,7 @@ update_ntp_time_from_server(){
                     if ! ntpdate 1.pool.ntp.org ; then
                         if ! ntpdate 2.pool.ntp.org ; then
                             if ! ntpdate 3.pool.ntp.org ; then
-                                el_warning "can't set time from ntp servers"
+                                el_warning "can't set time from ntp servers: bios:${bios_mode} - timezone:${timezone} - wifi:${is_wifi} - live:${is_live} "
                             fi
                         fi
                     fi

@@ -234,6 +234,15 @@ main(){
     fi
     sleep 1
 
+    # make sure that we are connected to internet
+    if ! el_verify_internet 2>/dev/null 1>/dev/null ; then
+        sleep 5
+        timeout 10 dig NS google.com 1>/dev/null 2>/dev/null
+        if ! el_verify_internet 2>/dev/null 1>/dev/null ; then
+            exit
+        fi
+    fi
+
     # mark a stamp, amount of users that was able to successfully connect to internet
     if ((is_live)) && ! el_flag check stamp-connected ; then
         { curl --connect-timeout 30 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.1/055-live-connected-success.html 2>/dev/null 1>&2 & disown ; } 2>/dev/null

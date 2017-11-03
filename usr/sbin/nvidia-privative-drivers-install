@@ -120,6 +120,10 @@ detect_driver_version(){
         fi
     fi
 
+    # mark it
+    if [[ -n "$driver_version" ]] ; then
+        _NVIDIA_VERSION="$driver_version"
+    fi
 
     # }}}
 

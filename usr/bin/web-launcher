@@ -29,6 +29,7 @@ main(){
                 ;;
             --app=*)
                 is_mode_app=1
+                # get normal urls, we will use app later
                 el_array_member_add "${arg#--app=}" "${urls[@]}" ; urls=("${_out[@]}")
                 el_debug "added url '${arg#--app=}' in APP mode"
                 shift
@@ -85,6 +86,9 @@ main(){
                 if [[ "$browser" = "chrome" ]] ; then
                     if [[ -x "$( which "$browser" )" ]] ; then
                         browser="$( which "${browser}" )"
+                        if ((is_mode_app)) ; then
+                            preurl="--app="
+                        fi
                     else
                         if [[ -x "$( which "google-$browser" )" ]] ; then
                             browser="$( which "google-${browser}" )"
@@ -110,6 +114,9 @@ main(){
                     browser="$( which "${browser}" )"
                     el_debug "prefered browser: $browser"
 
+                    if ((is_mode_app)) ; then
+                        preurl="--new-window " # keep space
+                    fi
                     if ((is_mode_incognito)) ; then
                         el_array_member_add "--private-window" "${browser_options[@]}" ; browser_options=("${_out[@]}")
                     fi
@@ -155,11 +162,7 @@ main(){
     # run the webs
     for url in "${urls[@]}"
     do
-        if ((is_mode_app)) ; then
-            ${browser} ${browser_options} --app="${url}" &
-        else
-            ${browser} ${browser_options} "${url}" &
-        fi
+        ${browser} ${browser_options[@]} ${preurl}"${url}" &
 
         # don't bottleneck opening tabs
         LC_ALL=C sleep 2

@@ -570,7 +570,7 @@ main(){
     fi
 
 
-    while getopts ":a:cCdhm:s:S:H:pt:T:vx:X:" opt; do
+    while getopts ":a:cCdhm:s:S:H:pt:T:vqx:X:" opt; do
         case "$opt" in
             a)
                 el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")

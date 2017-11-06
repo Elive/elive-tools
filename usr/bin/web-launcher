@@ -107,11 +107,12 @@ main(){
                     if ((is_mode_incognito)) ; then
                         el_array_member_add "--incognito" "${browser_options[@]}" ; browser_options=("${_out[@]}")
                     fi
+                    # works for both chrome/chromium, but http:// is needed to be passed (duh)
+                    if ((is_mode_app)) ; then
+                        preurl="--app="
+                    fi
+
                     break
-                fi
-                # works for both chrome/chromium, but http:// is needed to be passed (duh)
-                if ((is_mode_app)) ; then
-                    preurl="--app="
                 fi
                 ;;
             iceweasel|firefox)
@@ -125,6 +126,7 @@ main(){
                     if ((is_mode_incognito)) ; then
                         el_array_member_add "--private-window" "${browser_options[@]}" ; browser_options=("${_out[@]}")
                     fi
+
                     break
                 fi
                 ;;
@@ -132,6 +134,7 @@ main(){
                 if [[ -x "$( which "$browser" )" ]] ; then
                     browser="$( which "${browser}" )"
                     el_debug "prefered browser: $browser"
+
                     break
                 fi
                 ;;
@@ -143,6 +146,7 @@ main(){
                         browser="$( which "${browser}" )"
                     fi
                     el_debug "prefered browser: $browser"
+
                     break
                 fi
                 ;;
@@ -150,6 +154,7 @@ main(){
                 if [[ -x "$( which "$browser" )" ]] ; then
                     browser="urxvt -e bash -c '$( which "${browser}" )'"
                     el_debug "prefered browser: $browser"
+
                     break
                 fi
                 ;;

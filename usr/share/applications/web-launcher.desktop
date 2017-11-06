@@ -8,4 +8,5 @@ Categories=Utilities;Development
 StartupNotify=true
 NoDisplay=true
 Icon=web-browser
-Exec=web-launcher %F
+Exec=web-launcher %U
+MimeType=text/html;text/xml;application/xhtml_xml;application/xhtml+xml;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;application/rss+xml;

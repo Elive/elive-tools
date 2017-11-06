@@ -124,7 +124,7 @@ get_meter(){
 
     # checks
     if [[ -z "$meter" ]] ; then
-        el_error "No meters found to configure volumes, is your audio card working?"
+        el_error "No meters found to configure volumes, is your audio card working?: $(amixer scontrols)|$(cat /proc/asound/cards)|$(cat "$HOME/.asoundrc" )|###"
     fi
 
 

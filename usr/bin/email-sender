@@ -169,13 +169,17 @@ do_email_send(){
         # SEND !
         cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" = 0 ]] ; then
-            el_explain 2 "email sent"
+            if ! ((is_mode_quiet)) ; then
+                el_explain 2 "email sent"
+            fi
         else
             # try again
             cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
             if [[ "$?" = 0 ]] ; then
-                el_explain 2 "email sent"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "email sent"
+                fi
             else
                 el_warning "unable to send email, let's wait 2 minutes and we will try again"
                 sleep 120
@@ -183,7 +187,9 @@ do_email_send(){
                 cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
                 if [[ "$?" = 0 ]] ; then
-                    el_explain 2 "email sent"
+                    if ! ((is_mode_quiet)) ; then
+                        el_explain 2 "email sent"
+                    fi
                 else
                     # reconfigure or exit {{{
                     local message_reconfigure
@@ -211,13 +217,17 @@ do_email_send(){
         cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
         if [[ "$?" = 0 ]] ; then
-            el_explain 2 "email sent"
+            if ! ((is_mode_quiet)) ; then
+                el_explain 2 "email sent"
+            fi
         else
             # try again
             cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
             if [[ "$?" = 0 ]] ; then
-                el_explain 2 "email sent"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "email sent"
+                fi
             else
                 el_warning "unable to send email, let's wait 2 minutes and we will try again"
                 sleep 120
@@ -225,7 +235,9 @@ do_email_send(){
                 cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
                 if [[ "$?" = 0 ]] ; then
-                    el_explain 2 "email sent"
+                    if ! ((is_mode_quiet)) ; then
+                        el_explain 2 "email sent"
+                    fi
                 else
                     # reconfigure or exit {{{
                     local message_reconfigure
@@ -514,6 +526,7 @@ usage(){
 -C  check:  checks if your sending of email works, and exits
 -d  debug mode
 -v  verbose mode
+-q  quiet mode
 
 [modes]
 - You can use this tool with -m 'message' or concatenating from the standard input
@@ -561,7 +574,9 @@ main(){
         case "$opt" in
             a)
                 el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")
-                el_explain 2 "attached file: $OPTARG"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "attached file: $OPTARG"
+                fi
 
                 ;;
             c)
@@ -588,7 +603,9 @@ main(){
 
             p)
                 is_plain_mode=1
-                el_explain 2 "__plain__ mode selected"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "__plain__ mode selected"
+                fi
 
                 ;;
             m)
@@ -596,10 +613,12 @@ main(){
                 message="$OPTARG"
                 message_excerpt="${message:0:300}"
 
-                if [[ "$( echo "$message" | wc -m )" -lt 300 ]] ; then
-                    el_explain 2 "message is __${message} ... (cut)__"
-                else
-                    el_explain 2 "message is __${message_excerpt} ... (cut)__"
+                if ! ((is_mode_quiet)) ; then
+                    if [[ "$( echo "$message" | wc -m )" -lt 300 ]] ; then
+                        el_explain 2 "message is __${message} ... (cut)__"
+                    else
+                        el_explain 2 "message is __${message_excerpt} ... (cut)__"
+                    fi
                 fi
                 # sometimetimes the stdin detection can fail, but if we have the message parameter is for sure that we don't want the stdin input, so we are defining it
                 unset is_stdin
@@ -607,17 +626,23 @@ main(){
                 ;;
             s)
                 subject="$OPTARG"
-                el_explain 2 "subject is __${subject}__"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "subject is __${subject}__"
+                fi
 
                 ;;
             S)
                 title="$OPTARG"
-                el_explain 2 "Title is __${title}__"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "Title is __${title}__"
+                fi
 
                 ;;
             H)
                 headertext="$OPTARG"
-                el_explain 2 "Headertext is __${headertext}__"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "Headertext is __${headertext}__"
+                fi
 
                 ;;
             t)
@@ -629,26 +654,38 @@ main(){
                     exit 1
                 fi
 
-                el_explain 2 "target (to) is __${to}__"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "target (to) is __${to}__"
+                fi
 
                 ;;
             T)
                 template="$OPTARG"
-                el_explain 2 "template is __${template}__"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "template is __${template}__"
+                fi
 
                 ;;
             v)
                 export EL_DEBUG=2
 
                 ;;
+            q)
+                is_mode_quiet=1
+
+                ;;
             x)
                 el_array_member_add "$OPTARG" "${targets_cc[@]}" ; targets_cc=("${_out[@]}")
-                el_explain 2 "CC: $OPTARG"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "CC: $OPTARG"
+                fi
 
                 ;;
             X)
                 el_array_member_add "$OPTARG" "${targets_bcc[@]}" ; targets_bcc=("${_out[@]}")
-                el_explain 2 "BCC: $OPTARG"
+                if ! ((is_mode_quiet)) ; then
+                    el_explain 2 "BCC: $OPTARG"
+                fi
 
                 ;;
             \?)

@@ -1,6 +1,9 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+zenity --error --text="This tool is actually disabled due to its uselessness, if you want to make it working back you are welcome to hack the source code in elive-tools from our github website. Thank you"
+exit
+
 
 loop_work_and_brainstorm(){
 

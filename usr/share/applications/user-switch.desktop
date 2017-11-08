@@ -84,4 +84,4 @@ GenericName[vi]=Chuyển sang người dùng khác duy trì phiên làm việc c
 Icon=emblem-people
 Exec=dm-tool switch-to-greeter
 Terminal=false
-Categories=System;Settings;
+Categories=System;

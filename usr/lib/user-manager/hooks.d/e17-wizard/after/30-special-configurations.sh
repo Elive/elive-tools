@@ -29,7 +29,16 @@ main(){
         fi
     fi
 
+    # disable battery emodule if the battery is broken
+    if laptop-detect ; then
+        if acpi | grep -qsE "\s+0%$" ; then
+            enlightenment_remote -module-disable battery
+            enlightenment_remote -module-unload battery
+        fi
+    fi
 
+
+    sync ; sleep 1
     enlightenment_remote -save
 
 

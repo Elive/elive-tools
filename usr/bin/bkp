@@ -410,7 +410,7 @@ check_files_owner_compatibility(){
         if [[ -d "$dir" ]] ; then
             el_debug "checking for files not owned by you in '$dir'"
 
-            if [[ "$( find "$dir" ! -user "$USER" 2>/dev/null | wc -l )" -gt 0 ]] ; then
+            if [[ "$( find "$dir" ! -user "$USER" 2>/dev/null | wc -l )" -gt 0 ]] && [[ "$UID" != 0 ]] ; then
                 echo ""
                 echo ""
                 el_error "These files can give problems:"

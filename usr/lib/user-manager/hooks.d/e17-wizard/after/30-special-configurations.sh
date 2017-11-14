@@ -30,11 +30,9 @@ main(){
     fi
 
     # disable battery emodule if the battery is broken
-    if laptop-detect ; then
-        if acpi | grep -qsE "\s+0%$" ; then
-            enlightenment_remote -module-disable battery
-            enlightenment_remote -module-unload battery
-        fi
+    if LC_ALL=C acpi 2>&1 | grep -qsE "\s+0%$" || LC_ALL=C acpi 2>&1 | grep -qsE "No support for.*power_supply" ; then
+        enlightenment_remote -module-disable battery
+        enlightenment_remote -module-unload battery
     fi
 
 

@@ -551,7 +551,7 @@ install_driver(){
 
     # - conf }}}
     # force brightness entry conf {{{
-    if laptop-detect ; then
+    if /usr/sbin/laptop-detect ; then
 
         local message_brightness_force
         message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"

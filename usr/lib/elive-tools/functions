@@ -116,9 +116,14 @@ source /etc/adduser.conf
 
 # Note: if you use ZSH, you must set the SOURCE var name from the main script
 if [[ -z "$SOURCE" ]]; then
-    SOURCE="$( readlink -f "$0" || true )"
+    if [[ -n "$ZSH_VERSION" ]] ; then
+        # TODO: actually stills showing the name of this function file, not works
+        SOURCE="${(%):-%x}"
+    else
+        SOURCE="$( readlink -f "$0" || true )"
 fi
 
+fi
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
@@ -1866,6 +1871,7 @@ el_array_member_check(){
     if [[ -n $ZSH_VERSION ]] ; then
         for i in "${(P)list[@]}"
         do
+            [[ -z "$i" ]] && continue
             if [[ "${list[i]}" = "$match" ]] ; then
                 return 0
             fi
@@ -1873,6 +1879,7 @@ el_array_member_check(){
     else
         for i in "${!list[@]}"
         do
+            [[ -z "$i" ]] && continue
             if [[ "${list[i]}" = "$match" ]] ; then
                 return 0
             fi
@@ -1894,6 +1901,7 @@ el_array_member_unset(){
     shift
 
     for i in "$@"; do
+        [[ -z "$i" ]] && continue
         if [[ $item != "$i" ]]; then
             _out+=("$i")
         fi
@@ -1915,7 +1923,8 @@ el_array_member_add(){
 
 
     for i in "$@"; do
-        if [[ $item = "$i" ]]; then
+        [[ -z "$i" ]] && continue
+        if [[ "$item" = "$i" ]]; then
             match=1
         fi
 
@@ -2535,6 +2544,11 @@ el_config_save(){
         return
     fi
 
+    if ! declare -p "$@" 1>/dev/null 2>&1 ; then
+        el_warning "$FUNCNAME called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
+        return
+    fi
+
     # create conf file
     if ! [[ -s "$tmp_conf_f" ]] ; then
         mkdir -p "$( dirname "$tmp_conf_f" )"
@@ -2555,8 +2569,8 @@ el_config_save(){
         #el_debug "deleted old conf: $entry"
     done
 
-    # append configuration
-    declare -p "$@" >> "$tmp_conf_f"
+    # append configuration, and save the variable as global so it can work outside this function
+    declare -p "$@" | sed -e 's|declare -|declare -g|g' >> "$tmp_conf_f"
 }
 
 #===  FUNCTION  ================================================================

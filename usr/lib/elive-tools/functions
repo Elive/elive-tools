@@ -114,7 +114,10 @@ source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
-SOURCE="$( readlink -f "$0" || true )"
+# Note: if you use ZSH, you must set the SOURCE var name from the main script
+if [[ -z "$SOURCE" ]]; then
+    SOURCE="$( readlink -f "$0" || true )"
+fi
 
 #-------------------------------------------------------------------------------
 #   Set the DISPLAY variable
@@ -1146,7 +1149,7 @@ el_check_is_shell(){
     #el_security_function_loop || return
 
     # }}}
-    if [[ -n "$ZSH_VERSION" ]] || [[ "$0" = "bash" ]] ; then
+    if [[ "$0" = "bash" ]] || [[ "$0" = "zsh" ]] ; then
         return 0
     else
         return 1
@@ -2501,14 +2504,14 @@ el_config_get(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_config_save
 #   DESCRIPTION:  saves a configuration to re-use if we run again the installer
-#    PARAMETERS:  varname (not value)
+#                 works with bash and zsh, but the SOURCE var needs to be set in main script
+#    PARAMETERS:  varname (not value), multiple-ones allowed (space separated)
 #       RETURNS:  -
 #===============================================================================
 el_config_save(){
     # pre {{{
+    local entry
     # note: by some reason this needs to be alone and first or may not work:
-    local _configuration
-    _configuration="$1"
 
     # checks {{{
     if el_check_is_shell ; then
@@ -2527,7 +2530,7 @@ el_config_save(){
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
-    if ! el_check_variables "_configuration,tmp_conf_f" 1>/dev/null 2>&1 ; then
+    if [[ -z "$@" ]] ; then
         el_warning "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
         return
     fi
@@ -2537,17 +2540,23 @@ el_config_save(){
         mkdir -p "$( dirname "$tmp_conf_f" )"
 
         touch "$tmp_conf_f"
-        #chmod +x "$tmp_conf_f"
-        # TODO: test if not +x can be sourced
-        # TODO: test if works with arrays too
     fi
 
     # }}}
     # remove old possible entries
-    sed -i "/^${_configuration}=/d" "$tmp_conf_f"
+    for entry in "$@"
+    do
+        # bash entries
+        sed -i "/^${entry}=/d" "$tmp_conf_f"
+        sed -i "/^declare.* ${entry}=/d" "$tmp_conf_f"
+        # zsh entries
+        sed -i "/^typeset.* ${entry}=/d" "$tmp_conf_f"
+        sed -i "/^typeset.* ${entry}$/d" "$tmp_conf_f"
+        #el_debug "deleted old conf: $entry"
+    done
 
     # append configuration
-    echo "${_configuration}=\"${!_configuration}\"" >> "$tmp_conf_f"
+    declare -p "$@" >> "$tmp_conf_f"
 }
 
 #===  FUNCTION  ================================================================

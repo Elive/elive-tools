@@ -58,7 +58,13 @@ bios_mode_get(){
     if [[ -z "$bios_mode" ]] ; then
         if ! ((is_force)) ; then
             bios_mode="$( awk -v FS=":::" '{if ($1 == "bios mode") print $2}' "${conf}" | tail -1 )"
+
+            # first run always need to update conf
+            if [[ -z "$bios_mode" ]] ; then
+                needs_update_conf=1
+            fi
         fi
+
 
         if [[ -z "$bios_mode" ]] ; then
             # if we have a windows, the time should be set to localtime for compatibility

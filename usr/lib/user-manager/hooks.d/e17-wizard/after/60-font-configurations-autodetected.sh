@@ -31,6 +31,10 @@ main(){
         #enlightenment_remote -font-set "application" "$font" 9
         true
     else
+        # disable google chrome bookmarks due to size limitations
+        sed -i -e "s|\"show_on_all_tabs\":true|\"show_on_all_tabs\":false|g" "$HOME/.config/google-chrome/Default/Preferences"
+        sed -i -e "s|\"show_on_all_tabs\" : true|\"show_on_all_tabs\" : false|g" "$HOME/.config/google-chrome/Default/Preferences"
+
         if [[ "$resolution" -ge 800 ]] ; then
             # resolutions between 800x* & 1024x*
             enlightenment_remote -font-set "application" "$font" 8

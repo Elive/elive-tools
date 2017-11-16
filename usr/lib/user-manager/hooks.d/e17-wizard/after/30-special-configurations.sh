@@ -1,7 +1,6 @@
 #!/bin/bash
 main(){
     # pre {{{
-    local resolution font
 
     # }}}
 

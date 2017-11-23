@@ -27,7 +27,8 @@ if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."
 
     # create a new group with a temporal process to attach the first job on the existing group
-    tmux new-session -d -s $group_session -n "$win_name" -x 400 -y 100 "sleep 2 ; exit"
+    tmux new-session -d -s $group_session -n "$win_name" -x 400 -y 100 "sleep 30 ; exit"
+    sleep 1
 fi
 
 # Make sure we are not already in a tmux session

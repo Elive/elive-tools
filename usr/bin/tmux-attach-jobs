@@ -27,7 +27,7 @@ if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."
 
     # create a new group with a temporal process to attach the first job on the existing group
-    tmux new-session -d -s $group_session -n "$win_name" -x 400 -y 100 "sleep 30 ; exit"
+    tmux new-session -d -s $group_session -n "${win_name}" -x 400 -y 100 "sleep 30 ; exit"
     sleep 1
 fi
 
@@ -38,12 +38,13 @@ else
     # Kill defunct sessions first
     old_sessions=$(bash -c "tmux ls 2>/dev/null" | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
     for old_session_id in $old_sessions; do
+        [[ -z "$old_session_id" ]] && continue
         tmux kill-session -t $old_session_id
     done
 
     # run things in a new window
-    #tmux new-window -t ${group_session}:+ -n "$win_name" "$@"
-    tmux new-window -t ${group_session} -n "$win_name" "$@"
+    #tmux new-window -t "${group_session}" -n "$win_name" "$@"
+    tmux new-window -t "${group_session}:+" -n "$win_name" "$@"
 
     echo "Jobs run in a background tmux"
     echo "Tip: run 'tmux ls' to list tmux sessions or go to it with 'tmux attach -t $group_session'"

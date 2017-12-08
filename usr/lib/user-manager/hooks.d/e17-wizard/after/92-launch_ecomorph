@@ -375,9 +375,9 @@ main(){
 
     if ((has_glxinfo_ecomorph_compatibility)) &&  ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal &&  ! grep "system.hardware.product" /tmp/.lshal | grep -qi "vmware" ;  then
 
-        if zenity --question --text="$( eval_gettext "Activate visual effects? Visual effects are required for the first four options of the special border button features, but it works only in some hardware. Try it!" )" ; then
+        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, but it may not work correctly in some few computers." )" ; then
 
-            zenity --info --text="$( eval_gettext "This feature can be a bit unstable, if you see any problem or strange behaviours in your desktop try to deactivate the Ecomorph module." )"
+            zenity --info --text="$( eval_gettext "If you have any problem or strange behaviour, just deactivate the Ecomorph module." )"
             # this message is annoying and useless:
             #zenity --info --text="$( eval_
             #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
@@ -389,15 +389,24 @@ main(){
 
             enlightenment_remote -module-load ecomorph
             enlightenment_remote -module-enable ecomorph
-            enlightenment_remote -module-load ecomorph
             sleep 1
             # module is loaded but ecomorph not started, so we can do it from here
             killall ecomorph 2>/dev/null || true
             ecomorph ini inotify text regex move cube rotate switcher shift ring scale expo animation scaleaddon wobbly cubereflex thumbnail   &>/dev/null &disown
 
-            sleep 20
-            enlightenment_remote -save
-            zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
+            sync
+            sleep 4
+            if pidof ecomorph 1>/dev/null 2>&1 ; then
+                enlightenment_remote -save
+                sleep 1
+                enlightenment_remote -restart
+                #sleep 10
+                #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
+            else
+                enlightenment_remote -module-disable ecomorph
+                enlightenment_remote -module-unload ecomorph
+                zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
+            fi
         fi
     fi
 

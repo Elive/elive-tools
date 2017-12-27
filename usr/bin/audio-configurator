@@ -128,7 +128,7 @@ main(){
     number_cards="$( echo -e "$list_cards" | wc -l )"
 
     # only one card found
-    if [[ "$number_cards" -lt "2" ]] ; then
+    if [[ "$number_cards" -eq "1" ]] ; then
         selection="$list_cards"
         # remove extra leading blank chars
         read -r selection <<< "$selection"

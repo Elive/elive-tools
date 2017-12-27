@@ -1,5 +1,12 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+#el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 #export NOREPORTS=1
 
 #===  FUNCTION  ================================================================
@@ -125,6 +132,7 @@ get_meter(){
     # checks
     if [[ -z "$meter" ]] ; then
         el_error "No meters found to configure volumes, is your audio card working?: $(amixer scontrols)|$(cat /proc/asound/cards)|$(cat "$HOME/.asoundrc" )|###"
+        el_notify_user "$( eval_gettext "Seems like there's problem with your audio card, to reconfigure it just run:" ) audio-configurator"
     fi
 
 

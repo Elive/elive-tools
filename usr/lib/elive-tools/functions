@@ -500,6 +500,7 @@ el_check_dependencies(){
     el_warning "$FUNCNAME is moved to 'el_dependencies_check', please update or report this code (full compatibility still working, don't worry)"
     el_dependencies_check "$@"
 }
+
 el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
     # example:  el_dependencies_check gmplayer,find,sed,etc
     local check found found_no dir

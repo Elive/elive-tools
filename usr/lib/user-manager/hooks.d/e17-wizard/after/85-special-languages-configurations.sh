@@ -50,9 +50,9 @@ main(){
         if zenity --question --text="$message_asking" ; then
             # install
             if [[ -n "$package" ]] ; then
-                if ! el_dependencies_check "$package" ; then
+                #if ! el_dependencies_check "$package" ; then
                     el_dependencies_install "$package"
-                fi
+                #fi
             fi
             # instructions
             zenity --info --text="$message_instructions"

@@ -55,6 +55,14 @@ main(){
             # instructions
             zenity --info --text="$message_instructions"
         fi
+
+        # add package in installed system
+        if grep -qs "boot=live" /proc/cmdline ; then
+            while read -ru 3 line
+            do
+                echo "$line" >> /tmp/.packages-to-install
+            done 3<<< "$( echo "$package" | tr ',' '\n' )"
+        fi
     fi
 
     # if we are debugging give it a little pause to see what is going on

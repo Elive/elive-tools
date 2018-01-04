@@ -57,6 +57,10 @@ main(){
             zenity --info --text="$message_instructions"
 
             # demo typing
+            export GTK_IM_MODULE="ibus"
+            export QT_IM_MODULE="ibus"
+            export XMODIFIERS="@im=ibus"
+            export ECORE_IMF_MODULE="ibus"
             zenity --entry --text="$( eval_gettext "You can try to switch to the new keyboard and type any text in here." )" || true
 
             # final note

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# XXX Warning: there's a .desktop that references to this (name $0) command, do not break up things
+
 source /usr/lib/elive-tools/functions
 
 killall -9 enlightenment_start enlightenment ecomorph 2>/dev/null

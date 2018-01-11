@@ -277,10 +277,6 @@ build_args()
     fi
 }
 
-abort_with_fallback_wm(){
-    unset has_glxinfo_ecomorph_compatibility
-}
-
 ####################
 # Execution begins here.
 #set -x
@@ -304,7 +300,33 @@ abort_with_fallback_wm(){
 #fi
 
 
+
 # }}}
+
+abort_with_fallback_wm(){
+    if ((is_elive_helper)) ; then
+        case "$1" in
+            virtual)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers that doesn't works on virtual machines, please try Elive in a real machine instead" )"
+                ;;
+            fbconfig)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, and you are using FBconfig which is not valid for this." )"
+                ;;
+            nvidia)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, you are using an nvidia driver which seems to be uncompatible or wrongly configured." )"
+                ;;
+            flags)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, seems like your drivers are not correctly using the required flags for make Ecomorph work properly." )"
+                ;;
+            driver)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, seems like your driver is blacklisted or not from the whitelist, you can try to load the Ecomorph module manually and if works correctly in your computer please report this bug to the Elive BTS." )"
+                ;;
+        esac
+    fi
+
+    unset has_glxinfo_ecomorph_compatibility
+}
+
 
 
 main(){
@@ -320,6 +342,15 @@ main(){
     if [[ "${memory}" -lt "800000" ]] || [[ "$cpubogomips" -lt 2800 ]] ; then
         return
     fi
+
+    for arg in "$@"
+    do
+        case "$arg" in
+            --elivehelper)
+                is_elive_helper=1
+                ;;
+        esac
+    done
 
 
     # give a preview of the theme
@@ -343,20 +374,20 @@ main(){
     if ! check_xgl; then
         # if vesa or vga are in use, do not even try glxinfo (LP#119341)
         if ! running_under_whitelisted_driver || have_blacklisted_pciid; then
-            abort_with_fallback_wm
+            abort_with_fallback_wm driver
         fi
         # check if we have the required bits to run ecomp and if not,
         # fallback
         if ! check_tfp || ! check_npot_texture || ! check_composite || ! check_texture_size; then
-            abort_with_fallback_wm
+            abort_with_fallback_wm flags
         fi
 
         if check_nvidia && ! check_nvidia_memory; then
-            abort_with_fallback_wm
+            abort_with_fallback_wm nvidia
         fi
 
         if ! check_fbconfig; then
-            abort_with_fallback_wm
+            abort_with_fallback_wm fbconfig
         fi
     fi
 
@@ -373,8 +404,13 @@ main(){
         killall hald 2>/dev/null 1>&2 || true
     fi
 
-    if ((has_glxinfo_ecomorph_compatibility)) &&  ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal &&  ! grep "system.hardware.product" /tmp/.lshal | grep -qi "vmware" ;  then
+    # abort in VM
+    if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
+        abort_with_fallback_wm virtual
+    fi
 
+
+    if ((has_glxinfo_ecomorph_compatibility)) ; then
         if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, but it may not work correctly in some few computers." )" ; then
 
             zenity --info --text="$( eval_gettext "If you have any problem or strange behaviour, just deactivate the Ecomorph module." )"

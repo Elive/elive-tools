@@ -442,14 +442,17 @@ main(){
                     zenity --info --text="$( eval_gettext "Your already opened applications will not be included in the Ecomorph layer, only the new ones that you open since now. To have the full compatibility please logout and login again." )"
                     #sleep 10
                     #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
+                    is_ecomorph_working=1
                     break
                 fi
             done
 
             # not running ecomorph?
-            enlightenment_remote -module-disable ecomorph
-            enlightenment_remote -module-unload ecomorph
-            zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
+            if ! ((is_ecomorph_working)) ; then
+                enlightenment_remote -module-disable ecomorph
+                enlightenment_remote -module-unload ecomorph
+                zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
+            fi
         fi
     fi
 

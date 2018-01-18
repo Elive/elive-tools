@@ -426,23 +426,30 @@ main(){
             enlightenment_remote -module-load ecomorph
             enlightenment_remote -module-enable ecomorph
             sleep 1
-            # module is loaded but ecomorph not started, so we can do it from here
-            killall ecomorph 2>/dev/null || true
-            ecomorph ini inotify text regex move cube rotate switcher shift ring scale expo animation scaleaddon wobbly cubereflex thumbnail zoom  &>/dev/null &disown
+            # module is loaded but ecomorph not started, so we can do it from here - updated version, it actually loads it
+            #killall ecomorph 2>/dev/null || true
+            #ecomorph ini inotify text regex move cube rotate switcher shift ring scale expo animation scaleaddon wobbly cubereflex thumbnail zoom  &>/dev/null &disown
 
             sync
-            sleep 4
-            if pidof ecomorph 1>/dev/null 2>&1 ; then
-                enlightenment_remote -save
+            for i in $(seq 18)
+            do
                 sleep 1
-                enlightenment_remote -restart
-                #sleep 10
-                #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
-            else
-                enlightenment_remote -module-disable ecomorph
-                enlightenment_remote -module-unload ecomorph
-                zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
-            fi
+                if pidof ecomorph 1>/dev/null 2>&1 ; then
+                    enlightenment_remote -save
+                    sleep 1
+                    #enlightenment_remote -restart
+                    sleep 5
+                    zenity --info --text="$( eval_gettext "Your already opened applications will not be included in the Ecomorph layer, only the new ones that you open since now. To have the full compatibility please logout and login again." )"
+                    #sleep 10
+                    #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
+                    break
+                fi
+            done
+
+            # not running ecomorph?
+            enlightenment_remote -module-disable ecomorph
+            enlightenment_remote -module-unload ecomorph
+            zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
         fi
     fi
 

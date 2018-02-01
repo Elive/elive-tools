@@ -59,7 +59,7 @@ main(){
             message_gl="$( printf "$( eval_gettext "You have selected the software mode of composite. This option is more stable than the GL mode but it can make your desktop less responsive, especially during video playback, due to the higher demand on your CPU. We suggest you try to the GL mode to see if it works correctly with your graphic card. You can found it in the Composite settings of the Enlightenment preferences. Enabling VSYNC is strongly suggested to reproduce videos perfectly smooth without horizontal artifacts." )" )"
 
             if ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal ; then
-                zenity --info --text="$message_gl"
+                zenity --info --text="$message_gl" || true
             fi
             ;;
         2)
@@ -72,7 +72,7 @@ main(){
                 local message_gl
                 message_gl="$( printf "$( eval_gettext "You have selected the GL mode of Composite. This is a good thing because it makes your desktop flow more smoothly with less lag. This could also interfere with rare graphic cards by blocking your computer, black screen or windows, unresponsive desktop returning from suspension or windows that disappear. If you see any of these problems or you want a more stable environment just use the software mode instead of GL. You can switch to software mode at any moment in the Enlightenment preferences." )" )"
 
-                zenity --info --text="$message_gl"
+                zenity --info --text="$message_gl" || true
 
                 # vsync ?
                 if grep 'value "vsync"' "$temp" | sed -e 's|^.*: ||g' -e 's|;.*$||g' | tail -1 | grep -qs "1" ; then
@@ -80,7 +80,7 @@ main(){
                 else
                     local message_vsync_disabled
                     message_vsync_disabled="$( printf "$( eval_gettext "You didn't select the %s option for composite (vertical synchronization), this option allows you to play videos perfectly smooth and without horizontally cutting lines. You can enable this option in the Options panel, in the Composite section." )" "vsync" )"
-                    zenity --info --text="$message_vsync_disabled"
+                    zenity --info --text="$message_vsync_disabled" || true
                 fi
             fi
 
@@ -92,7 +92,7 @@ main(){
                     #message_intel_buggy="$( printf "$( eval_g
                 #ettext "Note Intel cards: There's a known problem with the blanking (screensaver) powersavign feature on this version of the Intel drivers, which turns your desktop unrensponsive, if you really want automatic screen blanking you should use instead the software-mode of composite, but if you don't need it, just don't turn it on and everything else is fine." )" )"
 
-                    #zenity --info --text="$message_intel_buggy"
+                    #zenity --info --text="$message_intel_buggy" || true
                 #fi
             #fi
 

@@ -54,7 +54,7 @@ main(){
             fi
 
             # instructions
-            zenity --info --text="$message_instructions"
+            zenity --info --text="$message_instructions" || true
 
             # demo typing
             export GTK_IM_MODULE="ibus"
@@ -64,7 +64,7 @@ main(){
             zenity --entry --text="$( eval_gettext "You can try to switch to the new keyboard and type any text in here." )" || true
 
             # final note
-            zenity --info --text="$( eval_gettext "There's can be multiple Ibus packages that you can install for support your language, if you find that there's a better alternative please report this to Elive so we can implement it working for everybody." )"
+            zenity --info --text="$( eval_gettext "There's can be multiple Ibus packages that you can install for support your language, if you find that there's a better alternative please report this to Elive so we can implement it working for everybody." )" || true
         fi
 
         # add package in installed system

@@ -413,7 +413,7 @@ main(){
     if ((has_glxinfo_ecomorph_compatibility)) ; then
         if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, but it may not work correctly in some few computers." )" ; then
 
-            zenity --info --text="$( eval_gettext "If you have any problem or strange behaviour, just deactivate the Ecomorph module." )"
+            zenity --info --text="$( eval_gettext "If you have any problem or strange behaviour, just deactivate the Ecomorph module." )" || true
             # this message is annoying and useless:
             #zenity --info --text="$( eval_
             #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
@@ -439,9 +439,9 @@ main(){
                     sleep 1
                     #enlightenment_remote -restart
                     sleep 5
-                    zenity --info --text="$( eval_gettext "Your already opened applications will not be included in the Ecomorph layer, only the new ones that you open since now. To have the full compatibility please logout and login again." )"
+                    zenity --info --text="$( eval_gettext "Your already opened applications will not be included in the Ecomorph layer, only the new ones that you open since now. To have the full compatibility please logout and login again." )" || true
                     #sleep 10
-                    #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )"
+                    #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )" || true
                     is_ecomorph_working=1
                     break
                 fi

@@ -393,7 +393,7 @@ main(){
         local message_migrated_files
         message_migrated_files="$( printf "$( eval_gettext "Some configurations in your home has been migrated to the new directory names that are now set in your own language, you can see what exactly has changed by opening a terminal and running this command: %s" )" "cat $cachedir/logs.txt " )"
 
-        zenity --info --text="$message_migrated_files"
+        zenity --info --text="$message_migrated_files" || true
 
         if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
             local message_share_results
@@ -401,7 +401,7 @@ main(){
             if zenity --question --text="$message_share_results" ; then
                 xchat &
                 sleep 5
-                zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs-unknown-filetypes.txt"
+                zenity --info --text="Now, the easiest way is to open a terminal and run this command:  elivepaste ${cachedir}/logs-unknown-filetypes.txt" || true
             fi
         fi
     fi

@@ -10,7 +10,7 @@ else
         echo "$@"
     }
 fi
-TEXTDOMAIN="deliver"
+TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 

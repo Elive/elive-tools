@@ -238,16 +238,16 @@ EOF
                 #local translated_message
                 #translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
 
-                #$guitool --info --text="$translated_message"
+                #$guitool --info --text="$translated_message" || true
             fi
 
             # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
-            #$guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )"
+            #$guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )" || true
 
         fi
 
         if ! ((is_quiet_mode)) ; then
-            $guitool --info --text="$( eval_gettext "Your audio card has been configured. To raise and lower the volume, use your keyboard hotkeys. If they do not work you can configure them in your Enlightenment hotkey preferences." )"
+            $guitool --info --text="$( eval_gettext "Your audio card has been configured. To raise and lower the volume, use your keyboard hotkeys. If they do not work you can configure them in your Enlightenment hotkey preferences." )" || true
         fi
 
     fi

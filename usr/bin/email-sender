@@ -308,7 +308,7 @@ do_validate_sending(){
             message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will found a testing email in your account, you can delete it." )" "" )"
 
             if ! { [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; } ; then
-                $guitool --info --text="$message_success_sending"
+                $guitool --info --text="$message_success_sending" || true
             fi
 
             # save our conf because we know that it works now

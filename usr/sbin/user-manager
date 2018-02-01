@@ -47,7 +47,7 @@ messagedone(){
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"
 
-    $guitool --info --text="$translated_message"
+    $guitool --info --text="$translated_message" || true
 
     exit 0
 }
@@ -58,7 +58,7 @@ messageuserdeleted(){
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have removed successfully the %s user" )" "$username" )"
 
-    $guitool --info --text="$translated_message"
+    $guitool --info --text="$translated_message" || true
 
     exit 0
 }
@@ -205,7 +205,7 @@ adduserelive(){
 
     # fingerprint support
     if lshal 2>/dev/null | grep -qsi "fingerprint" || lsusb | grep -qsi "Upek" ; then
-        $guitool --info --text="$( eval_gettext "Your computer supports fingerprint reader, you can follow the howto of Elive to activate it." )"
+        $guitool --info --text="$( eval_gettext "Your computer supports fingerprint reader, you can follow the howto of Elive to activate it." )" || true
     fi
     # deprecated, we use e17-wizard startup now
     #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
@@ -297,7 +297,7 @@ changepass(){
     #echo "$username:$userpass" | chpasswd $chpassopt
     bash -c 'printf "%s:%s\\n" "$1" "$2" | chpasswd -m' -- "$username" "$userpass"
 
-    $guitool --info --text="$( eval_gettext "New password changed" )"
+    $guitool --info --text="$( eval_gettext "New password changed" )" || true
 
     exit
 }
@@ -323,14 +323,14 @@ autologinconf(){
 
     if [[ "$username" = "cancel" ]] ; then
         sed -i "/autologin-user=/d" "/etc/lightdm/lightdm.conf"
-        $guitool --info --text="$( eval_gettext "Autologin disabled" )"
+        $guitool --info --text="$( eval_gettext "Autologin disabled" )" || true
     else
         /usr/lib/*/lightdm/lightdm-set-defaults --autologin "${username}"
 
         local message_autologin_set
         message_autologin_set="$( printf "$( eval_gettext "Autologin set to %s" )" "$username" )"
 
-        $guitool --info --text="$message_autologin_set"
+        $guitool --info --text="$message_autologin_set" || true
     fi
 
     exit 0

@@ -43,7 +43,7 @@ select_card_multiple(){
             menu+=("$( echo "$_id" )")
             menu+=("$( echo "$_description" )")
         fi
-    done 3<<< "$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" )"
+    done 3<<< "$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" | grep -v "at 0x.*irq" )"
 
     if [[ "${#menu[@]}" -eq 2 ]] ; then
         selection="$( echo "${menu[0]}" | head -1 )"
@@ -76,7 +76,7 @@ main(){
 
     guitool=zenity
 
-    list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+    list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
 
     # if our first argument is the card name to use, change the list of cards to use this one
     # try to be smart determining cards that we know that they are valid

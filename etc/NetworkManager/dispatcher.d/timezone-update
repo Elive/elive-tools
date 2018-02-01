@@ -87,6 +87,13 @@ bios_mode_get(){
 update_ntp_time_from_server(){
     bios_mode_get
 
+    if ! el_verify_internet 2>/dev/null 1>/dev/null ; then
+        sleep 10
+        if ! el_verify_internet 2>/dev/null 1>/dev/null ; then
+            sleep 20
+        fi
+    fi
+
     # update the time from a server
     service ntp stop 2>/dev/null 1>&2
 

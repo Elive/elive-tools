@@ -1344,7 +1344,7 @@ el_debug(){
             fi
         #else
             #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                #timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message"
+                #timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message" || true
             #fi
         fi
     fi
@@ -1416,7 +1416,7 @@ el_info(){
             fi
         #else
             #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                #timeout 40 $guitool --info --text="${SOURCE}: $message"
+                #timeout 40 $guitool --info --text="${SOURCE}: $message" || true
             #fi
         fi
     fi
@@ -2352,7 +2352,7 @@ el_request_report_bug(){
                 #local message_instructions
                 #message_instructions="$( TEXTDOMAIN="elive-tools" eval_gettext "Make sure that the report doesn't already exist first, then click where it says to add a new task. You must be registered for create a task first. Close this dialog when you have finished. Thank you." )"
                 #sleep 6
-                #timeout 240 $guitool --info --text="$message_instructions"
+                #timeout 240 $guitool --info --text="$message_instructions" || true
 
             #fi
         #else
@@ -2468,7 +2468,7 @@ el_request_donation(){
     _dummy3="$( eval_gettext "To make a donation only takes you one or two minutes and it guarantees that there will be more versions of Elive in the future and more improved!" )"
 
     # show it
-    #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )"
+    #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )" || true
     if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy $_dummy2" )" ; then
         /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
     else

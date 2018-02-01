@@ -127,7 +127,7 @@ main(){
 
         if [[ -n "$DISPLAY" ]] ; then
             if ((is_mode_force)) ; then
-                zenity --info --text="$message_upgrade_force"
+                zenity --info --text="$message_upgrade_force" || true
                 if ! el_dependencies_install "$packagename" ; then
                     exit 1
                 fi

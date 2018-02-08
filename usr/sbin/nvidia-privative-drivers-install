@@ -327,7 +327,7 @@ interactive_ask_privative(){
 
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If after to install the drivers you are unable to run the graphical system successfully, just reboot and select to not install them the next time." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or blocks your computer when running the graphical system, try the free drivers instead or the VESA compatibility mode." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "If the install fails..." \

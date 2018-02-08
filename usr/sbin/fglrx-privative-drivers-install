@@ -215,6 +215,16 @@ interactive_ask_privative(){
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
                 log_progress_msg "Installing proprietary ATI drivers"
+                    # remember that this is not stable {{{
+                    local message_remember
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or blocks your computer when running the graphical system, try the free drivers instead or the VESA compatibility mode." )" "" )"
+
+                    dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                        --title "If the install fails..." \
+                        --msgbox "$message_remember" \
+                        0 0
+
+                    # - remember that this is not stable }}}
             fi
             ;;
         1) # no

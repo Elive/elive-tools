@@ -309,8 +309,8 @@ abort_with_fallback_wm(){
             virtual)
                 zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers that doesn't works on virtual machines, please try Elive in a real machine instead" )"
                 ;;
-            fbconfig)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, and you are using FBconfig which is not valid for this." )"
+            traditional)
+                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, and you are using a traditional compatibility driver which can make your graphical system work but is not enough for this." )"
                 ;;
             nvidia)
                 zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, you are using an nvidia driver which seems to be uncompatible or wrongly configured." )"
@@ -387,7 +387,7 @@ main(){
         fi
 
         if ! check_fbconfig; then
-            abort_with_fallback_wm fbconfig
+            abort_with_fallback_wm traditional
         fi
     fi
 
@@ -407,6 +407,10 @@ main(){
     # abort in VM
     if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
         abort_with_fallback_wm virtual
+    fi
+
+    if grep -qsi "VESA(.*): Creating default Display" /var/log/Xorg.0.log ; then
+        abort_with_fallback_wm traditional
     fi
 
 

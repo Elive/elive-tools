@@ -415,9 +415,9 @@ main(){
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then
-        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, but it may not work correctly in some few computers." )" ; then
+        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, look nicer and act faster, but it may not work correctly in some few computers." )" ; then
 
-            zenity --info --text="$( eval_gettext "If you have any problem or strange behaviour, just deactivate the Ecomorph module." )" || true
+            zenity --info --text="$( eval_gettext "Considerations: If you have any problem or strange behaviour, just deactivate the Ecomorph module. You can also change all the default effects in the Ecomorph preferences, like specific effects for different applications or chaning the default Cube desktop transition to the Wall one." )" || true
             # this message is annoying and useless:
             #zenity --info --text="$( eval_
             #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"

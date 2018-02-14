@@ -435,7 +435,7 @@ main(){
             #ecomorph ini inotify text regex move cube rotate switcher shift ring scale expo animation scaleaddon wobbly cubereflex thumbnail zoom  &>/dev/null &disown
 
             sync
-            for i in $(seq 18)
+            for i in $(seq 22)
             do
                 sleep 1
                 if pidof ecomorph 1>/dev/null 2>&1 ; then

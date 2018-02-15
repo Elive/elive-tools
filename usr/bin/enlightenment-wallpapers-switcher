@@ -1,0 +1,72 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file
+
+    if grep -qs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
+
+    set -x
+    for arg in "$@"
+    do
+        case "$arg" in
+            --delay=*)
+                time_switching_seconds="${arg##--delay=}"
+                shift
+                ;;
+        esac
+    done
+    exit
+
+    # }}}
+
+    # minutes
+    #time_switching_seconds="$(( 5 * 60 ))"
+    # seconds
+    if [[ -z "$time_switching_seconds" ]] ; then
+        time_switching_seconds="10"
+    fi
+
+    # default wallpaper to use
+    default_wallpaper="/usr/share/enlightenment/data/backgrounds/Elive Stars.edj"
+
+    #el_debug "Starting (infinite) loop for switching between existing wallpapers"
+    #while true
+    #do
+
+    # first wait an entire minute
+    if ((is_live)) ; then
+        sleep 60
+    fi
+
+    el_debug "Starting demo switch between wallpapers"
+
+    # not infinite loop mode, so more friendly
+    for file in /usr/share/enlightenment/data/backgrounds/*edj $HOME/.e/*/backgrounds/*edj
+    do
+        if [[ -s "$file" ]] ; then
+
+            el_debug "Switching to desktop wallpaper: $file"
+
+            enlightenment_remote -desktop-bg-set "$file"
+
+            sleep "$time_switching_seconds"
+        fi
+    done
+
+    if [[ -s "$default_wallpaper" ]] ; then
+        el_debug "Set default wallpaper: $default_wallpaper"
+        enlightenment_remote -desktop-bg-set "$default_wallpaper"
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

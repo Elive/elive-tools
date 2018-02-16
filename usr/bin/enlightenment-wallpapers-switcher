@@ -35,9 +35,9 @@ main(){
     #while true
     #do
 
-    # first wait an entire minute
+    # wait a bit before to start
     if ((is_live)) ; then
-        sleep 60
+        sleep 40
     fi
 
     el_debug "Starting demo switch between wallpapers"

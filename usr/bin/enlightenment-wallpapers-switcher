@@ -9,7 +9,6 @@ main(){
         is_live=1
     fi
 
-    set -x
     for arg in "$@"
     do
         case "$arg" in
@@ -19,7 +18,6 @@ main(){
                 ;;
         esac
     done
-    exit
 
     # }}}
 

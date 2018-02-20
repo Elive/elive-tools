@@ -49,6 +49,20 @@ main(){
     temp="$(mktemp --suffix .src )"
     eet -d "$file" config "$temp"
 
+    # know virtualized state
+    if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
+        hald &
+        sync
+        LC_ALL=C sleep 1
+
+        lshal 2>/dev/null > /tmp/.lshal || true
+        # save some memory
+        killall hald 2>/dev/null 1>&2 || true
+    fi
+    if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
+        is_virtualized=1
+    fi
+
 
     # get data
 
@@ -56,21 +70,21 @@ main(){
     case "$value" in
         1)
             local message_gl
-            message_gl="$( printf "$( eval_gettext "You have selected the software mode of composite. This option is more stable than the GL mode but it can make your desktop less responsive, especially during video playback, due to the higher demand on your CPU. We suggest you try to the GL mode to see if it works correctly with your graphic card. You can found it in the Composite settings of the Enlightenment preferences. Enabling VSYNC is strongly suggested to reproduce videos perfectly smooth without horizontal artifacts." )" )"
+            message_gl="$( printf "$( eval_gettext "Non accelerated desktop selected. This option is more stable but it can make your desktop less responsive, specially during video playback. If you didn't tried the accelerated mode we suggest it to see if it works correctly with your graphic card." )" )"
 
-            if ! grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal ; then
+            if ! ((is_virtualized)) ; then
                 zenity --info --text="$message_gl" || true
             fi
             ;;
         2)
-            if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal ; then
+            if ((is_virtualized)) ; then
                 local message_vbox
-                message_vbox="$( printf "$( eval_gettext "You cannot use the GL accelerated mode inside virtualbox" )" "" )"
-                zenity --error --text="$message_vbox"
+                message_vbox="$( printf "$( eval_gettext "The hardware accelerated mode may not work correctly in a virtual machine" )" "" )"
+                zenity --warning --text="$message_vbox"
 
             else
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "You have selected the GL mode of Composite. This is a good thing because it makes your desktop flow more smoothly with less lag. This could also interfere with rare graphic cards by blocking your computer, black screen or windows, unresponsive desktop returning from suspension or windows that disappear. If you see any of these problems or you want a more stable environment just use the software mode instead of GL. You can switch to software mode at any moment in the Enlightenment preferences." )" )"
+                message_gl="$( printf "$( eval_gettext "The hardware accelerated mode selected makes your desktop flow more smooth and fast, also videos plays in a perfect vertical synchronization, but if you see any strange behaviour like a broken desktop, computer freeze or applications dissappearing it will meant that your graphic card is not supported with these drivers. In such case you will need to switch to the non accelerated mode in a new desktop configuration." )" )"
 
                 zenity --info --text="$message_gl" || true
 

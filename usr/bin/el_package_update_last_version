@@ -146,12 +146,12 @@ main(){
         else
             if ((is_mode_force)) ; then
                 echo -e "The package $packagename needs to be updated.\nPlease insert root/admin password:"
-                su -c "apt-get install $packagename" root
+                su -c "DEBIAN_FRONTEND=noninteractive apt-get install $packagename" root
                 exit 0
             else
                 if el_confirm "$message_upgrade_please" ; then
                     echo -e "Please insert root/admin password:"
-                    su -c "apt-get install $packagename" root
+                    su -c "DEBIAN_FRONTEND=noninteractive apt-get install $packagename" root
                     exit 0
                 else
                     exit 1

@@ -701,6 +701,7 @@ el_aptget_update(){
 #-------------------------------------------------------------------------------
 el_package_newer_check(){
     local package installed candidate
+    # XXX important: this uses apt caches, doesn't check for online version
 
     package="$1"
 

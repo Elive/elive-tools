@@ -51,7 +51,7 @@ main(){
 
     # know virtualized state
     if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-        hald &
+        /usr/sbin/hald
         sync
         LC_ALL=C sleep 1
 

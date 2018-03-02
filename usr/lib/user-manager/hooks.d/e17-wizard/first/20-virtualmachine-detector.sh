@@ -6,7 +6,7 @@ main(){
     #local file dir temp
 
     if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-        hald &
+        timeout 20 /usr/sbin/hald
         sync
         LC_ALL=C sleep 1
 

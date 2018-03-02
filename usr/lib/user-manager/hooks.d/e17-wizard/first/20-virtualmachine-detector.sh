@@ -10,7 +10,9 @@ main(){
         sync
         LC_ALL=C sleep 1
 
-        lshal 2>/dev/null > /tmp/.lshal || true
+        if ! timeout 20 lshal 2>/dev/null > /tmp/.lshal ; then
+            timeout 30 lshal 2>/dev/null > /tmp/.lshal || true
+        fi
         # save some memory
         killall hald 2>/dev/null 1>&2 || true
     fi

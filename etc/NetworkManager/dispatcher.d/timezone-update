@@ -1,5 +1,7 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
+[[ -z $HOME ]] && export HOME="/home/$(id -un)"
+[[ -z $USER ]] && export USER="$(id -un)"
 
 . /lib/lsb/init-functions
 

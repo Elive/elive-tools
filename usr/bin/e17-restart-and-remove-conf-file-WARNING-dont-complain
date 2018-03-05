@@ -4,7 +4,7 @@
 
 source /usr/lib/elive-tools/functions
 
-killall -9 enlightenment_start enlightenment ecomorph 2>/dev/null
+killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
 rm -fr "$HOME/.e" "$HOME/.xsession-errors"
 
 #killall -9 Xorg &

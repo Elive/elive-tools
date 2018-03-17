@@ -7,7 +7,7 @@ main(){
 
     if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
         timeout 20 /usr/sbin/hald
-        sync
+        #sync # do not enable sync here, at first boot time in installed seems like it bottlenecks a bit (flushing new FS datas?)
         LC_ALL=C sleep 1
 
         if ! timeout 20 lshal 2>/dev/null > /tmp/.lshal ; then

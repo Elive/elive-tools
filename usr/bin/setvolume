@@ -131,9 +131,14 @@ get_meter(){
 
     # checks
     if [[ -z "$meter" ]] ; then
-        el_error "No meters found to configure volumes, is your audio card working?:\n$(amixer scontrols)\n|$(cat /proc/asound/cards)\n|$(cat "$HOME/.asoundrc" )|###"
-        el_notify_user "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "Seems like there's problem with your audio card, to reconfigure it just run:" ) audio-configurator"
 
+        if ((is_already_configured)) ; then
+            el_error "No meters found to configure volumes, is your audio card working?:\n$(amixer scontrols)\n|$(cat /proc/asound/cards)\n|$(cat "$HOME/.asoundrc" )|###"
+            el_notify_user "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "Seems like there's problem with your audio card, to reconfigure it just run:" ) audio-configurator"
+        else
+            audio-configurator
+            is_already_configured=1
+        fi
     fi
 
 
@@ -433,6 +438,10 @@ main(){
     fi
 
     meter="$( get_meter )"
+    if [[ -z "$meter" ]] ; then
+        # get it a second time (in case that not worked we have run the configurator to get again the correct meter value, if still not working show the error)
+        meter="$( get_meter )"
+    fi
     el_explain 2 "selected meter: $meter"
 
 

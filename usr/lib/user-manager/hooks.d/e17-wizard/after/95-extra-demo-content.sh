@@ -2,9 +2,9 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
-. gettext.sh
-TEXTDOMAIN="elive-tools"
-export TEXTDOMAIN
+#. gettext.sh
+#TEXTDOMAIN="elive-tools"
+#export TEXTDOMAIN
 
 
 

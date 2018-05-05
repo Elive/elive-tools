@@ -754,6 +754,15 @@ install_driver(){
 
     el_explain 2 "Install complete"
 
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
+        local message_suggestion
+        message_suggestion="$( printf "$( eval_gettext "Suggestion: Sometimes the screen looks distorted after to install the drivers in live mode. If this happens, try to switch to the console mode and then back to the graphical system. This issue should not happen having Elive installed in your computer." )" "" )"
+        dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+            --title "Suggestion for Live Mode:" \
+            --msgbox "${message_suggestion} \n\nExample to switch to Console and then to Graphical system:\nCtrl + Alt + F1, then, Ctrl + Alt + F7 (or F8)" \
+            0 0
+    fi
+
     # - load module }}}
 }
 

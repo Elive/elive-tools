@@ -28,7 +28,7 @@ main(){
         zh_CN*|zh_TW*)
             language="Chinese"
             local message_instructions_extra
-            message_instructions_extra="$( printf "$( eval_gettext "You must first install from the Package Manager one of the suggested options that supports Chinese input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
+            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager first to install one of the suggested options supporting Chinese input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
             ;;
         vi_VN*)
             language="Vietnamese"
@@ -41,10 +41,10 @@ main(){
     if [[ -n "$language" ]] ; then
         # messages
         local message_asking
-        message_asking="$( printf "$( eval_gettext "Do you want to add support for %s keyboard input in your Elive system?" )" "$language" )"
+        message_asking="$( printf "$( eval_gettext "Do you want to add support for %s keyboard input to your Elive system?" )" "$language" )"
 
         local message_instructions
-        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard input to '%s'. You can found this option typing '%s' in the launcher. Or in %s. Inside these settings you must select the '%s' button and then '%s', finally select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. Now you just need to open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
+        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings typing '%s' in the launcher. Or in %s. In these settings select the '%s' button and then '%s'. Finally select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. Open a graphical application now and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
 
         # install
         if zenity --question --text="$message_asking" ; then
@@ -61,10 +61,10 @@ main(){
             export QT_IM_MODULE="ibus"
             export XMODIFIERS="@im=ibus"
             export ECORE_IMF_MODULE="ibus"
-            zenity --entry --text="$( eval_gettext "You can try to switch to the new keyboard and type any text in here." )" || true
+            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type any text in here." )" || true
 
             # final note
-            zenity --info --text="$( eval_gettext "There's can be multiple Ibus packages that you can install for support your language, if you find that there's a better alternative please report this to Elive so we can implement it working for everybody." )" || true
+            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find that there is a better alternative, please report it to Elive, so it can be implemented and work for everybody." )" || true
         fi
 
         # add package in installed system

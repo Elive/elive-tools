@@ -307,19 +307,19 @@ abort_with_fallback_wm(){
     if ((is_elive_helper)) ; then
         case "$1" in
             virtual)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers that doesn't works on virtual machines, please try Elive in a real machine instead" )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers not woriking on virtual machines. Please try Elive on a real computer instead." )"
                 ;;
             traditional)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, and you are using a traditional compatibility driver which can make your graphical system work but is not enough for this." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. You use a standard compatibility driver instead which makes your graphical insterface work, but which is not sufficient for the intended purpose." )"
                 ;;
             nvidia)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, you are using an nvidia driver which seems to be uncompatible or wrongly configured." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. You use an nvidia driver which appears to be incompatible or wrongly configured." )"
                 ;;
             flags)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, seems like your drivers are not correctly using the required flags for make Ecomorph work properly." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. the driver you use is not correctly using the required flags to make Ecomorph work properly." )"
                 ;;
             driver)
-                zenity --error --text="$( eval_gettext "These special features requires 3D accelerated drivers, seems like your driver is blacklisted or not from the whitelist, you can try to load the Ecomorph module manually and if works correctly in your computer please report this bug to the Elive BTS." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, please report the bug to the Elive BTS." )"
                 ;;
         esac
     fi
@@ -415,9 +415,9 @@ main(){
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then
-        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, look nicer and act faster, but it may not work correctly in some few computers." )" ; then
+        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have more features, look nicer and be more responsive, but it may not work correctly on a very small number of computers." )" ; then
 
-            zenity --info --text="$( eval_gettext "Considerations: If you have any problem or strange behaviour, just deactivate the Ecomorph module. You can also change all the default effects in the Ecomorph preferences, like the effects for every application or chaning the default Cube desktop transition to the Wall one." )" || true
+            zenity --info --text="$( eval_gettext "If your desktop shows any problem or strange behaviour, deactivate the Ecomorph module. You can also change the default effects for every application in the Ecomorph preferences or change the default Cube desktop transition to the Wall one." )" || true
             # this message is annoying and useless:
             #zenity --info --text="$( eval_
             #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
@@ -443,7 +443,7 @@ main(){
                     sleep 1
                     #enlightenment_remote -restart
                     sleep 5
-                    zenity --info --text="$( eval_gettext "Your already opened applications will not be included in the Ecomorph layer, only the new ones that you open since now. To have the full compatibility please logout and login again." )" || true
+                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer - only the ones that you open from now. To have Ecomorph fully functioning, please log out and in again." )" || true
                     #sleep 10
                     #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )" || true
                     is_ecomorph_working=1
@@ -455,7 +455,7 @@ main(){
             if ! ((is_ecomorph_working)) ; then
                 enlightenment_remote -module-disable ecomorph
                 enlightenment_remote -module-unload ecomorph
-                zenity --warning --text="$( eval_gettext "Seems like Ecomorph has failed to run in this computer due to your graphics hardware, you can try to enable the yourself the module in the configurations but if not works you will need to try it in a different computer." )"
+                zenity --warning --text="$( eval_gettext "Ecomorph does not run on this computer due to your graphics hardware. You can try to manually enable the module in Settings/Modules, but if it still does not work, you will need to try using it on a different computer." )"
             fi
         fi
     fi

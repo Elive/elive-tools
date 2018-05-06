@@ -316,7 +316,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. You use an nvidia driver which appears to be incompatible or wrongly configured." )"
                 ;;
             flags)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. the driver you use is not correctly using the required flags to make Ecomorph work properly." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. But the driver you use doesn't looks like to have the enough required features to make Ecomorph work properly." )"
                 ;;
             driver)
                 zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, please report the bug to the Elive BTS." )"

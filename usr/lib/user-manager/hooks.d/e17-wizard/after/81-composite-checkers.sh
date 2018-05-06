@@ -70,7 +70,7 @@ main(){
     case "$value" in
         1)
             local message_gl
-            message_gl="$( printf "$( eval_gettext "Non accelerated desktop selected. This option is more stable but it can make your desktop less responsive, specially during video playback. If you didn't tried the accelerated mode we suggest it to see if it works correctly with your graphic card." )" )"
+            message_gl="$( printf "$( eval_gettext "No desktop acceleration selected. This option is more stable, but it may result in a less responsive desktop, especially during video playback. If you did not try the accelerated mode yet, it is suggested to select it. You will be able to see, then , if it is compatible with your graphic card." )" )"
 
             if ! ((is_virtualized)) ; then
                 zenity --info --text="$message_gl" || true
@@ -79,12 +79,12 @@ main(){
         2)
             if ((is_virtualized)) ; then
                 local message_vbox
-                message_vbox="$( printf "$( eval_gettext "The hardware accelerated mode may not work correctly in a virtual machine" )" "" )"
+                message_vbox="$( printf "$( eval_gettext "The hardware acceleration mode may not work correctly in a virtual machine" )" "" )"
                 zenity --warning --text="$message_vbox"
 
             else
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "The hardware accelerated mode selected makes your desktop flow more smooth and fast, also videos plays in a perfect vertical synchronization, but if you see any strange behaviour like a broken desktop, computer freeze or applications dissappearing it will meant that your graphic card is not supported with these drivers. In such case you will need to switch to the non accelerated mode in a new desktop configuration." )" )"
+                message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop more responsive. It also makes for better video playback. If you encounter any strange behaviour like a broken desktop, a frozen system or crashing applications, this means that your graphic card is not supported by these drivers. In this case switch off hardware acceleration." )" )"
 
                 zenity --info --text="$message_gl" || true
 
@@ -93,7 +93,7 @@ main(){
                     true
                 else
                     local message_vsync_disabled
-                    message_vsync_disabled="$( printf "$( eval_gettext "You didn't select the %s option for composite (vertical synchronization), this option allows you to play videos perfectly smooth and without horizontally cutting lines. You can enable this option in the Options panel, in the Composite section." )" "vsync" )"
+                    message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for composite (vertical synchronization). This option allows you to play videos perfectly smoothly and without horizontal lines. Go to the options panel, and in the options panel, go to the composite section." )" "vsync" )"
                     zenity --info --text="$message_vsync_disabled" || true
                 fi
             fi

@@ -166,7 +166,12 @@ main(){
                     el_error "problem with apt-get install -y $packagename"
                 fi
             else
-                el_error "$(basename $0) called in automated mode and we are non-root, how we should proceed? ignoring..."
+                if el_check_sudo_automated ; then
+                    sudo DEBIAN_FRONTEND=noninteractive apt-get -f install
+                    sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename}
+                else
+                    el_error "$(basename $0) called in automated mode and we are non-root, how we should proceed? ignoring..."
+                fi
             fi
         else
             if [[ -n "$DISPLAY" ]] ; then

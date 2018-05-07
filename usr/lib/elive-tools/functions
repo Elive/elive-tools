@@ -580,8 +580,8 @@ EOF
     else
         if ! el_dependencies_check gksu ; then
             if [[ -x "$( which urxvt )" ]] ; then
-            urxvt -e bash -c "su -c 'DEBIAN_FRONTEND=noninteractive apt-get update' root"
-            urxvt -e bash -c "su -c 'DEBIAN_FRONTEND=noninteractive apt-get install -y gksu' root"
+                urxvt -e bash -c "su -c 'DEBIAN_FRONTEND=noninteractive apt-get update' root"
+                urxvt -e bash -c "su -c 'DEBIAN_FRONTEND=noninteractive apt-get install -y gksu' root"
             else
                 if [[ -n "$TERM" ]] ; then
                     # if we are in this condition maybe we are in a non-desktop install, so we don't want these things

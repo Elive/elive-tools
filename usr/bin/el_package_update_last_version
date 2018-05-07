@@ -58,7 +58,17 @@ main(){
 
     # check if exist or apt-get update
     if [[ -z "$url_repository" ]] ; then
-        el_aptget_update
+        if ((is_quiet)) ; then
+            if [[ "$UID" = 0 ]] ; then
+                timeout 1200 apt-get update || timeout 24000 apt-get update
+            else
+                if el_check_sudo_automated ; then
+                    sudo apt-get update || sudo apt-get update
+                fi
+            fi
+        else
+            el_aptget_update
+        fi
     fi
     if [[ -z "$url_repository" ]] ; then
         el_warning "Package $packagename not found in the repos, ignoring it..."
@@ -126,7 +136,17 @@ main(){
     # - checking results and deciding }}}
 
     # make sure that we update caches or we will be unable to install it
-    el_aptget_update force
+    if ((is_quiet)) ; then
+        if [[ "$UID" = 0 ]] ; then
+            timeout 1200 apt-get update || timeout 24000 apt-get update
+        else
+            if el_check_sudo_automated ; then
+                sudo apt-get update || sudo apt-get update
+            fi
+        fi
+    else
+        el_aptget_update force
+    fi
 
     # install new package if found
     if el_package_newer_check "${packagename}" ; then
@@ -142,7 +162,7 @@ main(){
                 if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
                     el_error "problem with apt-get -f install"
                 fi
-                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ${packagename}" ; then
+                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confnew\" -y ${packagename}" ; then
                     el_error "problem with apt-get install -y $packagename"
                 fi
             else
@@ -196,7 +216,7 @@ main(){
                         if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
                             el_error "problem with apt-get -f install"
                         fi
-                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ${packagename}" ; then
+                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confnew\" -y ${packagename}" ; then
                             el_error "problem with apt-get install -y $packagename"
                         fi
                     else

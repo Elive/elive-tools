@@ -217,7 +217,7 @@ interactive_ask_privative(){
                 log_progress_msg "Installing proprietary ATI drivers"
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or blocks your computer when running the graphical system, try the free drivers instead or the VESA compatibility mode." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers do not work or if your computer freezes in graphical mode, try the free drivers instead or the VESA compatibility mode." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "If the install fails..." \
@@ -393,7 +393,7 @@ install_driver(){
 
         if /usr/sbin/laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses a special ATI shared drivers, where the internal card is used for save battery and switches to the ATI when needs more performance. You can use in Elive the ATI if you install FGLRX or it will use the Intel if you don't, so we are going to use now the FGLRX. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected on your system. Your laptop probably uses special ATI shared drivers, using the internal card to save battery power and switching to the ATI driver when more performance is necessary. You can use the ATI graphic card in Elive, if you install FGLRX. Otherwise the Intel card will be used. FGLRX will be used for now. If you have any problem with your graphical system, it is suggested to disable one of them in the BIOS settings. Use Google to find out how to set up your BIOS." )" "" )"
         else
             local message_multiple_cards
             message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"

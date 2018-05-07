@@ -139,10 +139,10 @@ main(){
         # install
         if ((is_automated)) ; then
             if [[ "$UID" = 0 ]] ; then
-                if ! timeout 900 DEBIAN_FRONTEND=noninteractive apt-get -f install ; then
+                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
                     el_error "problem with apt-get -f install"
                 fi
-                if ! timeout 900 DEBIAN_FRONTEND=noninteractive apt-get install -y $packagename ; then
+                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ${packagename}" ; then
                     el_error "problem with apt-get install -y $packagename"
                 fi
             else
@@ -193,10 +193,10 @@ main(){
                     fi
                 else
                     if [[ "$UID" = 0 ]] ; then
-                        if ! timeout 900 DEBIAN_FRONTEND=noninteractive apt-get -f install ; then
+                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
                             el_error "problem with apt-get -f install"
                         fi
-                        if ! timeout 900 DEBIAN_FRONTEND=noninteractive apt-get install -y $packagename ; then
+                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ${packagename}" ; then
                             el_error "problem with apt-get install -y $packagename"
                         fi
                     else

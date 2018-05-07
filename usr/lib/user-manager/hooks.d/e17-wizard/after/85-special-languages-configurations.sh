@@ -61,7 +61,7 @@ main(){
             export QT_IM_MODULE="ibus"
             export XMODIFIERS="@im=ibus"
             export ECORE_IMF_MODULE="ibus"
-            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type any text in here." )" || true
+            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type in any text here." )" || true
 
             # final note
             zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find that there is a better alternative, please report it to Elive, so it can be implemented and work for everybody." )" || true

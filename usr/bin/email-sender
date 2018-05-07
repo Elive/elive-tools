@@ -68,7 +68,7 @@ do_email_send(){
 
     if [[ -z "$subject" ]] ; then
         local message_subject
-        message_subject="$( printf "$( eval_gettext "A message from %s in %s's computer" )" "$username" "$(hostname | sed 's/[^ _-]*/\u&/g' )" )"
+        message_subject="$( printf "$( eval_gettext "A message from %s on %s's computer" )" "$username" "$(hostname | sed 's/[^ _-]*/\u&/g' )" )"
 
         subject="$message_subject"
     fi

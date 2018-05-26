@@ -60,7 +60,7 @@ main(){
     if [[ -z "$url_repository" ]] ; then
         if ((is_quiet)) ; then
             if [[ "$UID" = 0 ]] ; then
-                timeout 1200 apt-get update || timeout 24000 apt-get update
+                apt-get update || apt-get update
             else
                 if el_check_sudo_automated ; then
                     sudo apt-get update || sudo apt-get update
@@ -138,7 +138,7 @@ main(){
     # make sure that we update caches or we will be unable to install it
     if ((is_quiet)) ; then
         if [[ "$UID" = 0 ]] ; then
-            timeout 1200 apt-get update || timeout 24000 apt-get update
+            apt-get update || apt-get update
         else
             if el_check_sudo_automated ; then
                 sudo apt-get update || sudo apt-get update
@@ -159,10 +159,10 @@ main(){
         # install
         if ((is_automated)) ; then
             if [[ "$UID" = 0 ]] ; then
-                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
+                if ! DEBIAN_FRONTEND=noninteractive apt-get -f install ; then
                     el_error "problem with apt-get -f install"
                 fi
-                if ! timeout 1200 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confnew\" -y ${packagename}" ; then
+                if ! DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename} ; then
                     el_error "problem with apt-get install -y $packagename"
                 fi
             else
@@ -218,10 +218,10 @@ main(){
                     fi
                 else
                     if [[ "$UID" = 0 ]] ; then
-                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get -f install" ; then
+                        if ! DEBIAN_FRONTEND=noninteractive apt-get -f install ; then
                             el_error "problem with apt-get -f install"
                         fi
-                        if ! timeout 900 bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confnew\" -y ${packagename}" ; then
+                        if ! DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename} ; then
                             el_error "problem with apt-get install -y $packagename"
                         fi
                     else

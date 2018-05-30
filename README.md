@@ -3,6 +3,8 @@ elive-tools
 
 Set of handy and useful tools by Elive, for specially use in the Elive project
 
+**UPDATE**: this repo has a big ton of amazing tools and features, but i have not the time to maintain the readme, sorry for that!
+
 This is a brief summary of tools and features:
 
 * audio-configurator

@@ -1,0 +1,191 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+not_supported(){
+    local mime
+    mime="$1"
+
+    local message_notsupported
+    message_notsupported="$( printf "$( eval_gettext "The mimetype %s is not implemented. You can report this with an example of how this file should be run to the Elive BTS in order to have it running for you and everybody." )" "$mime" )"
+
+    zenity --info --text="$message_notsupported"
+}
+
+run_edje(){
+    local file
+    file="$1"
+
+    while read -ru 3 line
+    do
+        [[ "$line" = *"'e/theme/about'"* ]] && is_e_theme=1
+        [[ "$line" = *"'e/modules/ibox/"* ]] && is_e_theme=1
+        [[ "$line" = *"'e/desktop/background'"* ]] && is_e_wallpaper=1
+    done 3<<< "$( edje_player -G "$file")"
+
+    # only wallpaper
+    if ((is_e_wallpaper)) && ! ((is_e_theme)) ; then
+        # show a preview
+        edje_player "$file"
+
+        if zenity --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
+            enlightenment_remote -desktop-bg-add-set "$file"
+        fi
+
+        return
+    fi
+
+    # full E theme
+    if ((is_e_theme)) ; then
+        if zenity --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
+            cp -f "$file" "$HOME/.e/e17/themes/"
+            # update: seems like it doesn't works?
+            #enlightenment_remote -theme-set
+            zenity --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may be not always fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
+
+        fi
+
+        return
+    fi
+
+    # still here? implement it
+    zenity --warning --text="$( eval_gettext "Seems like you are trying to run an edje file but we don't know how to use it. Please report this to the Elive BTS" )"
+}
+
+run_script(){
+    local file mode
+    mode="$1"
+    file="$2"
+
+    local message_done
+    message_done="$( printf "$( eval_gettext "All operations done, you can close the terminal" )" "" )"
+
+
+    # nvidia installer?
+    if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
+        if zenity --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the nvidia drivers, do you want to run it instead of the official nvidia installer?" )" ; then
+            if [[ -x "$( which urxvt )" ]] ; then
+                gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
+            else
+                el_error "no urxvt found"
+            fi
+
+            #all done
+            exit
+        fi
+    fi
+
+    # warn user
+    el_config_get "is_user_warned"
+    if ! ((is_user_warned)) ; then
+        zenity --warning --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source" )"
+        is_user_warned=1
+        el_config_save "is_user_warned"
+    fi
+    el_config_get "is_user_warned_root"
+    if ! ((is_user_warned_root)) ; then
+        zenity --info --text="$( eval_gettext "Important: if you need to execute a file with admin privileges, right click in the file manager to enter in admin mode, then run it from the new session" )"
+        is_user_warned_root=1
+        el_config_save "is_user_warned_root"
+    fi
+
+    if ! test -x "$file" ; then
+        if zenity --question --text="$( eval_gettext "The file that you are trying to run seems like to be a script but it doesn't has permissions to be executed. Add executable permissions?" )" ; then
+            chmod +x "$file"
+        else
+            zenity --error --text="$( eval_gettext"If the file has no executable permissions we cannot run it. Exiting..." )"
+            return 1
+        fi
+    fi
+
+    if [[ -x "$( which urxvt )" ]] ; then
+        urxvt -hold -e bash -c "$file ; echo ${message_done}"
+    else
+        if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+            terminology -hold -e "${file} ; echo ${message_done}"
+        fi
+    fi
+}
+
+
+main(){
+    # pre {{{
+    local file
+
+    # }}}
+
+    for file in "$@"
+    do
+        file="$( LC_ALL=C readlink -f "$file" )"
+
+        mime="$( LC_ALL=C file -bi "$file" | sed -e 's|; charset.*$||g' )"
+
+        # some fixes
+        case "$mime" in
+            "text/plain"|"application/octet-stream")
+                unset mime
+
+                # edje files are octets
+                if echo "$file" | grep -qsi "\.edj" ; then
+                    if edje_player -G "$file" | head -5 | grep -qs "group.*in file" ; then
+                        mime="edj/edje"
+                    fi
+                fi
+
+                # script files
+                if [[ -z "$mime" ]] ; then
+                    if head -1 "$file" | grep -qsE "^#!.*(bin/env |bin/)(bash|sh|dash|zsh)$" ; then
+                        mime="text/x-shellscript"
+                    fi
+                fi
+                if [[ -z "$mime" ]] ; then
+                    if echo "$file" | grep -qsi ".*\.run" ; then
+                        mime="text/x-shellscript"
+                    fi
+                fi
+                if [[ -z "$mime" ]] ; then
+                    if LC_ALL=C file "$file" | grep -qsi "script.*text.*executable" ; then
+                        mime="text/x-shellscript"
+                    fi
+                fi
+
+                ;;
+        esac
+
+        # parse and run
+        case "$mime" in
+            "text/x-shellscript")
+                run_script "user" "$file"
+                ;;
+            "text/x-ruby")
+                run_script "user" "$file"
+                ;;
+            "text/x-perl")
+                run_script "user" "$file"
+                ;;
+            "text/x-awk")
+                #not_supported "$mime"
+                run_script "user" "$file"
+                ;;
+            "text/x-python")
+                run_script "user" "$file"
+                ;;
+            "edj/edje")
+                run_edje "$file"
+                ;;
+            *)
+                not_supported "$mime"
+        esac
+    done
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

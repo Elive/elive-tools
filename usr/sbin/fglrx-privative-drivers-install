@@ -631,10 +631,10 @@ uninstall_driver(){
 
 main(){
     # pre {{{
-    if [[ -z "${1}" ]] ; then
-        usage
-        exit 1
-    fi
+    #if [[ -z "${1}" ]] ; then
+        #usage
+        #exit 1
+    #fi
 
     . /lib/lsb/init-functions
 

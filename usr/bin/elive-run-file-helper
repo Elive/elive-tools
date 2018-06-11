@@ -174,7 +174,7 @@ main(){
             "text/x-python")
                 run_script "user" "$file"
                 ;;
-            "edj/edje")
+            "edj/edje"|"application/x-extension-edj")
                 run_edje "$file"
                 ;;
             *)

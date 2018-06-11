@@ -121,6 +121,7 @@ main(){
     for file in "$@"
     do
         file="$( LC_ALL=C readlink -f "$file" )"
+        dirname="$( dirname "$file" )"
 
         mime="$( LC_ALL=C file -bi "$file" | sed -e 's|; charset.*$||g' )"
 
@@ -174,7 +175,14 @@ main(){
             "text/x-python")
                 run_script "user" "$file"
                 ;;
-            "edj/edje"|"application/x-extension-edj")
+            "text/x-makefile")
+                cd "$dirname"
+
+                if [[ -x "$( which urxvt )" ]] ; then
+                    urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
+                fi
+                ;;
+            "edj/edje"|"application/x-extension-edj"|"application/edje")
                 run_edje "$file"
                 ;;
             *)

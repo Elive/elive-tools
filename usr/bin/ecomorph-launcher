@@ -307,19 +307,19 @@ abort_with_fallback_wm(){
     if ((is_elive_helper)) ; then
         case "$1" in
             virtual)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers not woriking on virtual machines. Please try Elive on a real computer instead." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers which doesn't works on virtual machines. To have them working you should use Elive in a real computer instead." )"
                 ;;
             traditional)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. You use a standard compatibility driver instead which makes your graphical insterface work, but which is not sufficient for the intended purpose." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You are using a standard driver which is more compatible and can make your graphical interface to work correctly, but it is not sufficient for enable the special effects. This can happen with very old computers or very recent ones, in the second case you can wait for a newer version of Elive that will have newer drivers." )"
                 ;;
             nvidia)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. You use an nvidia driver which appears to be incompatible or wrongly configured." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You use an nvidia driver which appears to be incompatible or wrongly installed." )"
                 ;;
             flags)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. But the driver you use doesn't looks like to have the enough required features to make Ecomorph work properly." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. But the driver you use does not looks like to have the enough required features to make Ecomorph work properly, maybe you can try with a different driver configuration, also a newer version of Elive can solve the problem with updated drivers." )"
                 ;;
             driver)
-                zenity --error --text="$( eval_gettext "These special features require 3D-accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, please report the bug to the Elive BTS." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, please report the bug to the Elive BTS." )"
                 ;;
         esac
     fi

@@ -9,7 +9,7 @@ export TEXTDOMAIN
 
 suggest_emodule_flag_keyboard(){
     local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country uses different keyboard layouts. If you want to switch between different language keyboards fastly, right click in the shelf of the bottom right corner to add as content the keyboard gadget." )" "" )"
+    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country uses different keyboard layouts. If you want to switch between different language keyboards fastly, right click in the shelf of the bottom right corner to add as content the keyboard gadget. You can also add a hotkey to switch them fastly." )" "" )"
 
     zenity --info --text="$message_suggestion_flag"
 }

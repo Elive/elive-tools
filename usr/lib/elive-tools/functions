@@ -114,6 +114,14 @@ source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
+# use EL_LC_EN instead of LC_ALL=C:
+if grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
+    EL_LC_EN="en_US.UTF-8"
+else
+    # warning: this can broke things by not being utf8
+    EL_LC_EN="C"
+fi
+
 # Note: if you use ZSH, you must set the SOURCE var name from the main script
 if [[ -z "$SOURCE" ]]; then
     if [[ -n "$ZSH_VERSION" ]] ; then

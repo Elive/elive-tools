@@ -23,7 +23,7 @@ get_all_partitions_list(){
     # LVM support {{{
     if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay 2>/dev/null | grep -q "logical volume.*active" ) ; then
         # loop between the partitions that are used for a LVM (physical volume)
-        for pvname in $( LC_ALL=C pvdisplay 2>/dev/null | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
+        for pvname in $( LC_ALL="$EL_LC_EN" pvdisplay 2>/dev/null | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
         do
             # remove extra leading blank chars
             read -r pvname <<< "$pvname"
@@ -34,7 +34,7 @@ get_all_partitions_list(){
         done
 
         # any logical volume (real partition inside lvm2 setup) to add?
-        #for lvname in $( LC_ALL=C lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
+        #for lvname in $( LC_ALL="$EL_LC_EN" lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
         #do
             ## remove extra leading blank chars
             #read -r lvname <<< "$lvname"
@@ -68,7 +68,7 @@ get_all_partitions_list(){
 
             # remove elements that composes raids
             #for dev in $( cat /proc/mdstat | grep "^${raid} :" | tr ' ' '\n' | grep "\[[[:digit:]]\]" | sed 's|\[.*$||g' )
-            for dev in $( LC_ALL=C mdadm --detail "/dev/${raid}"  | grep "active sync.*/dev/" | sed -e 's|^.*/dev/|/dev/|g' )
+            for dev in $( LC_ALL="$EL_LC_EN" mdadm --detail "/dev/${raid}"  | grep "active sync.*/dev/" | sed -e 's|^.*/dev/|/dev/|g' )
             do
                 [[ ! -b "${dev}" ]] && continue || true
                 el_array_member_unset "${dev}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
@@ -321,7 +321,7 @@ main(){
                     # UPDATE: not-formated partitions has not uuid (so they needs to be considered real partitions if we want to select them as available, but they are not possible to be mounted)
                     #if [[ "$EL_DEBUG" -gt 2 ]] ; then
                         #el_debug "$(basename $0) checking '${item}', it is not a partition? (no UUID):"
-                        #LC_ALL=C /sbin/udevadm info --query=all --name="$item" 1>&2
+                        #LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$item" 1>&2
                     #fi
                 fi
             fi
@@ -391,12 +391,12 @@ main(){
                 #fi
             fi
 
-        done 3<<< "$( LC_ALL=C /sbin/udevadm info --query=all --name="$item" 2>&1 )"
+        done 3<<< "$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$item" 2>&1 )"
 
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL=C lsblk -lnbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -lnbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 
@@ -560,7 +560,7 @@ get_filesystem_hal(){
     #actually the only used
     #/etc/init.d/dbus restart 1>/dev/null 2>&1
     #/etc/init.d/hal restart 1>/dev/null 2>&1
-    udi=$( LC_ALL=C hal-find-by-property --key "block.device" --string "$1" 2>/dev/null )
+    udi=$( LC_ALL="$EL_LC_EN" hal-find-by-property --key "block.device" --string "$1" 2>/dev/null )
     hal-get-property --udi "$udi" --key "volume.fstype" 2>/dev/null
 }
 

@@ -165,10 +165,10 @@ get_volume(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        LC_ALL=C amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
+        LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
     else
         # mono
-        LC_ALL=C amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
+        LC_ALL="$EL_LC_EN" amixer get "${meter}" 2>/dev/null | grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | grep -E "[[:digit:]]*" | head -1
     fi
 
 }
@@ -289,7 +289,7 @@ mute_modes(){
     el_check_variables "mode"
 
     # }}}
-    state_before="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+    state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
     # remove extra leading blank chars
     read -r state_before <<< "$state_before"
 
@@ -310,7 +310,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
             # remove extra leading blank chars
             read -r state_after <<< "$state_after"
 
@@ -340,7 +340,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
             # remove extra leading blank chars
             read -r state_after <<< "$state_after"
 
@@ -383,7 +383,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            state_after="$( LC_ALL=C amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
             # remove extra leading blank chars
             read -r state_after <<< "$state_after"
 
@@ -475,7 +475,7 @@ main(){
         amixer -q sset Mic Playback mute 2>/dev/null
 
         # Fix for skype when we dont have a "Mic" control
-        if ! LC_ALL=C amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then
+        if ! LC_ALL="$EL_LC_EN" amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then
             if [[ -d "$HOME/.Skype" ]] && grep -q "<AGC>.</AGC>" "$HOME/.Skype/shared.xml" ; then
                 killall skype 2>/dev/null || killall -9 skype 2>/dev/null
                 sync

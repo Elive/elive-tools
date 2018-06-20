@@ -120,10 +120,10 @@ main(){
 
     for file in "$@"
     do
-        file="$( LC_ALL=C readlink -f "$file" )"
+        file="$( LC_ALL="$EL_LC_EN" readlink -f "$file" )"
         dirname="$( dirname "$file" )"
 
-        mime="$( LC_ALL=C file -bi "$file" | sed -e 's|; charset.*$||g' )"
+        mime="$( LC_ALL="$EL_LC_EN" file -bi "$file" | sed -e 's|; charset.*$||g' )"
 
         # some fixes
         case "$mime" in
@@ -149,7 +149,7 @@ main(){
                     fi
                 fi
                 if [[ -z "$mime" ]] ; then
-                    if LC_ALL=C file "$file" | grep -qsi "script.*text.*executable" ; then
+                    if LC_ALL="$EL_LC_EN" file "$file" | grep -qsi "script.*text.*executable" ; then
                         mime="text/x-shellscript"
                     fi
                 fi

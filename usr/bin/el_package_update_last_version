@@ -95,7 +95,7 @@ main(){
 
     # }}}
 
-    package_version_installed="$( LC_ALL=C  apt-cache policy "${packagename}" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 )"
+    package_version_installed="$( LC_ALL="$EL_LC_EN"  apt-cache policy "${packagename}" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 )"
 
     # first pass, check if we can have a possible candidate (fuzzy mode) {{{
     while read -ru 3 line

@@ -167,14 +167,14 @@ do_email_send(){
             > "$tempfile_body"
 
         # SEND !
-        cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+        cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
         if [[ "$?" = 0 ]] ; then
             if ! ((is_mode_quiet)) ; then
                 el_explain 2 "email sent"
             fi
         else
             # try again
-            cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+            cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
             if [[ "$?" = 0 ]] ; then
                 if ! ((is_mode_quiet)) ; then
@@ -184,7 +184,7 @@ do_email_send(){
                 el_warning "unable to send email, let's wait 2 minutes and we will try again"
                 sleep 120
                 # try again
-                cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+                cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" -e 'set content_type="text/html"' "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
                 if [[ "$?" = 0 ]] ; then
                     if ! ((is_mode_quiet)) ; then
@@ -214,7 +214,7 @@ do_email_send(){
     else
 
         # SEND !
-        cat "$tempfile_body" | LC_ALL=C timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+        cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 60 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
         if [[ "$?" = 0 ]] ; then
             if ! ((is_mode_quiet)) ; then
@@ -222,7 +222,7 @@ do_email_send(){
             fi
         else
             # try again
-            cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+            cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
             if [[ "$?" = 0 ]] ; then
                 if ! ((is_mode_quiet)) ; then
@@ -232,7 +232,7 @@ do_email_send(){
                 el_warning "unable to send email, let's wait 2 minutes and we will try again"
                 sleep 120
                 # try again
-                cat "$tempfile_body" | LC_ALL=C timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
+                cat "$tempfile_body" | LC_ALL="$EL_LC_EN" timeout 120 mutt -F "$conf_mutt" -s "$subject" "$to" "${attachments[@]/#/-a}" "${targets_cc[@]/#/-c}" "${targets_bcc[@]/#/-b}" --
 
                 if [[ "$?" = 0 ]] ; then
                     if ! ((is_mode_quiet)) ; then

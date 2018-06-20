@@ -687,7 +687,7 @@ install_driver(){
         done
     fi
 
-    LC_ALL=C update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
+    LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
     rm -f /boot/*old-dkms 2>/dev/null
 
     # - apt-get install }}}

@@ -114,7 +114,7 @@ source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
-# use EL_LC_EN instead of LC_ALL=C:
+# use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
 if grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
     EL_LC_EN="en_US.UTF-8"
 else
@@ -339,7 +339,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # cache online (20 min)
     if [[ -s "$stamp_hour_prev" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
 
             # if anything tell us that we are connected and we was before, we should still be
             el_dependencies_check "route"
@@ -354,7 +354,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # cache offline (20 min)
     if [[ -s "$stamp_hour_prev_offline" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
 
             # if all the other checks tell us that we really are not connected, say that we are not, in cache mode
             if el_verify_internet_ping 2 ; then
@@ -642,7 +642,7 @@ el_aptget_update(){
     fi
 
     if [[ -e "/var/lib/apt/periodic/update-success-stamp" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )" -gt 14400 ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -gt 14400 ]] ; then
             want_update=1
         fi
     else
@@ -717,10 +717,10 @@ el_package_newer_check(){
         return 2
     fi
 
-    installed="$( LC_ALL=C apt-cache policy "$package" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    installed="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
     read -r installed <<< "$installed"
 
-    candidate="$( LC_ALL=C apt-cache policy "$package" | grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    candidate="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
     read -r candidate <<< "$candidate"
 
 
@@ -2069,7 +2069,7 @@ el_report_to_elive(){
 
     # at least 4 hours passed to clean reports counter
     if [[ -s "$tmp_conf_f" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )" -gt "$limit_reports_seconds" ]] ; then
+        if [[ "$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -gt "$limit_reports_seconds" ]] ; then
             counter_reports_sent=0
             el_config_save "counter_reports_sent"
         fi
@@ -2175,15 +2175,15 @@ el_report_to_elive(){
         if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
-            LC_ALL=C sleep 1
+            LC_ALL="$EL_LC_EN" sleep 1
             if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
-                #LC_ALL=C sleep 1
+                #LC_ALL="$EL_LC_EN" sleep 1
                 #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     #true
 
-                    #LC_ALL=C sleep 1
+                    #LC_ALL="$EL_LC_EN" sleep 1
                     #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         #true
                     #fi

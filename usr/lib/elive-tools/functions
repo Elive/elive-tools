@@ -250,7 +250,7 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 #-------------------------------------------------------------------------------
 el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
     # pre {{{
-    local timeout
+    local timeout count
     timeout="$1"
 
     if [[ -z "$timeout" ]] ; then
@@ -259,30 +259,27 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     fi
 
     # - pre }}}
-    if timeout $timeout ping -c 1 www.google.com  2>/dev/null 1>&2 ; then
-        return 0
-    else
-        # just do another small attemp, because we really want to use internet
-        if [[ "$timeout" -gt 5 ]] ; then
-
-            if timeout 1 ping -c 2 www.google.com  2>/dev/null 1>&2 ; then
-                return 0
-            fi
+    for count in $( seq "$timeout" )
+    do
+        if timeout $timeout ping -c 1 www.google.com  2>/dev/null 1>&2 ; then
+            return 0
         fi
+        # wait a delay until we reach our set timeout
+        LC_ALL=C sleep 0.8
+    done
 
-        # wanna debug more?
-        if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-            el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.google.com 2>&1 )"
-            if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
-                el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
-            else
-                el_debug "we cannot even ping to the google dns (8.8.8.8)"
-            fi
+    # wanna debug more?
+    if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+        el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.google.com 2>&1 )"
+        if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
+            el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
+        else
+            el_debug "we cannot even ping to the google dns (8.8.8.8)"
         fi
-
-        # in any case if we reach here, is because we cannot ping to google, so return that
-        return 1
     fi
+
+    # in any case if we reach here, is because we cannot ping to google, so return that
+    return 1
 }
 #-------------------------------------------------------------------------------
 #   Verify if we have internet connection (return value)

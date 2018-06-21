@@ -1,6 +1,7 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# TODO: since we install our own drivers, can we remove the package libgl1-mesa-dri ? (because it wastes 100 MB from installation), will need some betatestings
 
 
 #===  FUNCTION  ================================================================

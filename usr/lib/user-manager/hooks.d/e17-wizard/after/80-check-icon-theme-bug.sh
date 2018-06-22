@@ -13,10 +13,9 @@ main(){
 
         eet -d e.cfg config e.cfg.src
 
-        if ! grep -qs "value \"icon_theme\" string: \"gnome\";" e.cfg.src ; then
+        if ! grep -qs "value \"icon_theme\" string: \"gnome\";" e.cfg.src && [[ -s "/usr/share/icons/gnome/index.theme" ]] ; then
             zenity --warning --text="$( eval_gettext "Your icons seems to be wrongly configured, press ok to restart your configuration" )"
-            killall -9 enlightenment
-            rm -rf "$HOME/.e" "$HOME/.xsession-errors"
+            e17-restart-and-remove-conf-file-WARNING-dont-complain
         fi
 
         rm -f e.cfg.src

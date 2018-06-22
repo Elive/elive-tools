@@ -250,8 +250,13 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 #-------------------------------------------------------------------------------
 el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
     # pre {{{
-    local timeout count
+    local timeout count target
     timeout="$1"
+    # note: this code contains commented lines used for debug (to simulate a full lag)
+
+    # note: dns resolving can be very slow if we are for example using torrents
+    #target="www.google.com"
+    target="8.8.8.8"
 
     if [[ -z "$timeout" ]] ; then
         # default timeout if not set
@@ -259,18 +264,75 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     fi
 
     # - pre }}}
-    for count in $( seq "$timeout" )
-    do
-        if timeout $timeout ping -c 1 www.google.com  2>/dev/null 1>&2 ; then
+    # do we have booted the computer recently? (and so no internet yet)
+    # live boot time (geolocation)
+    if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 60 ]] ; then
+        # we just booted the system, wait for real 5 secons
+        for i in $( seq 5 )
+        do
+            sleep 1
+            #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
+            if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+                return 0
+            fi
+        done
+    fi
+    if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 300 ]] ; then
+    #if true ; then
+        # wait up to 11-30 seconds (lag vs without lag
+        # note: the sleeps are needed because the ping will inmediately fail, and we need to wait some seconds on this case
+        # note: and we need this ugly structure because it can lead to a much higher limit time
+        if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
             return 0
         fi
-        # wait a delay until we reach our set timeout
-        LC_ALL=C sleep 0.8
-    done
+        LC_ALL=C sleep 2
+        #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
+        if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            return 0
+        fi
+        LC_ALL=C sleep 2
+        #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
+        if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            return 0
+        fi
+        LC_ALL=C sleep 3
+        #if timeout 3 sleep 100000 2>/dev/null 1>&2 ; then
+        if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            return 0
+        fi
+        LC_ALL=C sleep 4
+        #if timeout 4 sleep 100000 2>/dev/null 1>&2 ; then
+        if timeout 4 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            return 0
+        fi
+    fi
+
+    # do we are using servcies that slows down our dns resolving? just make sure and test it..
+    #if ps aux | grep -v grep | grep -qsiE "(transmission|torrent|deluge|amule|nicotine)" ; then
+        ## special ping modes in case we have a lag (because we don't want to lose time resolving dns)
+        #target="8.8.8.8"
+        ##if timeout 3 sleep 100000 2>/dev/null 1>&2 ; then
+        #if timeout 4 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            #return 0
+        #fi
+    #else
+        ## this is the normal ping mode
+        ##if timeout $timeout sleep 100000 2>/dev/null 1>&2 ; then
+        #if timeout $timeout ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+            #return 0
+        #fi
+    #fi
+
+    # normal ping mode, we don't need to use the previous code with 8.8.8.8 so we use it by default
+    # we only need to know if we can ping to outside, not dns resolving
+    if timeout $timeout ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+        return 0
+    fi
+
 
     # wanna debug more?
     if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-        el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 www.google.com 2>&1 )"
+        el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 "$target" 2>&1 )"
         if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
             el_debug "by other side we can ping directly to an ip, please check your /etc/resolv.conf"
         else
@@ -286,18 +348,14 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev stamp_hour_prev_offline date_hour_now date_hour_prev date_hour_prev_offline returned OnLine i mode timeout
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout
 
-    stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet-last_run_hour"
-    stamp_hour_prev_offline="/tmp/.stamps-${USER}/verify_internet-last_run_hour_offline"
+    stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet_connection"
     mkdir -p "$( dirname "${stamp_hour_prev}" )"
 
     date_hour_now="$( date +%s )"
-    date_hour_prev="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
-    date_hour_prev_offline="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
-
-    # remove extra leading blank chars
-    read -r date_hour_prev <<< "$date_hour_prev"
+    #date_hour_prev="$( tail -1 "${stamp_hour_prev}" 2>/dev/null )"
+    #read -r date_hour_prev <<< "$date_hour_prev"
 
     # note: we should not use delayed, we always want delayed, instead, we should use "fast" when we need a fast check
     mode="$1"
@@ -333,44 +391,26 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     done
 
 
+    # cache online (10 min)
+    if [[ -n "$OnLine" ]] ; then
+        if [[ -s "$stamp_hour_prev" ]] ; then
+            if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 600 ]] ; then
 
-    # cache online (20 min)
-    if [[ -s "$stamp_hour_prev" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
-
-            # if anything tell us that we are connected and we was before, we should still be
-            el_dependencies_check "route"
-            if [[ -n "$OnLine" ]] || /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
-                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-                    el_debug "seems like we still online, using cache + small checks"
+                # if anything tell us that we are connected and we was before, we should still be
+                el_dependencies_check "route"
+                if /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
+                    if [[ "${EL_DEBUG}" -gt "3" ]] ; then
+                        el_debug "seems like we still online, using cache + small checks"
+                    fi
+                    return 0
                 fi
-                return 0
             fi
         fi
     fi
 
-    # cache offline (20 min)
-    if [[ -s "$stamp_hour_prev_offline" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev_offline}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 1200 ]] ; then
 
-            # if all the other checks tell us that we really are not connected, say that we are not, in cache mode
-            if el_verify_internet_ping 2 ; then
-                echo "$date_hour_now" > "$stamp_hour_prev"
-                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-                    el_debug "connection to internet found at ping level"
-                fi
-                return 0
-            else
-                if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-                    el_debug "we was OFFline at least 20 minutes ago, ping dont answer in 2 seconds, we should still off"
-                fi
-                return 1
-            fi
-        fi
-    fi
-
-    # we have not jumped from the caches, so remove them so we will avoid the next check loops
-    rm -f "$stamp_hour_prev_offline" "$stamp_hour_prev"
+    # we have not finished from the caches, so remove them so we will avoid the next check loops
+    rm -f "$stamp_hour_prev"
 
 
     # do a ping check
@@ -380,11 +420,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             el_debug "connection to internet found at ping level"
         fi
         return 0
-    else
-        if [[ "${mode}" = "fast" ]] ; then
-            # we have no time for other checks, return
-            return 1
-        fi
     fi
 
 
@@ -409,7 +444,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
         return 0
     else
-        echo "$date_hour_now" > "$stamp_hour_prev_offline"
         if [[ "${EL_DEBUG}" -gt "3" ]] ; then
             el_debug "Connection to internet not found"
         fi

@@ -415,9 +415,10 @@ main(){
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then
-        if zenity --question --text="$( eval_gettext "Enable visual effects? Your desktop will have more features, look nicer and be more responsive, but they may not work correctly on a very small number of computers." )" ; then
+        if zenity --question --text="$( eval_gettext "Enable visual effects? Your desktop will have more features, look nicer and be more responsive, but they may not work correctly on some computers." )" ; then
+            #Some slow computers can also have the desktop slower.
 
-            zenity --info --text="$( eval_gettext "If your desktop shows any problem or strange behaviour, deactivate the Ecomorph module. You can also change the default effects for every application in the Ecomorph preferences or change the default Cube desktop transition to the Wall one." )" || true
+            zenity --info --text="$( eval_gettext "If your desktop feels slower or shows any strange behaviour, simply disable the Ecomorph module. You can also change the type of effects in the Ecomorph preferences." )" || true
             # this message is annoying and useless:
             #zenity --info --text="$( eval_
             #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
@@ -456,7 +457,17 @@ main(){
                 enlightenment_remote -module-disable ecomorph
                 enlightenment_remote -module-unload ecomorph
                 zenity --warning --text="$( eval_gettext "Ecomorph does not run on this computer due to your graphics hardware. You can try to manually enable the module in Settings/Modules, but if it still does not work, you will need to try using it on a different computer." )"
+
+                exit
             fi
+
+
+            # wait and tell the user if still wants to use it
+            local message_want_to_continue_using
+            message_want_to_continue_using="$( printf "$( eval_gettext "Special effects works better and faster in some computers and worse or slower in others. Do you want to keep the module Ecomorph enabled?" )" "" )"
+
+            # wait 5 minutes before to ask if continue using it
+            enlightenment_remote -exec-cmd "sleep 300 ; if ! zenity --question --text='$message_want_to_continue_using' ; then enlightenment_remote -module-disable ecomorph ; fi "
         fi
     fi
 

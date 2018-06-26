@@ -466,13 +466,17 @@ main(){
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
         amixer -q set Capture 90% 2>/dev/null
-        amixer -q set Mic unmute 2>/dev/null
-        amixer -q set Mic 70% 2>/dev/null
+        amixer -q set "Internal Mic" unmute 2>/dev/null
+        amixer -q set "Internal Mic" 85% 2>/dev/null
+        amixer -q set "Mic" unmute 2>/dev/null
+        amixer -q set "Mic" 85% 2>/dev/null
         # capture mode
-        amixer -q sset Mic cap 2>/dev/null
+        amixer -q sset "Internal Mic" cap 2>/dev/null
+        amixer -q sset "Mic" cap 2>/dev/null
         amixer -q sset Capture cap 2>/dev/null
         # mute playback of mic, very annoying
-        amixer -q sset Mic Playback mute 2>/dev/null
+        amixer -q sset "Internal Mic" Playback mute 2>/dev/null
+        amixer -q sset "Mic" Playback mute 2>/dev/null
 
         # Fix for skype when we dont have a "Mic" control
         if ! LC_ALL="$EL_LC_EN" amixer scontrols | sed -e 's|^.mixer control||g' | grep -vi boost | grep -q "Mic" ; then

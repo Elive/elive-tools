@@ -7,6 +7,40 @@ export TEXTDOMAIN="elive-tools"
 # set user home
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 
+reconfigure_applications(){
+    local name mic num
+    # vokoscreen default mic
+    if [[ -s "$HOME/.config/vokoscreen/vokoscreen.conf" ]] ; then
+        if grep -qs "^pcm\.mic" "$HOME/.asoundrc" ; then
+            while read -ru 3 line
+            do
+                if [[ "$line" = "pcm.mic"* ]] ; then
+                    _a=1
+                fi
+                if ((_a)) ; then
+                    if echo "$line" | grep -qsE "^\s+card " ; then
+                        mic="$( echo "$line" | grep -qsE "^\s+card " | sed -e 's|^.*card ||g' )"
+                    fi
+                fi
+                if [[ -n "$mic" ]] ; then
+                    break
+                fi
+            done 3<<< "$( cat "$HOME/.asoundrc")"
+        else
+            mic="$( grep "^defaults\.pcm\.card" "$HOME/.asoundrc" | sed -e 's|^.*defaults.pcm.card ||g' | tail -1 )"
+        fi
+
+        # configure
+        if [[ -n "$mic" ]] ; then
+            num="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | awk '{print $1}' )"
+            name="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | sed -e 's|^.* - ||g' )"
+            if [[ -n "$name" ]] && [[ -n "$num" ]] ; then
+                sed -i -e "s|NameCaptureCard=.*|NameCaptureCard=\"[hw:${num},${num}] ${name}\"|g" "$HOME/.config/vokoscreen/vokoscreen.conf"
+            fi
+        fi
+    fi
+}
+
 select_card_multiple(){
     local _id _description menu
     # list cards, per priority
@@ -44,8 +78,11 @@ select_card_multiple(){
             menu+=("$( echo "$_description" )")
         fi
     done 3<<< "$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" | grep -v "at 0x.*irq" )"
+    # note: this psort is not very important since it's only going to be used for menu
 
-    if [[ "${#menu[@]}" -eq 2 ]] ; then
+    # set auto mode unless we have an USB/DAC audio card, also because we may want the mic from elsewhere
+    if [[ "${#menu[@]}" -eq 2 ]] && ! ((has_usb_audio)) ; then
+    #if [[ "${#menu[@]}" -eq 2 ]] ; then
         selection="$( echo "${menu[0]}" | head -1 )"
         is_auto_mode=1
     else
@@ -77,6 +114,14 @@ main(){
     guitool=zenity
 
     list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+
+    if grep -qsE "\[(USB|DAC)\s*]" /proc/asound/cards ; then
+        has_usb_audio=1
+    fi
+
+    if [[ "$( cat /proc/asound/cards | grep -vE "\[(ThinkPadEC|NVidia|midi|MIDI|HDMI|Dummy|system|Modem)" | grep -E "\[.*\]" | wc -l )" -gt 1 ]]  ; then
+        has_multiple_cards=1
+    fi
 
     # if our first argument is the card name to use, change the list of cards to use this one
     # try to be smart determining cards that we know that they are valid
@@ -143,18 +188,23 @@ main(){
             if ((is_smart_mode)) ; then
                 read -r selection <<< "$selection"
 
+                unset array_cards
                 while read -ru 3 line ; do
                     rm -f "${HOME}/.asoundrc"
+                    [[ -z "$line" ]] && continue
+
+                    # note: this is needed to configure the amixer next command, based on the while loop psort
                     echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
                     echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
 
-                    array_cards="$( echo -e "${array_cards}" ; amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+                    array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
 
-                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tac  )"
+                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
                 # select the card that has most tracks
                 # first detect the max number of tracks
                 selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
                 selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
 
@@ -173,6 +223,7 @@ main(){
                 is_multiple_cards=1
             else
                 if [[ -s "$HOME/.asoundrc" ]] ; then
+                    # exit because is interactive and user canceled
                     exit
                 else
                     unset is_multiple_cards
@@ -203,18 +254,63 @@ main(){
         sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
     fi
 
-    # set microphone default
-    if ! ((is_auto_mode)) && ! [[ -e "$DHOME/.shared-home" ]] ; then
-        if ((is_multiple_cards)) ; then
-            if ! $guitool --question --text="$( eval_gettext "Use the same audio card for your microphone?" )" ; then
-                select_card_multiple
 
-                cat >> "${HOME}/.asoundrc" << EOF
+    # set microphone default
+    if ! [[ -e "$DHOME/.shared-home" ]] ; then
+
+        if ((is_auto_mode)) ; then
+            if ((has_multiple_cards)) ; then
+
+                # backup for the loop
+                cp -f "$HOME/.asoundrc" "$HOME/.asoundrc.bak"
+
+                unset array_cards
+                while read -ru 3 line ; do
+                    rm -f "${HOME}/.asoundrc"
+                    [[ -z "$line" ]] && continue
+
+                    # note: this is needed to configure the amixer next command, based on the while loop psort
+                    echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
+                    echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
+
+                    # add this card only if has a mic available
+                    if LC_ALL=C amixer | grep -qsi "Simple mixer control.*'.*Mic" ; then
+                        array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+                    fi
+
+                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+
+                # restore
+                mv -f "$HOME/.asoundrc.bak" "$HOME/.asoundrc"
+
+                # select the card that has most tracks
+                # first detect the max number of tracks
+                selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+
+                # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
+                selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+
+                mic="$selection"
+            fi
+        else
+            if ((has_multiple_cards)) || ((has_usb_audio)) ; then
+
+                if ! $guitool --question --text="$( eval_gettext "Use the same audio card for your microphone?" )" ; then
+
+                    select_card_multiple
+                    mic="$selection"
+                fi
+            fi
+        fi
+
+        # append (important) mic conf
+        if [[ -n "$mic" ]] ; then
+            cat >> "${HOME}/.asoundrc" << EOF
 
 pcm.mic
 {
     type hw
-    card ${selection}
+    card ${mic}
 }
 
 pcm.!default
@@ -232,19 +328,19 @@ pcm.!default
     }
 }
 EOF
-
-            #else
-
-                #local translated_message
-                #translated_message="$( printf "$( eval_gettext "Using default card %s for your microphone" )" "$selection" )"
-
-                #$guitool --info --text="$translated_message" || true
-            fi
-
-            # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
-            #$guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )" || true
+            # syntax
 
         fi
+
+
+        # TODO: remove --smart option, we ALWAYS want it to be smart! unless we don't want --auto
+
+        # TODO: include a way to detect if mic is working, etc... maybe more easy to implement it on the C future mixer code
+        #$guitool --info --text="$( eval_gettext "If you experience noise in your speakers, or your microphone doesn't capture anything, just play with the settings in your audio card mixer. Sometimes you need to enable the capture mode or set it to the microphone for make it working, and sometimes the microphone is repeated to your audio card giving you echo or noise, you can solve those problems trying different settings" )" || true
+
+
+        reconfigure_applications
+
 
         if ! ((is_quiet_mode)) ; then
             $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volumes application in the Sound menu." )" || true

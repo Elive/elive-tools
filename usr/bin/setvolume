@@ -466,15 +466,23 @@ main(){
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
         amixer -q set Capture 90% 2>/dev/null
+        amixer -q set "Front Mic" unmute 2>/dev/null
+        amixer -q set "Front Mic" 85% 2>/dev/null
+        amixer -q set "Rear Mic" unmute 2>/dev/null
+        amixer -q set "Rear Mic" 85% 2>/dev/null
         amixer -q set "Internal Mic" unmute 2>/dev/null
         amixer -q set "Internal Mic" 85% 2>/dev/null
         amixer -q set "Mic" unmute 2>/dev/null
         amixer -q set "Mic" 85% 2>/dev/null
         # capture mode
+        amixer -q sset "Front Mic" cap 2>/dev/null
+        amixer -q sset "Rear Mic" cap 2>/dev/null
         amixer -q sset "Internal Mic" cap 2>/dev/null
         amixer -q sset "Mic" cap 2>/dev/null
         amixer -q sset Capture cap 2>/dev/null
         # mute playback of mic, very annoying
+        amixer -q sset "Front Mic" Playback mute 2>/dev/null
+        amixer -q sset "Rear Mic" Playback mute 2>/dev/null
         amixer -q sset "Internal Mic" Playback mute 2>/dev/null
         amixer -q sset "Mic" Playback mute 2>/dev/null
 

@@ -66,11 +66,8 @@ select_card_multiple(){
         if [[ "$_id" ]] && [[ -n "$_description" ]] ; then
 
             # skip unwanted ones
-            if ((is_smart_mode)) ; then
-                # smart cards to skip: ThinkPad Console Audio Control
-                if [[ "$_id" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
-                    continue
-                fi
+            if [[ "$_id" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
+                continue
             fi
 
 
@@ -128,7 +125,8 @@ main(){
     for arg in "$@"
     do
         if [[ "$arg" = "--smart" ]] ; then
-            is_smart_mode=1
+            # deprecated feature: we always want it to be smart!, unless we don't use --auto
+            #is_smart_mode=1
             shift
         fi
         if [[ "$arg" = "--auto" ]] ; then
@@ -185,38 +183,42 @@ main(){
             el_dependencies_check "psort"
 
             # detect the optimal card based in their number of tracks
-            if ((is_smart_mode)) ; then
-                read -r selection <<< "$selection"
+            read -r selection <<< "$selection"
 
-                unset array_cards
-                while read -ru 3 line ; do
-                    rm -f "${HOME}/.asoundrc"
-                    [[ -z "$line" ]] && continue
+            unset array_cards
+            while read -ru 3 line ; do
+                rm -f "${HOME}/.asoundrc"
+                [[ -z "$line" ]] && continue
 
-                    # note: this is needed to configure the amixer next command, based on the while loop psort
-                    echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
-                    echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
+                # note: this is needed to configure the amixer next command, based on the while loop psort
+                echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
+                echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
 
-                    array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
-
-                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
-
-                # select the card that has most tracks
-                # first detect the max number of tracks
-                selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
-
-                # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-                selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
-
-                if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
-                    $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but if has not been the case please reconfigure your audio card from the applications menus of Elive." )"
+                # set a preferenced result
+                if [[ "$line" = DAC ]] ; then
+                    preferenced="DAC"
                 fi
 
-            else
-                selection="$(echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | tac | head -1 )"
-                read -r selection <<< "$selection"
+                array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+
+            done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+
+            # select the card that has most tracks
+            # first detect the max number of tracks
+            selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+
+            # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
+            selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+
+            if [[ -n "$preferenced" ]] ; then
+                #if ((is_auto_mode)) ; then
+                selection="DAC"
+                #fi
             fi
 
+            if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
+                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but if has not been the case please reconfigure your audio card from the applications menus of Elive." )"
+            fi
 
         else
             if select_card_multiple ; then

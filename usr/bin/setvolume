@@ -465,15 +465,15 @@ main(){
 
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
-        amixer -q set Capture 90% 2>/dev/null
+        amixer -q set Capture 100% 2>/dev/null
         amixer -q set "Front Mic" unmute 2>/dev/null
-        amixer -q set "Front Mic" 85% 2>/dev/null
+        amixer -q set "Front Mic" 100% 2>/dev/null
         amixer -q set "Rear Mic" unmute 2>/dev/null
-        amixer -q set "Rear Mic" 85% 2>/dev/null
+        amixer -q set "Rear Mic" 100% 2>/dev/null
         amixer -q set "Internal Mic" unmute 2>/dev/null
-        amixer -q set "Internal Mic" 85% 2>/dev/null
+        amixer -q set "Internal Mic" 100% 2>/dev/null
         amixer -q set "Mic" unmute 2>/dev/null
-        amixer -q set "Mic" 85% 2>/dev/null
+        amixer -q set "Mic" 100% 2>/dev/null
         # capture mode
         amixer -q sset "Front Mic" cap 2>/dev/null
         amixer -q sset "Rear Mic" cap 2>/dev/null
@@ -520,7 +520,7 @@ main(){
 
         # then set a default generic volume
         unset meter
-        main 90% 1>/dev/null
+        main 85% 1>/dev/null
         exit
     fi
 

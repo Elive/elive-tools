@@ -247,7 +247,7 @@ EOF
         fi
 
         if ! ((is_quiet_mode)) ; then
-            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys. If they do not work, you can configure them in your Enlightenment keybinding preferences." )" || true
+            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volumes application in the Sound menu." )" || true
         fi
 
     fi

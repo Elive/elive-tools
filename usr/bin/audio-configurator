@@ -23,11 +23,13 @@ reconfigure_applications(){
                     fi
                 fi
                 if [[ -n "$mic" ]] ; then
+                    el_debug "mic is set to another card: $mic"
                     break
                 fi
             done 3<<< "$( cat "$HOME/.asoundrc")"
         else
             mic="$( grep "^defaults\.pcm\.card" "$HOME/.asoundrc" | sed -e 's|^.*defaults.pcm.card ||g' | tail -1 )"
+            el_debug "mic is set to default card: $mic"
         fi
 
         # configure
@@ -66,10 +68,16 @@ select_card_multiple(){
         if [[ "$_id" ]] && [[ -n "$_description" ]] ; then
 
             # skip unwanted ones
+            case "$_id" in
+                Modem|Dummy|system)
+                    el_debug "skipping $_id because is not a useful card"
+                    continue
+                    ;;
+            esac
             if [[ "$_id" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
+                el_debug "skipping ThinkPadEC because is not a useful one"
                 continue
             fi
-
 
             menu+=("$( echo "$_id" )")
             menu+=("$( echo "$_description" )")
@@ -81,9 +89,11 @@ select_card_multiple(){
     if [[ "${#menu[@]}" -eq 2 ]] && ! ((has_usb_audio)) ; then
     #if [[ "${#menu[@]}" -eq 2 ]] ; then
         selection="$( echo "${menu[0]}" | head -1 )"
+        el_debug "only one card found: $selection | switching to auto mode"
         is_auto_mode=1
     else
         selection="$( $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" "${menu[@]}" || echo cancel )"
+        el_debug "User selected audio card: $selection"
     fi
 
     # remove extra leading blank chars
@@ -116,7 +126,8 @@ main(){
         has_usb_audio=1
     fi
 
-    if [[ "$( cat /proc/asound/cards | grep -vE "\[(ThinkPadEC|NVidia|midi|MIDI|HDMI|Dummy|system|Modem)" | grep -E "\[.*\]" | wc -l )" -gt 1 ]]  ; then
+    if [[ "$( cat /proc/asound/cards | grep -vE "\[(ThinkPadEC|NVidia|midi|MIDI|Dummy|system|Modem)" | grep -E "\[.*\]" | wc -l )" -gt 1 ]]  ; then
+        el_debug "there is multiple cards found"
         has_multiple_cards=1
     fi
 
@@ -163,6 +174,8 @@ main(){
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card 0|g" /usr/share/alsa/alsa.conf
         fi
 
+        el_debug "no audio cards found"
+
         $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system. We suggest you to try a different kernel version to see if it has drivers for it." )"
 
         exit
@@ -176,6 +189,7 @@ main(){
         # remove extra leading blank chars
         read -r selection <<< "$selection"
 
+        el_debug "only one card found, using $selection"
     else
         # more than one card found
         if ((is_auto_mode)) ; then
@@ -183,8 +197,6 @@ main(){
             el_dependencies_check "psort"
 
             # detect the optimal card based in their number of tracks
-            read -r selection <<< "$selection"
-
             unset array_cards
             while read -ru 3 line ; do
                 rm -f "${HOME}/.asoundrc"
@@ -196,6 +208,7 @@ main(){
 
                 # set a preferenced result
                 if [[ "$line" = DAC ]] ; then
+                    el_debug "we have a DAC audio card, using it as a preferenced one"
                     preferenced="DAC"
                 fi
 
@@ -214,6 +227,8 @@ main(){
                 #if ((is_auto_mode)) ; then
                 selection="DAC"
                 #fi
+            else
+                el_debug "we selected the card $selected from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
             fi
 
             if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
@@ -229,11 +244,12 @@ main(){
                     exit
                 else
                     unset is_multiple_cards
-                    is_auto_mode=1
+                    $guitool --warning --text="$( eval_gettext "You have not selected any audio card so is not going to be configured. To let Elive to pick the smarter choice for you run this command:" ): $(basename $0) --auto"
+                    exit
+                    #is_auto_mode=1
                 fi
             fi
         fi
-
     fi
 
     # cleanup, new conf
@@ -277,6 +293,7 @@ main(){
 
                     # add this card only if has a mic available
                     if LC_ALL=C amixer | grep -qsi "Simple mixer control.*'.*Mic" ; then
+                        el_debug "the card $line is a good candidate for the extra microphone configuration"
                         array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
                     fi
 
@@ -307,6 +324,8 @@ main(){
 
         # append (important) mic conf
         if [[ -n "$mic" ]] ; then
+            el_debug "configuring a different mic source to $mic"
+
             cat >> "${HOME}/.asoundrc" << EOF
 
 pcm.mic

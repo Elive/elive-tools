@@ -37,7 +37,7 @@ reconfigure_applications(){
             num="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | awk '{print $1}' )"
             name="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | sed -e 's|^.* - ||g' )"
             if [[ -n "$name" ]] && [[ -n "$num" ]] ; then
-                sed -i -e "s|NameCaptureCard=.*|NameCaptureCard=\"[hw:${num},${num}] ${name}\"|g" "$HOME/.config/vokoscreen/vokoscreen.conf"
+                sed -i -e "s|NameCaptureCard=.*|NameCaptureCard=\"[hw:${num},0] ${name}\"|g" "$HOME/.config/vokoscreen/vokoscreen.conf"
             fi
         fi
     fi

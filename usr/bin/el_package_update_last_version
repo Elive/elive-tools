@@ -70,8 +70,10 @@ main(){
             el_aptget_update
         fi
     fi
+
+    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
     if [[ -z "$url_repository" ]] ; then
-        el_warning "Package $packagename not found in the repos, ignoring it..."
+        NOREPORTS=1 el_warning "Package $packagename not found in the repos, ignoring it..."
         exit 1
     fi
 

@@ -17,7 +17,7 @@ main(){
         # special cases, having a .asoundr doesn't works in other non-elive systems
         if [[ -e "$DHOME/.shared-home" ]] ; then
             el_explain 0 "home is shared"
-            $guitool --warning --text="$( eval_gettext "Your home is shared with another system so we will not configure your audio card in order to have it working on your other system too, you should have it working in your Elive by default, but if is not the case please run the audio-configurator application and it will create a file in your home directory called '.asoundrc' (which starts with a dot) to make your audio working, if then your audio doesn't works in your other systems then you should need to delete it." )"
+            $guitool --warning --text="$( eval_gettext "Your home is shared with another system so we will not configure your audio card in order to have it working on your other system too, you should have it working in your Elive by default, but if is not the case please run the audio-configurator application and it will create a file in your home directory called '.asoundrc' (which starts with a dot) to make your audio working, if then your audio doesn't works in your other systems then you should need to delete it." ) - Or delete the file $HOME/.shared-home"
 
         fi
     fi

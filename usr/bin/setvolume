@@ -496,6 +496,8 @@ main(){
         amixer -q set "Internal Mic" 100% 2>/dev/null
         amixer -q set "Mic" unmute 2>/dev/null
         amixer -q set "Mic" 100% 2>/dev/null
+        # by default do not hear yourself in headphones
+        amixer -q set "Sidetone" 0% 2>/dev/null
         # capture mode
         amixer -q sset "Front Mic" cap 2>/dev/null
         amixer -q sset "Rear Mic" cap 2>/dev/null

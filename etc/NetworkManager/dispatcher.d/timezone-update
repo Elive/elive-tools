@@ -262,12 +262,6 @@ main(){
         fi
     fi
 
-    # mark a stamp, amount of users that was able to successfully connect to internet
-    if ((is_live)) && ! el_flag check stamp-connected ; then
-        { curl --connect-timeout 30 --max-time 40 -A "elive-tools::$(el_elive_version_get)" http://www.elivecd.org/stats/1.1/055-live-connected-success.html 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-        el_flag add stamp-connected
-    fi
-
     # }}}
 
     # get ID's {{{

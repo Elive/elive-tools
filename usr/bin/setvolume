@@ -82,6 +82,21 @@ get_meter(){
             fi
         fi
     fi
+    ##################
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Headphone'"* ]] ; then
+            meter=Headphone
+
+            # verify that this meter really works or skip to the next one
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
+        fi
+    fi
+
 
     # this doesn't exist on this time but may make things working in the future
     if [[ -z "$meter" ]] ; then
@@ -97,6 +112,8 @@ get_meter(){
             fi
         fi
     fi
+
+
     ##################
     # Master should be everytime on Max volume or you got distortions
     if [[ -z "$meter" ]] ; then

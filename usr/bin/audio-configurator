@@ -362,6 +362,9 @@ EOF
 
         reconfigure_applications
 
+        # ALWAYS reconfigure audios (and mic capture and all) after to have configured a new card
+        setvolume defaults
+
 
         if ! ((is_quiet_mode)) ; then
             $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volumes application in the Sound menu." )" || true

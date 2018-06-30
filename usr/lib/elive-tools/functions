@@ -2524,6 +2524,7 @@ el_request_donation(){
 #          NAME:  el_config_get
 #   DESCRIPTION:  gets all the previously saved configurations for the $0 tool
 #    PARAMETERS:  -
+#                 to force conf file: prepend the variable SOURCE ($0) to the function call
 #       RETURNS:  sources the file configuration, so it gets the variables
 #          NOTE:  this tool cannot work with array variables
 #===============================================================================
@@ -2556,6 +2557,7 @@ el_config_get(){
 #   DESCRIPTION:  saves a configuration to re-use if we run again the installer
 #                 works with bash and zsh, but the SOURCE var needs to be set in main script
 #    PARAMETERS:  varname (not value), multiple-ones allowed (space separated)
+#                 to force conf file: prepend the variable SOURCE ($0) to the function call
 #       RETURNS:  -
 #===============================================================================
 el_config_save(){

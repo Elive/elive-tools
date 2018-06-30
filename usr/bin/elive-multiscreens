@@ -228,6 +228,10 @@ load_multiscreens_configuration(){
         # different than last time, ask
         if [[ -n "$conf" ]] && [[ "$conf" != "$conf_multiscreens_last" ]] ; then
             el_debug "different configuration from the last time, ask what to do"
+            # needed for wait that E is loaded, positioning widgets
+            if ((is_mode_delayed)) ; then
+                sleep 5
+            fi
             if timeout 120 zenity --question --text="$( eval_gettext "You have a new configuration for multiple screens, do you want to use it?" )" ; then
 
                 # check and set primary screen {{{
@@ -290,6 +294,11 @@ load_multiscreens_configuration(){
             if [[ "$screens_connected_number" -gt 1 ]] ; then
                 el_debug "we dont have anything to load, but we found multiple screens connected, to ask the user if wants to configure them"
 
+                # needed for wait that E is loaded, positioning widgets
+                if ((is_mode_delayed)) ; then
+                    sleep 5
+                fi
+
                 if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive? (suggested)" )" ; then
 
                     # configure
@@ -349,10 +358,13 @@ main(){
     # load configurations
     el_config_get
 
-    while getopts ":aqcflph" opt; do
+    while getopts ":adqcflph" opt; do
         case "$opt" in
             a)
                 is_mode_auto=1
+                ;;
+            d)
+                is_mode_delayed=1
                 ;;
             q)
                 # less use of debug functions:

@@ -2612,6 +2612,10 @@ el_config_save(){
         #el_debug "deleted old conf: $entry"
     done
 
+    if [[ "$( declare -p "$@" | wc -l )" -gt 1 ]] ; then
+        el_warning "saving variables with more than one line give problems, dont use it in your code or improve the function: $@"
+    fi
+
     # append configuration, and save the variable as global so it can work outside this function
     declare -p "$@" | sed -e 's|declare\s--|declare -|g' -e 's|declare -|declare -g|g' | awk '{$2 = $2" --"; print $0}' >> "$tmp_conf_f"
 }

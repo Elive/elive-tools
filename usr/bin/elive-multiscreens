@@ -147,6 +147,7 @@ configure_multiscreens(){
         el_config_save "conf_multiscreens_last"
 
         conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort | tr '\n' ' ' )"
+        read -r conf_multiscreens_last_screens_list <<< "$conf_multiscreens_last_screens_list"
         el_config_save "conf_multiscreens_last_screens_list"
 
         el_config_save "conf_multiscreens_last_autoload_wanted"
@@ -282,6 +283,7 @@ load_multiscreens_configuration(){
             el_config_save "conf_multiscreens_last"
 
             conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort | tr '\n' ' ' )"
+            read -r conf_multiscreens_last_screens_list <<< "$conf_multiscreens_last_screens_list"
             el_config_save "conf_multiscreens_last_screens_list"
 
             # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)

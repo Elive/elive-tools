@@ -146,7 +146,7 @@ configure_multiscreens(){
         conf_multiscreens_last="$conf"
         el_config_save "conf_multiscreens_last"
 
-        conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
+        conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort | tr '\n' ' ' )"
         el_config_save "conf_multiscreens_last_screens_list"
 
         el_config_save "conf_multiscreens_last_autoload_wanted"
@@ -190,7 +190,7 @@ load_multiscreens_configuration(){
         if [[ "$conf_multiscreens_last_autoload_wanted" = "yes" ]] ; then
 
             # only if we have the same screens connected
-            if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$screens_connected_names" | sort )" ]] ; then
+            if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$screens_connected_names" | sort | tr '\n' ' ' )" ]] ; then
 
                 if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
                     # load
@@ -281,7 +281,7 @@ load_multiscreens_configuration(){
             conf_multiscreens_last="$conf"
             el_config_save "conf_multiscreens_last"
 
-            conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
+            conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort | tr '\n' ' ' )"
             el_config_save "conf_multiscreens_last_screens_list"
 
             # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)

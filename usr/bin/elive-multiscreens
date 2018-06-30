@@ -23,7 +23,7 @@ usage(){
 -c  Configure: Reconfigure multiscreens
 -a  Auto: Do not ask any question
 -q  Quiet: Be silent
--p  Prev-deskto: this marks a state to know that we are before/previous to desktop started
+-p  Prev-desktop: this marks a state to know that we are before/previous to desktop started
 "
 }
 
@@ -35,16 +35,6 @@ usage(){
 #===============================================================================
 configure_multiscreens(){
     # pre {{{
-    local arg
-    #el_debug
-    #el_security_function_loop || return
-
-    if ! ((is_mode_configure)) ; then
-        return
-    fi
-
-    arg="$1"
-    el_check_variables "arg"
 
 
     # install dependencies
@@ -60,14 +50,107 @@ configure_multiscreens(){
 
     # }}}
 
+    # explain {{{
+    # explain the user how to configure it
+    timeout 120 zenity --text="$( eval_gettext "Use the next tool to configure your screens. Then make sure to click in save your configuration so that Elive can use it when starting the desktop." )"
+    if ((is_mode_previous_desktop)) ; then
+        # big explaination too
+        timeout 120 zenity --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the top tabs." )"
+    fi
+
+    # - explain }}}
+    # configure {{{
+    # gui for the user
+    arandr
+
+    if [[ -d "$HOME/.screenlayout" ]] ; then
+        conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+        file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
+    fi
+
+    # check and fix
+    if [[ -z "$conf" ]] ; then
+        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration with the tool, so Elive cannot use it to remember your screens setup in the optimal way. Do you want to try again?" )" ; then
+
+            # configure
+            arandr
+
+            # load new conf
+            if [[ -d "$HOME/.screenlayout" ]] ; then
+                conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+                file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
+            fi
+        fi
+    else
+        # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
+        conf_multiscreens_last=""
+        conf_multiscreens_last_autoload_wanted=""
+        el_config_save "conf_multiscreens_last"
+        el_config_save "conf_multiscreens_last_autoload_wanted"
+
+        return
+    fi
+
+    # - configure }}}
+    # primary screen select {{{
+    # set the primary screen
+    if ! grep -qs " --primary" "$file" ; then
+        while true
+        do
+            if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
+                break
+            else
+                if [[ "$primary" = "cancel" ]] ; then
+                    break
+                fi
+                primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+            fi
+        done
+
+        # set it
+        sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
+        # update timestamps since we modify the file
+        conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+    fi
+
+    # - primary screen select }}}
+    # use and ask if save {{{
+    if [[ -x "$file" ]] ; then
+        # load the new conf
+        ( . "$file" )
+
+        sleep 1
+
+        if timeout 25 zenity --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start your graphical system?" )" ; then
+
+            conf_multiscreens_last_autoload_wanted="yes"
+        else
+            conf_multiscreens_last=""
+            conf_multiscreens_last_autoload_wanted="no"
+        fi
+
+        # save confs
+        conf_multiscreens_last="$conf"
+        el_config_save "conf_multiscreens_last"
+
+        conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
+        el_config_save "conf_multiscreens_last_screens_list"
+
+        el_config_save "conf_multiscreens_last_autoload_wanted"
+
+    else
+        conf_multiscreens_last=""
+        conf_multiscreens_last_autoload_wanted=""
+        el_config_save "conf_multiscreens_last"
+        el_config_save "conf_multiscreens_last_autoload_wanted"
+    fi
+
+    # - use and ask if save }}}
 }
 
 load_multiscreens_configuration(){
-    local conf datestamp file screens_connected_names activeOutput primary
-
-    if ! ((is_mode_load)) ; then
-        return
-    fi
+    # pre {{{
+    local conf file screens_connected_names activeOutput primary
 
     # install dependencies
     if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
@@ -79,37 +162,45 @@ load_multiscreens_configuration(){
         fi
     fi
 
-
-    # list of screens known
+    # get confs
+    # screens known
     if [[ -z "$conf_multiscreens_last_screens_list" ]] ; then
         conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
         el_config_save "conf_multiscreens_last_screens_list"
     fi
 
+
+    # - pre }}}
+
     # check for arandr configurations
     if [[ -d "$HOME/.screenlayout" ]] ; then
         conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
         file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
-        #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
     fi
 
-
-    # TODO: use a per-profile list of loading configurations array (ID + max resolution etc)
+    # TODO: implement: use a per-profile list of loading configurations array (ID + max resolution etc)
     # only if we have valid configurations
     if [[ -s "$file" ]] && [[ -x "$file" ]] && grep -qs "^xrandr" "$file" ; then
 
-        # just load it if wanted
+        # just load it if wanted {{{
         if [[ "$conf_multiscreens_last_autoload_wanted" = "yes" ]] ; then
 
             # only if we have the same screens connected
             if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$screens_connected_names" | sort )" ]] ; then
 
                 if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
+                    # load
                     ( . "$file" )
                     # nothing more to do
                     return
                 fi
             else
+                # we have different screens connected, hum?
+                if [[ "$screens_connected_number" -gt 1 ]] ; then
+                    # TODO: implement:
+                    zenity --warning --text="You have different screens connected than in your last configuration, this feature is not yet implemented in Elive, you can collaborate improving this tool from ${0}, donate, making the project more known to have more resources, etc..."
+                fi
+
                 # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
                 conf_multiscreens_last=""
                 conf_multiscreens_last_autoload_wanted=""
@@ -118,12 +209,14 @@ load_multiscreens_configuration(){
             fi
         fi
 
+        # }}}
+
         # different than last time, ask
-        if [[ "$conf" != "$conf_multiscreens_last" ]] ; then
+        if [[ -n "$conf" ]] && [[ "$conf" != "$conf_multiscreens_last" ]] ; then
             # note: doesn't matter if we said to not load the configuration if
             if timeout 120 zenity --question --text="$( eval_gettext "You have a new configuration for multiple screens, do you want to use it?" )" ; then
 
-                # set the primary screen
+                # check and set primary screen {{{
                 if ! grep -qs " --primary" "$file" ; then
                     while true
                     do
@@ -141,10 +234,11 @@ load_multiscreens_configuration(){
                     sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
                     # update timestamps since we modify the file
                     conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
-                    el_config_save "conf"
                 fi
 
-                # load and ask
+                # }}}
+                # load and save {{{
+                # load
                 ( . "$file" )
 
 
@@ -154,9 +248,14 @@ load_multiscreens_configuration(){
                     conf_multiscreens_last_autoload_wanted="no"
                 fi
                 el_config_save "conf_multiscreens_last_autoload_wanted"
+
+                # }}}
+            else
+                conf_multiscreens_last_autoload_wanted="no"
+                el_config_save "conf_multiscreens_last_autoload_wanted"
             fi
 
-            # always save our last used conf position (asked)
+            # always save our last used conf position (because we already asked)
             conf_multiscreens_last="$conf"
             el_config_save "conf_multiscreens_last"
 
@@ -167,80 +266,42 @@ load_multiscreens_configuration(){
     else
         # if we don't have a valid configuration, ask for a new one
         if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] ; then
-            if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive? (suggested)" )" ; then
+            if [[ "$screens_connected_number" -gt 1 ]] ; then
+                if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive? (suggested)" )" ; then
 
-                timeout 120 zenity --text="$( eval_gettext "Use the next tool to configure them. Then make sure to click in save your configuration so that Elive can use it when starting the desktop." )"
-                # configure
-                arandr
-
-                if [[ -d "$HOME/.screenlayout" ]] ; then
-                    conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
-                    file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
-                    #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
-                fi
-
-                if [[ -z "$conf" ]] ; then
-                    if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration with the tool, so Elive cannot use it to remember your screens setup in the optimal way. Do you want to try again?" )" ; then
-                        # configure
-                        arandr
-                        # load new conf
-                        if [[ -d "$HOME/.screenlayout" ]] ; then
-                            conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
-                            file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
-                            #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
-                        fi
-                    fi
+                    # configure
+                    configure_multiscreens
                 fi
             fi
 
-            # if we still no having conf, forget about it
-            if [[ -n "$conf" ]] ; then
-                # TODO: when elive-skel is used or e17-confs restarted, delete the screens configurations too
-                # TODO: e17-confs requires a configurator for multiscreens, in other words, a pager for every extra screen
-                # TODO: e17-restart should use elive-skel instead of a force delete?
+            # TODO: when elive-skel is used or e17-confs restarted, delete the screens configurations too
+            # TODO: e17-confs requires a configurator for multiscreens, in other words, a pager for every extra screen
+            # TODO: e17-restart should use elive-skel instead of a force delete?
 
-                if [[ -x "$file" ]] ; then
+            # if we have now a new conf
+            # FIXME: this code seems not needed anymore, remove it
+            #if [[ -n "$conf" ]] ; then
+                #if [[ -x "$file" ]] ; then
 
-                    # set the primary screen
-                    if ! grep -qs " --primary" "$file" ; then
-                        while true
-                        do
-                            if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
-                                break
-                            else
-                                if [[ "$primary" = "cancel" ]] ; then
-                                    break
-                                fi
-                                primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
-                            fi
-                        done
+                    ## load and ask
+                    #( . "$file" )
 
-                        # set it
-                        sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
-                        # update timestamps since we modify the file
-                        conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
-                        el_config_save "conf"
-                    fi
+                    ## done
+                    #timeout 60 zenity --info --text="$( eval_gettext "Perfect, Elive will use this configuration from now when your desktop starts, if you want to stop loading it just delete the configurations from their directory:" )"
 
-                    # load and ask
-                    ( . "$file" )
+                    #conf_multiscreens_last="$conf"
+                    #el_config_save "conf_multiscreens_last"
+                #else
+                    #el_error "configuration file not found or not executable: $file"
+                #fi
+            #else
+                #conf_multiscreens_last_autoload_wanted="no"
+                #el_config_save "conf_multiscreens_last_autoload_wanted"
 
-                    # done
-                    timeout 60 zenity --info --text="$( eval_gettext "Perfect, Elive will use this configuration from now when your desktop starts, if you want to stop loading it just delete the configurations from their directory:" )"
-
-                    conf_multiscreens_last="$conf"
-                    el_config_save "conf_multiscreens_last"
-                else
-                    el_error "configuration file not found or not executable: $file"
-                fi
-            else
-                conf_multiscreens_last_autoload_wanted="no"
-                el_config_save "conf_multiscreens_last_autoload_wanted"
-
-                # empty configuration, so that if in the future we found a new one we will ask if load it
-                conf_multiscreens_last=""
-                el_config_save "conf_multiscreens_last"
-            fi
+                ## empty configuration, so that if in the future we found a new one we will ask if load it
+                #conf_multiscreens_last=""
+                #el_config_save "conf_multiscreens_last"
+            #fi
         fi
     fi
 
@@ -317,7 +378,7 @@ main(){
     case "$screens_connected_number" in
         0)
             # report
-            el_error "no screens connected? \n$(xrandr --query)"
+            el_error "no screens connected? \n$( xrandr --query )"
 
             if ((is_mode_auto)) || ((is_mode_previous_desktop)) ; then
                 exit
@@ -341,8 +402,14 @@ main(){
     esac
 
 
-    configure_multiscreens
-    load_multiscreens_configuration
+    # we only want to load conf, not configure it
+    if ((is_mode_load)) ; then
+        load_multiscreens_configuration
+    fi
+
+    if ((is_mode_configure)) ; then
+        configure_multiscreens
+    fi
 
 }
 

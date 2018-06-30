@@ -52,10 +52,10 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 zenity --text="$( eval_gettext "Use the next tool to configure your screens. Then make sure to click in save your configuration so that Elive can use it when starting the desktop." )"
+    timeout 120 zenity --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 zenity --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the top tabs." )"
+        timeout 120 zenity --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the top tabs." )"
     fi
 
     # - explain }}}
@@ -70,25 +70,26 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration with the tool, so Elive cannot use it to remember your screens setup in the optimal way. Do you want to try again?" )" ; then
+        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again?" )" ; then
 
             # configure
             arandr
 
             # load new conf
             if [[ -d "$HOME/.screenlayout" ]] ; then
+                # FIXME: this gets the last conf, but doesn't means that is ours one, we should use a backup/recover state for the directory with trap flags
                 conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
                 file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
             fi
-        fi
-    else
-        # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
-        conf_multiscreens_last=""
-        conf_multiscreens_last_autoload_wanted=""
-        el_config_save "conf_multiscreens_last"
-        el_config_save "conf_multiscreens_last_autoload_wanted"
+        else
+            # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
+            conf_multiscreens_last=""
+            conf_multiscreens_last_autoload_wanted=""
+            el_config_save "conf_multiscreens_last"
+            el_config_save "conf_multiscreens_last_autoload_wanted"
 
-        return
+            return
+        fi
     fi
 
     # - configure }}}
@@ -117,6 +118,7 @@ configure_multiscreens(){
     # use and ask if save {{{
     if [[ -x "$file" ]] ; then
         # load the new conf
+        el_debug "running: $(cat "$file" | grep "^xrand" )"
         ( . "$file" )
 
         sleep 1
@@ -150,8 +152,6 @@ configure_multiscreens(){
 
 load_multiscreens_configuration(){
     # pre {{{
-    local conf file screens_connected_names activeOutput primary
-
     # install dependencies
     if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
         el_dependencies_install "x11-server-utils"
@@ -161,14 +161,6 @@ load_multiscreens_configuration(){
             exit 1
         fi
     fi
-
-    # get confs
-    # screens known
-    if [[ -z "$conf_multiscreens_last_screens_list" ]] ; then
-        conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
-        el_config_save "conf_multiscreens_last_screens_list"
-    fi
-
 
     # - pre }}}
 
@@ -190,6 +182,7 @@ load_multiscreens_configuration(){
 
                 if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
                     # load
+                    el_debug "running: $(cat "$file" | grep "^xrand" )"
                     ( . "$file" )
                     # nothing more to do
                     return
@@ -239,6 +232,7 @@ load_multiscreens_configuration(){
                 # }}}
                 # load and save {{{
                 # load
+                el_debug "running: $(cat "$file" | grep "^xrand" )"
                 ( . "$file" )
 
 
@@ -284,6 +278,7 @@ load_multiscreens_configuration(){
                 #if [[ -x "$file" ]] ; then
 
                     ## load and ask
+                    #el_debug "running: $(cat "$file" | grep "^xrand" )"
                     #( . "$file" )
 
                     ## done
@@ -312,9 +307,13 @@ main(){
     # pre confs
     if [[ -z "${1}" ]] ; then
         is_mode_configure=1
+        el_debug "no options given, so we should want to configure it then"
     fi
 
     # }}}
+
+    # load configurations
+    el_config_get
 
     while getopts ":aqcflph" opt; do
         case "$opt" in

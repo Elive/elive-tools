@@ -277,6 +277,9 @@ load_multiscreens_configuration(){
             conf_multiscreens_last="$conf"
             el_config_save "conf_multiscreens_last"
 
+            conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
+            el_config_save "conf_multiscreens_last_screens_list"
+
             # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)
             # maybe we can add a watcher here to know about that? no... we need to know that the game exited!
         fi

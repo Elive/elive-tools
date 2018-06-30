@@ -1,0 +1,211 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
+load_multiscreens_configuration(){
+    local conf datestamp file connectedOutputs activeOutput primary
+
+    # get info from xrandr
+    connectedOutputs="$( LC_ALL="$EL_LC_EN" xrandr | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    #activeOutput="$( LC_ALL="$EL_LC_EN" xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")" # im not sure what this does but dont looks to work, not always the screen is set as primary, hum
+
+    if ! [[ "$( echo "$connectedOutputs" | wc -l )" -gt 1 ]] || [[ -z "$connectedOutputs" ]] ; then
+        return
+    fi
+
+    # list of screens known
+    if [[ -z "$conf_multiscreens_last_screens_list" ]] ; then
+        conf_multiscreens_last_screens_list="$( echo "$connectedOutputs" | sort )"
+        el_config_save "conf_multiscreens_last_screens_list"
+    fi
+
+    # check for arandr configurations
+    if [[ -d "$HOME/.screenlayout" ]] ; then
+        conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+        file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
+        #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
+    fi
+
+
+    # only if we have valid configurations
+    if [[ -s "$file" ]] && [[ -x "$file" ]] && grep -qs "^xrandr" "$file" ; then
+
+        # just load if wanted
+        if [[ "$conf_multiscreens_last_autoload_wanted" = "yes" ]] ; then
+
+            # only if we have the same screens connected
+            if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$connectedOutputs" | sort )" ]] ; then
+
+                if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
+                    ( . "$file" )
+                    # nothing more to do
+                    return
+                fi
+            else
+                # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
+                conf_multiscreens_last=""
+                conf_multiscreens_last_autoload_wanted=""
+                el_config_save "conf_multiscreens_last"
+                el_config_save "conf_multiscreens_last_autoload_wanted"
+            fi
+        fi
+
+        # different than last time, ask
+        if [[ "$conf" != "$conf_multiscreens_last" ]] ; then
+            # note: doesn't matter if we said to not load the configuration if
+            if timeout 120 zenity --question --text="$( eval_gettext "You have a new configuration for multiple screens, do you want to use it?" )" ; then
+
+                # set the primary screen
+                if ! grep -qs " --primary" "$file" ; then
+                    while true
+                    do
+                        if [[ -n "$primary" ]] && echo "$connectedOutputs" | grep -qs "^${primary}$" ; then
+                            break
+                        else
+                            if [[ "$primary" = "cancel" ]] ; then
+                                break
+                            fi
+                            primary="$(  echo "$connectedOutputs" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                        fi
+                    done
+
+                    # set it
+                    sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
+                    # update timestamps since we modify the file
+                    conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+                    el_config_save "conf"
+                fi
+
+                # load and ask
+                ( . "$file" )
+
+
+                if timeout 180 zenity --question --text="$( eval_gettext "Move your mouse among your screens to verify the settings. Do you want to always load this configuration when starting Elive?" )" ; then
+                    conf_multiscreens_last_autoload_wanted="yes"
+                else
+                    conf_multiscreens_last_autoload_wanted="no"
+                fi
+                el_config_save "conf_multiscreens_last_autoload_wanted"
+            fi
+
+            # always save our last used conf position (asked)
+            conf_multiscreens_last="$conf"
+            el_config_save "conf_multiscreens_last"
+
+            # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)
+            # maybe we can add a watcher here to know about that? no... we need to know that the game exited!
+        fi
+
+    else
+        # if we don't have a valid configuration, ask for a new one
+        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] ; then
+            if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive? (suggested)" )" ; then
+
+                timeout 120 zenity --text="$( eval_gettext "Use the next tool to configure them. Then make sure to click in save your configuration so that Elive can use it when starting the desktop." )"
+                # configure
+                arandr
+
+                if [[ -d "$HOME/.screenlayout" ]] ; then
+                    conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+                    file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
+                    #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
+                fi
+
+                if [[ -z "$conf" ]] ; then
+                    if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration with the tool, so Elive cannot use it to remember your screens setup in the optimal way. Do you want to try again?" )" ; then
+                        # configure
+                        arandr
+                        # load new conf
+                        if [[ -d "$HOME/.screenlayout" ]] ; then
+                            conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+                            file="$( echo "$conf" | cut -d' ' -f 2- | tail -n 1 )"
+                            #datestamp="$( echo "$conf" | cut -d' ' -f 1- | tail -n 1 )"
+                        fi
+                    fi
+                fi
+            fi
+
+            # if we still no having conf, forget about it
+            if [[ -n "$conf" ]] ; then
+                # TODO: when elive-skel is used or e17-confs restarted, delete the screens configurations too
+                # TODO: e17-confs requires a configurator for multiscreens, in other words, a pager for every extra screen
+                # TODO: e17-restart should use elive-skel instead of a force delete?
+
+                if [[ -x "$file" ]] ; then
+
+                    # set the primary screen
+                    if ! grep -qs " --primary" "$file" ; then
+                        while true
+                        do
+                            if [[ -n "$primary" ]] && echo "$connectedOutputs" | grep -qs "^${primary}$" ; then
+                                break
+                            else
+                                if [[ "$primary" = "cancel" ]] ; then
+                                    break
+                                fi
+                                primary="$(  echo "$connectedOutputs" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                            fi
+                        done
+
+                        # set it
+                        sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
+                        # update timestamps since we modify the file
+                        conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
+                        el_config_save "conf"
+                    fi
+
+                    # load and ask
+                    ( . "$file" )
+
+                    # done
+                    timeout 60 zenity --info --text="$( eval_gettext "Perfect, Elive will use this configuration from now when your desktop starts, if you want to stop loading it just delete the configurations from their directory:" )"
+
+                    conf_multiscreens_last="$conf"
+                    el_config_save "conf_multiscreens_last"
+                else
+                    el_error "configuration file not found or not executable: $file"
+                fi
+            else
+                conf_multiscreens_last_autoload_wanted="no"
+                el_config_save "conf_multiscreens_last_autoload_wanted"
+
+                # empty configuration, so that if in the future we found a new one we will ask if load it
+                conf_multiscreens_last=""
+                el_config_save "conf_multiscreens_last"
+            fi
+        fi
+    fi
+
+}
+
+main(){
+    # pre {{{
+    local var
+
+    if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
+        el_dependencies_install "arandr"
+
+        if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
+            zenity --error --text="Arandr tool is required"
+            exit 1
+        fi
+    fi
+
+
+
+    # }}}
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

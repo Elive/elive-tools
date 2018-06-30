@@ -111,6 +111,7 @@ configure_multiscreens(){
                 if [[ "$primary" = "cancel" ]] || [[ -z "$screens_connected_names" ]] ; then
                     break
                 fi
+                # TODO: include more info in the selector about the screens, like their resolution and size dimensions
                 primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
             fi
         done

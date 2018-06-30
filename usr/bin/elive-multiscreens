@@ -202,10 +202,10 @@ load_multiscreens_configuration(){
                 fi
             else
                 # we have different screens connected, hum?
-                if [[ "$screens_connected_number" -gt 1 ]] ; then
-                    # TODO: implement:
-                    zenity --warning --text="You have different screens connected than in your last configuration, this feature is not yet implemented in Elive, you can collaborate improving this tool from ${0}, donate, making the project more known to have more resources, etc..."
-                fi
+                #if [[ "$screens_connected_number" -gt 1 ]] ; then
+                    ## TODO: implement:
+                    #zenity --warning --text="You have different screens connected than in your last configuration, this feature is not yet implemented in Elive, you can collaborate improving this tool from ${0}, donate, making the project more known to have more resources, etc..."
+                #fi
 
                 # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
                 conf_multiscreens_last=""
@@ -218,6 +218,12 @@ load_multiscreens_configuration(){
         fi
 
         # }}}
+
+        # we dont want to interact more from this point, so just exit
+        if ((is_mode_previous_desktop)) ; then
+            exit
+        fi
+
 
         # different than last time, ask
         if [[ -n "$conf" ]] && [[ "$conf" != "$conf_multiscreens_last" ]] ; then
@@ -277,7 +283,7 @@ load_multiscreens_configuration(){
 
     else
         # if we don't have a valid configuration, ask for a new one
-        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] ; then
+        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] && ! ((is_mode_previous_desktop)) ; then
             if [[ "$screens_connected_number" -gt 1 ]] ; then
                 el_debug "we dont have anything to load, but we found multiple screens connected, to ask the user if wants to configure them"
 

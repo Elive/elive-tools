@@ -7,20 +7,82 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
-load_multiscreens_configuration(){
-    local conf datestamp file connectedOutputs activeOutput primary
+# TODO: remove modes: auto, pre, quiet, if they are useless in the final code
 
-    # get info from xrandr
-    connectedOutputs="$( LC_ALL="$EL_LC_EN" xrandr | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
-    #activeOutput="$( LC_ALL="$EL_LC_EN" xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")" # im not sure what this does but dont looks to work, not always the screen is set as primary, hum
+#===  FUNCTION  ================================================================
+#          NAME:  usage
+#   DESCRIPTION:  shows usage help
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+usage(){
+    echo -e "
+    Usage: $(basename $0) args:
 
-    if ! [[ "$( echo "$connectedOutputs" | wc -l )" -gt 1 ]] || [[ -z "$connectedOutputs" ]] ; then
+-l  Load: Uses your last multiscreens configuration
+-c  Configure: Reconfigure multiscreens
+-a  Auto: Do not ask any question
+-q  Quiet: Be silent
+-p  Prev-deskto: this marks a state to know that we are before/previous to desktop started
+"
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  configure_multiscreens
+#   DESCRIPTION:  configures multiscreen
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+configure_multiscreens(){
+    # pre {{{
+    local arg
+    #el_debug
+    #el_security_function_loop || return
+
+    if ! ((is_mode_configure)) ; then
         return
     fi
 
+    arg="$1"
+    el_check_variables "arg"
+
+
+    # install dependencies
+    if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
+        el_dependencies_install "arandr"
+
+        if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
+            zenity --error --text="Arandr tool is required, please install it first"
+            exit 1
+        fi
+    fi
+
+
+    # }}}
+
+}
+
+load_multiscreens_configuration(){
+    local conf datestamp file screens_connected_names activeOutput primary
+
+    if ! ((is_mode_load)) ; then
+        return
+    fi
+
+    # install dependencies
+    if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
+        el_dependencies_install "x11-server-utils"
+
+        if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
+            zenity --error --text="xrandr tool is required, please install it first"
+            exit 1
+        fi
+    fi
+
+
     # list of screens known
     if [[ -z "$conf_multiscreens_last_screens_list" ]] ; then
-        conf_multiscreens_last_screens_list="$( echo "$connectedOutputs" | sort )"
+        conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort )"
         el_config_save "conf_multiscreens_last_screens_list"
     fi
 
@@ -32,14 +94,15 @@ load_multiscreens_configuration(){
     fi
 
 
+    # TODO: use a per-profile list of loading configurations array (ID + max resolution etc)
     # only if we have valid configurations
     if [[ -s "$file" ]] && [[ -x "$file" ]] && grep -qs "^xrandr" "$file" ; then
 
-        # just load if wanted
+        # just load it if wanted
         if [[ "$conf_multiscreens_last_autoload_wanted" = "yes" ]] ; then
 
             # only if we have the same screens connected
-            if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$connectedOutputs" | sort )" ]] ; then
+            if [[ "$conf_multiscreens_last_screens_list" = "$( echo "$screens_connected_names" | sort )" ]] ; then
 
                 if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
                     ( . "$file" )
@@ -64,13 +127,13 @@ load_multiscreens_configuration(){
                 if ! grep -qs " --primary" "$file" ; then
                     while true
                     do
-                        if [[ -n "$primary" ]] && echo "$connectedOutputs" | grep -qs "^${primary}$" ; then
+                        if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
                             break
                         else
                             if [[ "$primary" = "cancel" ]] ; then
                                 break
                             fi
-                            primary="$(  echo "$connectedOutputs" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                            primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
                         fi
                     done
 
@@ -142,13 +205,13 @@ load_multiscreens_configuration(){
                     if ! grep -qs " --primary" "$file" ; then
                         while true
                         do
-                            if [[ -n "$primary" ]] && echo "$connectedOutputs" | grep -qs "^${primary}$" ; then
+                            if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
                                 break
                             else
                                 if [[ "$primary" = "cancel" ]] ; then
                                     break
                                 fi
-                                primary="$(  echo "$connectedOutputs" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                                primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
                             fi
                         done
 
@@ -185,21 +248,101 @@ load_multiscreens_configuration(){
 
 main(){
     # pre {{{
-    local var
-
-    if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
-        el_dependencies_install "arandr"
-
-        if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
-            zenity --error --text="Arandr tool is required"
-            exit 1
-        fi
+    # pre confs
+    if [[ -z "${1}" ]] ; then
+        is_mode_configure=1
     fi
-
-
 
     # }}}
 
+    while getopts ":aqcflph" opt; do
+        case "$opt" in
+            a)
+                is_mode_auto=1
+                ;;
+            q)
+                is_mode_quiet=1
+                ;;
+
+            c)
+                el_debug "configure mode"
+                is_mode_configure=1
+                ;;
+            f)
+                el_debug "force mode"
+                is_mode_force=1
+                ;;
+            l)
+                el_debug "load mode"
+                is_mode_load=1
+                ;;
+            p)
+                is_mode_previous_desktop=1
+                ;;
+            \?)
+                usage
+                NOREPORTS=1 el_error "Invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                usage
+                NOREPORTS=1 el_error "Option -$OPTARG requires an argument."
+                exit 1
+                ;;
+            h)
+                usage
+                exit
+                ;;
+            # temporal demo code for multiargs:
+            #a)
+                #el_array_member_add "$OPTARG" "${attachments[@]}" ; attachments=("${_out[@]}")
+                #if ! ((is_mode_quiet)) ; then
+                    #el_explain 2 "attached file: $OPTARG"
+                #fi
+                #;;
+        esac
+    done
+
+
+    # get info from xrandr
+    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    #activeOutput="$( LC_ALL="$EL_LC_EN" xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")" # im not sure what this does but dont looks to work, not always the screen is set as primary, hum
+    if [[ -n "$screens_connected_names" ]] ; then
+        screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
+    else
+        screens_connected_number="0"
+    fi
+
+    # how much screens we have?
+    case "$screens_connected_number" in
+        0)
+            # report
+            el_error "no screens connected? \n$(xrandr --query)"
+
+            if ((is_mode_auto)) || ((is_mode_previous_desktop)) ; then
+                exit
+            fi
+
+            # inform
+            zenity --error --text="$( eval_gettext "You don't have any screens connected" )"
+            ;;
+        1)
+            # unless we want to configure resolutions, everything is fine
+            #if ((is_mode_auto)) || ((is_mode_previous_desktop)) ; then
+                #exit
+            #fi
+            # UPDATE: the user may have a wanted specific resolution to use, so always be able to load configurations for a single screen too
+            true
+            ;;
+        *)
+            # more than one screen
+            true
+            ;;
+    esac
+
+
+    configure_multiscreens
+    load_multiscreens_configuration
 
 }
 

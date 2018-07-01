@@ -43,6 +43,7 @@ configure_multiscreens(){
     # TODO: betatest ecomorph dealing
     # TODO: betatest: with system -> reboots, is my DIMM always reduced? is not the e17-conf already meant to not do that??
     # TODO: the pre-desktop mode is a bit ugly (code speaking, error-prone), maybe we should just have an own function for it
+    # TODO: add a keyboard hotkey to switch between screens (in e17-conf), and include it in the hotkeys PDF
     # pre {{{
 
 

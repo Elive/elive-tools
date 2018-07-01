@@ -137,7 +137,11 @@ configure_multiscreens(){
     if [[ -x "$file" ]] ; then
         # load the new conf
         el_info "running: $(cat "$file" | grep "^xrand" )"
-        ( . "$file" )
+        (
+        if ! "$file" ; then
+            zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+        fi
+        )
 
         sleep 1
 
@@ -208,7 +212,11 @@ load_multiscreens_configuration(){
                     # load
                     # TODO: disable debug when finished to betatest: we just want to load, less bottleneck
                     el_info "running: $(cat "$file" | grep "^xrand" )"
-                    ( . "$file" )
+                    (
+                    if ! "$file" ; then
+                        zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                    fi
+                    )
                     # nothing more to do
                     return
                 fi
@@ -270,7 +278,11 @@ load_multiscreens_configuration(){
                 # load and save {{{
                 # load
                 el_info "running: $(cat "$file" | grep "^xrand" )"
-                ( . "$file" )
+                (
+                if ! "$file" ; then
+                    zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                fi
+                )
 
                 # ask for confirmation
                 if timeout 180 zenity --question --text="$( eval_gettext "Move your mouse among your screens to verify the settings. Do you want to always load this configuration when starting Elive?" )" ; then

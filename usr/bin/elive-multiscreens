@@ -145,6 +145,10 @@ configure_multiscreens(){
 
             conf_multiscreens_last_autoload_wanted="yes"
             el_debug "user wanted to save permanently this configuration"
+
+            if ((is_mode_configure)) ; then
+                timeout 90 zenity --info --text="$( eval_gettext "Note: if the desktop doesn't acts as expected, try to restart to a new desktop configuration" )"
+            fi
         else
             conf_multiscreens_last_autoload_wanted="no"
             el_debug "user not wanted to re-use this configuration"

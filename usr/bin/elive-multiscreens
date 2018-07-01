@@ -42,6 +42,7 @@ configure_multiscreens(){
     # TODO: betatest games restoring states
     # TODO: betatest ecomorph dealing
     # TODO: betatest: with system -> reboots, is my DIMM always reduced? is not the e17-conf already meant to not do that??
+    # TODO: the pre-desktop mode is a bit ugly (code speaking, error-prone), maybe we should just have an own function for it
     # pre {{{
 
 

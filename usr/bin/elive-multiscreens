@@ -34,6 +34,14 @@ usage(){
 #       RETURNS:  -
 #===============================================================================
 configure_multiscreens(){
+    # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)
+    # maybe we can add a watcher here to know about that? no... we need to know that the game exited!
+    # TODO: remove the xrandr module from E sources? not so important since we don't use it... also it doesn't shows on modules list as a pluggable module
+    # TODO: when elive-skel is used or e17-confs restarted, delete the screens configurations too
+    # TODO: e17-restart should use elive-skel instead of a force delete?
+    # TODO: betatest games restoring states
+    # TODO: betatest ecomorph dealing
+    # TODO: betatest: with system -> reboots, is my DIMM always reduced? is not the e17-conf already meant to not do that??
     # pre {{{
 
 

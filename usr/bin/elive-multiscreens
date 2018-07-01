@@ -139,7 +139,9 @@ configure_multiscreens(){
         el_info "running: $(cat "$file" | grep "^xrand" )"
         (
         if ! "$file" ; then
-            zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+            if ! (($is_mode_previous_desktop)) ; then
+                zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+            fi
         fi
         )
 
@@ -214,7 +216,9 @@ load_multiscreens_configuration(){
                     el_info "running: $(cat "$file" | grep "^xrand" )"
                     (
                     if ! "$file" ; then
-                        zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                        if ! (($is_mode_previous_desktop)) ; then
+                            zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                        fi
                     fi
                     )
                     # nothing more to do
@@ -280,7 +284,9 @@ load_multiscreens_configuration(){
                 el_info "running: $(cat "$file" | grep "^xrand" )"
                 (
                 if ! "$file" ; then
-                    zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                    if ! (($is_mode_previous_desktop)) ; then
+                        zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                    fi
                 fi
                 )
 

@@ -304,10 +304,10 @@ load_multiscreens_configuration(){
 
                 # needed for wait that E is loaded, positioning widgets
                 if ((is_mode_delayed)) ; then
-                    sleep 5
+                    sleep 15
                 fi
 
-                if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive? (suggested)" )" ; then
+                if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive?" )" ; then
 
                     # configure
                     configure_multiscreens

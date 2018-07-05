@@ -111,8 +111,11 @@ configure_multiscreens(){
     # - configure }}}
     # primary screen select {{{
     # set the primary screen
-    if ! grep -qs " --primary" "$file" ; then
-        el_debug "no primary conf found, asking for it"
+    #if ! grep -qs " --primary" "$file" ; then
+        #el_debug "no primary conf found, asking for it"
+
+        # remove it first
+        sed -i -e "s| --primary||g" "$file" 2>/dev/null || true
 
         while true
         do
@@ -133,7 +136,7 @@ configure_multiscreens(){
         conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
 
         el_debug "user selected $primary as primary screen, updating configuration to use always it"
-    fi
+    #fi
 
     # - primary screen select }}}
     # use and ask if save {{{

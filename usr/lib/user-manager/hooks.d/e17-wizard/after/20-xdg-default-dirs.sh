@@ -110,10 +110,10 @@ main(){
         XDG_CONFIG_HOME="${HOME}/.config"
     fi
 
-    if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] ; then
-        el_explain 0 "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
-        exit 0
-    fi
+    #if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] ; then
+        #el_explain 0 "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+        #exit 0
+    #fi
 
     # show progress (after to request instmod)
     echo 1 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -446,8 +446,8 @@ main(){
     net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   2>/dev/null 1>&2 || true
 
     # mark a state flag so that we don't run this again
-    mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
-    echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
+    #mkdir -p "$( dirname "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+    #echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
     # progress
     echo -e "# Done" > "$TMP_PROGRESS_CONFIGURING_f"

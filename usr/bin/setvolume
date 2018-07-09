@@ -440,6 +440,7 @@ main(){
         echo -e "$(basename $0) mute    # switch on/off mute mode"
         echo -e "$(basename $0) muteset # set ON mute mode"
         echo -e "$(basename $0) unmute  # set OFF mute mode"
+        echo -e "$(basename $0) showvolume  # show the actual volume value"
 
         echo -e "\n$(basename $0) uses special powers making any card to work with all the features even the mute one, if doesn't, report the bug to us"
         exit 1
@@ -566,6 +567,11 @@ main(){
     # toggle
     if [[ "$action" = "mute" ]] ; then
         mute_modes "mute"
+        exit
+    fi
+    # show volume
+    if [[ "$action" = "showvolume" ]] ; then
+        get_volume
         exit
     fi
 

@@ -13,6 +13,9 @@ fi
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+export GTK_THEME="Adwaita"
+export GTK2_RC_FILES="/usr/share/themes/Adwaita/gtk-2.0/gtkrc"
+
 
 
 main(){

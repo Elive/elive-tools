@@ -40,6 +40,7 @@ main(){
             # wicd-: deprecated and not needed for elive
             # print-applet: useless
             # notification-daemon: dont include it if we are going to use e17's one
+            # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it
             continue
         fi
         # - un-needed ones }}}

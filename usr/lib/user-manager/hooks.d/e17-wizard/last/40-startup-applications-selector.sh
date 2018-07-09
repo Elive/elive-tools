@@ -240,8 +240,9 @@ EOF
                         echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
                     fi
                 else
-                    el_error "Gdu startup file not found"
-                    sleep 2
+                    # user may have removed it from the install
+                    NOREPORTS=1 el_error "Gdu startup file not found"
+                    #sleep 2
                 fi
             fi
         fi

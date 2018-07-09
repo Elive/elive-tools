@@ -34,7 +34,7 @@ main(){
 
         # - checks }}}
         # un-needed / blacklisted ones {{{
-        if echo "$filename" | grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon)" ; then
+        if echo "$filename" | grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk)" ; then
             # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
             # nm-applet: already integrated in elive correctly and saving mem
             # wicd-: deprecated and not needed for elive

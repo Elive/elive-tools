@@ -16,8 +16,8 @@ main(){
         enlightenment_remote -module-disable battery
         enlightenment_remote -module-unload battery
     else
-        enlightenment_remote -module-enable battery
         enlightenment_remote -module-load battery
+        enlightenment_remote -module-enable battery
     fi
 
 

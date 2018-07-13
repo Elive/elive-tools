@@ -1,0 +1,228 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+# Lock system (good one) {{{
+#lockfile="/tmp/.$(basename $0)-${USER}.lock"
+
+exit_ok(){
+    rm -f "$lockfile"
+    rm -f "$tmpimage"
+    rmdir "$tmpdir"
+}
+exit_error(){
+    rm -f "$lockfile"
+    rm -f "$tmpimage"
+    rmdir "$tmpdir"
+}
+
+#if [[ -r "$lockfile" ]] ; then
+#PROCCESS="$(cat $lockfile)"
+#else
+#PROCCESS=" "
+#fi
+#if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+#el_error "$(basename $0) already running"
+#exit
+#else
+#echo $$ > "$lockfile"
+#fi
+
+# traps needs to be after the lock verification, in order to not remove it when we are already running
+trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 15 ERR TERM
+
+# SET the lock file
+#echo "$$" > "$lockfile"
+
+
+# end lock system }}}
+
+usage(){
+    echo -e "Takes a screenshot from different options and copy it to your clipboard to be pasted where you want
+
+Usage: $(basename $0) [options]
+
+-d  delayed:     wait 5 seconds before to take the screenshot
+-w  window:      take a screenshot of a window (click to it)
+-r  range:       drag your mouse to select what you want to take in your screenshot,
+                 or just click in the window that you want to take the screenshot
+-q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90.
+
+Notes: if no window or range is specified, the full desktop is used for the screenshot
+"
+}
+
+take_screenshot(){
+    local options
+
+    # defaults: do not beep
+    options="--silent"
+
+    # no need to click, just take a screenshot of the focused window
+    if ((is_mode_window)) ; then
+        options="--focused $options"
+    fi
+    # borders are not included if we are in selection mode
+    if ((is_mode_borders)) ; then
+        options="--border $options"
+    fi
+    # selection mode (user can click to take the screenshot of a window too)
+    if ((is_mode_selection)) ; then
+        options="--select $options"
+    fi
+    # wait x seconds and show a counter
+    if ((is_mode_delayed)) ; then
+        options="--count $options"
+        options="--delay 5 $options"
+    fi
+
+    # screenshot
+    if ((is_mode_save)) ; then
+        scrot --quality "$quality" $options
+    else
+        scrot --quality "$quality" $options "$tmpimage"
+    fi
+
+    # copy to clipboard
+    if ((is_mode_png)) ; then
+        xclip -selection clipboard -t "image/png" < "$tmpimage"
+    else
+        xclip -selection clipboard -t "image/jpeg" < "$tmpimage"
+    fi
+
+    local message_result
+    if ((is_mode_save)) ; then
+        message_result="$( printf "$( eval_gettext "Screenshot saved in your Pictures directory. You can paste it where you want using:" )" " Ctrl + V" )"
+    else
+        message_result="$( printf "$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" )" " Ctrl + V" )"
+    fi
+
+    # tell the user
+    if el_check_is_shell || [[ -n "$TERM" ]] ; then
+        el_info "$message_result"
+    else
+        notify-send -t 8000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"
+    fi
+}
+
+main(){
+    # pre {{{
+    local file
+    tmpdir="/tmp/.$(basename $0)-${USER}"
+    mkdir -p "$tmpdir"
+
+    if ! el_dependencies_check "scrot" 2>/dev/null ; then
+        el_aptget_update
+        el_dependencies_install "scrot"
+    fi
+
+    # }}}
+
+    # load configurations
+    el_config_get
+
+    while getopts ":dsq:w" opt; do
+        case "$opt" in
+            #a)
+                #is_mode_auto=1
+                #;;
+            #c)
+                #is_mode_clipboard=1
+                #;;
+            #b)
+                #is_mode_borders=1
+                #;;
+            d)
+                is_mode_delayed=1
+                ;;
+            r)
+                is_mode_range=1
+                ;;
+            s)
+                is_mode_save=1
+                ;;
+            w)
+                is_mode_window=1
+                is_mode_borders=1
+                ;;
+            #q)
+                ## less use of debug functions:
+                #export EL_DEBUG=0
+                #is_mode_quiet=1
+                #;;
+
+            #c)
+                #el_debug "configure mode"
+                #is_mode_configure=1
+                #;;
+            #f)
+                #el_debug "force mode"
+                #is_mode_force=1
+                #;;
+            #l)
+                #el_debug "load mode"
+                #is_mode_load=1
+                #;;
+            #p)
+                #is_mode_previous_desktop=1
+                #;;
+            h)
+                usage
+                exit
+                ;;
+            #o)
+                ## output file
+                ##el_array_member_add "$OPTARG" "${file_output[@]}" ; file_output=("${_out[@]}")
+                #file_output="$OPTARG"
+                #el_debug "output file: $OPTARG"
+                #;;
+            q)
+                # quality
+                #el_array_member_add "$OPTARG" "${quality[@]}" ; quality=("${_out[@]}")
+                quality="$OPTARG"
+                el_debug "quality: $OPTARG"
+                ;;
+            \?)
+                usage
+                NOREPORTS=1 el_error "Invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                usage
+                NOREPORTS=1 el_error "Option -$OPTARG requires an argument."
+                exit 1
+                ;;
+        esac
+    done
+
+    # set defaults
+    if [[ -z "$quality" ]] ; then
+        quality=90
+    fi
+    # type of image
+    if ((is_mode_png)) ; then
+        tmpimage="${tmpdir}/screenshot.png"
+    else
+        tmpimage="${tmpdir}/screenshot.jpg"
+    fi
+
+    # we always want border of windows (if no range mode)
+    is_mode_borders=1
+
+
+    # run
+    take_screenshot
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

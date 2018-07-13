@@ -108,6 +108,8 @@ take_screenshot(){
         if el_check_is_shell || ((is_terminal)) ; then
             el_info "$message_drag_range"
         else
+            # we need to wait a bit so the user is not pressing the keyboard
+            LC_ALL=C sleep 0.32
             notify-send -t 4000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
         fi
 
@@ -115,9 +117,9 @@ take_screenshot(){
 
 
     if ((is_mode_png)) ; then
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png'
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
     else
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg'
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg' || true
     fi
 
     # set the image filename to use

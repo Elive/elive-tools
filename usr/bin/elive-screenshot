@@ -105,19 +105,19 @@ take_screenshot(){
 
     # some info for the user
     if ((is_mode_range)) ; then
-        if el_check_is_shell || [[ -n "$TERM" ]] ; then
+        if el_check_is_shell || ((is_terminal)) ; then
             el_info "$message_drag_range"
         else
-            notify-send -t 6000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+            notify-send -t 4000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
         fi
 
     fi
 
 
     if ((is_mode_png)) ; then
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png'
     else
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg' || true
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg'
     fi
 
     # set the image filename to use
@@ -139,7 +139,7 @@ take_screenshot(){
     fi
 
     # tell the user
-    if el_check_is_shell || [[ -n "$TERM" ]] ; then
+    if el_check_is_shell || ((is_terminal)) ; then
         el_info "$message_result"
     else
         notify-send -t 8000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"

@@ -1195,7 +1195,7 @@ el_check_is_shell(){
     #el_security_function_loop || return
 
     # }}}
-    if [[ "$0" = "bash" ]] || [[ "$0" = "zsh" ]] ; then
+    if [[ "$0" = "bash" ]] || [[ "$0" = *"zsh" ]] ; then
         return 0
     else
         return 1

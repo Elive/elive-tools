@@ -6,6 +6,8 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+
+
 # Lock system (good one) {{{
 #lockfile="/tmp/.$(basename $0)-${USER}.lock"
 
@@ -51,7 +53,9 @@ Usage: $(basename $0) [options]
 -w  window:      take a screenshot of a window (click to it)
 -r  range:       drag your mouse to select what you want to take in your screenshot,
                  or just click in the window that you want to take the screenshot
--q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90.
+-q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90. (not available for PNG)
+-p  png:         Use PNG quality (default is jpg)
+-s  save:        Save the screenshot in your pictures directory
 
 Notes: if no window or range is specified, the full desktop is used for the screenshot
 "
@@ -67,12 +71,12 @@ take_screenshot(){
     if ((is_mode_window)) ; then
         options="--focused $options"
     fi
-    # borders are not included if we are in selection mode
+    # borders are not included if we are in range mode
     if ((is_mode_borders)) ; then
         options="--border $options"
     fi
-    # selection mode (user can click to take the screenshot of a window too)
-    if ((is_mode_selection)) ; then
+    # range mode (user can click to take the screenshot of a window too)
+    if ((is_mode_range)) ; then
         options="--select $options"
     fi
     # wait x seconds and show a counter
@@ -80,12 +84,51 @@ take_screenshot(){
         options="--count $options"
         options="--delay 5 $options"
     fi
+    # set the quality
+    if [[ -n "$quality" ]] && ! ((is_mode_png)) ; then
+        options="--quality $quality $options"
+    fi
+
+    # format message
+    local message_result message_drag_range
+    if ((is_mode_save)) ; then
+        message_result="$( eval_gettext "Screenshot saved in your pictures directory. You can paste it where you want using:" ) Ctrl + V"
+    else
+        message_result="$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" ) Ctrl + V"
+    fi
+    message_drag_range="$( eval_gettext "Drag your mouse to select a region to capture, or click in the desired window" )"
+
 
     # screenshot
-    if ((is_mode_save)) ; then
-        scrot --quality "$quality" $options
+    cd "$tmpdir"
+    rm -f *png *jpg
+
+    # some info for the user
+    if ((is_mode_range)) ; then
+        if el_check_is_shell || [[ -n "$TERM" ]] ; then
+            el_info "$message_drag_range"
+        else
+            notify-send -t 6000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+        fi
+
+    fi
+
+
+    if ((is_mode_png)) ; then
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png'
     else
-        scrot --quality "$quality" $options "$tmpimage"
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg'
+    fi
+
+    # set the image filename to use
+    tmpimage="$( find . -mindepth 1 -maxdepth 1 -type f | tail -1 | sed -e 's|\.\/||g' )"
+    tmpimage="$( pwd )/$tmpimage"
+
+    # copy it to the screenshots directory if wanted
+    if ((is_mode_save)) ; then
+        mkdir -p "$(xdg-user-dir PICTURES)/Screenshots"
+        cp -f "$tmpimage" "$(xdg-user-dir PICTURES)/Screenshots/"
+        el_info "Screenshot saved as: $(xdg-user-dir PICTURES)/Screenshots/$(basename $tmpimage)"
     fi
 
     # copy to clipboard
@@ -93,13 +136,6 @@ take_screenshot(){
         xclip -selection clipboard -t "image/png" < "$tmpimage"
     else
         xclip -selection clipboard -t "image/jpeg" < "$tmpimage"
-    fi
-
-    local message_result
-    if ((is_mode_save)) ; then
-        message_result="$( printf "$( eval_gettext "Screenshot saved in your Pictures directory. You can paste it where you want using:" )" " Ctrl + V" )"
-    else
-        message_result="$( printf "$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" )" " Ctrl + V" )"
     fi
 
     # tell the user
@@ -117,16 +153,19 @@ main(){
     mkdir -p "$tmpdir"
 
     if ! el_dependencies_check "scrot" 2>/dev/null ; then
-        el_aptget_update
-        el_dependencies_install "scrot"
+        el_aptget_update || true
+        el_dependencies_install "scrot" || true
     fi
+
+    # always run without errors
+    set -e
 
     # }}}
 
     # load configurations
     el_config_get
 
-    while getopts ":dsq:w" opt; do
+    while getopts ":drswphq:" opt; do
         case "$opt" in
             #a)
                 #is_mode_auto=1
@@ -142,6 +181,7 @@ main(){
                 ;;
             r)
                 is_mode_range=1
+                is_mode_borders=1
                 ;;
             s)
                 is_mode_save=1
@@ -156,10 +196,9 @@ main(){
                 #is_mode_quiet=1
                 #;;
 
-            #c)
-                #el_debug "configure mode"
-                #is_mode_configure=1
-                #;;
+            p)
+                is_mode_png=1
+                ;;
             #f)
                 #el_debug "force mode"
                 #is_mode_force=1
@@ -201,19 +240,18 @@ main(){
     done
 
     # set defaults
-    if [[ -z "$quality" ]] ; then
-        quality=90
-    fi
-    # type of image
     if ((is_mode_png)) ; then
-        tmpimage="${tmpdir}/screenshot.png"
+        unset quality
     else
-        tmpimage="${tmpdir}/screenshot.jpg"
+        if [[ -z "$quality" ]] ; then
+            quality=90
+        fi
     fi
 
-    # we always want border of windows (if no range mode)
-    is_mode_borders=1
-
+    if ((is_mode_range)) && ((is_mode_window)) ; then
+        unset is_mode_range
+        NOREPORTS=1 el_warning "Range and window mode cannot be used at the same time, switching to capture the focused window only"
+    fi
 
     # run
     take_screenshot

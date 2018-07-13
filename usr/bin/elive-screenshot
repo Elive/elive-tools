@@ -50,7 +50,7 @@ usage(){
 Usage: $(basename $0) [options]
 
 -d  delayed:     wait 5 seconds before to take the screenshot
--w  window:      take a screenshot of a window (click to it)
+-w  window:      take a screenshot to the focused window
 -r  range:       drag your mouse to select what you want to take in your screenshot,
                  or just click in the window that you want to take the screenshot
 -q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90. (not available for PNG)
@@ -115,9 +115,9 @@ take_screenshot(){
 
 
     if ((is_mode_png)) ; then
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png'
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
     else
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg'
+        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg' || true
     fi
 
     # set the image filename to use

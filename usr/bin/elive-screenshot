@@ -127,7 +127,7 @@ take_screenshot(){
     tmpimage="$( pwd )/$tmpimage"
 
     # if we don't have image (maybe the user didnt release the keyboard at enough time)
-    if ! [[ -s "$tmpimage" ]] ; then
+    if ! [[ -s "$tmpimage" ]] || [[ -d "$tmpimage" ]] ; then
         NOREPORTS=1 el_warning "Screenshot was not captured"
         exit
     fi

@@ -7,20 +7,23 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
-
 # Lock system (good one) {{{
 #lockfile="/tmp/.$(basename $0)-${USER}.lock"
 
 exit_ok(){
     set +e
     #rm -f "$lockfile"
-    rm -f "$tmpimage"
+    if [[ -s "$tmpimage" ]] && ! [[ -d "$tmpimage" ]] ; then
+        rm -f "$tmpimage"
+    fi
     rmdir "$tmpdir"
 }
 exit_error(){
     set +e
     #rm -f "$lockfile"
-    rm -f "$tmpimage"
+    if [[ -s "$tmpimage" ]] && ! [[ -d "$tmpimage" ]] ; then
+        rm -f "$tmpimage"
+    fi
     rmdir "$tmpdir"
 }
 

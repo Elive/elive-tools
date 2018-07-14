@@ -12,12 +12,14 @@ export TEXTDOMAIN
 #lockfile="/tmp/.$(basename $0)-${USER}.lock"
 
 exit_ok(){
-    rm -f "$lockfile"
+    set +e
+    #rm -f "$lockfile"
     rm -f "$tmpimage"
     rmdir "$tmpdir"
 }
 exit_error(){
-    rm -f "$lockfile"
+    set +e
+    #rm -f "$lockfile"
     rm -f "$tmpimage"
     rmdir "$tmpdir"
 }

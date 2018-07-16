@@ -115,7 +115,7 @@ take_screenshot(){
         else
             # we need to wait a bit so the user is not pressing the keyboard
             LC_ALL=C sleep 0.33
-            notify-send -t 4000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+            notify-send -t 3600 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
         fi
 
     fi

@@ -24,16 +24,16 @@ try_and_configure(){
         # up to 5 seconds
         for j in $( seq 10 )
         do
-            wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+            wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
             if [[ -n "$wifi_dev" ]] ; then
                 el_debug "possible good driver: $driver"
 
-                for dev in $( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tr '\n' ' ' )
+                for dev in $( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tr '\n' ' ' )
                 do
                     [[ -z "$dev" ]] && continue
                     for j in $( seq 8 )
                     do
-                        if iwlist $dev scan 1>/dev/null 2>&1 ; then
+                        if LC_ALL=C iwlist $dev scan 1>/dev/null 2>&1 ; then
                             driver_good="$driver"
                             wifi_dev="$dev"
                             break 4
@@ -93,23 +93,25 @@ main(){
         # get device name
         el_debug "BCM43 Broadcom Wireless device detected"
 
-        wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+        wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
 
         # check again..
         if [[ -z "$wifi_dev" ]] ; then
             sleep 1
-            wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+            wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
         fi
 
         # check if we can scan
         if [[ -n "$wifi_dev" ]] ; then
-            if ! iwlist $wifi_dev scan 1>/dev/null 2>&1 ; then
+            if ! LC_ALL=C iwlist $wifi_dev scan 1>/dev/null 2>&1 ; then
                 unset wifi_dev
             fi
         fi
 
         # wifi not working correctly? let's try with other modules:
-        if [[ -z "$wifi_dev" ]] ; then
+        if [[ -n "$wifi_dev" ]] ; then
+            el_debug "wifi seems to be correctly working, nothing more to do"
+        else
             try_and_configure
 
             # hack: extracting firmwares, files included probably in built-time of the iso

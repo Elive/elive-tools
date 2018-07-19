@@ -112,6 +112,30 @@ main(){
         if [[ -z "$wifi_dev" ]] ; then
             try_and_configure
 
+            # hack: extracting firmwares, files included probably in built-time of the iso
+            if ! ((is_wifi_working)) ; then
+                mv /lib/firmware/b43 /tmp/ || true
+                mv /lib/firmware/b43legacy /tmp/ || true
+                mkdir -p /lib/firmware/b43
+
+                for i in /var/tmp/b43-firmwares/*o
+                do
+                    [[ -s "$i" ]] || continue
+                    b43-fwcutter -w /lib/firmware "$i" || true
+                done
+
+                # configure again
+                try_and_configure
+
+                # cleanups
+                if ! ((is_wifi_working)) ; then
+                    rm -rf /lib/firmware/b43 /lib/firmware/b43legacy
+                    mv /tmp/b43 /lib/firmware/ || true
+                    mv /tmp/b43legacy /lib/firmware/ || true
+                fi
+            fi
+
+
             if ! ((is_wifi_working)) ; then
                 el_error "B43 device not installed correctly: \n$( lspci -nn -d "14e4:" )"
             fi

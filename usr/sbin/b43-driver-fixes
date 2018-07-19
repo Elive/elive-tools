@@ -1,0 +1,130 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+try_and_configure(){
+
+    #modules_list="wl b43 b43legacy brcm80211"
+    modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb"
+
+    # remove every b43 module
+    for j in $( seq 5 )
+    do
+        for i in $modules_list
+        do
+            rmmod "$i" 2>/dev/null || true
+        done
+    done
+
+    # try drivers
+    for driver in $modules_list
+    do
+        modprobe "$driver"
+        el_debug "trying with driver $driver ..."
+
+        # up to 5 seconds
+        for j in $( seq 10 )
+        do
+            wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+            if [[ -n "$wifi_dev" ]] ; then
+                el_debug "possible good driver: $driver"
+
+                for dev in $( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tr '\n' ' ' )
+                do
+                    [[ -z "$dev" ]] && continue
+                    for j in $( seq 8 )
+                    do
+                        if iwlist $dev scan 1>/dev/null 2>&1 ; then
+                            driver_good="$driver"
+                            wifi_dev="$dev"
+                            break 4
+                        fi
+
+                        LC_ALL=C sleep 0.5
+                    done
+                done
+            fi
+
+            LC_ALL=C  sleep 0.5
+        done
+
+        # do not conflict, remove
+        rmmod "$driver" 2>/dev/null || true
+    done
+
+    # valid driver! hooorray
+    if [[ -n "$wifi_dev" ]] ; then
+        el_debug "Wireless interface found '$wifi_dev' using driver '$driver_good' "
+        # delete previous conf
+        rm -f /etc/modprobe.d/broadcom-sta-dkms.conf
+
+        echo -e "# blacklisting modules by Elive to make broadcom b43 devices working" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+
+        case "$driver_good" in
+            b43|b43legacy)
+                echo -e "blacklist wl" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                ;;
+            wl)
+                echo -e "blacklist b43" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist b43legacy" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist b44" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist bcma" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist brcm80211" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist brcmsmac" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist ssb" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                ;;
+        esac
+
+        if ! grep -qsE "^${driver_good}$" /etc/modules ; then
+            echo -e "# broadcom b43 wifi by elive\n$driver_good" >> /etc/modules
+        fi
+
+        is_wifi_working=1
+    fi
+}
+
+
+main(){
+    # pre {{{
+    #local  driver_good modules_list wifi_dev
+    # }}}
+
+    # detect if we have a Broadcom 43* type wifi
+    if [[ "$( lspci -nn -d "14e4:" | wc -l )" -gt 0 ]] ; then
+        # get device name
+        el_debug "BCM43 Broadcom Wireless device detected"
+
+        wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+
+        # check again..
+        if [[ -z "$wifi_dev" ]] ; then
+            sleep 1
+            wifi_dev="$( LC_ALL=C /sbin/iwconfig | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+        fi
+
+        # check if we can scan
+        if [[ -n "$wifi_dev" ]] ; then
+            if ! iwlist $wifi_dev scan 1>/dev/null 2>&1 ; then
+                unset wifi_dev
+            fi
+        fi
+
+        # wifi not working correctly? let's try with other modules:
+        if [[ -z "$wifi_dev" ]] ; then
+            try_and_configure
+
+            if ! ((is_wifi_working)) ; then
+                el_error "B43 device not installed correctly: \n$( lspci -nn -d "14e4:" )"
+            fi
+        fi
+    else
+        el_debug "no b43 devices found, ignoring..."
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

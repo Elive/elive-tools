@@ -250,7 +250,7 @@ mute_modes_force(){
     # get actual volume
     volume_actual="$( get_volume )"
     if [[ -z "$volume_actual" ]] ; then
-        el_error "unable to get actual volume"
+        el_warning "unable to get actual volume"
         exit
     fi
 
@@ -541,6 +541,8 @@ main(){
         # then set a default generic volume
         unset meter
         main 85% 1>/dev/null
+        true
+
         exit
     fi
 

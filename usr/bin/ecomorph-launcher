@@ -296,7 +296,7 @@ build_args()
 
 
 #if [ "x$LIBGL_ALWAYS_INDIRECT" = "x1" ]; then
-    #INDIRECT="yes";
+#INDIRECT="yes";
 #fi
 
 
@@ -355,15 +355,15 @@ main(){
 
     # give a preview of the theme
     #if el_verify_internet ; then
-        #cd /tmp
+    #cd /tmp
 
-        #if zenity --question --text="$( eval_gettext "Do you want to try the preview of the desktop theme on which we are working on?" )" ; then
-        #curl -s -A Mozilla http://www.elivecd.org/elive_3.0_light_development.edj
-        #sudo -H mv *edj /usr/share/enlightenment/data/themes/
-        #sudo -H chown root:root /usr/share/enlightenment/data/themes/*edj
-        #sudo -H chmod a+r /usr/share/enlightenment/data/themes/*edj
+    #if zenity --question --text="$( eval_gettext "Do you want to try the preview of the desktop theme on which we are working on?" )" ; then
+    #curl -s -A Mozilla http://www.elivecd.org/elive_3.0_light_development.edj
+    #sudo -H mv *edj /usr/share/enlightenment/data/themes/
+    #sudo -H chown root:root /usr/share/enlightenment/data/themes/*edj
+    #sudo -H chmod a+r /usr/share/enlightenment/data/themes/*edj
 
-        #enlightenment_remote -restart
+    #enlightenment_remote -restart
     #fi
 
 
@@ -415,13 +415,36 @@ main(){
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then
-        if zenity --question --text="$( eval_gettext "Activate visual effects? Your desktop will have extra features, look nicer and most of the times faster." )" ; then
+        if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer and most of the times faster." )" ; then
             #Some slow computers can also have the desktop slower.
 
-            zenity --info --text="$( eval_gettext "If your desktop feels slower or shows any strange behaviour, simply disable the Ecomorph module. You can also change the type of effects in the Ecomorph preferences." )" || true
-            # this message is annoying and useless:
-            #zenity --info --text="$( eval_
-            #gettext "If you are a C coder, you can help get it working for the next stable release. You can also improve Elive by making a donation so we can be able to pay more resources. Thank you!" )"
+            local message_warn_user
+            message_warn_user="$( printf "$( eval_gettext "Note: If your desktop feels slower or shows any strange behaviour, simply disable the Ecomorph module. You can also change the type of effects in the Ecomorph preferences." )" "" )"
+
+            if [[ -s "$HOME/.ecomp/ecomp.cfg.normal" ]] && [[ -s "$HOME/.ecomp/ecomp.cfg.full" ]] ; then
+                answer="$( zenity --width=580 --height=240 --list \
+                    --text="$( eval_gettext "Select a profile for the visual effects" )\n\n${message_warn_user}" \
+                    --column="$( eval_gettext "Type" )" --column="$( eval_gettext "Description" )" \
+                    "normal" "$( eval_gettext "Default, with basic effects, perfect for daily work" )" \
+                    "full" "$( eval_gettext "Lots of random visual effects, perfect for demonstration" )" \
+                    || echo cancel)"
+
+                if [[ "$answer" = "cancel" ]] ; then
+                    exit
+                fi
+
+                if [[ -n "$answer" ]] ; then
+                    if [[ -s "$HOME/.ecomp/ecomp.cfg.${answer}" ]] ; then
+                        cp -f "$HOME/.ecomp/ecomp.cfg.${answer}" "$HOME/.ecomp/ecomp.cfg"
+                    fi
+                fi
+            else
+                if ! [[ -s "$HOME/.ecomp/ecomp.cfg" ]] ; then
+                    EL_DEBUG=0 elive-skel upgrade .ecomp
+                fi
+            fi
+
+            #zenity --info --text="$message_warn_user" || true
 
             el_speak_text "starting metamorphosization"
 

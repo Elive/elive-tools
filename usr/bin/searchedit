@@ -17,7 +17,7 @@ main(){
     fi
 
     if [[ -z "$EDITOR" ]] ; then
-        el_warning "EDITOR variable is not set, please assign it to your .bashrc / .zshrc"
+        el_warning "EDITOR variable is not set, assign it to your .bashrc / .zshrc"
         if [[ -x "/usr/bin/vim" ]] ; then
             el_warning "we will fallback to vim"
             EDITOR="vim"

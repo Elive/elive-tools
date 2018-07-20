@@ -19,7 +19,7 @@ main(){
         exit 1
     fi
     if [[ -n "$2" ]] ; then
-        el_error "Please use it only with one argument"
+        el_error "use it only with one argument"
         exit 1
     fi
 

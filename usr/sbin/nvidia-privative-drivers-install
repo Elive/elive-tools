@@ -665,7 +665,7 @@ install_driver(){
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
                         sleep 4
-                        echo -e "\nE: Installing nvidia packages failed, please report the previous error messages to Elive" 1>&2
+                        echo -e "\nE: Installing nvidia packages failed, report the previous error messages to Elive" 1>&2
                         sleep 10
                     fi
                 done 3<<< "$( echo "$_NVIDIA_PACKAGES")"

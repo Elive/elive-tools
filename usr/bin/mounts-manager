@@ -28,7 +28,7 @@ restart_daemons(){
             { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
             { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         else
-            el_info "Is needed to restart some polkitd services, please run again this tool from root"
+            el_info "Is needed to restart some polkitd services, run again this tool from root"
         fi
     fi
 

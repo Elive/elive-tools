@@ -232,7 +232,7 @@ main(){
             fi
 
             if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
-                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but if has not been the case please reconfigure your audio card from the applications menus of Elive." )"
+                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but if has not been the case reconfigure your audio card from the applications menus of Elive." )"
             fi
 
         else

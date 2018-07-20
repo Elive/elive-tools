@@ -319,7 +319,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. But the driver you use does not looks like to have the enough required features to make Ecomorph work properly, maybe you can try with a different driver configuration, also a newer version of Elive can solve the problem with updated drivers." )"
                 ;;
             driver)
-                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, please report the bug to the Elive BTS." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, report the bug to the Elive BTS." )"
                 ;;
         esac
     fi
@@ -468,7 +468,7 @@ main(){
                     sleep 1
                     #enlightenment_remote -restart
                     sleep 5
-                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer - only the ones that you open from now. To have Ecomorph fully functioning, please log out and in again." )" || true
+                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer - only the ones that you open from now. To have Ecomorph fully functioning, log out and in again." )" || true
                     #sleep 10
                     #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )" || true
                     is_ecomorph_working=1

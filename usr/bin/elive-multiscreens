@@ -53,7 +53,7 @@ configure_multiscreens(){
         el_dependencies_install "arandr"
 
         if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
-            zenity --error --text="Arandr tool is required, please install it first"
+            zenity --error --text="Arandr tool is required, install it first"
             exit 1
         fi
     fi
@@ -193,7 +193,7 @@ load_multiscreens_configuration(){
         el_dependencies_install "x11-server-utils"
 
         if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
-            zenity --error --text="xrandr tool is required, please install it first"
+            zenity --error --text="xrandr tool is required, install it first"
             exit 1
         fi
     fi

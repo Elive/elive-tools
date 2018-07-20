@@ -206,7 +206,7 @@ main(){
             else
                 if ((is_terminal)) ; then
                     if ((is_mode_force)) ; then
-                        echo -e "The package $packagename needs to be updated.\nPlease insert root/admin password:"
+                        echo -e "The package $packagename needs to be updated.\nInsert root/admin password:"
                         su -c "DEBIAN_FRONTEND=noninteractive apt-get install $packagename" root
                         exit 0
                     else

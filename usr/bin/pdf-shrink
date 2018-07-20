@@ -203,7 +203,7 @@ main(){
         let "PROGRESS+=$INCREMENT"
 
     done
-    ) | $guitool  --progress --pulsate --title "$( eval_gettext "Converting documents, please be patient..." )" --percentage=0 --auto-close --auto-kill
+    ) | $guitool  --progress --pulsate --title "$( eval_gettext "Converting documents, be patient..." )" --percentage=0 --auto-close --auto-kill
 
 
     rm -rf "${tempdir}"
@@ -214,7 +214,7 @@ main(){
         sleep 2
     fi
 
-    $guitool --info --text="$( eval_gettext "Files converted, please verify that they works correctly" )" || true
+    $guitool --info --text="$( eval_gettext "Files converted, verify that they works correctly" )" || true
 
 
 }

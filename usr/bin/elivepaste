@@ -10,7 +10,7 @@ main(){
         if ! el_dependencies_install "pastebinit,file" ; then
             exit 1
         fi
-        #el_error "Please install the package pastebinit first"
+        #el_error "install the package pastebinit first"
     fi
 
     if [[ ! -t 0 ]] ; then
@@ -146,7 +146,7 @@ main(){
     # max lines allowed
     if [[ "$(echo -e "${buffer}" | wc -l)" -gt "$max_lines" ]] ; then
         el_error "Output lines are bigger than 500, too long paste, ignoring..."
-        el_explain 0 "please try instead: __command args | foo | bar | $(basename $0)__"
+        el_explain 0 "Try instead: __command args | foo | bar | $(basename $0)__"
         exit 1
     fi
 

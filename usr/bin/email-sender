@@ -95,7 +95,7 @@ do_email_send(){
 
         if [[ -n "${attachments[@]}" ]] ; then
             local message_message_default
-            message_message_default="$( printf "$( eval_gettext "Please check the attached files." )" )"
+            message_message_default="$( printf "$( eval_gettext "Check the attached files." )" )"
 
             message="$message_message_default"
 
@@ -197,7 +197,7 @@ do_email_send(){
 
                     if ! $guitool --question --text="$message_reconfigure" ; then
                         # we don't want to reconfigure, so just exit
-                        el_error "unable to send email, please run again the tool or reconfigure your account"
+                        el_error "unable to send email, run again the tool or reconfigure your account"
                         exit 0
                     fi
 
@@ -245,7 +245,7 @@ do_email_send(){
 
                     if ! $guitool --question --text="$message_reconfigure" ; then
                         # we don't want to reconfigure, so just exit
-                        el_error "unable to send email, please run again the tool or reconfigure your account"
+                        el_error "unable to send email, run again the tool or reconfigure your account"
                         exit 0
                     fi
 
@@ -430,7 +430,7 @@ do_configure(){
 
 
         local message_invalid
-        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', please try again." )" "john.smith@gmail.com" )"
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', try again." )" "john.smith@gmail.com" )"
 
         # verify username inserted
         if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then

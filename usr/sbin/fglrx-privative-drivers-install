@@ -235,7 +235,7 @@ interactive_ask_privative(){
                 else
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "To use the free drivers please reboot and select the 'Only free drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                    message_onlyfree="$( printf "$( eval_gettext "To use the free drivers reboot and select the 'Only free drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "Free Driver Option" \
@@ -445,7 +445,7 @@ install_driver(){
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
                         sleep 5
-                        echo -e "\nE: Installing fglrx packages failed, please report the previous error messages to Elive" 1>&2
+                        echo -e "\nE: Installing fglrx packages failed, report the previous error messages to Elive" 1>&2
                         sleep 10
                     fi
                 done 3<<< "$( echo "$_FGLRX_PACKAGES")"

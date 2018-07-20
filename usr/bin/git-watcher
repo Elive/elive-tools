@@ -275,7 +275,7 @@ shared_messages_create(){
 
             # small check, just in case
             if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
-                el_error "Have you inserted the identifier instead of the remote URL? mmh... please do it again:"
+                el_error "Have you inserted the identifier instead of the remote URL? mmh... do it again:"
                 read -e remote_working
             fi
         else
@@ -603,7 +603,7 @@ conf_share_setup(){
                 _dropbox_dir="$shared_main_d"
             fi
 
-            echo -e "\nTo be synced with others we use Dropbox, please insert the path of your main shared dropbox directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
+            echo -e "\nTo be synced with others we use Dropbox, insert the path of your main shared dropbox directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
             read -e shared_main_d
             # remove extra leading blank chars
             read -r shared_main_d <<< "${shared_main_d%/}"
@@ -638,7 +638,7 @@ conf_share_setup(){
 
                     # small check, just in case
                     if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
-                        el_error "Have you inserted the identifier instead of the remote URL? mmh... please do it again:"
+                        el_error "Have you inserted the identifier instead of the remote URL? mmh... do it again:"
                         read -e remote_working
                     fi
                 else
@@ -1921,7 +1921,7 @@ options_main_interact(){
             ;;
         C)  # command specific
             if [[ -z "$user_input_command" ]] ; then
-                echo -e "\nPlease enter the command that you want to use:"
+                echo -e "\nEnter the command that you want to use:"
                 echo -e "Example:  make && sudo make install && enlightenment_remote -restart"
                 read -e user_input_command
             fi
@@ -2213,7 +2213,7 @@ main(){
     # upgrade required
     if dpkg --compare-versions "$tool_version_watcher" gt "$tool_version" ; then
         el_package_update_last_version "elive-tools"
-        el_error "Your $(basename $0) has been upgraded, please run it again"
+        el_error "Your $(basename $0) has been upgraded, run it again"
 
         exit
     fi

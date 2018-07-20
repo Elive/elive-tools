@@ -464,7 +464,7 @@ do_work(){
 
     echo -e "You are now in a safe place where modify your sources"
     echo -e "Your modifications will be merged or erased after you finish"
-    el_explain 0 "Please logout from the shell for finish your working state"
+    el_explain 0 "logout from the shell for finish your working state"
 
     # entering in new shell
     $SHELL || true
@@ -477,7 +477,7 @@ do_work(){
         if el_confirm "Do you want to run a meld with the original directory?" ; then
             if ! el_dependencies_check meld ; then
                 if ! el_dependencies_install meld ; then
-                    el_error "Please install required dependencies"
+                    el_error "Install required dependencies"
                 fi
             fi
             meld "${tmpdir}" .
@@ -599,7 +599,7 @@ do_meld(){
 
     if ! el_dependencies_check meld ; then
         if ! el_dependencies_install meld ; then
-            el_error "Please install required dependencies"
+            el_error "Install required dependencies"
         fi
     fi
 
@@ -737,7 +737,7 @@ main(){
 
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
-        el_warning "you still having the old dir for backups, please remove it entirely: ${HOME}/.${tool}.backups"
+        el_warning "you still having the old dir for backups, remove it entirely: ${HOME}/.${tool}.backups"
     fi
 
 
@@ -756,7 +756,7 @@ main(){
 
     if ! el_dependencies_check "rsync,rdiff-backup,diff,colordiff" ; then
         if ! el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff" ; then
-            el_error "Please install required dependencies"
+            el_error "Install required dependencies"
         fi
     fi
 

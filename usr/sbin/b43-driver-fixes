@@ -3,8 +3,25 @@ source /usr/lib/elive-tools/functions
 
 try_and_configure(){
 
+    # note: wl must be the first one
     #modules_list="wl b43 b43legacy brcm80211"
-    modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb"
+    modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb rndis_wlan"
+
+    # previous fixes
+    # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
+    if lshal | grep -qsi lenovo && lshal | grep -qsi "system.hardware.*G580" ; then
+        cat > "/etc/modprobe.d/10_wl.conf" <<EOF
+blacklist brcmsmac
+blacklist bcma
+softdep wl pre: lib80211_crypt_tkip lib80211_crypt_ccmp lib80211_crypt_wep
+EOF
+    fi
+    # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
+    if lshal | grep -qsi lenovo && lshal | grep -qsi "system.hardware.*Twist" ; then
+        cat > "/etc/modprobe.d/10_b43.conf" <<EOF
+options b43 pio=0 qos=0
+EOF
+    fi
 
     # remove every b43 module
     for j in $( seq 5 )
@@ -18,7 +35,11 @@ try_and_configure(){
     # try drivers
     for driver in $modules_list
     do
-        modprobe "$driver"
+        if ! modprobe "$driver" ; then
+            rmmod "$driver" 2>/dev/null || true
+            continue
+        fi
+
         el_debug "trying with driver $driver ..."
 
         # up to 5 seconds
@@ -55,15 +76,25 @@ try_and_configure(){
     if [[ -n "$wifi_dev" ]] ; then
         el_debug "Wireless interface found '$wifi_dev' using driver '$driver_good' "
         # delete previous conf
+        if ! [[ -s /etc/modprobe.d/broadcom-sta-dkms.conf ]] ; then
+            el_warning "/etc/modprobe.d/broadcom-sta-dkms.conf doesnt exist, ignoring..."
+        fi
         rm -f /etc/modprobe.d/broadcom-sta-dkms.conf
 
-        echo -e "# blacklisting modules by Elive to make broadcom b43 devices working" >> /etc/modprobe.d/broadcom-sta-dkms.conf
 
         case "$driver_good" in
-            b43|b43legacy)
+            b43)
+                echo -e "# blacklisting modules by Elive to make broadcom b43 devices working\n# Contact thanatermesis@gmail.com if this list should be improved for your type of driver" >> /etc/modprobe.d/broadcom-sta-dkms.conf
                 echo -e "blacklist wl" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist b43legacy" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                ;;
+            b43legacy)
+                echo -e "# blacklisting modules by Elive to make broadcom b43 devices working\n# Contact thanatermesis@gmail.com if this list should be improved for your type of driver" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist wl" >> /etc/modprobe.d/broadcom-sta-dkms.conf
+                echo -e "blacklist b43" >> /etc/modprobe.d/broadcom-sta-dkms.conf
                 ;;
             wl)
+                echo -e "# blacklisting modules by Elive to make broadcom b43 devices working\n# Contact thanatermesis@gmail.com if this list should be improved for your type of driver" >> /etc/modprobe.d/broadcom-sta-dkms.conf
                 echo -e "blacklist b43" >> /etc/modprobe.d/broadcom-sta-dkms.conf
                 echo -e "blacklist b43legacy" >> /etc/modprobe.d/broadcom-sta-dkms.conf
                 echo -e "blacklist b44" >> /etc/modprobe.d/broadcom-sta-dkms.conf
@@ -116,6 +147,12 @@ main(){
 
             # hack: extracting firmwares, files included probably in built-time of the iso
             if ! ((is_wifi_working)) ; then
+
+                # try to remove first some conflicting modules: https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
+                rmmod "acer_wmi" 2>/dev/null || true
+                rmmod "dell_wmi" 2>/dev/null || true
+                rmmod "cfg80211" 2>/dev/null || true
+
                 mv /lib/firmware/b43 /tmp/ || true
                 mv /lib/firmware/b43legacy /tmp/ || true
                 mkdir -p /lib/firmware/b43

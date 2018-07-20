@@ -35,7 +35,7 @@ EOF
     # try drivers
     for driver in $modules_list
     do
-        if ! modprobe "$driver" ; then
+        if ! modprobe "$driver" 2>/dev/null ; then
             rmmod "$driver" 2>/dev/null || true
             continue
         fi
@@ -153,8 +153,8 @@ main(){
                 rmmod "dell_wmi" 2>/dev/null || true
                 rmmod "cfg80211" 2>/dev/null || true
 
-                mv /lib/firmware/b43 /tmp/ || true
-                mv /lib/firmware/b43legacy /tmp/ || true
+                mv /lib/firmware/b43 /tmp/ 2>/dev/null || true
+                mv /lib/firmware/b43legacy /tmp/ 2>/dev/null || true
                 mkdir -p /lib/firmware/b43
 
                 for i in /var/cache/firmwares/b43/*o
@@ -169,8 +169,8 @@ main(){
                 # cleanups
                 if ! ((is_wifi_working)) ; then
                     rm -rf /lib/firmware/b43 /lib/firmware/b43legacy
-                    mv /tmp/b43 /lib/firmware/ || true
-                    mv /tmp/b43legacy /lib/firmware/ || true
+                    mv /tmp/b43 /lib/firmware/ 2>/dev/null || true
+                    mv /tmp/b43legacy /lib/firmware/ 2>/dev/null || true
                 fi
             fi
 

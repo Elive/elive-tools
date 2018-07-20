@@ -32,15 +32,20 @@ EOF
         done
     done
 
-    # try drivers
+    # TODO: do we require to unblock rfkill?
+    # Try drivers
     for driver in $modules_list
     do
         if ! modprobe "$driver" 2>/dev/null ; then
+            el_debug "failed attempt to use driver: ${driver}"
             rmmod "$driver" 2>/dev/null || true
             continue
         fi
 
         el_debug "trying with driver $driver ..."
+
+        # unblock rfkill
+        rfkill unblock all 2>/dev/null || true
 
         # up to 5 seconds
         for j in $( seq 10 )
@@ -143,6 +148,7 @@ main(){
         if [[ -n "$wifi_dev" ]] ; then
             el_debug "wifi seems to be correctly working, nothing more to do"
         else
+
             try_and_configure
 
             # hack: extracting firmwares, files included probably in built-time of the iso

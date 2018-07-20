@@ -467,25 +467,21 @@ main(){
     if [[ "${1}" = "defaults" ]] ; then
         # enable PCM channel first of all
         timeout 5 aplay /dev/null 2>/dev/null
-        # extra volumes up
-        amixer -q set Headphone 100% 2>/dev/null
-        amixer -q set Speaker 100% 2>/dev/null
-        amixer -q set PCM 100% 2>/dev/null
-        amixer -q set Front 100% 2>/dev/null
-        amixer -q set Surround 100% 2>/dev/null
+
         # unmute channels
         amixer -q set Master unmute 2>/dev/null
         amixer -q set PCM    unmute 2>/dev/null
         amixer -q set Front  unmute 2>/dev/null
         amixer -q set Wave   unmute 2>/dev/null
         amixer -q set DAC    unmute 2>/dev/null
+        # extra volumes up
+        amixer -q set Headphone 100% 2>/dev/null
+        amixer -q set Speaker 100% 2>/dev/null
+        amixer -q set PCM 100% 2>/dev/null
+        amixer -q set Front 100% 2>/dev/null
+        amixer -q set Surround 100% 2>/dev/null
 
 
-        # mute playback of mic, very annoying (before to raise their volumes)
-        amixer -q sset "Front Mic" Playback mute 2>/dev/null
-        amixer -q sset "Rear Mic" Playback mute 2>/dev/null
-        amixer -q sset "Internal Mic" Playback mute 2>/dev/null
-        amixer -q sset "Mic" Playback mute 2>/dev/null
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
         amixer -q set Capture 100% 2>/dev/null
@@ -497,8 +493,14 @@ main(){
         amixer -q set "Internal Mic" 100% 2>/dev/null
         amixer -q set "Mic" unmute 2>/dev/null
         amixer -q set "Mic" 100% 2>/dev/null
+        # mute playback of mic, very annoying (before to raise their volumes) - note: after previous mic configurations since they resets this settings
+        amixer -q sset "Front Mic" Playback mute 2>/dev/null
+        amixer -q sset "Rear Mic" Playback mute 2>/dev/null
+        amixer -q sset "Internal Mic" Playback mute 2>/dev/null
+        amixer -q sset "Mic" Playback mute 2>/dev/null
         # by default do not hear yourself in headphones
         amixer -q set "Sidetone" 0% 2>/dev/null
+        #amixer -q set "Sidetone" mute 2>/dev/null
         # capture mode
         amixer -q sset "Front Mic" cap 2>/dev/null
         amixer -q sset "Rear Mic" cap 2>/dev/null

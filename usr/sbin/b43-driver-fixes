@@ -3,6 +3,8 @@ source /usr/lib/elive-tools/functions
 
 try_and_configure(){
 
+    el_debug "trying b43 modules"
+
     # note: wl must be the first one
     #modules_list="wl b43 b43legacy brcm80211"
     modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb rndis_wlan"

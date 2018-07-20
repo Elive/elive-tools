@@ -120,7 +120,7 @@ main(){
                 mv /lib/firmware/b43legacy /tmp/ || true
                 mkdir -p /lib/firmware/b43
 
-                for i in /var/tmp/b43-firmwares/*o
+                for i in /var/cache/firmwares/b43/*o
                 do
                     [[ -s "$i" ]] || continue
                     b43-fwcutter -w /lib/firmware "$i" || true

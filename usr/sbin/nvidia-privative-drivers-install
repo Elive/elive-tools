@@ -21,6 +21,7 @@ usage(){
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
     echo -e "  -c: check only (tell which version of the drivers we need)"
+    echo -e "  -t: test driver only (if the driver is correctly installed and working)"
     echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
@@ -28,6 +29,26 @@ usage(){
     echo -e "  -v: verbose mode"
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  check_driver
+#   DESCRIPTION:  check if is already installed
+#    PARAMETERS:  -
+#       RETURNS:  true | false
+#===============================================================================
+check_driver(){
+    # we should have enough with only this file, if is not installed it should have been removed!
+    if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+        return 1
+    fi
+    # but wee need also to make sure that is 'correctly' installed
+    if ! modprobe nvidia || ! nvidia-modprobe ; then
+        return 1
+    fi
+    # just another test
+    if ! lsmod | grep -qs nvidia ; then
+        return 1
+    fi
+}
 #===  FUNCTION  ================================================================
 #          NAME:  check_hardware
 #   DESCRIPTION:  check the hardware if has or not the graphic card
@@ -874,7 +895,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdifm:lquv" opt; do
+    while getopts ":acdifm:lquvt" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -910,6 +931,9 @@ main(){
             u)
                 is_mode_uninstall=1
                 ;;
+            t)
+                is_mode_test_installed=1
+                ;;
             \?)
                 el_error "Invalid option: -$OPTARG"
                 usage
@@ -936,6 +960,23 @@ main(){
     if ((is_mode_version_set)) ; then
         # uninstall possible drivers first
         uninstall_driver
+    fi
+
+    # just check if installed and working
+    if ((is_mode_test_installed)) ; then
+        if check_driver ; then
+            exit 0
+        else
+            exit 1
+        fi
+    fi
+
+    # do not ask to install driver if is already and correctly installed (like in persistence mode)
+    if check_driver ; then
+        if ! ((is_mode_force)) ; then
+            el_debug "driver already installed, use -f to force installation"
+            exit
+        fi
     fi
 
     interactive_ask_privative

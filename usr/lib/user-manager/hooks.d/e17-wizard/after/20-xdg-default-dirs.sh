@@ -121,7 +121,10 @@ main(){
     # show progress (after to request instmod)
     echo 1 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
 
-    { ( while test -f "$TMP_PROGRESS_CONFIGURING_f" ; do cat "$TMP_PROGRESS_CONFIGURING_f" || true ; sleep 1 ; done | $guitool --progress --pulsate --text="$( eval_gettext "Migrating directories and configurations to selected language, this operation can be very slow if you have much data, please be patient." )" --auto-close ) & disown ; } 2>/dev/null
+    # only show a gui if we are not in live mode!
+    if ! grep -qs "boot=live" /proc/cmdline ; then
+        { ( while test -f "$TMP_PROGRESS_CONFIGURING_f" ; do cat "$TMP_PROGRESS_CONFIGURING_f" || true ; sleep 1 ; done | $guitool --progress --pulsate --text="$( eval_gettext "Migrating directories and configurations to selected language, this operation can be very slow if you have much data, please be patient." )" --auto-close ) & disown ; } 2>/dev/null
+    fi
 
 
     # progress

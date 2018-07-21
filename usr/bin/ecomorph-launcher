@@ -492,7 +492,9 @@ main(){
             message_want_to_continue_using="$( printf "$( eval_gettext "Special effects works better and faster in some computers and worse or slower in others. Do you want to keep the module Ecomorph enabled?" )" "" )"
 
             # wait 5 minutes before to ask if continue using it
-            enlightenment_remote -exec-cmd "sleep 300 ; if zenity --question --text='$message_want_to_continue_using' ; then true ; else enlightenment_remote -module-disable ecomorph || true ; fi "
+            if ! grep -qs "boot=live" /proc/cmdline ; then
+                enlightenment_remote -exec-cmd "sleep 300 ; if zenity --question --text='$message_want_to_continue_using' ; then true ; else enlightenment_remote -module-disable ecomorph || true ; fi "
+            fi
 
             true
         fi

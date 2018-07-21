@@ -468,7 +468,8 @@ main(){
                     sleep 1
                     #enlightenment_remote -restart
                     sleep 5
-                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer - only the ones that you open from now. To have Ecomorph fully functioning, log out and in again." )" || true
+                    #zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer - only the ones that you open from now. To have Ecomorph fully functioning, log out and in again." )" || true
+                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer, only the ones that you open from now. If does not work correctly, log out and in again." )" || true
                     #sleep 10
                     #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )" || true
                     is_ecomorph_working=1

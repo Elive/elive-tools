@@ -113,7 +113,7 @@ main(){
         XDG_CONFIG_HOME="${HOME}/.config"
     fi
 
-    if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] ; then
+    if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] && dpkg --compare-versions "$( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" | tail -1 )" ge "$version" ; then
         el_explain 0 "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
         exit 0
     fi

@@ -117,6 +117,7 @@ EOF
         fi
 
         is_wifi_working=1
+        service network-manager restart 1>/dev/null 2>&1 || true
     fi
 }
 

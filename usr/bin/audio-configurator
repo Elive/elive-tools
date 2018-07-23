@@ -367,11 +367,11 @@ EOF
         timeout 5 aplay /dev/null 2>/dev/null
         LC_ALL=C sleep 0.2
 
-        rm -f "${HOME}/.config/setvolume"
-        setvolume defaults
-
-
         if ! ((is_quiet_mode)) ; then
+            # normal run by gui should always want to have volumes configured
+            rm -f "${HOME}/.config/setvolume"
+            setvolume defaults
+
             $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volumes application in the Sound menu." )" || true
         fi
 

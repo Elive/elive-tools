@@ -124,7 +124,7 @@ sudoersadd(){
 
     # add sudoers configuration
     if ! grep -qsE "^${username}\s+" /etc/sudoers ; then
-        echo -e "$username\tALL=(ALL) ALL" >> /etc/sudoers
+        echo -e "$username  ALL=(ALL) ALL" >> /etc/sudoers
     fi
 
     # add to group

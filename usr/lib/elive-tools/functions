@@ -163,7 +163,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n | sort -n | tail -1 2>/dev/null )"
+            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
 
             # cleanups
             display="/tmp/${display##* /tmp/}"
@@ -358,7 +358,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet_connection"
     mkdir -p "$( dirname "${stamp_hour_prev}" )"
@@ -404,7 +404,8 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # cache online (10 min)
     if [[ -n "$OnLine" ]] ; then
         if [[ -s "$stamp_hour_prev" ]] ; then
-            if [[ "$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -lt 600 ]] ; then
+            buf="$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" 2>/dev/null | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
+            if [[ -n "$buf" ]] && [[ "$buf" -lt 600 ]] ; then
 
                 # if anything tell us that we are connected and we was before, we should still be
                 el_dependencies_check "route"
@@ -672,7 +673,7 @@ EOF
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){
-    local message_updating force want_update
+    local message_updating force want_update buf
     force="$1"
 
     el_set_display_variables
@@ -683,7 +684,8 @@ el_aptget_update(){
     fi
 
     if [[ -e "/var/lib/apt/periodic/update-success-stamp" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -gt 14400 ]] ; then
+        buf="$( echo "$(date +%s) - $( stat -c %Y /var/lib/apt/periodic/update-success-stamp 2>/dev/null )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
+        if [[ -n "$buf" ]] && [[ "$buf" -gt 14400 ]] ; then
             want_update=1
         fi
     else
@@ -2049,7 +2051,7 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tmp_conf_f limit_reports_amount limit_reports_seconds
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tmp_conf_f limit_reports_amount limit_reports_seconds buf
     el_security_function_loop || return
     # max 5 reports per tool
     limit_reports_amount=5
@@ -2110,7 +2112,8 @@ el_report_to_elive(){
 
     # at least 4 hours passed to clean reports counter
     if [[ -s "$tmp_conf_f" ]] ; then
-        if [[ "$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )" -gt "$limit_reports_seconds" ]] ; then
+        buf="$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" 2>/dev/null )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
+        if [[ -n "$buf" ]] && [[ "$buf" -gt "$limit_reports_seconds" ]] ; then
             counter_reports_sent=0
             el_config_save "counter_reports_sent"
         fi

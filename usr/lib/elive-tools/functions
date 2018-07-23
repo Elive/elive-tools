@@ -31,7 +31,8 @@ if [[ -n "$TERM" ]] ; then
         is_terminal=1
         is_console=0
     fi
-    if [[ "$TERM" = "linux" ]] && [[ -n "$TTY" ]] ; then
+    # note: TTY variable not shows in bash login aparently
+    if [[ "$TERM" = "linux" ]] ; then
         if [[ -n "$E_START" ]] ; then
             # launched from e17 itself
             is_terminal=0
@@ -81,14 +82,16 @@ else
     el_c_b="\033[1;34m" # Blue color
     el_c_b2="\033[0;34m" # Blue2 color
 
-    if ((is_console)) ; then
-        # gray's are not visible in console for any reason, use cyan's instead
-        el_c_gr="\033[1;36m" # Gray color
-        el_c_gr2="\033[0;36m" # Gray2 color
-    else
-        el_c_gr="\033[1;30m" # Gray color
-        el_c_gr2="\033[0;30m" # Gray2 color
-    fi
+    el_c_gr="\033[1;30m" # Gray color
+    el_c_gr2="\033[0;30m" # Gray2 color
+    #if ((is_console)) ; then
+        ## gray's are not visible in console for any reason, use cyan's instead
+        #el_c_gr="\033[1;36m" # Gray color
+        #el_c_gr2="\033[0;36m" # Gray2 color
+    #else
+        #el_c_gr="\033[1;30m" # Gray color
+        #el_c_gr2="\033[0;30m" # Gray2 color
+    #fi
 
     el_c_blink="\033[5m" # Blink 'color' effect  (orig. blink)
     el_c_underline="\033[4m" # Underline 'color' effect  (orig. underline)

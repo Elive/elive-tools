@@ -45,3 +45,14 @@ if [ "$TERM" = "linux" ]; then
     echo -en "\e]PFcccccc" # light white
     #clear #for background artifacting
 fi
+
+# dynamically use the same colorschemes that we have for our X terminals
+if [ "$TERM" = "linux" ]; then
+    if test -n "$TTY" ]; then
+        _SEDCMD='s/^[^\!].*\*color\([0-9]\{1,\}\).*#\([0-9a-fA-F]\{6\}\).*/\1 \2/p'
+        for i in $(sed -n "$_SEDCMD" "$HOME/.Xdefaults" | awk '$1 < 16 {printf "\\e]P%X%s", $1, $2}'); do
+            echo -en "$i"
+        done
+        clear
+    fi
+fi

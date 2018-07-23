@@ -5,7 +5,13 @@ source /usr/lib/elive-tools/functions
 export TEXTDOMAIN="elive-tools"
 
 # set user home
-[[ -z $HOME ]] && export HOME="/home/$(id -un)"
+if [[ -z "$HOME" ]] ; then
+    if [[ "$HOME" = "/" ]] || [[ "$UID" = "0" ]] ; then
+        export HOME="/root"
+    else
+        export HOME="/home/$(id -un)"
+    fi
+fi
 
 reconfigure_applications(){
     local name mic num

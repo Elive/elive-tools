@@ -324,7 +324,7 @@ main(){
         && [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] \
         && [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] \
         && [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] \
-        && [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Templates" ]] \
+        && [[ "$( xdg-user-dir TEMPLATES )" != "$HOME/Templates" ]] \
         ; then
         local entry conf dir file
         while read -ru 3 entry

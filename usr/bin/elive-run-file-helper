@@ -102,11 +102,31 @@ run_script(){
         fi
     fi
 
-    if [[ -x "$( which urxvt )" ]] ; then
-        urxvt -hold -e bash -c "$file ; echo ${message_done}"
+    if [[ "$UID" = 0 ]] ; then
+        if [[ -x "$( which urxvt )" ]] ; then
+            urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ${message_done}"
+        else
+            if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+                terminology -hold -e "${file} ; apt-get -f install ; echo ${message_done}"
+            fi
+        fi
     else
-        if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
-            terminology -hold -e "${file} ; echo ${message_done}"
+        if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
+            if [[ -x "$( which urxvt )" ]] ; then
+                urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ${message_done}"
+            else
+                if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+                    terminology -hold -e "${file} ; sudo apt-get -f install ; echo ${message_done}"
+                fi
+            fi
+        else
+            if [[ -x "$( which urxvt )" ]] ; then
+                urxvt -hold -e bash -c "$file ; echo ${message_done}"
+            else
+                if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+                    terminology -hold -e "${file} ; echo ${message_done}"
+                fi
+            fi
         fi
     fi
 }

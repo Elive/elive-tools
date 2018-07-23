@@ -366,6 +366,8 @@ EOF
         # we need to create the PCM channel! it doesn't exist until we do it
         timeout 5 aplay /dev/null 2>/dev/null
         LC_ALL=C sleep 0.2
+
+        rm -f "${HOME}/.config/setvolume"
         setvolume defaults
 
 

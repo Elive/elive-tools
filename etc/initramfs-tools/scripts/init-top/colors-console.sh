@@ -26,22 +26,22 @@
 
 # colorscheme based in Elive terminal colorschemes (similar to molokai/monokai)
 if [ "$TERM" = "linux" ]; then
-    echo -en "\e]P0010101" # black
+    echo -en "\e]P0000000" # black
     echo -en "\e]P1e50000" # red
     echo -en "\e]P287cc00" # green
     echo -en "\e]P3fc8700" # brown
     echo -en "\e]P46720ff" # blue
     echo -en "\e]P5fa00cc" # magenta
     echo -en "\e]P600c8fc" # cyan
-    echo -en "\e]P7c8c8c8" # white
+    echo -en "\e]P7d8d8d8" # white
     # -----------------------------
-    echo -en "\e]P8808080" # light black
-    echo -en "\e]P9cc8888" # light red
-    echo -en "\e]PA88cc88" # light green
-    echo -en "\e]PBccaa88" # light brown
-    echo -en "\e]PC8888cc" # light blue
-    echo -en "\e]PDcc88cc" # light magenta
-    echo -en "\e]PE88cccc" # light cyan
-    echo -en "\e]PFcccccc" # light white
+    echo -en "\e]P88a8a8a" # light black
+    echo -en "\e]P9ff4040" # light red
+    echo -en "\e]PAc2fc4c" # light green
+    echo -en "\e]PBffc342" # light brown
+    echo -en "\e]PC9e71ff" # light blue
+    echo -en "\e]PDff58e0" # light magenta
+    echo -en "\e]PEa1efff" # light cyan
+    echo -en "\e]PFffffff" # light white
     #clear #for background artifacting
 fi

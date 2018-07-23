@@ -115,7 +115,14 @@ fi
 # extra vars
 source /etc/adduser.conf
 [[ -z "$DHOME" ]] && export DHOME=/home
-[[ -z $HOME ]] && export HOME="/home/$(id -un)"
+# set the user's home, sometimes, like if we are in an init script, the home points to /
+if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
+    if [[ "$UID" = "0" ]] ; then
+        export HOME="/root"
+    else
+        export HOME="$DHOME/$(id -un)"
+    fi
+fi
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
 if grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then

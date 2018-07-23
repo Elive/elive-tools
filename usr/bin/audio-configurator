@@ -4,15 +4,6 @@ source /usr/lib/elive-tools/functions
 . gettext.sh
 export TEXTDOMAIN="elive-tools"
 
-# set user home
-if [[ -z "$HOME" ]] ; then
-    if [[ "$HOME" = "/" ]] || [[ "$UID" = "0" ]] ; then
-        export HOME="/root"
-    else
-        export HOME="/home/$(id -un)"
-    fi
-fi
-
 reconfigure_applications(){
     local name mic num
     # vokoscreen default mic

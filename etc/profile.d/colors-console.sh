@@ -52,5 +52,5 @@ if [ "$TERM" = "linux" ]; then
     for i in $(sed -n "$_SEDCMD" "$HOME/.Xdefaults" | awk '$1 < 16 {printf "\\e]P%X%s", $1, $2}'); do
         echo -en "$i"
     done
-    clear
+    #clear
 fi

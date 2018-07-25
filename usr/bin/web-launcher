@@ -1,6 +1,28 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+verify_version_at_least(){
+    local package version_min version_installed
+    package="$1"
+    version_min="$2"
+
+    if [[ -n "$package" ]] && [[ -n "$version_min" ]] ; then
+        version_installed="$( dpkg -l | awk -v package="$package" '{if ($2 == package) print $3}' | grep "[[:digit:]]" | tail -1 )"
+        if [[ -n "$version_installed" ]] ; then
+            if dpkg --compare-versions "$version_installed" "ge" "$version_min" ; then
+                return 0
+            else
+                return 1
+            fi
+        else
+            # not installed, do not set it as a candidate
+            return 1
+        fi
+    else
+        # wrong call?
+        return 1
+    fi
+}
 main(){
     # pre {{{
     local url debian_version elive_version is_wheezy browsers arg
@@ -22,7 +44,7 @@ main(){
                 el_debug "added url '${arg}' "
                 shift
                 ;;
-            chrome|google-chrome|chromium|firefox|iceweasel|links2|lynx|w3m|netsurf|surf)
+            chrome|google-chrome|chromium|firefox|firefox-esr|iceweasel|links2|lynx|w3m|netsurf|surf)
                 el_array_member_add "${arg}" "${browsers[@]}" ; browsers=("${_out[@]}")
                 el_debug "added browser preference '${arg}' "
                 shift
@@ -61,10 +83,22 @@ main(){
     done
 
     # add possible ones based in preference
-    el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+    if verify_version_at_least "google-chrome-stable" "57" ; then
+        el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+    fi
+    if verify_version_at_least "firefox-esr" "52" ; then
+        el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
+    fi
+    if verify_version_at_least "chromium-browser" "48" ; then
+        el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+    fi
     el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
+    # fallback (lower versions)
+    el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+    # lower alternatives
     el_array_member_add "surf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "netsurf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "links2" "${browsers[@]}" ; browsers=("${_out[@]}")
@@ -115,9 +149,15 @@ main(){
                     break
                 fi
                 ;;
-            iceweasel|firefox)
+            iceweasel|firefox|firefox-esr)
                 if [[ -x "$( which "$browser" )" ]] ; then
-                    browser="$( which "${browser}" )"
+                    # always use firefox-esr as preference (args like --new-window dont works if not)
+                    if [[ -x "$( which "firefox-esr" )" ]] ; then
+                        browser="$( which "${browser}" )"
+                    else
+                        browser="$( which "${browser}" )"
+                    fi
+
                     el_debug "prefered browser: $browser"
 
                     if ((is_mode_app)) ; then

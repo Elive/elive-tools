@@ -7,7 +7,7 @@ verify_version_at_least(){
     version_min="$2"
 
     if [[ -n "$package" ]] && [[ -n "$version_min" ]] ; then
-        version_installed="$( dpkg -l | awk -v package="$package" '{if ($2 == package) print $3}' | grep "[[:digit:]]" | tail -1 )"
+        version_installed="$( dpkg -l | grep -E "^(hi|ii)" | awk -v package="$package" '{if ($2 == package) print $3}' | grep "[[:digit:]]" | tail -1 )"
         if [[ -n "$version_installed" ]] ; then
             if dpkg --compare-versions "$version_installed" "ge" "$version_min" ; then
                 return 0
@@ -83,17 +83,33 @@ main(){
     done
 
     # add possible ones based in preference
-    if verify_version_at_least "google-chrome-stable" "57" ; then
-        el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+    if ((is_mode_app)) ; then
+        # try to use the app mode as much as possible in chrome, because it looks much better with it, so lower the min version for chrome (unless specified in the launcher command)
+        # versions included in wheezy
+        if verify_version_at_least "google-chrome-stable" "48" ; then
+            el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
+        if verify_version_at_least "chromium" "37" ; then
+            el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
+        # less preference for firefox because it doens't has an "app" mode
+        if verify_version_at_least "firefox-esr" "52" ; then
+            el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
+    else
+        # versions-based preferences
+        if verify_version_at_least "google-chrome-stable" "57" ; then
+            el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
+        if verify_version_at_least "chromium" "57" ; then
+            el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
+        # less preference for firefox because it doens't has an "app" mode
+        if verify_version_at_least "firefox-esr" "52" ; then
+            el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
+        fi
     fi
-    if verify_version_at_least "chromium" "48" ; then
-        el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
-    fi
-    # less preference for firefox because it doens't has an "app" mode
-    if verify_version_at_least "firefox-esr" "52" ; then
-        el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
-    fi
-    # fallback (lower versions)
+    # fallback default preferences
     el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")

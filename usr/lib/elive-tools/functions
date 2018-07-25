@@ -46,6 +46,11 @@ else
     is_terminal=0
 fi
 
+# better verbosity mode for scripts when in zsh
+if [[ -n "$ZSH_VERSION" ]] && ! [[ "$0" = "bash" ]] && ! [[ "$0" = *"zsh" ]] ; then
+    setopt LOCAL_OPTIONS NO_NOTIFY NO_MONITOR
+fi
+
 if [[ -n "$NOCOLOR" ]] || [[ -z "$LS_COLORS" ]] ; then
     el_c_n=""
     el_c_r=""

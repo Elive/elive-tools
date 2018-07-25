@@ -89,7 +89,7 @@ main(){
     if verify_version_at_least "firefox-esr" "52" ; then
         el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
     fi
-    if verify_version_at_least "chromium-browser" "48" ; then
+    if verify_version_at_least "chromium" "48" ; then
         el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
     fi
     el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")

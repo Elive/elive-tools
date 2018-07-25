@@ -2269,17 +2269,20 @@ el_mark_state(){
     # }}}
     # parse ids {{{
     case "$id" in
+        test)
+            id="3"
+            ;;
+        upgraded)
+            id="2"
+            ;;
         installing)
             id="5"
             ;;
         installed)
             id="6"
             ;;
-        upgraded)
-            id="2"
-            ;;
-        test)
-            id="3"
+        noreports)
+            id="7"
             ;;
     esac
 

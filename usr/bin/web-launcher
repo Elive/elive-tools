@@ -7,7 +7,7 @@ verify_version_at_least(){
     version_min="$2"
 
     if [[ -n "$package" ]] && [[ -n "$version_min" ]] ; then
-        version_installed="$( dpkg -l | grep -E "^(hi|ii)" | awk -v package="$package" '{if ($2 == package) print $3}' | grep "[[:digit:]]" | tail -1 )"
+        version_installed="$( COLUMNS=1000 dpkg -l | grep -E "^(hi|ii)" | awk -v package="$package" '{if ($2 == package) print $3}' | grep "[[:digit:]]" | tail -1 )"
         if [[ -n "$version_installed" ]] ; then
             if dpkg --compare-versions "$version_installed" "ge" "$version_min" ; then
                 return 0

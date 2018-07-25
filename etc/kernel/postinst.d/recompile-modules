@@ -69,7 +69,7 @@ do
         echo -e "Rebuilding modules for: $package" 1>&2
         "/var/lib/dpkg/info/${package}.postinst" configure || true
     fi
-done 3<<< "$( dpkg -l | grep -E "^ii\s*.*[[:print:]]-dkms\s*" | awk '{print $2}' )"
+done 3<<< "$( COLUMNS=1000 dpkg -l | grep -E "^(h|i)i\s*.*[[:print:]]-dkms\s*" | awk '{print $2}' )"
 
 # recompile each of these ones too
 for _conf in /usr/src/*/dkms.conf

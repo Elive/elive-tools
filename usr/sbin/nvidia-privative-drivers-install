@@ -841,7 +841,7 @@ uninstall_driver(){
             fi
         fi
 
-    done 3<<< "$( dpkg -l | grep nvidia | awk '{print $2}' )"
+    done 3<<< "$( COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' )"
 
     # remove extra leading blank chars
     read -r _NVIDIA_PACKAGES <<< "$_NVIDIA_PACKAGES"
@@ -860,17 +860,17 @@ uninstall_driver(){
 
 
     # just in case, reinstall the nouveau driver
-    if ! dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
+    if ! COLUMNS=1000 dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
         DEBIAN_FRONTEND="noninteractive" apt-get install -y xserver-xorg-video-nouveau
     fi
 
     # - packages }}}
     # end {{{
     # show final result
-    if dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
+    if COLUMNS=1000 dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
         echo -e ""
         el_error "We still having some nvidia packages not uninstalled:"
-        dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2
+        COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2
     else
         el_explain 0 "Driver NVIDIA uninstalled __successfully__"
     fi

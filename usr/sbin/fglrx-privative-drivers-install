@@ -618,7 +618,7 @@ uninstall_driver(){
             fi
         fi
 
-    done 3<<< "$( { echo "xvba-va-driver" ; dpkg -l | grep fglrx | awk '{print $2}' ; } )"
+    done 3<<< "$( { echo "xvba-va-driver" ; COLUMNS=1000 dpkg -l | grep fglrx | awk '{print $2}' ; } )"
 
     # remove extra leading blank chars
     read -r _FGLRX_PACKAGES <<< "$_FGLRX_PACKAGES"
@@ -639,10 +639,10 @@ uninstall_driver(){
     # - packages }}}
     # end {{{
     # show final result
-    if dpkg -l | awk '{print $2}' | grep fglrx | grep -vE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" | grep -qs fglrx ; then
+    if COLUMNS=1000 dpkg -l | awk '{print $2}' | grep fglrx | grep -vE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" | grep -qs fglrx ; then
         echo -e ""
         el_error "We still having some fglrx packages not uninstalled:"
-        dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2
+        COLUMNS=1000 dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2
     else
         el_explain 0 "Driver FGLRX uninstalled __successfully__"
     fi

@@ -86,18 +86,19 @@ main(){
     if verify_version_at_least "google-chrome-stable" "57" ; then
         el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
     fi
-    if verify_version_at_least "firefox-esr" "52" ; then
-        el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
-    fi
     if verify_version_at_least "chromium" "48" ; then
         el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
     fi
-    el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
-    el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
+    # less preference for firefox because it doens't has an "app" mode
+    if verify_version_at_least "firefox-esr" "52" ; then
+        el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
+    fi
     # fallback (lower versions)
     el_array_member_add "chrome" "${browsers[@]}" ; browsers=("${_out[@]}")
-    el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
     # lower alternatives
     el_array_member_add "surf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "netsurf" "${browsers[@]}" ; browsers=("${_out[@]}")
@@ -160,6 +161,9 @@ main(){
 
                     el_debug "prefered browser: $browser"
 
+                    # notes:
+                    # new-window doesn't always works, only if we have an already-running session/instance
+                    # new-instance doesn't works at all (if you have already an instance running), so it can bug! dont use it
                     if ((is_mode_app)) ; then
                         preurl="--new-window " # keep space
                     fi

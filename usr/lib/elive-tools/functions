@@ -2243,13 +2243,20 @@ el_report_to_elive(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_mark_state
 #   DESCRIPTION:  marks states for debug purposes
-#    PARAMETERS:  $1 = id
+#    PARAMETERS:  $1 = id | $1 + $2 = category + action
 #       RETURNS:  -
 #===============================================================================
 el_mark_state(){
     # pre {{{
-    local id
-    id="$1"
+    local id state category action
+    if [[ -n "$2" ]] ; then
+        category="$1"
+        action="$2"
+    else
+        if [[ -n "$1" ]] ; then
+            state="$1"
+        fi
+    fi
 
     # }}}
     # only send with user's permission {{{
@@ -2268,28 +2275,35 @@ el_mark_state(){
 
     # }}}
     # parse ids {{{
-    case "$id" in
-        test)
-            id="3"
-            ;;
-        upgraded)
-            id="2"
-            ;;
-        installing)
-            id="5"
-            ;;
-        installed)
-            id="6"
-            ;;
-        noreports)
-            id="7"
-            ;;
-    esac
+    # always run in background to not slow down anything from the tools
+    if [[ -n "$category" ]] && [[ -n "$action" ]] ; then
+        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+    fi
 
-    if [[ -n "$id" ]] ; then
-        timeout 10 curl -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
-    else
-        timeout 10 curl -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" 2>/dev/null 1>&2 || true
+    if [[ -n "$state" ]] ; then
+        case "$state" in
+            test)
+                id="3"
+                ;;
+            upgraded)
+                id="2"
+                ;;
+            installing)
+                id="5"
+                ;;
+            installed)
+                id="6"
+                ;;
+            noreports)
+                # TODO: remove, temporal tests
+                id="7"
+                ;;
+        esac
+        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+    fi
+
+    if [[ -z "$1" ]] ; then
+        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
     fi
     # - parse ids }}}
 }

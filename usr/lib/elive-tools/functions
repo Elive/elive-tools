@@ -2240,6 +2240,56 @@ el_report_to_elive(){
     fi
     # }}}
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_mark_state
+#   DESCRIPTION:  marks states for debug purposes
+#    PARAMETERS:  $1 = id
+#       RETURNS:  -
+#===============================================================================
+el_mark_state(){
+    # pre {{{
+    local id
+    id="$1"
+
+    # }}}
+    # only send with user's permission {{{
+    # get conf
+    if [[ -s "/etc/elive/settings" ]] ; then
+        source "/etc/elive/settings" 1>/dev/null 2>&1
+    fi
+    if [[ -s "$HOME/.config/elive/settings" ]] ; then
+        source "$HOME/.config/elive/settings"
+    fi
+
+    # exit if not wanted
+    if [[ "${send_debug_reports}" != "yes" ]] ; then
+        return
+    fi
+
+    # }}}
+    # parse ids {{{
+    case "$id" in
+        installing)
+            id="5"
+            ;;
+        installed)
+            id="6"
+            ;;
+        upgraded)
+            id="2"
+            ;;
+        test)
+            id="3"
+            ;;
+    esac
+
+    if [[ -n "$id" ]] ; then
+        timeout 10 curl -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+    else
+        timeout 10 curl -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" 2>/dev/null 1>&2 || true
+    fi
+    # - parse ids }}}
+}
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_flag
@@ -2291,8 +2341,8 @@ el_flag(){
             el_error "unkown action ${action}, func: ${FUNCNAME[1]}"
             ;;
     esac
-
 }
+
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_add_on_exit

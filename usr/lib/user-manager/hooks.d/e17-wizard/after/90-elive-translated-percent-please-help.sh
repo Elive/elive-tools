@@ -2,9 +2,6 @@
 source /usr/lib/elive-tools/functions
 # gettext not works here because we are on first page
 
-export GTK_THEME="Adwaita"
-export GTK2_RC_FILES="/usr/share/themes/Adwaita/gtk-2.0/gtkrc"
-
 main(){
     # pre {{{
     local lang amount percent dir total

@@ -6,9 +6,6 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
-export GTK_THEME="Adwaita"
-export GTK2_RC_FILES="/usr/share/themes/Adwaita/gtk-2.0/gtkrc"
-
 
 # know virtualized state
 if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then

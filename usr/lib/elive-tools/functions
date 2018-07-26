@@ -47,7 +47,7 @@ else
 fi
 
 # better verbosity mode for scripts when in zsh
-if [[ -n "$ZSH_VERSION" ]] && ! [[ "$0" = "bash" ]] && ! [[ "$0" = *"zsh" ]] ; then
+if [[ -n "$ZSH_VERSION" ]] && ! [[ "$0" = "bash" ]] && ! [[ "$SOURCE" = "$0" ]] ; then
     setopt LOCAL_OPTIONS NO_NOTIFY NO_MONITOR
 fi
 

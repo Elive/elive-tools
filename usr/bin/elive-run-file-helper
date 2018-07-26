@@ -25,7 +25,14 @@ run_edje(){
         [[ "$line" = *"'e/theme/about'"* ]] && is_e_theme=1
         [[ "$line" = *"'e/modules/ibox/"* ]] && is_e_theme=1
         [[ "$line" = *"'e/desktop/background'"* ]] && is_e_wallpaper=1
-    done 3<<< "$( edje_player -G "$file")"
+        [[ "$line" = "0 groups in file"* ]] && is_e_invalid=1
+    done 3<<< "$( LC_ALL="$EL_LC_EN" edje_player -G "$file")"
+
+    # uncompatible edje file
+    if ((is_e_invalid)) ; then
+        zenity --error --text="$( eval_gettext "This Edje file doesn't looks to be compatible or having a known usage. Make sure that you are using a version compatible for Enlightenment 17" )"
+        return
+    fi
 
     # only wallpaper
     if ((is_e_wallpaper)) && ! ((is_e_theme)) ; then

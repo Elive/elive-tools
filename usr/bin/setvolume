@@ -597,25 +597,42 @@ main(){
 
     # normal actions, like setting the volume
     #if echo "$list" | grep -q "'$meter',1" ; then
-    if [[ "$list" = *"'$meter',1"* ]] ; then
-        # stereo
-        if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
-            #get_meter
-            set_volume "$action"
-        fi
 
-        if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
-            #get_meter
-            set_volume "$action"
-        fi
+    # update: let's change the volumes of all relevant tracks, sometimes PCM doesn't change the volume (where it was!) and we need to use Speaker instead
+    amixer -q set $meter $action 2>/dev/null
 
-    else
-        # mono
-        if ! amixer -q set $meter $action 2>/dev/null ; then
-            #get_meter
-            set_volume "$action"
-        fi
+    if [[ "${meter}" != "Speaker" ]] ; then
+        amixer -q set Speaker $action 2>/dev/null
     fi
+    if [[ "${meter}" != "Headphone" ]] ; then
+        amixer -q set Headphone $action 2>/dev/null
+    fi
+    if [[ "${meter}" != "DAC" ]] ; then
+        amixer -q set DAC $action 2>/dev/null
+    fi
+
+    true
+
+
+    #if [[ "$list" = *"'$meter',1"* ]] ; then
+        ## stereo
+        #if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
+            ##get_meter
+            #set_volume "$action"
+        #fi
+
+        #if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
+            ##get_meter
+            #set_volume "$action"
+        #fi
+
+    #else
+        ## mono
+        #if ! amixer -q set $meter $action 2>/dev/null ; then
+            ##get_meter
+            #set_volume "$action"
+        #fi
+    #fi
     ##################
 
     # this is old and deprecated

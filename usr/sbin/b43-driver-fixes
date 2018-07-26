@@ -185,7 +185,7 @@ main(){
 
 
             if ! ((is_wifi_working)) ; then
-                el_error "B43 device not installed correctly: \n$( lspci -nn -d "14e4:" )"
+                el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )"
             fi
         fi
     else

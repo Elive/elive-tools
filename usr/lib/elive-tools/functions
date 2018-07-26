@@ -1212,11 +1212,18 @@ el_check_is_shell(){
     #el_security_function_loop || return
 
     # }}}
-    if [[ "$0" = "bash" ]] || [[ "$0" = *"zsh" ]] ; then
+    # check when in bash
+    if [[ "$0" = "bash" ]] ; then
         return 0
-    else
-        return 1
     fi
+
+    # check when in zsh
+    if [[ -n "$ZSH_VERSION" ]] && [[ "$SOURCE" = "/usr/lib/elive-tools/functions" ]] ; then
+        return 0
+    fi
+
+    # anything else is a script
+    return 1
 }
 
 #===  FUNCTION  ================================================================

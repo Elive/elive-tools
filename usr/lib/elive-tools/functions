@@ -46,10 +46,6 @@ else
     is_terminal=0
 fi
 
-# better verbosity mode for scripts when in zsh
-if [[ -n "$ZSH_VERSION" ]] && ! [[ "$0" = "bash" ]] && ! [[ "$SOURCE" = "$0" ]] ; then
-    setopt LOCAL_OPTIONS NO_NOTIFY NO_MONITOR
-fi
 
 if [[ -n "$NOCOLOR" ]] || [[ -z "$LS_COLORS" ]] ; then
     el_c_n=""
@@ -2270,6 +2266,12 @@ el_mark_state(){
         fi
     fi
 
+    # demo code: this is an example of how to run background processes without annoying debug info, but adding these settings globally will:
+    # Important: this breaks el_confirm in zsh
+    #if [[ -n "$ZSH_VERSION" ]] && ! [[ "$0" = "bash" ]] && ! [[ "$SOURCE" = "$0" ]] ; then
+        #setopt LOCAL_OPTIONS NO_NOTIFY NO_MONITOR
+    #fi
+
     # }}}
     # only send with user's permission {{{
     # get conf
@@ -2289,7 +2291,11 @@ el_mark_state(){
     # parse ids {{{
     # always run in background to not slow down anything from the tools
     if [[ -n "$category" ]] && [[ -n "$action" ]] ; then
-        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        if [[ -n "$ZSH_VERSION" ]] ; then
+            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+        else
+            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        fi
     fi
 
     if [[ -n "$state" ]] ; then
@@ -2311,11 +2317,19 @@ el_mark_state(){
                 id="7"
                 ;;
         esac
-        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        if [[ -n "$ZSH_VERSION" ]] ; then
+            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+        else
+            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        fi
     fi
 
     if [[ -z "$1" ]] ; then
-        { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        if [[ -n "$ZSH_VERSION" ]] ; then
+            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+        else
+            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+        fi
     fi
     # - parse ids }}}
 }

@@ -20,6 +20,7 @@ usage(){
     echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
+    echo -e "  -h: help usage"
     echo -e "  -c: check only (tell which version of the drivers we need)"
     echo -e "  -t: test driver only (if the driver is correctly installed and working)"
     echo -e "  -m: model (version of drivers) to use"
@@ -71,7 +72,7 @@ check_hardware(){
     _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
 
     if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
-        el_explain 3 "nvidia card found on pci-id"
+        el_debug "nvidia card found on pci-id"
         is_nvidia_card_found=1
     fi
 
@@ -84,7 +85,7 @@ check_hardware(){
     # check if hardware has nvidia
     # Seems like a more reliable way than using VGA for the detect is: lspci -nn | grep '\[03'
     if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+nvidia\s+" ; then
-        el_explain 3 "nvidia card found in lspci"
+        el_debug "nvidia card found in lspci"
         is_nvidia_card_found=1
     fi
 
@@ -120,7 +121,7 @@ detect_driver_version(){
     el_debug
 
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
-        el_explain 2 "Selected __${driver_version}__ version of drivers to use"
+        el_debug "Selected ${driver_version} version of drivers to use"
         _NVIDIA_VERSION="$driver_version"
         #_NVIDIA_MODULE="nvidia" # should be always this one in all the versions, or maybe not?
         return
@@ -149,7 +150,7 @@ detect_driver_version(){
 
     # }}}
 
-    el_explain 0 "Reading Packages..."
+    el_info "Reading Packages..."
 
     # try to search for ID's {{{
     #
@@ -177,10 +178,11 @@ detect_driver_version(){
             el_debug "Not ID's found on installed packages, unpacking not-installed ones..."
         else
             if ((is_mode_live)) ; then
-                el_explain 2 "You are in mode_live, skipping the pre-download of packages for this mode..."
+                el_debug "You are in mode_live, skipping the pre-download of packages for this mode..."
             else
                 # download from urls for scan
-                el_debug "Not ID's found on installed packages, downloading them..."
+                el_info "Not ID's found on installed packages, downloading them..."
+                if el_verify_internet fast ; then
                 mkdir -p /var/tmp/nvidia-tmp
                 cd /var/tmp/nvidia-tmp
 
@@ -194,6 +196,9 @@ detect_driver_version(){
                         wget -q "${url_repository%/}/${line}"
                     done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
                 done
+                else
+                    NOREPORTS=1 el_error "no connection to internet found"
+                fi
             fi
         fi
         # for any of the places where we are (cd), let's scan the opened files:
@@ -226,17 +231,17 @@ detect_driver_version(){
     # }}}
     # show result found {{{
     if [[ -n "$_NVIDIA_VERSION" ]] ; then
-        el_explain 0 "Version of Nvidia for your machines is: __${_NVIDIA_VERSION}__"
-        el_explain 0 "Module to load for your nvidia card is: __${_NVIDIA_MODULE}__"
+        el_info "Version of Nvidia for your machines is: ${_NVIDIA_VERSION}"
+        el_info "Module to load for your nvidia card is: ${_NVIDIA_MODULE}"
     else
         # if we have nothing found we should tell the user what to do
         if ((is_mode_check)) ; then
-            el_explain 0 "Seems like we cannot detect the package of nvidia that you need for your graphic card, things that you can do:"
-            el_explain 0 " * Update your packages list (__apt-get update__) and try again"
+            el_info "Seems like we cannot detect the package of nvidia that you need for your graphic card, things that you can do:"
+            el_info " * Update your packages list (apt-get update) and try again"
 
 
-            el_explain 0 " * Maybe your version of nvidia is not yet included in Elive, but it should be backported soon"
-            el_explain 0 "Run the command __nvidia-detect__ to see what it says"
+            el_info " * Maybe your version of nvidia is not yet included in Elive, but it should be backported soon"
+            el_info "Run the command nvidia-detect to see what it says"
         else
             if ((is_mode_auto)) ; then
                 el_error "Unable to autodetect the version that you need, exiting"
@@ -247,6 +252,7 @@ detect_driver_version(){
     fi
 
     # if we only  want to check, we don't need to do anything more here, just exit
+    if [[ -n "$_NVIDIA_VERSION" ]] ; then
     if ((is_mode_check)) ; then
         echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
         exit
@@ -261,6 +267,15 @@ detect_driver_version(){
                 --msgbox "$message_version_suggest" \
                 0 0
         fi
+    fi
+    else
+        NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
+        sleep 1
+    fi
+
+    if [[ -z "$_NVIDIA_VERSION" ]] ; then
+        el_warning "unable to detect your driver version, assuming current"
+        _NVIDIA_VERSION="current"
     fi
 
     # examples of results:
@@ -529,7 +544,7 @@ interactive_ask_driver_version(){
             ;;
     esac
 
-    el_explain 2 "Selected list of packages to install:\n__$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )__"
+    el_debug "Selected list of packages to install:\n$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )"
 
 
     # - select packages to install depending on which version we selected }}}
@@ -774,7 +789,7 @@ install_driver(){
     # reload devices just in case
     service nvidia-kernel restart 1>/dev/null 2>&1
 
-    el_explain 2 "Install complete"
+    el_debug "Install complete"
 
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
         local message_suggestion
@@ -812,7 +827,7 @@ uninstall_driver(){
             if ((is_mode_force)) ; then
                 rmmod -f nvidia
             else
-                el_explain 0 "E: unable to unload the __nvidia module__, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
+                el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
                 exit 1
             fi
         fi
@@ -855,7 +870,7 @@ uninstall_driver(){
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
         fi
     else
-        el_explain 0 "Nvidia packages already removed"
+        el_info "Nvidia packages already removed"
     fi
 
 
@@ -872,7 +887,7 @@ uninstall_driver(){
         el_error "We still having some nvidia packages not uninstalled:"
         COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2
     else
-        el_explain 0 "Driver NVIDIA uninstalled __successfully__"
+        el_info "Driver NVIDIA uninstalled successfully"
     fi
 
     # - end }}}
@@ -895,7 +910,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdifm:lquvt" opt; do
+    while getopts ":acdifm:lquvht" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -933,6 +948,10 @@ main(){
                 ;;
             t)
                 is_mode_test_installed=1
+                ;;
+            h)
+                usage
+                exit
                 ;;
             \?)
                 el_error "Invalid option: -$OPTARG"

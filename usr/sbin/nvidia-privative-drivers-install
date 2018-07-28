@@ -183,19 +183,19 @@ detect_driver_version(){
                 # download from urls for scan
                 el_info "Not ID's found on installed packages, downloading them..."
                 if el_verify_internet fast ; then
-                mkdir -p /var/tmp/nvidia-tmp
-                cd /var/tmp/nvidia-tmp
+                    mkdir -p /var/tmp/nvidia-tmp
+                    cd /var/tmp/nvidia-tmp
 
-                for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
-                do
-                    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
-                    while read -ru 3 line
+                    for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
                     do
-                        #url_package_dir="${url_repository%/}/${line%/*}/"
-                        el_debug "downloading: ${line##*/}"
-                        wget -q "${url_repository%/}/${line}"
-                    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
-                done
+                        url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+                        while read -ru 3 line
+                        do
+                            #url_package_dir="${url_repository%/}/${line%/*}/"
+                            el_debug "downloading: ${line##*/}"
+                            wget -q "${url_repository%/}/${line}"
+                        done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+                    done
                 else
                     NOREPORTS=1 el_error "no connection to internet found"
                 fi
@@ -253,21 +253,21 @@ detect_driver_version(){
 
     # if we only  want to check, we don't need to do anything more here, just exit
     if [[ -n "$_NVIDIA_VERSION" ]] ; then
-    if ((is_mode_check)) ; then
-        echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
-        exit
-    else
-        # suggest the version to use
-        if ! ((is_mode_auto)) ; then
-            local message_version_suggest
-            message_version_suggest="$( printf "$( eval_gettext "Your detected version of Nvidia drivers to select is '%s'." )" "$_NVIDIA_VERSION" )"
+        if ((is_mode_check)) ; then
+            echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
+            exit
+        else
+            # suggest the version to use
+            if ! ((is_mode_auto)) ; then
+                local message_version_suggest
+                message_version_suggest="$( printf "$( eval_gettext "Your detected version of Nvidia drivers to select is '%s'." )" "$_NVIDIA_VERSION" )"
 
-            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                --title "Suggested Version" \
-                --msgbox "$message_version_suggest" \
-                0 0
+                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    --title "Suggested Version" \
+                    --msgbox "$message_version_suggest" \
+                    0 0
+            fi
         fi
-    fi
     else
         NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
         sleep 1
@@ -523,14 +523,14 @@ interactive_ask_driver_version(){
 
             # tell the user to use an older kernel
             #if dpkg --compare-versions "$(uname -r)" ge "3.16" ; then
-                #local message_too_much_new_kernel
-                ##message_too_much_new_kernel="$( printf "$( eva
-                ##l_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
+            #local message_too_much_new_kernel
+            ##message_too_much_new_kernel="$( printf "$( eva
+            ##l_gettext "Your selected kernel is very new for this version of nvidia, we will try in any of the cases to compile the module for this kernel but if it fails to run your graphical system just use an older version of the kernel, like the one given by default debian. We tested that it compiles with the version 3.2" )" "" )"
 
-                #dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                    #--title "Too much new kernel" \
-                    #--msgbox "$message_too_much_new_kernel" \
-                    #0 0
+            #dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                #--title "Too much new kernel" \
+                #--msgbox "$message_too_much_new_kernel" \
+                #0 0
             #fi
 
 
@@ -897,8 +897,8 @@ uninstall_driver(){
 main(){
     # pre {{{
     #if [[ -z "${1}" ]] ; then
-        #usage
-        #exit 1
+    #usage
+    #exit 1
     #fi
 
     . /lib/lsb/init-functions

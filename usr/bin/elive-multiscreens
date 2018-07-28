@@ -28,6 +28,46 @@ usage(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  module_ecomorph_unload
+#   DESCRIPTION:  disables the ecomorph emodule before to load multiscreens because it bugs
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+module_ecomorph_unload(){
+    # pre {{{
+    local module address
+
+    #module="$1"
+    module="ecomorph"
+    el_check_variables "module"
+
+    # }}}
+
+    if ! ((is_mode_previous_desktop)) ; then
+        # check dbus
+        if ! enlightenment_remote -ping 1>/dev/null ; then
+            if [[ -s "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
+                address="$( cat "$HOME/.cache/dbus-session-address-last.txt" | tail -1 )"
+                export DBUS_SESSION_BUS_ADDRESS="$address"
+            fi
+        fi
+
+        if enlightenment_remote -ping 1>/dev/null ; then
+            if enlightenment_remote -module-list | grep --colors=never "^${module} -- Enabled" ; then
+                timeout 30 zenity --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
+
+                enlightenment_remote -module-disable "$module"
+                sleep 7
+            fi
+
+        else
+            el_error "unable to use enlightenment_remote in $SOURCE"
+        fi
+    fi
+
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  configure_multiscreens
 #   DESCRIPTION:  configures multiscreen
 #    PARAMETERS:  -
@@ -60,6 +100,8 @@ configure_multiscreens(){
 
 
     # }}}
+
+    module_ecomorph_unload
 
     # explain {{{
     # explain the user how to configure it
@@ -218,8 +260,9 @@ load_multiscreens_configuration(){
 
                 if [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" = "$conf_multiscreens_last" ]] ; then
                     # load
-                    # TODO: disable debug when finished to betatest: we just want to load, less bottleneck
-                    el_info "running: $(cat "$file" | grep "^xrand" )"
+                    module_ecomorph_unload
+                    # disable debug when finished to betatest: we just want to load, less bottleneck
+                    #el_info "running: $(cat "$file" | grep "^xrand" )"
                     (
                     if ! "$file" ; then
                         if ! (($is_mode_previous_desktop)) ; then
@@ -287,6 +330,8 @@ load_multiscreens_configuration(){
                 # }}}
                 # load and save {{{
                 # load
+                module_ecomorph_unload
+
                 el_info "running: $(cat "$file" | grep "^xrand" )"
                 (
                 if ! "$file" ; then
@@ -319,9 +364,6 @@ load_multiscreens_configuration(){
 
             conf_multiscreens_last_screens_list="$( echo "$screens_connected_names" | sort | tr '\n' ' ' | sed -e 's| $||g' )"
             el_config_save "conf_multiscreens_last_screens_list"
-
-            # FIXME: disable the randr module from enlightenment? (what if we exit from games? try this in tower by loading/unloading the module)
-            # maybe we can add a watcher here to know about that? no... we need to know that the game exited!
         fi
 
     else

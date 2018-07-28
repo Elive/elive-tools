@@ -415,7 +415,7 @@ main(){
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then
-        if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer and most of the times faster." )" ; then
+        if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer and sometimes will be faster. You can deactivate them later disabling the Ecomorph module." )" ; then
             #Some slow computers can also have the desktop slower.
 
             local message_warn_user

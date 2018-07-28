@@ -789,7 +789,7 @@ install_driver(){
     # reload devices just in case
     service nvidia-kernel restart 1>/dev/null 2>&1
 
-    el_debug "Install complete"
+    el_info "Install complete"
 
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
         local message_suggestion

@@ -21,6 +21,7 @@ usage(){
     echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no ati cards are found)"
     echo -e "  -q: quiet mode"
+    echo -e "  -h: help usage"
     echo -e "  -c: check only (tell which version of the drivers we need)"
     echo -e "  -t: test driver only (if the driver is correctly installed and working)"
     echo -e "  -m: model (version of drivers) to use"
@@ -77,7 +78,7 @@ check_hardware(){
     # TODO: if something like:  01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI RV370 5B60 [Radeon X300 (PCIE)]
     #         try to catch the PCIE instead which means "new"
     if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" ; then
-        el_explain 3 "ati card found in lspci"
+        el_debug "ati card found in lspci"
         is_ati_card_found=1
     fi
 
@@ -123,7 +124,7 @@ detect_driver_version(){
     # checks to determine version {{{
     # manual mode
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
-        el_explain 2 "Selected __${driver_version}__ version of drivers to use"
+        el_debug "Selected ${driver_version} version of drivers to use"
         _FGLRX_VERSION="$driver_version"
         return
     fi
@@ -250,7 +251,7 @@ interactive_ask_privative(){
             fi
             ;;
         1) # no
-            if ((is_mode_live)) && ! ((is_mode_auto)) ; then
+            if ((is_mode_live)) ; then
                 if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
                     log_progress_msg "Using the free drivers..."
                 else
@@ -367,7 +368,7 @@ interactive_ask_driver_version(){
             ;;
     esac
 
-    el_explain 2 "Selected list of packages to install:\n__$( echo "${_FGLRX_PACKAGES}" | tr ' ' '\n' )__"
+    el_debug "Selected list of packages to install:\n$( echo "${_FGLRX_PACKAGES}" | tr ' ' '\n' )"
 
 
     # - select packages to install depending on which version we selected }}}
@@ -489,7 +490,7 @@ install_driver(){
         done
     fi
 
-    LC_ALL=C update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
+    LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
     rm -f /boot/*old-dkms 2>/dev/null
 
 
@@ -558,7 +559,7 @@ install_driver(){
             --msgbox "$message_remember" \
             0 0
 
-        el_explain 2 "Install complete"
+        el_info "Install complete"
     fi
     # - inform }}}
 }
@@ -589,7 +590,7 @@ uninstall_driver(){
                 rmmod -f radeon
                 rmmod -f radeonhd
             else
-                el_explain 0 "E: unable to unload the __radeon|radeonhd module__, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
+                el_info "E: unable to unload the 'radeon|radeonhd' module, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
                 exit 1
             fi
         fi
@@ -632,7 +633,7 @@ uninstall_driver(){
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_FGLRX_PACKAGES
         fi
     else
-        el_explain 0 "FGLRX packages already removed"
+        el_info "FGLRX packages already removed"
     fi
 
 
@@ -644,7 +645,7 @@ uninstall_driver(){
         el_error "We still having some fglrx packages not uninstalled:"
         COLUMNS=1000 dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2
     else
-        el_explain 0 "Driver FGLRX uninstalled __successfully__"
+        el_info "Driver FGLRX uninstalled successfully"
     fi
 
     # - end }}}
@@ -667,7 +668,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdifm:lquvt" opt; do
+    while getopts ":acdifm:lquvht" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -705,6 +706,10 @@ main(){
                 ;;
             t)
                 is_mode_test_installed=1
+                ;;
+            h)
+                usage
+                exit
                 ;;
             \?)
                 el_error "Invalid option: -$OPTARG"

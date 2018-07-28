@@ -85,10 +85,11 @@ else
 
     el_c_gr="\033[1;30m" # Gray color
     el_c_gr2="\033[0;30m" # Gray2 color
-    #if ((is_console)) ; then
-        ## gray's are not visible in console for any reason, use cyan's instead
-        #el_c_gr="\033[1;36m" # Gray color
+    if ((is_console)) ; then
+        ## gray's are not visible in console when vga=normal (t460s doesnt configure the good one so it fallbacks to normal), use cyan's instead
+        el_c_gr="\033[1;36m" # Gray color
         #el_c_gr2="\033[0;36m" # Gray2 color
+    fi
     #else
         #el_c_gr="\033[1;30m" # Gray color
         #el_c_gr2="\033[0;30m" # Gray2 color

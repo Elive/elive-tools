@@ -191,7 +191,7 @@ configure_multiscreens(){
         if "$file" ; then
             # we have configured primary, so we need to reload desktop
             enlightenment_remote -restart
-            sleep 3
+            sleep 5
         else
             if ! (($is_mode_previous_desktop)) ; then
                 zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"

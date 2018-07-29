@@ -159,18 +159,31 @@ configure_multiscreens(){
         # remove it first
         sed -i -e "s| --primary||g" "$file" 2>/dev/null || true
 
-        while true
-        do
-            if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
-                break
-            else
-                if [[ "$primary" = "cancel" ]] || [[ -z "$screens_connected_names" ]] ; then
+
+        screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+        if [[ -n "$screens_connected_names" ]] ; then
+            screens_connected_number="$screens_connected_names"
+        else
+            screens_connected_number="0"
+        fi
+
+        if [[ "$screens_connected_number" = 1 ]] ; then
+            primary="$( echo $screens_connected_names )"
+        else
+
+            while true
+            do
+                if [[ -n "$primary" ]] && echo "$screens_connected_names" | grep -qs "^${primary}$" ; then
                     break
+                else
+                    if [[ "$primary" = "cancel" ]] || [[ -z "$screens_connected_names" ]] ; then
+                        break
+                    fi
+                    # TODO: include more info in the selector about the screens, like their resolution and size dimensions
+                    primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
                 fi
-                # TODO: include more info in the selector about the screens, like their resolution and size dimensions
-                primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
-            fi
-        done
+            done
+        fi
 
         # set it
         sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"

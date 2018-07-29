@@ -131,7 +131,7 @@ detect_driver_version(){
 
 
     if [[ -z "$driver_version" ]] ; then
-        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
+        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | sort -uV | sed -e 's|^.*Radeon HD||g' -e 's|^.*Radeon ||g' -e 's|Series.*$||g' -e 's/[^0-9]*//g' | grep -E "[[:digit:]]" | awk '{print $1}' | head -1 )"
 
         if [[ -n "$driver_version" ]] ; then
             if [[ "${driver_version}" -gt "4000" ]] ; then
@@ -432,17 +432,12 @@ install_driver(){
     # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
     if lsmod | grep -qsE "(radeon|radeonhd)" ; then
-        if ((is_mode_force)) ; then
             rmmod -f radeon
             rmmod -f radeonhd
-        else
-            rmmod radeon
-            rmmod radeonhd
 
             if lsmod | grep -qsE "(radeon|radeonhd)" ; then
-                echo -e "\nE: radeon|radeonhd module is loaded and we cannot unload it"
-                echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=radeon,radeonhd' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
-            fi
+            el_error "\nE: radeon|radeonhd module is loaded and we cannot unload it"
+            el_info "You should reboot and add the boot parameter 'modprobe.blacklist=radeon,radeonhd' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
         fi
     fi
 

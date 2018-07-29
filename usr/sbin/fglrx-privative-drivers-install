@@ -573,6 +573,10 @@ uninstall_driver(){
 
     unset _FGLRX_PACKAGES
 
+    if ! ((is_ati_card_found)) ; then
+        log_progress_msg "Removing FGLRX proprietary ATI drivers, this machine doesn't has it"
+    fi
+
     # }}}
 
     # unload module {{{

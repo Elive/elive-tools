@@ -817,6 +817,10 @@ uninstall_driver(){
 
     unset _NVIDIA_PACKAGES
 
+    if ! ((is_nvidia_card_found)) ; then
+        log_progress_msg "Removing Nvidia proprietary drivers, this machine doesn't has it"
+    fi
+
     # }}}
 
     # unload module {{{

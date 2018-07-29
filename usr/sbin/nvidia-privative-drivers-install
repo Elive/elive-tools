@@ -967,6 +967,9 @@ main(){
         esac
     done
 
+    if grep -qs "simulate=nvidia" /proc/cmdline ; then
+        is_mode_force=1
+    fi
 
 
     check_hardware

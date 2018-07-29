@@ -128,7 +128,7 @@ main(){
     # }}}
 
     # detect if we have a Broadcom 43* type wifi
-    if [[ "$( lspci -nn -d "14e4:" | wc -l )" -gt 0 ]] ; then
+    if [[ "$( lspci -nn -d "14e4:" | wc -l )" -gt 0 ]] || grep -qs "simulate=b43" /proc/cmdline ; then
         # get device name
         el_debug "BCM43 Broadcom Wireless device detected"
 

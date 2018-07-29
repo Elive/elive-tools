@@ -720,6 +720,9 @@ main(){
         esac
     done
 
+    if grep -qsE "simulate=(ati|fglrx)" /proc/cmdline ; then
+        is_mode_force=1
+    fi
 
 
     check_hardware

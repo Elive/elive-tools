@@ -13,7 +13,8 @@ not_supported(){
     local message_notsupported
     message_notsupported="$( printf "$( eval_gettext "The mimetype %s is not implemented. You can report this with an example of how this file should be run to the Elive BTS in order to have it running for you and everybody." )" "$mime" )"
 
-    zenity --info --text="$message_notsupported"
+    #zenity --info --text="$message_notsupported"
+    el_warning "mimetype '$mime' not implemented"
 }
 
 run_edje(){
@@ -214,6 +215,11 @@ main(){
                 ;;
             *)
                 not_supported "$mime"
+                # run a default launcher!
+                if [[ -x "/usr/bin/thunar" ]] ; then
+                    thunar "$file"
+                fi
+                ;;
         esac
     done
 }

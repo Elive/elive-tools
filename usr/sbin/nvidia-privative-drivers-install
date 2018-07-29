@@ -69,7 +69,7 @@ check_hardware(){
     # }}}
     # detect if we have the hardware with nvidia {{{
     # pci-id with nvidia on first graphic card
-    _DEVICE="$(lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
+    _DEVICE="$( lspci -mn | awk '/0300/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
 
     if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
         el_debug "nvidia card found on pci-id"
@@ -84,7 +84,7 @@ check_hardware(){
 
     # check if hardware has nvidia
     # Seems like a more reliable way than using VGA for the detect is: lspci -nn | grep '\[03'
-    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+nvidia\s+" ; then
+    if lspci | grep -qsiE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" ; then
         el_debug "nvidia card found in lspci"
         is_nvidia_card_found=1
     fi
@@ -304,7 +304,7 @@ interactive_ask_privative(){
 
     # }}}
     # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
 
@@ -644,7 +644,7 @@ install_driver(){
     # - }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+nvidia\s+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
 
         if laptop-detect ; then
             local message_multiple_cards

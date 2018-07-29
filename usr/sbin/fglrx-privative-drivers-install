@@ -77,7 +77,7 @@ check_hardware(){
     # TODO: if has intel too, strongly suggests to use intel instead
     # TODO: if something like:  01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI RV370 5B60 [Radeon X300 (PCIE)]
     #         try to catch the PCIE instead which means "new"
-    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*(AMD|ATI)" ; then
+    if lspci | grep -qsiE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" ; then
         el_debug "ati card found in lspci"
         is_ati_card_found=1
     fi
@@ -131,7 +131,8 @@ detect_driver_version(){
 
 
     if [[ -z "$driver_version" ]] ; then
-        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | sort -uV | sed -e 's|^.*Radeon HD||g' -e 's|^.*Radeon ||g' -e 's|Series.*$||g' -e 's/[^0-9]*//g' | grep -E "[[:digit:]]" | awk '{print $1}' | head -1 )"
+        driver_version="$( lspci | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" | sort -uV | sed -e 's|^.*Radeon HD||g' -e 's|^.*Radeon ||g' -e 's|^.*Rage||g' -e 's|Series.*$||g' -e 's/[^0-9]*//g' | grep -E "[[:digit:]]" | awk '{print $1}' | head -1 )"
+        read -r driver_version <<< "$driver_version"
 
         if [[ -n "$driver_version" ]] ; then
             if [[ "${driver_version}" -gt "4000" ]] ; then
@@ -180,7 +181,7 @@ interactive_ask_privative(){
 
     # }}}
     # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
@@ -412,7 +413,7 @@ install_driver(){
     # - conf }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not ati ones...
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
 
         if /usr/sbin/laptop-detect ; then
             local message_multiple_cards
@@ -432,10 +433,10 @@ install_driver(){
     # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
     if lsmod | grep -qsE "(radeon|radeonhd)" ; then
-            rmmod -f radeon
-            rmmod -f radeonhd
+        rmmod -f radeon
+        rmmod -f radeonhd
 
-            if lsmod | grep -qsE "(radeon|radeonhd)" ; then
+        if lsmod | grep -qsE "(radeon|radeonhd)" ; then
             el_error "\nE: radeon|radeonhd module is loaded and we cannot unload it"
             el_info "You should reboot and add the boot parameter 'modprobe.blacklist=radeon,radeonhd' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
         fi

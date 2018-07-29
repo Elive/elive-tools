@@ -222,6 +222,7 @@ detect_driver_version(){
                 fi
             fi
         done
+        rm -rf nvidia-tmp 2>/dev/null
 
         cd "$prev_dir"
         rm -rf /var/cache/apt/archives/nvidia-tmp 2>/dev/nul

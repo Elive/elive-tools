@@ -77,7 +77,7 @@ check_hardware(){
     # TODO: if has intel too, strongly suggests to use intel instead
     # TODO: if something like:  01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI RV370 5B60 [Radeon X300 (PCIE)]
     #         try to catch the PCIE instead which means "new"
-    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" ; then
+    if lspci | grep -qsiE "(VGA|3D|Display)\s+.*(AMD|ATI)" ; then
         el_debug "ati card found in lspci"
         is_ati_card_found=1
     fi
@@ -131,7 +131,7 @@ detect_driver_version(){
 
 
     if [[ -z "$driver_version" ]] ; then
-        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
+        driver_version="$( lspci | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | sed -e 's|^.*Radeon HD||g' -e 's|Series.*$||g' | awk '{print $1}' | grep -E "^[[:digit:]]*[[:digit:]]$" )"
 
         if [[ -n "$driver_version" ]] ; then
             if [[ "${driver_version}" -gt "4000" ]] ; then
@@ -160,7 +160,7 @@ detect_driver_version(){
 
     # if we only  want to check, we don't need to do anything more here, just exit
     if ((is_mode_check)) ; then
-        echo -e "The detected ATI drivers for your machine is probably: $_FGLRX_VERSION"
+        echo -e "The detected ATI drivers for your machine is maybe: $_FGLRX_VERSION"
         exit
     fi
 
@@ -180,7 +180,7 @@ interactive_ask_privative(){
 
     # }}}
     # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
@@ -220,7 +220,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of ATI? We don't suggest you to do it unless you really know that they works good for you, most of the times the free drivers is much better quality for the ATI cards and the proprietary ones only works good in some cards, if you select to use the proprietary one you should verify that everything works without problems, because it can even block entirely your computer and give you other good amount of instability problems, the best is to simply try all the options and applications before to decide for one." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of ATI? These are known as the most problematic graphic cards ever made. So we cannot tell you if the open or the privative drivers will work best for your case, you must try all of them. To know it better, you can found things like your computer entirely blocked, strange visual artifacts, black windows, and any type of problem, specialy headaches. Our best suggestion is to buy a true graphic card the next time, but our best wishes are with you." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -240,7 +240,7 @@ interactive_ask_privative(){
                 log_progress_msg "Installing proprietary ATI drivers"
                 # remember that this is not stable {{{
                 local message_remember
-                message_remember="$( printf "$( eval_gettext "If these drivers do not work or if your computer freezes in graphical mode, try the free drivers instead or the VESA compatibility mode." )" "" )"
+                message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try with another option from the list, or use the open drivers too. If none works in a stable way experience, buy an Nvidia or Intel card instead, your computer and even your filesystem will be grateful to you." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "If the install fails..." \
@@ -294,7 +294,7 @@ interactive_ask_driver_version(){
         message_select_driver="$( printf "$( eval_gettext "Use the Spacebar to select the driver that you want to install, then press Enter to confirm." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
-            message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is probably the one that you need." )" "$_FGLRX_VERSION" )"
+            message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is maybe the one that you need." )" "$_FGLRX_VERSION" )"
         fi
 
         dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
@@ -412,7 +412,7 @@ install_driver(){
     # - conf }}}
     # Optimus inform to user {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not ati ones...
-    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*\s+(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$(lspci | grep -E "(VGA|3D|Display)" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "(VGA|3D|Display)" | grep -iE "(VGA|3D|Display)\s+.*(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
 
         if /usr/sbin/laptop-detect ; then
             local message_multiple_cards
@@ -509,7 +509,7 @@ install_driver(){
             sleep 4
             NOREPORTS=1 el_error "Unable to load FGLRX module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the FGLRX driver will be require from an older kernel." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version, like the OLD ones. If the video card is old then an older version of the FGLRX driver will be require from an older kernel." )" "" )"
         fi
 
 

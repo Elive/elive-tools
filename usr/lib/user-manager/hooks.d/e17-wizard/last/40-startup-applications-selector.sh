@@ -198,7 +198,7 @@ main(){
                             echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
                         fi
                     else
-                        el_error "Polkit startup file not found"
+                        NOREPORTS=1 el_error "Polkit startup file not found"
                         sleep 2
                     fi
                 fi
@@ -208,7 +208,7 @@ main(){
 
             # we don't want the daemon running, but user needs to access to disks, ask him
             if ((is_polkit_auth_disabled_wanted)) ; then
-                if zenity --question --text="$( eval_gettext "Do you want to have full access to the hard disks for this user ?" )" ; then
+                if zenity --question --text="$( eval_gettext "Do you want to enable full disk access for this user?" )" ; then
                     #cat > /var/lib/polkit-1/localauthority/10-vendor.d/10-live-cd.pkla << EOF
                     cat > /tmp/.$(basename $0 )-${USER}.txt << EOF
 # Policy to allow the user $USER to bypass policykit

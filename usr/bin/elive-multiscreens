@@ -27,6 +27,26 @@ usage(){
 "
 }
 
+# generates a usable menu output with more info for select screen
+screens_connected_names_menu_gen(){
+    local screen line menu
+
+menu="$(
+while read -ru 3 line
+do
+    [[ -z "$line" ]] && continue
+    echo "$line"
+
+    screen="$( LC_ALL=C xrandr -q | grep -E "^$line\s+connected\s+" | sed -e 's|^.*connected ||g' -e 's|+.*$||g' )"
+    [[ -z "$screen" ]] && screen="Screen"
+    echo "$screen"
+
+done 3<<< "$( echo "$screens_connected_names" )"
+)"
+
+echo "$menu"
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  module_ecomorph_unload
 #   DESCRIPTION:  disables the ecomorph emodule before to load multiscreens because it bugs
@@ -180,7 +200,7 @@ configure_multiscreens(){
                         break
                     fi
                     # TODO: include more info in the selector about the screens, like their resolution and size dimensions
-                    primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                    primary="$( screens_connected_names_menu_gen | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" --column="Resolution" || echo cancel )"
                 fi
             done
         fi
@@ -336,7 +356,7 @@ load_multiscreens_configuration(){
                             if [[ "$primary" = "cancel" ]] ; then
                                 break
                             fi
-                            primary="$(  echo "$screens_connected_names" | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                            primary="$( screens_connected_names_menu_gen | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
                         fi
                     done
 

@@ -642,8 +642,7 @@ uninstall_driver(){
     # show final result
     if COLUMNS=1000 dpkg -l | awk '{print $2}' | grep fglrx | grep -vE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" | grep -qs fglrx ; then
         echo -e ""
-        el_error "We still having some fglrx packages not uninstalled:"
-        COLUMNS=1000 dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2
+        el_error "We still having some fglrx packages not uninstalled: $( COLUMNS=1000 dpkg -l | grep fglrx | awk '{print $2}' | grep fglrx  1>&2 )"
     else
         el_info "Driver FGLRX uninstalled successfully"
     fi

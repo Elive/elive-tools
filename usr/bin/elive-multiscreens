@@ -61,6 +61,17 @@ module_ecomorph_unload(){
     module="ecomorph"
     el_check_variables "module"
 
+    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    if [[ -n "$screens_connected_names" ]] ; then
+        screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
+    else
+        screens_connected_number="0"
+    fi
+
+    # only bugs using more than one screen, so do not not unload if not needed
+    if [[ -n "$screens_connected_number" ]] && [[ "$screens_connected_number" -gt 1 ]] ; then
+        return
+    fi
     # }}}
 
     if ! ((is_mode_previous_desktop)) ; then

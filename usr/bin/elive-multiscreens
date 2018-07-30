@@ -241,8 +241,11 @@ configure_multiscreens(){
         (
         if "$file" ; then
             # we have configured primary, so we need to reload desktop
-            enlightenment_remote -restart
-            sleep 5
+            # we always need to restart E to use the correct confs for the bar and gadgets
+            if ! (($is_mode_previous_desktop)) ; then
+                sleep 5
+                enlightenment_remote -restart
+            fi
         else
             if ! (($is_mode_previous_desktop)) ; then
                 zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
@@ -323,7 +326,14 @@ load_multiscreens_configuration(){
                     # disable debug when finished to betatest: we just want to load, less bottleneck
                     #el_info "running: $(cat "$file" | grep "^xrand" )"
                     (
-                    if ! "$file" ; then
+                    if "$file" ; then
+                        # we always need to restart E to use the correct confs for the bar and gadgets
+                        # wait that the desktop is loaded to not break something first
+                        if ! (($is_mode_previous_desktop)) ; then
+                            sleep 5
+                            enlightenment_remote -restart
+                        fi
+                    else
                         if ! (($is_mode_previous_desktop)) ; then
                             zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                         fi
@@ -396,8 +406,14 @@ load_multiscreens_configuration(){
 
                 el_info "running: $(cat "$file" | grep "^xrand" )"
                 (
-                if ! "$file" ; then
-                        zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                if "$file" ; then
+                    # we always need to restart E to use the correct confs for the bar and gadgets
+                    if ! (($is_mode_previous_desktop)) ; then
+                        sleep 5
+                        enlightenment_remote -restart
+                    fi
+                else
+                    zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                 fi
                 )
 

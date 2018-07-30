@@ -313,6 +313,7 @@ load_multiscreens_configuration(){
                     return
                 fi
             else
+                true
                 # we have different screens connected, hum?
                 #if [[ "$screens_connected_number" -gt 1 ]] ; then
                     ## TODO: implement:
@@ -320,12 +321,14 @@ load_multiscreens_configuration(){
                 #fi
 
                 # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
-                conf_multiscreens_last=""
-                conf_multiscreens_last_autoload_wanted=""
-                el_config_save "conf_multiscreens_last"
-                el_config_save "conf_multiscreens_last_autoload_wanted"
-
-                el_debug "we have different screens connected from the last setup, so forget our last configuration (we will ask then for a new one)"
+                # update: we don't want to delete any conf if the screens connected has changed
+                #if [[ "$screens_connected_number" -gt 1 ]] ; then
+                    #conf_multiscreens_last=""
+                    #conf_multiscreens_last_autoload_wanted=""
+                    #el_config_save "conf_multiscreens_last"
+                    #el_config_save "conf_multiscreens_last_autoload_wanted"
+                    #el_debug "we have different screens connected from the last setup, so forget our last configuration (we will ask then for a new one)"
+                #fi
             fi
         fi
 
@@ -338,7 +341,7 @@ load_multiscreens_configuration(){
 
 
         # different than last time, ask
-        if [[ -n "$conf" ]] && [[ "$conf" != "$conf_multiscreens_last" ]] ; then
+        if [[ -n "$conf" ]] && [[ -n "$conf_multiscreens_last" ]] && [[ "$conf" != "$conf_multiscreens_last" ]] ; then
             el_debug "different configuration from the last time, ask what to do"
             # needed for wait that E is loaded, positioning widgets
             if ((is_mode_delayed)) ; then
@@ -374,9 +377,7 @@ load_multiscreens_configuration(){
                 el_info "running: $(cat "$file" | grep "^xrand" )"
                 (
                 if ! "$file" ; then
-                    if ! (($is_mode_previous_desktop)) ; then
                         zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
-                    fi
                 fi
                 )
 
@@ -407,7 +408,7 @@ load_multiscreens_configuration(){
 
     else
         # if we don't have a valid configuration, ask for a new one
-        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] && ! ((is_mode_previous_desktop)) ; then
+        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] ; then
             if [[ "$screens_connected_number" -gt 1 ]] ; then
                 el_debug "we dont have anything to load, but we found multiple screens connected, to ask the user if wants to configure them"
 

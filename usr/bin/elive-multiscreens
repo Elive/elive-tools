@@ -86,10 +86,17 @@ module_ecomorph_unload(){
 
         if enlightenment_remote -ping 1>/dev/null ; then
             if enlightenment_remote -module-list | grep --color=never "^${module} -- Enabled" ; then
-                timeout 30 zenity --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
 
                 enlightenment_remote -module-disable "$module"
-                sleep 7
+                sleep 8
+                enlightenment_remote -restart
+                sleep 2
+                if enlightenment_remote -module-list | grep --color=never "^${module} -- Enabled" ; then
+                    enlightenment_remote -module-disable "$module"
+                    el_error "ecomorph module was unloaded but stills here"
+                fi
+
+                timeout 30 zenity --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
             fi
 
         else

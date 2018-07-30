@@ -77,7 +77,7 @@ check_hardware(){
     # TODO: if has intel too, strongly suggests to use intel instead
     # TODO: if something like:  01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI RV370 5B60 [Radeon X300 (PCIE)]
     #         try to catch the PCIE instead which means "new"
-    if lspci | grep -qsiE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" ; then
+    if lspci | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -qsE "(AMD|ATI)" ; then
         el_debug "ati card found in lspci"
         is_ati_card_found=1
     fi

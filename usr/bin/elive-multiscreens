@@ -53,7 +53,7 @@ module_ecomorph_unload(){
         fi
 
         if enlightenment_remote -ping 1>/dev/null ; then
-            if enlightenment_remote -module-list | grep --colors=never "^${module} -- Enabled" ; then
+            if enlightenment_remote -module-list | grep --color=never "^${module} -- Enabled" ; then
                 timeout 30 zenity --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
 
                 enlightenment_remote -module-disable "$module"
@@ -124,7 +124,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again?" )" ; then
+        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
 
             # configure
             arandr

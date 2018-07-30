@@ -89,10 +89,9 @@ module_ecomorph_unload(){
 
                 enlightenment_remote -module-disable "$module"
                 sleep 8
-                enlightenment_remote -restart
-                sleep 2
                 if enlightenment_remote -module-list | grep --color=never "^${module} -- Enabled" ; then
                     enlightenment_remote -module-disable "$module"
+                    sleep 9
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 

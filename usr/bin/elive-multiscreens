@@ -250,6 +250,8 @@ configure_multiscreens(){
         fi
         )
 
+        timeout 40 zenity --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the screen limits, working with multiple screens you may found more handier to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+
         sleep 1
 
         if timeout 25 zenity --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start your graphical system?" )" ; then

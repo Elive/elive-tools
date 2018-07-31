@@ -551,6 +551,7 @@ main(){
 
         # Master should be always set to 100 % in order to avoid distortions
         el_explain 2 "Master set to 100%"
+        amixer -q set "Master Mono" 100%  2>/dev/null
         amixer -q set Master,0 100%  2>/dev/null
         amixer -q set Master,1 100%  2>/dev/null
         amixer -q set Master 100%  2>/dev/null

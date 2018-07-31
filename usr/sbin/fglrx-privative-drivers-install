@@ -573,10 +573,6 @@ uninstall_driver(){
 
     unset _FGLRX_PACKAGES
 
-    if ! ((is_ati_card_found)) ; then
-        log_progress_msg "Removing FGLRX proprietary ATI drivers, this machine doesn't has it"
-    fi
-
     # }}}
 
     # unload module {{{
@@ -612,6 +608,10 @@ uninstall_driver(){
 
         # if matches
         if echo "$line" | grep -qsE "(fglrx|lib.*fglrx|glx.*fglrx|xserver.*fglrx|xvba-va-driver)" ; then
+    if ! ((is_ati_card_found)) ; then
+        log_progress_msg "Removing FGLRX proprietary ATI drivers, this machine doesn't has it"
+    fi
+
             # which doesn't maches
             if ! echo "$line" | grep -qsE "(fglrx-detect|glx-diversions|fglrx-installer-cleanup)" ; then
                 el_debug "Adding $line to the list of uninstall packages"
@@ -625,6 +625,8 @@ uninstall_driver(){
     read -r _FGLRX_PACKAGES <<< "$_FGLRX_PACKAGES"
 
     if [[ -n "$_FGLRX_PACKAGES" ]] ; then
+        log_progress_msg "Removing FGLRX proprietary ATI drivers, this machine doesn't has it"
+
         if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_FGLRX_PACKAGES"
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_FGLRX_PACKAGES

@@ -817,10 +817,6 @@ uninstall_driver(){
 
     unset _NVIDIA_PACKAGES
 
-    if ! ((is_nvidia_card_found)) ; then
-        log_progress_msg "Removing Nvidia proprietary drivers, this machine doesn't has it"
-    fi
-
     # }}}
 
     # unload module {{{
@@ -867,6 +863,8 @@ uninstall_driver(){
     read -r _NVIDIA_PACKAGES <<< "$_NVIDIA_PACKAGES"
 
     if [[ -n "$_NVIDIA_PACKAGES" ]] ; then
+        log_progress_msg "Removing Nvidia proprietary drivers, this machine doesn't has it"
+
         if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_NVIDIA_PACKAGES

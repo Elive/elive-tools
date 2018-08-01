@@ -23,7 +23,7 @@ main(){
     # always load screen configurations
     if [[ -e "/usr/share/xdgeldsk/applications/arandr-load-conf.desktop" ]] ; then
         mkdir -p "$HOME/.e/e17/applications/restart"
-        if ! grep -qs "arandr-load-conf.desktop" >> "$HOME/.e/e17/applications/restart/.order" ; then
+        if ! grep -qs "arandr-load-conf.desktop" "$HOME/.e/e17/applications/restart/.order" ; then
             echo "arandr-load-conf.desktop" >> "$HOME/.e/e17/applications/restart/.order"
         fi
     fi

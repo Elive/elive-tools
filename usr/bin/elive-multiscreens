@@ -246,11 +246,13 @@ configure_multiscreens(){
         if "$file" ; then
             # we have configured primary, so we need to reload desktop
             # we always need to restart E to use the correct confs for the bar and gadgets
-            if ! (($is_mode_previous_desktop)) ; then
-                sleep 2
-                enlightenment_remote -restart
-                sleep 5
-            fi
+            # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
+            true
+            #if ! (($is_mode_previous_desktop)) ; then
+                #sleep 2
+                #enlightenment_remote -restart
+                #sleep 5
+            #fi
         else
             if ! (($is_mode_previous_desktop)) ; then
                 zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
@@ -334,11 +336,13 @@ load_multiscreens_configuration(){
                     if "$file" ; then
                         # we always need to restart E to use the correct confs for the bar and gadgets
                         # wait that the desktop is loaded to not break something first
-                        if ! (($is_mode_previous_desktop)) ; then
-                            sleep 2
-                            enlightenment_remote -restart
-                            sleep 5
-                        fi
+                        # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
+                        true
+                        #if ! (($is_mode_previous_desktop)) ; then
+                            #sleep 2
+                            #enlightenment_remote -restart
+                            #sleep 5
+                        #fi
                     else
                         if ! (($is_mode_previous_desktop)) ; then
                             zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
@@ -418,11 +422,13 @@ load_multiscreens_configuration(){
                 (
                 if "$file" ; then
                     # we always need to restart E to use the correct confs for the bar and gadgets
-                    if ! (($is_mode_previous_desktop)) ; then
-                        sleep 2
-                        enlightenment_remote -restart
-                        sleep 5
-                    fi
+                    # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
+                    true
+                    #if ! (($is_mode_previous_desktop)) ; then
+                        #sleep 2
+                        #enlightenment_remote -restart
+                        #sleep 5
+                    #fi
                 else
                     zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                 fi

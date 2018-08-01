@@ -41,7 +41,7 @@ do
     [[ -z "$screen" ]] && screen="Screen"
     echo "$screen"
 
-done 3<<< "$( echo "$screens_connected_names" )"
+done 3<<< "$( echo "$screens_connected_names" | psort -- -p "^LVDS" -p "^HDMI"  )"
 )"
 
 echo "$menu"
@@ -215,6 +215,7 @@ configure_multiscreens(){
                     break
                 else
                     if [[ "$primary" = "cancel" ]] || [[ -z "$screens_connected_names" ]] ; then
+                        unset primary
                         break
                     fi
                     # TODO: include more info in the selector about the screens, like their resolution and size dimensions
@@ -224,6 +225,9 @@ configure_multiscreens(){
         fi
 
         # set it
+        if [[ -z "$primary" ]] ; then
+            primary="$( echo "$screens_connected_names" | psort -- -p "^LVDS" -p "^HDMI" | head -1 )"
+        fi
         sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
         # update timestamps since we modify the file
         conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"
@@ -389,6 +393,7 @@ load_multiscreens_configuration(){
                             break
                         else
                             if [[ "$primary" = "cancel" ]] ; then
+                                unset primary
                                 break
                             fi
                             primary="$( screens_connected_names_menu_gen | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
@@ -396,6 +401,9 @@ load_multiscreens_configuration(){
                     done
 
                     # set it
+                    if [[ -z "$primary" ]] ; then
+                        primary="$( echo "$screens_connected_names" | psort -- -p "^LVDS" -p "^HDMI" | head -1 )"
+                    fi
                     sed -i -e "s|output ${primary} |output ${primary} --primary |g" "$file"
                     # update timestamps since we modify the file
                     conf="$( find "$HOME/.screenlayout/" -type f -printf "%T@ %p\n" | sort -n | tail -n 1 )"

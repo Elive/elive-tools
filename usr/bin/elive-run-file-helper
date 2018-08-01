@@ -94,15 +94,21 @@ run_script(){
         is_user_warned=1
         el_config_save "is_user_warned"
     fi
-    el_config_get "is_user_warned_root"
-    if ! ((is_user_warned_root)) ; then
-        zenity --info --text="$( eval_gettext "Important: if you need to execute a file with admin privileges, right click in the file manager to enter in admin mode, then run it from the new session" )"
-        is_user_warned_root=1
-        el_config_save "is_user_warned_root"
+    #el_config_get "is_user_warned_root"
+    #if ! ((is_user_warned_root)) ; then
+        #zenity --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if is the case you need to right-click in the filemanager to enter in admin mode, then running the file from this new session." )"
+        #is_user_warned_root=1
+        #el_config_save "is_user_warned_root"
+    #fi
+
+    if ! [[ "$UID" = 0 ]] ; then
+        if zenity --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver in your system. We suggest to first try to run the file without the administrator privileges." )" ; then
+            is_root_wanted=1
+        fi
     fi
 
     if ! test -x "$file" ; then
-        if zenity --question --text="$( eval_gettext "The file that you are trying to run seems like to be a script but it doesn't has permissions to be executed. Add executable permissions?" )" ; then
+        if zenity --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
             chmod +x "$file"
         else
             zenity --error --text="$( eval_gettext"If the file has no executable permissions we cannot run it. Exiting..." )"
@@ -112,27 +118,43 @@ run_script(){
 
     if [[ "$UID" = 0 ]] ; then
         if [[ -x "$( which urxvt )" ]] ; then
-            urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ${message_done}"
+            urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
         else
             if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
-                terminology -hold -e "${file} ; apt-get -f install ; echo ${message_done}"
+                terminology -hold -e "${file} ; apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         fi
     else
         if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
             if [[ -x "$( which urxvt )" ]] ; then
-                urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ${message_done}"
+                if ((is_root_wanted)) ; then
+                    urxvt -hold -e bash -c "gksu $file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                else
+                    urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                fi
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
-                    terminology -hold -e "${file} ; sudo apt-get -f install ; echo ${message_done}"
+                    if ((is_root_wanted)) ; then
+                        terminology -hold -e "gksu ${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    else
+                        terminology -hold -e "${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    fi
                 fi
             fi
         else
             if [[ -x "$( which urxvt )" ]] ; then
-                urxvt -hold -e bash -c "$file ; echo ${message_done}"
+                if ((is_root_wanted)) ; then
+                    urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"
+                else
+                    urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
+                fi
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
-                    terminology -hold -e "${file} ; echo ${message_done}"
+                    if ((is_root_wanted)) ; then
+                        terminology -hold -e "gksu ${file} ; echo ; echo ; echo ${message_done}"
+                    else
+                        terminology -hold -e "${file} ; echo ; echo ; echo ${message_done}"
+                    fi
                 fi
             fi
         fi

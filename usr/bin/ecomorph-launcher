@@ -321,6 +321,9 @@ abort_with_fallback_wm(){
             driver)
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, report the bug to the Elive BTS." )"
                 ;;
+            multiscreens)
+                zenity --error --text="$( eval_gettext "The module Ecomorph doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
+                ;;
         esac
     fi
 
@@ -412,6 +415,14 @@ main(){
     if grep -qsi "VESA(.*): Creating default Display" /var/log/Xorg.0.log ; then
         abort_with_fallback_wm traditional
     fi
+
+    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
+    if [[ "$screens_connected_number" -gt 1 ]] ; then
+        abort_with_fallback_wm multiscreens
+    fi
+
+
 
 
     if ((has_glxinfo_ecomorph_compatibility)) ; then

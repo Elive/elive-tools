@@ -1068,6 +1068,10 @@ el_elive_version_get(){
     version="$( grep "^elive-version: " "/etc/elive-version" )"
     version="${version#elive-version: }"
 
+    if [[ -z "$version" ]] ; then
+        version="2.9.99"
+    fi
+
     if [[ -n "$version" ]] ; then
         echo "$version"
     else
@@ -1094,6 +1098,9 @@ el_check_version_is_days_recent(){
     # calculate date builded {{{
 
     date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
+    if [[ -z "$date_builded" ]] ; then
+        date_builded="2018-05-00"
+    fi
 
     date_builded_y="${date_builded%%-*}"
 

@@ -1165,6 +1165,9 @@ el_check_version_development_is_days_recent(){
     # calculate date builded {{{
 
     date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
+    if [[ -z "$date_builded" ]] ; then
+        date_builded="2018-05-00"
+    fi
 
     date_builded_y="${date_builded%%-*}"
 

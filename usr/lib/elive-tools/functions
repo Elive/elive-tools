@@ -2303,9 +2303,9 @@ el_mark_state(){
     # always run in background to not slow down anything from the tools
     if [[ -n "$category" ]] && [[ -n "$action" ]] ; then
         if [[ -n "$ZSH_VERSION" ]] ; then
-            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+            curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "https://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
         else
-            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+            { curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&e_c='${category}'&e_a='${action}'"]}' "https://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
         fi
     fi
 
@@ -2329,17 +2329,17 @@ el_mark_state(){
                 ;;
         esac
         if [[ -n "$ZSH_VERSION" ]] ; then
-            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+            curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "https://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
         else
-            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+            { curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org'${SOURCE}'&idsite=2&rec=1&action_name=track_goal&idgoal='${id}'"]}' "https://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
         fi
     fi
 
     if [[ -z "$1" ]] ; then
         if [[ -n "$ZSH_VERSION" ]] ; then
-            curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
+            curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org&idsite=2&rec=1"]}' "https://statistics.elivecd.org/piwik.php" 1>/dev/null 2>&1 || true
         else
-            { curl -m 10 -i -X POST -d '{"requests":["?url=http://www.elivecd.org&idsite=2&rec=1"]}' "http://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
+            { curl -m 10 -L -i -X POST -d '{"requests":["?url=https://www.elivecd.org&idsite=2&rec=1"]}' "https://statistics.elivecd.org/piwik.php" & disown ; } 1>/dev/null 2>&1 || true
         fi
     fi
     # - parse ids }}}
@@ -2627,10 +2627,10 @@ el_request_donation(){
     # show it
     #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )" || true
     if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy $_dummy2" )" ; then
-        /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
+        /etc/alternatives/x-www-browser "https://www.elivecd.org/donate" &
     else
         if $guitool --question --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy $_dummy3" )" ; then
-            /etc/alternatives/x-www-browser "http://www.elivecd.org/donate" &
+            /etc/alternatives/x-www-browser "https://www.elivecd.org/donate" &
         fi
     fi
 

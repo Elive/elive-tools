@@ -361,7 +361,7 @@ main(){
     #cd /tmp
 
     #if zenity --question --text="$( eval_gettext "Do you want to try the preview of the desktop theme on which we are working on?" )" ; then
-    #curl -s -A Mozilla http://www.elivecd.org/elive_3.0_light_development.edj
+    #curl -L -s -A Mozilla https://www.elivecd.org/elive_3.0_light_development.edj
     #sudo -H mv *edj /usr/share/enlightenment/data/themes/
     #sudo -H chown root:root /usr/share/enlightenment/data/themes/*edj
     #sudo -H chmod a+r /usr/share/enlightenment/data/themes/*edj

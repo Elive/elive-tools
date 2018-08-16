@@ -338,6 +338,8 @@ load_multiscreens_configuration(){
                         # we always need to restart E to use the correct confs for the bar and gadgets
                         # wait that the desktop is loaded to not break something first
                         # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
+                        # add a small delay after to run the screens configurator to make sure to make the system know about it
+                        LC_ALL=C sleep 0.3
                         true
                     else
                         if ! (($is_mode_previous_desktop)) ; then

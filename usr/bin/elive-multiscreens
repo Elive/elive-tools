@@ -146,7 +146,7 @@ configure_multiscreens(){
     timeout 120 zenity --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 zenity --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the top tabs or using ctrl+q." )"
+        timeout 120 zenity --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the menus or using ctrl+q." )"
     fi
 
     # - explain }}}

@@ -428,7 +428,7 @@ get_mountpoint(){
         dev="${dev##*/}"
 
         if [[ -b "/dev/mapper/${dev}" ]] ; then
-            dev="$/dev/mapper/${dev}"
+            dev="/dev/mapper/${dev}"
         else
             if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
                 dev="/dev/mapper/${dev}_crypt"
@@ -543,7 +543,7 @@ check_is_mounted(){
             dev="${dev##*/}"
 
             if [[ -b "/dev/mapper/${dev}" ]] ; then
-                dev="$/dev/mapper/${dev}"
+                dev="/dev/mapper/${dev}"
             else
                 if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
                     dev="/dev/mapper/${dev}_crypt"
@@ -629,7 +629,7 @@ el_umount(){
                 dev="${dev##*/}"
 
                 if [[ -b "/dev/mapper/${dev}" ]] ; then
-                    dev="$/dev/mapper/${dev}"
+                    dev="/dev/mapper/${dev}"
                 else
                     if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
                         dev="/dev/mapper/${dev}_crypt"
@@ -867,7 +867,7 @@ el_mount(){
         dev="${dev##*/}"
 
         if [[ -b "/dev/mapper/${dev}" ]] ; then
-            dev="$/dev/mapper/${dev}"
+            dev="/dev/mapper/${dev}"
         else
             if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
                 dev="/dev/mapper/${dev}_crypt"

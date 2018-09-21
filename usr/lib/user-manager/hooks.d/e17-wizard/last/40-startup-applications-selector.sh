@@ -8,7 +8,7 @@ export TEXTDOMAIN
 
 main(){
     # pre {{{
-    local file menu menu_auto message_gui
+    local file menu menu_auto menu_auto_live message_gui
 
     RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
@@ -49,6 +49,7 @@ main(){
         if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
             if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|elive-)" ; then
                 menu+=("TRUE")
+                menu_auto+=("$file")
                 el_debug "state: TRUE"
             else
                 menu+=("FALSE")
@@ -57,6 +58,7 @@ main(){
         else
             if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|elive-)" ; then
                 menu+=("TRUE")
+                menu_auto+=("$file")
                 el_debug "state: TRUE"
             else
                 menu+=("FALSE")
@@ -66,7 +68,7 @@ main(){
 
         # auto menu for live mode
         if echo "$filename" | grep -qsEi "^(polkit|elive-)" ; then
-            menu_auto+=("$file")
+            menu_auto_live+=("$file")
         fi
         # - default to enabled/disabled }}}
 
@@ -143,16 +145,28 @@ main(){
 
     # live (auto) mode?
     if ((is_live)) ; then
+        unset answer
         # create result variable
-        for line in "${menu_auto[@]}"
+        for line in "${menu_auto_live[@]}"
         do
             answer="${line}|${answer%|}"
         done
 
     else
 
+        # needed to make sure that the gui is launched?
+        #timeout 1 zenity --info 2>/dev/null || true
         # interactive mode, default
-        answer="$( zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+        answer="$( timeout 90 zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+
+        # use defaults if failed or canceled
+        if [[ -z "$answer" ]] || [[ "$answer" = "cancel" ]] ; then
+            unset answer
+            for line in "${menu_auto[@]}"
+            do
+                answer="${line}|${answer%|}"
+            done
+        fi
     fi
 
     # include the legacy elxstrt always

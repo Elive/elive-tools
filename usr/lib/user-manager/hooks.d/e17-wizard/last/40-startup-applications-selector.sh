@@ -67,7 +67,7 @@ main(){
         fi
 
         # auto menu for live mode
-        if echo "$filename" | grep -qsEi "^(polkit|elive-)" ; then
+        if echo "$filename" | grep -qsEi "^(polkit|elive-|gnome-)" ; then
             menu_auto_live+=("$file")
         fi
         # - default to enabled/disabled }}}
@@ -133,7 +133,7 @@ main(){
         el_debug "       (loop)"
         # }}}
 
-    done 3<<< "$( find /etc/xdg/autostart/ -type f -iname '*'.desktop )"
+    done 3<<< "$( find /etc/xdg/autostart/ -type f -iname '*'.desktop | sort -u )"
 
     el_dependencies_check "zenity"
 
@@ -191,7 +191,7 @@ main(){
                 is_gdu_notif_included=1
             fi
 
-            if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
+            if ! grep -qs "^${file}$" "$HOME/.e/e17/applications/startup/.order" ; then
                 echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
             fi
         fi

@@ -1,6 +1,6 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
-#el_make_environment
+el_make_environment
 . gettext.sh
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN

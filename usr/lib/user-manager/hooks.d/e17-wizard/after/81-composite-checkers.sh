@@ -83,7 +83,7 @@ main(){
 
             else
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop more responsive. It also makes for better video playback. If you encounter any strange behaviour like a broken desktop, a frozen system or crashing applications, this means that your graphic card is not supported by these drivers. In this case switch off hardware acceleration." )" )"
+                message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop more responsive and a smoother feeling, improves also the video playback speed and quality. But if the drivers for your graphic card are not correctly supported it can lead to a broken desktop or window visuals, to fix this you will need to switch to software mode in the composite options or disable the acceleration in a new desktop configuration." )" )"
 
                 zenity --info --text="$message_gl" || true
 

@@ -82,29 +82,30 @@ main(){
 
 
     # try with freegeoip (good but slow, reliable, which is more important)
-    if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+    # UPDATE: freegeoip changed the API for a different service (stills free apparently), but it is not implemented here, so let's disable it for now:
+    #if ! ((is_data_valid)) ; then
+        #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
 
-        # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-            is_data_valid=1
-            el_debug "using freegeoip"
-        else
-            data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+        ## verify
+        #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            #is_data_valid=1
+            #el_debug "using freegeoip"
+        #else
+            #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
 
-            if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-                is_data_valid=1
-                el_debug "using freegeoip"
-            else
-                sleep 1
-                data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
-                if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-                    is_data_valid=1
-                    el_debug "using freegeoip"
-                fi
-            fi
-        fi
-    fi
+            #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+                #is_data_valid=1
+                #el_debug "using freegeoip"
+            #else
+                #sleep 1
+                #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+                #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+                    #is_data_valid=1
+                    #el_debug "using freegeoip"
+                #fi
+            #fi
+        #fi
+    #fi
 
     # try with geoplugin (fast)
     if ! ((is_data_valid)) ; then

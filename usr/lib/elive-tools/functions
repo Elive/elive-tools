@@ -2537,6 +2537,14 @@ el_processes_using_mountpoint(){
     el_check_variables "dir"
     #el_check_dirs "$dir"
 
+    # get mountpoint if is a device
+    if [[ -b "$dir" ]] ; then
+        if mounts-manager --check-is-mounted "$dir" 2>/dev/null 1>&2 ; then
+            dir="$( mounts-manager --get-mountpoint "$dir" 2>/dev/null )"
+        fi
+    fi
+
+    # check
     if [[ -b "$dir" ]] ; then
         el_error "$dir is not a directory but a block device, try to use mounts-manager --get-mountpoint"
         return 1

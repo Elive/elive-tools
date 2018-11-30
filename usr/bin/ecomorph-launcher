@@ -319,7 +319,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. But the driver you use does not looks like to have the enough required features to make Ecomorph work properly, maybe you can try with a different driver configuration, also a newer version of Elive can solve the problem with updated drivers." )"
                 ;;
             driver)
-                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. Your driver may be blacklisted or at least not on the whitelist. Try to load the Ecomorph module manually. If this works correctly on your computer, report the bug to the Elive BTS." )"
+                zenity --error --text="$( eval_gettext "These special features require compatible 3D accelerated drivers. Try to load the Ecomorph module manually. If this works correctly on your computer, report the bug to the Elive BTS." )"
                 ;;
             multiscreens)
                 zenity --error --text="$( eval_gettext "The module Ecomorph doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"

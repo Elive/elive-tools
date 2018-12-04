@@ -9,6 +9,29 @@ export TEXTDOMAIN
 
 #export NOREPORTS=1
 
+conf_volume_set(){
+    volume_actual="$( get_volume )"
+    if [[ -n "$volume_actual" ]] && [[ "$volume_actual" != 0 ]] ; then
+        sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
+        echo -e "volume: $volume_actual" >> "$conf"
+    fi
+}
+conf_volume_get(){
+    local volume_before
+    # get volume from conf
+    if [[ -e "$conf" ]] && [[ -s "$conf" ]] ; then
+        volume_before="$( LC_ALL=C grep "^volume:" "$conf" )"
+        volume_before="${volume_before#volume:}"
+        # remove extra leading blank chars
+        read -r volume_before <<< "$volume_before"
+    fi
+
+    if [[ -n "$volume_before" ]] ; then
+        echo "$volume_before"
+    fi
+}
+
+
 #===  FUNCTION  ================================================================
 #          NAME:  get_meter
 #   DESCRIPTION:  prints the meter that we should use for modify volumes
@@ -222,7 +245,7 @@ set_volume(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  mute_modes_force
-#   DESCRIPTION:  force (hack) a mute mode for un unsupported card
+#   DESCRIPTION:  force (hack) a mute mode for an unsupported card
 #    PARAMETERS:  $1 = mode: mute|unmute  (no toggle modes)
 #       RETURNS:  -
 #===============================================================================
@@ -239,17 +262,7 @@ mute_modes_force(){
     # }}}
 
     # get volume from conf
-    if [[ -e "$conf" ]] && [[ -s "$conf" ]] ; then
-        volume_before="$( LC_ALL=C grep "^volume:" "$conf" )"
-        volume_before="${volume_before#volume:}"
-        # remove extra leading blank chars
-        read -r volume_before <<< "$volume_before"
-    fi
-
-    # no conf? get it now
-    if [[ -z "$volume_before" ]] ; then
-        volume_before="$( get_volume )"
-    fi
+    volume_before="$( conf_volume_get )"
 
     # get actual volume
     volume_actual="$( get_volume )"
@@ -261,26 +274,35 @@ mute_modes_force(){
     # set mute modes
     case "$mode" in
         muteset)
-            # set volume to 0
-            "$0" "0%"
 
             # save our last state of volume for next use
-            if [[ "$volume_actual" -gt 1 ]] ; then
-                sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
-                echo -e "volume: $volume_actual" >> "$conf"
+            if [[ "$volume_actual" -gt 20 ]] ; then
+                conf_volume_set
+                el_debug "volume actual was $volume_actual"
+            else
+                el_debug "no actual volume known"
             fi
+
+            # set volume to 0
+            "$0" "0%"
 
             ;;
         unmute|unmuteset)
 
             # set volume to our previous state
+            if [[ "$volume_actual" -lt 21 ]] ; then
+                if [[ -n "$volume_before" ]] && [[ "$volume_before" -gt 20 ]] ; then
             "$0" "${volume_before}%"
+                else
+                    "$0" "defaults"
+                fi
+            fi
 
             ;;
         mute|toggle)
-            el_explain 0 "volumes was originally at $volume_before and now $volume_actual"
+            el_debug "volumes was originally at $volume_before and now $volume_actual"
 
-            if [[ "$volume_actual" -lt 5 ]] ; then
+            if [[ "$volume_actual" -lt 21 ]] ; then
                 $FUNCNAME unmute
             else
                 $FUNCNAME muteset
@@ -320,7 +342,7 @@ mute_modes(){
             # set talk
             if [[ -n "$state_before" ]] ; then
                 if amixer -q set "$meter" unmute 2>/dev/null ; then
-                    el_explain 2 "mute was on"
+                    el_debug "mute was on"
                 else
                     # failed to set, force
                     mute_modes_force unmute
@@ -339,7 +361,7 @@ mute_modes(){
 
             # unsuccessful mute, force
             if [[ "$state_after" = "off" ]] ; then
-                el_explain 2 "mute has not changed, forcing it"
+                el_debug "mute has not changed, forcing it"
                 mute_modes_force unmute
                 return
             fi
@@ -351,7 +373,7 @@ mute_modes(){
             # set silent
             if [[ -n "$state_before" ]] ; then
                 if amixer -q set "$meter" mute 2>/dev/null ; then
-                    el_explain 2 "mute was off"
+                    el_debug "mute was off"
                 else
                     # failed to set, force
                     mute_modes_force muteset
@@ -370,7 +392,7 @@ mute_modes(){
 
             # unsuccessful mute, force
             if [[ "$state_after" = "on" ]] ; then
-                el_explain 2 "mute has not changed, forcing it"
+                el_debug "mute has not changed, forcing it"
                 mute_modes_force mute
                 return
             fi
@@ -378,13 +400,13 @@ mute_modes(){
             # - force detect }}}
 
             ;;
-        mute)
+        mute|toggle)
             # Toggle mute modes
             if [[ -n "$state_before" ]] ; then
 
                 if [[ "$state_before" = "off" ]] ; then
                     if amixer -q set "$meter" unmute 2>/dev/null ; then
-                        el_explain 2 "mute was on"
+                        el_debug "mute was on"
                     else
                         # failed to set, force
                         mute_modes_force unmute
@@ -394,7 +416,7 @@ mute_modes(){
 
                 if [[ "$state_before" = "on" ]] ; then
                     if amixer -q set "$meter" mute 2>/dev/null ; then
-                        el_explain 2 "mute was off"
+                        el_debug "mute was off"
                     else
                         # failed to set, force
                         mute_modes_force muteset
@@ -414,7 +436,7 @@ mute_modes(){
 
             # unsuccessful mute, force
             if [[ "$state_before" = "$state_after" ]] ; then
-                el_explain 2 "mute has not changed, forcing it"
+                el_debug "mute has not changed, forcing it"
                 mute_modes_force toggle
                 return
             fi
@@ -468,7 +490,7 @@ main(){
         # get it a second time (in case that not worked we have run the configurator to get again the correct meter value, if still not working show the error)
         meter="$( get_meter )"
     fi
-    el_explain 2 "selected meter: $meter"
+    el_debug "selected meter: $meter"
 
 
 
@@ -530,7 +552,7 @@ main(){
                 sync
                 sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.Skype/shared.xml"
 
-                el_explain 0 "added a fix for your skype: to not modify your volumes, your audio-card model needs this"
+                el_debug "added a fix for your skype: to not modify your volumes, your audio-card model needs this"
             else
                 if [[ "$TERM" != linux ]] ; then
                     el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
@@ -543,14 +565,14 @@ main(){
                 sync
                 sed -i "s|<AGC>.</AGC>|<AGC>1</AGC>|g" "$HOME/.Skype/shared.xml"
 
-                el_explain 0 "added a fix for your skype: to allow it modify your volumes, because your audio-card model needs this"
+                el_debug "added a fix for your skype: to allow it modify your volumes, because your audio-card model needs this"
             else
                 el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
             fi
         fi
 
         # Master should be always set to 100 % in order to avoid distortions
-        el_explain 2 "Master set to 100%"
+        el_debug "Master set to 100%"
         amixer -q set "Master Mono" 100%  2>/dev/null
         amixer -q set Master,0 100%  2>/dev/null
         amixer -q set Master,1 100%  2>/dev/null
@@ -563,6 +585,9 @@ main(){
         # this is needed in order to make the track working, by some strange reason
         main 2%+ 1>/dev/null
         true
+
+        # save volumes conf
+        conf_volume_set
 
         exit
     fi
@@ -588,6 +613,7 @@ main(){
         exit
     fi
     # toggle
+    # FIXME: if you run $0 toggle itself (which is not launched this way), amixer takes it correctly setting the mute mode too, we may want to use this method with our fallback probably
     if [[ "$action" = "mute" ]] ; then
         mute_modes "mute"
         exit
@@ -615,6 +641,8 @@ main(){
     if [[ "${meter}" != "DAC" ]] ; then
         amixer -q set DAC $action 2>/dev/null
     fi
+
+    conf_volume_set
 
     true
 

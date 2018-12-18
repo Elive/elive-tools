@@ -586,15 +586,19 @@ main(){
     # how much screens we have?
     case "$screens_connected_number" in
         0)
-            # report
-            el_error "no screens connected? \n$( xrandr --query )"
-
             if ((is_mode_auto)) || ((is_mode_previous_desktop)) ; then
                 exit
             fi
 
             # inform
-            zenity --error --text="$( eval_gettext "You don't have any screens connected" )"
+            if xrandr --query | grep -qs " disconnected" ; then
+                zenity --error --text="$( eval_gettext "Your screen appears disconnected, turn it ON first and try again." )"
+            else
+                # report
+                el_error "no screens connected? \n$( xrandr --query )"
+
+                zenity --error --text="$( eval_gettext "You don't have any screens connected" )"
+            fi
             ;;
         1)
             # unless we want to configure resolutions, everything is fine

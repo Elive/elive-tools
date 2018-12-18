@@ -47,6 +47,8 @@ if [[ -n "$TERM" ]] ; then
 else
     is_terminal=0
     is_console=0
+    # if we don't have TERM we need this value to not trigger 'tput' errors like when running apt commands
+    export TERM="dumb"
 fi
 
 

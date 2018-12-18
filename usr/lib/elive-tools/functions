@@ -33,21 +33,25 @@ if [[ -n "$TERM" ]] ; then
     fi
     # note: TTY variable not shows in bash login aparently
     if [[ "$TERM" = "linux" ]] ; then
+        # note: if you want to enable colors in an application run from E (.desktop file), you must set the TERM variable, and LS_COLORS too
         if [[ -n "$E_START" ]] ; then
             # launched from e17 itself
             is_terminal=0
             is_console=0
         else
+            # note: do not disable is_terminal, pure console is meant to be a terminal too and all the code depends monstly of the is_terminal one
             is_terminal=1
             is_console=1
         fi
     fi
 else
     is_terminal=0
+    is_console=0
 fi
 
 
-if [[ -n "$NOCOLOR" ]] || [[ -z "$LS_COLORS" ]] ; then
+# TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
+if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
     el_c_n=""
     el_c_r=""
     el_c_r2=""

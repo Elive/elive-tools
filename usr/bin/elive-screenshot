@@ -121,11 +121,8 @@ take_screenshot(){
     fi
 
 
-    if ((is_mode_png)) ; then
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
-    else
-        scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.jpg' || true
-    fi
+    # take screenshot in png first
+    scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
 
     # set the image filename to use
     tmpimage="$( find . -mindepth 1 -maxdepth 1 -type f | tail -1 | sed -e 's|\.\/||g' || true )"
@@ -137,18 +134,21 @@ take_screenshot(){
         exit
     fi
 
+    # copy to clipboard
+    xclip -selection clipboard -t "image/png" < "$tmpimage"
+
+    # convert to jpg if not wanted png
+    if ! ((is_mode_png)) ; then
+        convert -quality 90 "$tmpimage" "${tmpimage%.*}.jpg"
+        rm -f "$tmpimage"
+        tmpimage="${tmpimage%.*}.jpg"
+    fi
+
     # copy it to the screenshots directory if wanted
     if ((is_mode_save)) ; then
         mkdir -p "$(xdg-user-dir PICTURES)/Screenshots"
         cp -f "$tmpimage" "$(xdg-user-dir PICTURES)/Screenshots/"
         el_info "Screenshot saved as: $(xdg-user-dir PICTURES)/Screenshots/$(basename $tmpimage)"
-    fi
-
-    # copy to clipboard
-    if ((is_mode_png)) ; then
-        xclip -selection clipboard -t "image/png" < "$tmpimage"
-    else
-        xclip -selection clipboard -t "image/jpeg" < "$tmpimage"
     fi
 
     # tell the user

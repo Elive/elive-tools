@@ -858,6 +858,12 @@ el_mount(){
 
     # }}}
 
+    if [[ ! -b "$dev" ]] && [[ -n "$dev" ]] ; then
+        if [[ -b "/dev/$dev" ]] ; then
+            dev="/dev/$dev"
+        fi
+    fi
+
     if [[ "$dev" != "/dev/"* ]] || [[ ! -b "$dev" ]] ; then
         el_error "Argument passed to $FUNCNAME is not a device: $dev"
         return 1

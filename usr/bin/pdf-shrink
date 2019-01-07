@@ -44,6 +44,11 @@ trap "exit_me 0" 1 2 5 15
 
 
 shrink(){
+    local quality file dir
+    file="$1"
+    dir="$2"
+    quality="$3"
+
     ghostscript                  \
       -q -dNOPAUSE -dBATCH -dSAFER      \
       -sDEVICE=pdfwrite         \
@@ -52,16 +57,17 @@ shrink(){
       -dEmbedAllFonts=true          \
       -dSubsetFonts=true            \
       -dColorImageDownsampleType=/Bicubic   \
-      -dColorImageResolution=72     \
+      -dColorImageResolution=$quality     \
       -dGrayImageDownsampleType=/Bicubic    \
-      -dGrayImageResolution=72      \
+      -dGrayImageResolution=$quality      \
       -dMonoImageDownsampleType=/Bicubic    \
-      -dMonoImageResolution=72      \
-      -sOutputFile="$2"         \
-      "$1" || { zenity --error ; exit 1 ; }
+      -dMonoImageResolution=$quality      \
+      -sOutputFile="$dir"         \
+      "$file" || { zenity --error ; exit 1 ; }
 }
 
 check_smaller(){
+    local ISIZE OSIZE size_before size_after
     # If $1 and $2 are regular files, we can compare file sizes to
     # see if we succeeded in shrinking. If not, we copy $1 over $2:
     if [ ! -f "$1" -o ! -f "$2" ]; then
@@ -70,17 +76,23 @@ check_smaller(){
 
     ISIZE="$(echo $(wc -c "$1") | cut -f1 -d\ )"
     OSIZE="$(echo $(wc -c "$2") | cut -f1 -d\ )"
+    size_before="$( du -hs "$1" | awk '{print $1}' )"
+    size_after="$( du -hs "$2" | awk '{print $1}' )"
 
     if [ "$ISIZE" -lt "$OSIZE" ]; then
-        echo "# Input smaller than output, doing straight copy" >&2
+        echo "# Input smaller than output, doing straight copy"
         sleep 2
-        cp "$1" "$2"
+        cp -f "$1" "$2"
+    else
+        #echo "# Size was ${size_before}, now is ${size_after}, reduced $( echo "( $ISIZE / $OSIZE ) * 100" | bc -l | sed -e 's|\..*$||g' ) %"
+        #echo "# Size was ${size_before}, now is ${size_after}"
+        echo "# ${size_before} reduced to ${size_after}"
     fi
 }
 
 usage(){
     echo "Reduces PDF filesize by lossy recompressing with Ghostscript."
-    echo "Not guaranteed to succeed, but usually works."
+    #echo "Not guaranteed to succeed, but usually works."
     echo "  Usage: $1 infile [outfile]"
     exit
 }
@@ -117,30 +129,40 @@ main(){
 
     file_dest_dir="$(pwd)/Reconverted_PDFs"
 
+    rm -rf "$file_dest_dir"
     mkdir -p "$file_dest_dir"
 
     local message_quality_select
-    message_quality_select="$( printf "$( eval_gettext "Select a quality" )" )"
+    #message_quality_select="$( printf "$( eval_gettext "Select a quality" )" )"
+    message_quality_select="$( printf "$( eval_gettext "Select the DPI quality for the resized images" )" )"
 
 
     #quality="$( $guitool --list --height=220 --width=410 --text="$( eval_gettext "Select a quality" )" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low resolution images, high compressed" )" 2 "$( eval_gettext "Medium resolution images" )" 3 "$( eval_gettext "High resolution images, low compression"  )" )"
-    quality="$( $guitool --list --height=190 --width=440 --text="$message_quality_select" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low quality, smallest size, slow to convert" )" 2 "$( eval_gettext "High quality, biggest size, fast"  )" )"
+    #quality="$( $guitool --list --height=190 --width=440 --text="$message_quality_select" --column="Id" --column="$( eval_gettext "Quality" )" 1 "$( eval_gettext "Low quality, smallest size, slow to convert" )" 2 "$( eval_gettext "High quality, biggest size, fast"  )" )"
+    quality="$( $guitool --scale --value=100 --min-value=50 --max-value=600 --text="$message_quality_select" || echo cancel )"
 
-    case $quality in
-        1)
-            quality="low"
-            ;;
-        2)
-            quality="high"
-            ;;
-        *)
-            #$guitool --error --text="Wrong option selected"
-            exit
-            ;;
-    esac
+    #case $quality in
+        #1)
+            #quality="low"
+            #;;
+        #2)
+            #quality="high"
+            #;;
+        #*)
+            ##$guitool --error --text="Wrong option selected"
+            #exit
+            #;;
+    #esac
 
+    if [[ "$quality" = "cancel" ]] || [[ -z "$quality" ]] ; then
+        $guitool --error --text="$( eval_gettext "No quality selected, we recommend the default values." )"
+        exit 1
+    fi
+
+    counter="0"
 
     (
+
 
 
     for file in "$@"
@@ -149,7 +171,11 @@ main(){
         file="$file"
         filename="${file##*/}"
         filenameraw="${filename%.*}"
-        echo -e "# Converting \t ${filenameraw}"
+        if [[ -n "$previous_msg" ]] ; then
+            echo -e "${previous_msg}. Converting now ${filenameraw}"
+        else
+            echo -e "# Converting  ${filenameraw}"
+        fi
 
         # cache it for faster multiprocess (not i/o overload)
         cat "${file}" > /dev/null
@@ -165,8 +191,8 @@ main(){
         # convert it !
         #
 
-        case $quality in
-            low)
+        #case $quality in
+            #low)
                 if ! el_dependencies_check "ghostscript" ; then
                     if ! el_dependencies_install ghostscript ; then
                         exit 1
@@ -175,32 +201,39 @@ main(){
 
                 while read -ru 3 line
                 do
-                    echo "# $line"
-                    LC_ALL=C sleep 0.3
-                done 3<<< "$( shrink "$file" "${tempdir}/$filename" )"
+                    echo "# $line" 1>&2
+                    #LC_ALL=C sleep 0.3
+                done 3<<< "$( shrink "$file" "${tempdir}/$filename" "$quality" )"
 
-                ;;
-            high)
-                if ! el_dependencies_check "qpdf" ; then
-                    if ! el_dependencies_install qpdf ; then
-                        exit 1
-                    fi
-                fi
+                #;;
+            #high)
+                #if ! el_dependencies_check "qpdf" ; then
+                    #if ! el_dependencies_install qpdf ; then
+                        #exit 1
+                    #fi
+                #fi
 
-                while read -ru 3 line
-                do
-                    echo "# $line"
-                    LC_ALL=C sleep 0.3
-                done 3<<< "$( qpdf --linearize "$file" "${tempdir}/$filename" )"
-                ;;
-        esac
+                #while read -ru 3 line
+                #do
+                    #echo "# $line"
+                    #LC_ALL=C sleep 0.3
+                #done 3<<< "$( qpdf --linearize "$file" "${tempdir}/$filename" )"
+                #;;
+        #esac
 
-        check_smaller "$file" "${tempdir}/$filename"
+        previous_msg="$( check_smaller "$file" "${tempdir}/$filename" )"
 
         # move it after success
         mv "${tempdir}/$filename" "${file_dest_dir}/${filename}"
 
         let "PROGRESS+=$INCREMENT"
+        counter="$(( $counter + 1 ))"
+
+        # last message, show size
+        if [[ "$counter" = "$NUMBER_OF_FILES" ]] ; then
+            echo -e "$previous_msg for $filenameraw"
+            sleep 8
+        fi
 
     done
     ) | $guitool  --progress --pulsate --title "$( eval_gettext "Converting documents, be patient..." )" --percentage=0 --auto-close --auto-kill

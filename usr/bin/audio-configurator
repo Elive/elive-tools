@@ -89,7 +89,7 @@ select_card_multiple(){
         el_debug "only one card found: $selection | switching to auto mode"
         is_auto_mode=1
     else
-        selection="$( $guitool --list --width=400 --height=240 --column="Identifier" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" "${menu[@]}" || echo cancel )"
+        selection="$( $guitool --list --width=400 --height=240 --column="$( eval_gettext "Identifier" )" --column="$( eval_gettext "Description" )" --text="$( eval_gettext "Select the desired audio card that you want to use as default" )" "${menu[@]}" || echo cancel )"
         el_debug "User selected audio card: $selection"
     fi
 

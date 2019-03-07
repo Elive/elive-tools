@@ -1,0 +1,14 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+# small tool to debug the amount of time spent in every line of a command / script.
+# Use it like:  command-to-debug 2>&1 | this-tool
+
+while IFS= read -r line ; do
+    step="$( date +%R:%S,%N )"
+    step="${step:0:12}"
+    #printf "%s  %s\n" "$step" "$line"
+    echo -e "${el_c_gr}${step}${el_c_n}  ${line}"
+done
+
+

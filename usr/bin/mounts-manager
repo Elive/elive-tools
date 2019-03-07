@@ -32,9 +32,10 @@ restart_daemons(){
         fi
     fi
 
-    sync
     # we need to wait a bit, seems like udisks dont read anything if we don't
+    sync
     sleep 1
+
     if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         sleep 1
         if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
@@ -99,8 +100,6 @@ chroot_layers_mount(){
         is_mode_bind=1
         el_debug "using bind mode of mounting layers"
     fi
-
-    sync
 
     # }}}
 
@@ -260,8 +259,6 @@ chroot_layers_umount(){
         is_mode_bind=1
         el_debug "using bind mode of umounting layers"
     fi
-
-    sync
 
     # }}}
 
@@ -450,7 +447,7 @@ get_mountpoint(){
         #if LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -qs "is mounted:.*0" ; then
 
         #udisks --mount "$dev" 1>/dev/null
-        #sync
+        sync
         # TODO: if i use el_mount here it fails by some strange reason, why ? get_mountpoint not gets the mountpoint correctly?
         if el_mount "$dev" 1>/dev/null ; then
 
@@ -528,8 +525,9 @@ check_is_mounted(){
     arg="$1"
     el_check_variables "arg"
 
-    sync
     # }}}
+
+    sync
 
     if [[ "$arg" = /dev/* ]] ; then
         is_device=1
@@ -854,8 +852,6 @@ el_mount(){
 
     el_check_variables "dev"
 
-    sync
-
     # }}}
 
     if [[ ! -b "$dev" ]] && [[ -n "$dev" ]] ; then
@@ -929,7 +925,6 @@ el_mount(){
 
 
     # check if mounted
-    sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" )"
         return 0
@@ -947,7 +942,6 @@ el_mount(){
     fi
 
     # check if mounted
-    sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         echo "$dev mounted in: $(get_mountpoint "$dev" ), after to re-read partition table"
         return 0
@@ -965,7 +959,6 @@ el_mount(){
     fi
 
     # check if mounted
-    sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev + dbus + re-read"
         echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev  + re-read"
@@ -984,7 +977,6 @@ el_mount(){
     fi
 
     # check if mounted
-    sync
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         #echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev + dbus + re-read"
         echo "$dev mounted in: $(get_mountpoint "$dev" ), after to: restart udev  + re-read"
@@ -1034,11 +1026,9 @@ el_mount(){
         mount "$dev" "$target"
         sync
         sleep 1
-        sync
 
         # hibernated NTFS requires hack
         # check if mounted
-        sync
         if ! check_is_mounted "$dev" 2>/dev/null 1>&2 && [[ "$filesystem" = ntfs ]] ; then
             mount -t ntfs-3g -o remove_hiberfile "$dev" "$target"
         fi

@@ -891,7 +891,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 #   check if dir has files
 #-------------------------------------------------------------------------------
 el_check_dir_has_files(){
-    local dir f
+    local dir f files
 
     while read -ru 3 dir
     do
@@ -907,18 +907,11 @@ el_check_dir_has_files(){
 
             return 1
         else
-            if [[ $SHELL = *bash ]] ; then
-                if (shopt -s nullglob dotglob; f=(*); ((! ${#f[@]}))) 2>/dev/null 1>/dev/null ; then
-                    el_debug "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
+            files="$( command ls "${dir%/}/"* 2>/dev/null | wc -l )"
+            if ! [[ "$files" -gt 0 ]] ; then
+                el_debug "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
 
-                    return 1
-                fi
-            else
-                if ! command ls "${dir}/"*  2>/dev/null 1>/dev/null ; then
-                    el_debug "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
-
-                    return 1
-                fi
+                return 1
             fi
         fi
     done 3<<< "$( echo "$@" | tr ',' '\n' )"

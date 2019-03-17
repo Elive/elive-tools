@@ -35,11 +35,17 @@ menu="$(
 while read -ru 3 line
 do
     [[ -z "$line" ]] && continue
-    echo "$line"
 
     screen="$( LC_ALL=C xrandr -q | grep -E "^$line\s+connected\s+" | sed -e 's|^.*connected ||g' -e 's|+.*$||g' )"
     [[ -z "$screen" ]] && screen="Screen"
-    echo "$screen"
+    if ! echo "$screen" | grep -qs "x" ; then
+        screen="unknown"
+    fi
+
+    if [[ -n "$screen" ]] && [[ -n "$line" ]] ; then
+        echo "$line"
+        echo "$screen"
+    fi
 
 done 3<<< "$( echo "$screens_connected_names" | psort -- -p "^LVDS" -p "^HDMI"  )"
 )"

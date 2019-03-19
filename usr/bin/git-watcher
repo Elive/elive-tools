@@ -1263,6 +1263,7 @@ do_cherry_pick_menu(){
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
+    option_show "d" "Show actual diff"
     option_show "n" "Abort / Next commit"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
@@ -1280,6 +1281,15 @@ do_cherry_pick_menu(){
             command git status
 
             $FUNCNAME
+            ;;
+        d)  # show patch
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            GIT_PAGER=cat command git diff
+            command git status
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            # return back to main menu
+            $FUNCNAME
+
             ;;
         n|a) # shortcut to "a" too if we want to call it as "abort"
             command git cherry-pick --abort

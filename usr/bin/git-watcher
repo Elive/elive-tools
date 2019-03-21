@@ -1284,7 +1284,7 @@ do_cherry_pick_menu(){
             ;;
         d)  # show patch
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-            GIT_PAGER=cat command git diff
+            GIT_PAGER=cat command git diff --cached
             command git status
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             # return back to main menu
@@ -1404,12 +1404,13 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick -Xpatience -x -s '$commit_id'"
     if command git cherry-pick -Xpatience -x -s "$commit_id" ; then
+        command git show
         el_explain 0 "__Successfully applied!__"
         #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
 
-        #echo -e "Press Enter to continue"
-        #read nothing
-        sleep 1
+        echo -e "Press Enter to continue"
+        read nothing
+        #sleep 1
 
         # store actual position for future calls of this tool
         echo "$commit_id" > "$conf_commit_last_f"

@@ -2,9 +2,16 @@
 source /usr/lib/elive-tools/functions
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"
 [[ -z $USER ]] && export USER="$(id -un)"
+
 export NOREPORTS=1
 
 . /lib/lsb/init-functions
+
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: arp
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
 
 
 # This tool is called as:   command eth1 up
@@ -270,7 +277,7 @@ main(){
     #connected_mac="$(arp -a | grep "(${connected_gateway}) at" | sed -e "s|^.*${connected_gateway} at||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     # note: arp -a is slow, use arp -n instead
     if [[ -n "$connected_gateway" ]] ; then
-        connected_mac="$( /usr/sbin/arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
+        connected_mac="$( arp -n | grep -E "(${connected_gateway})\s+" | sed -e "s|^.*${connected_gateway}||g" | tr ' ' '\n' | grep -E ":.*:.*:.*:" | tail -1 )"
     fi
 
     # get the bios mode

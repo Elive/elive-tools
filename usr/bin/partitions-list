@@ -1,6 +1,12 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: udevadm
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
 
 get_all_partitions_list(){
     # get a normal list of partitions {{{
@@ -9,7 +15,7 @@ get_all_partitions_list(){
     for i in /dev/mapper/* /dev/[shv]d[a-z][0-9]* /dev/xvd[a-z][0-9]* /dev/vd[a-z] /dev/[shv]d[a-z] /dev/nvme[0-9]* /dev/mmcblk[0-9]*
     do
         if [[ -b "$i" ]] ; then
-            if /sbin/udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then
+            if udevadm info --query=name --name="$i" 2>/dev/null 1>&2 ; then
                 el_array_member_add "${i}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
             else
                 el_warning "Found device $i but doesn't seems to be reachable by udevadm, maybe is a vanished partition, skipping..."
@@ -391,7 +397,7 @@ main(){
                 #fi
             fi
 
-        done 3<<< "$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$item" 2>&1 )"
+        done 3<<< "$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$item" 2>&1 )"
 
 
         # re- fixes

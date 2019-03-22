@@ -1,6 +1,13 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: partprobe, udevadm
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
+
 #===  FUNCTION  ================================================================
 #          NAME:  restart_daemons
 #   DESCRIPTION:  Restarts udisks and polkit when we found an error trying to use the disk
@@ -66,9 +73,9 @@ refresh_partition_table(){
 
     # }}}
     if [[ "$1" = /dev/nvme* ]] ; then
-        /sbin/partprobe "${dev%%p[0-9]*}" 2>/dev/null || true
+        partprobe "${dev%%p[0-9]*}" 2>/dev/null || true
     else
-        /sbin/partprobe "${dev%%[0-9]*}" 2>/dev/null || true
+        partprobe "${dev%%[0-9]*}" 2>/dev/null || true
     fi
     sync
 }
@@ -179,7 +186,7 @@ chroot_layers_mount(){
     fi
 
     # sysv-rc
-    mkdir -p "$dir/usr/sbin"
+    mkdir -p "$dir/usr/sbin" 2>/dev/null
     if [[ -e "$dir/usr/sbin/policy-rc.d" ]] ; then
         chroot "$dir" dpkg-divert --rename --quiet --add /usr/sbin/policy-rc.d
         echo -e "#!/bin/sh\necho 'All runlevel operations denied by policy, made by elive modifications' >&2 \nexit 101" > "${dir}/usr/sbin/policy-rc.d"
@@ -469,9 +476,9 @@ get_mountpoint(){
     # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example, or not-formatted (without uuid) partitions)
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         # get the uuid
-        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
         if [[ -z "$uuid" ]] ; then
@@ -480,9 +487,9 @@ get_mountpoint(){
         fi
 
         # get FS
-        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
         # ignore unmountable partitions:
@@ -883,12 +890,12 @@ el_mount(){
 
 
     # ignore unmountable partitions:
-    if LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep -qs "DEVNAME=" ; then
+    if LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -qs "DEVNAME=" ; then
 
         # get FS
-        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
         if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
             el_debug "Unable to mount $dev because is not a mountable partition"
@@ -896,9 +903,9 @@ el_mount(){
         fi
 
         # get uuid
-        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
         if [[ -z "$uuid" ]] ; then
             el_debug "Unable to mount $dev because has not an uuid"
@@ -907,7 +914,7 @@ el_mount(){
 
         # get type
         # UPDATE: do not enable, LVM2 devices shows as "disk" but they are mountable, so we should refer them by their uuid or fs
-        #devtype="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #devtype="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #if [[ "$devtype" = "disk" ]] ; then
             #el_debug "Unable to mount $dev because is a disk type"
             #return 1
@@ -989,20 +996,20 @@ el_mount(){
         refresh_partition_table "$dev"
 
         # get UUID
-        uuid="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
-        filesystem="$( /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
         #if [[ -z "$uuid" ]] ; then
             ## second alternative, but this is buggy, it can show multiple ones and sometimes not works like test it for /dev/sda
-            #if LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$item" 2>&1 | grep -qs "DEVTYPE=disk" ; then
+            #if LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$item" 2>&1 | grep -qs "DEVTYPE=disk" ; then
                 #el_error "Unable to mount $dev because is a DISK"
                 #return 1
             #fi

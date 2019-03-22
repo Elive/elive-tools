@@ -1,6 +1,13 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: laptop-detect
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
+
 # TODO: since we install our own drivers, can we remove the package libgl1-mesa-dri ? (because it wastes 100 MB from installation), will need some betatestings
 
 
@@ -415,7 +422,7 @@ install_driver(){
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not ati ones...
     if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
 
-        if /usr/sbin/laptop-detect ; then
+        if laptop-detect ; then
             local message_multiple_cards
             message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected on your system. Your laptop probably uses special ATI shared drivers, using the internal card to save battery power and switching to the ATI driver when more performance is necessary. You can use the ATI graphic card in Elive, if you install FGLRX. Otherwise the Intel card will be used. FGLRX will be used for now. If you have any problem with your graphical system, it is suggested to disable one of them in the BIOS settings. Use Google to find out how to set up your BIOS." )" "" )"
         else

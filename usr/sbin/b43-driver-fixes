@@ -1,6 +1,13 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: iwconfig
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
+
 try_and_configure(){
 
     el_debug "trying b43 modules"
@@ -52,11 +59,11 @@ EOF
         # up to 5 seconds
         for j in $( seq 10 )
         do
-            wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+            wifi_dev="$( LC_ALL=C iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
             if [[ -n "$wifi_dev" ]] ; then
                 el_debug "possible good driver: $driver"
 
-                for dev in $( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tr '\n' ' ' )
+                for dev in $( LC_ALL=C iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tr '\n' ' ' )
                 do
                     [[ -z "$dev" ]] && continue
                     for j in $( seq 8 )
@@ -132,12 +139,12 @@ main(){
         # get device name
         el_debug "BCM43 Broadcom Wireless device detected"
 
-        wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+        wifi_dev="$( LC_ALL=C iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
 
         # check again..
         if [[ -z "$wifi_dev" ]] ; then
             sleep 1
-            wifi_dev="$( LC_ALL=C /sbin/iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
+            wifi_dev="$( LC_ALL=C iwconfig 2>&1 | grep IEEE | awk '{print $1}' | grep "[[:alpha:]]" | tail -1 )"
         fi
 
         # check if we can scan

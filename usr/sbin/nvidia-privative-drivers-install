@@ -1,6 +1,13 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: laptop-detect
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
+
 # TODO: since we install our own drivers, can we remove the package libgl1-mesa-dri ? (because it wastes 100 MB from installation), will need some betatestings
 
 #===  FUNCTION  ================================================================
@@ -589,7 +596,7 @@ install_driver(){
 
     # - conf }}}
     # force brightness entry conf {{{
-    if /usr/sbin/laptop-detect ; then
+    if laptop-detect ; then
 
         local message_brightness_force
         message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"

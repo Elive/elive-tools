@@ -20,9 +20,9 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     #setopt kshglob noshglob braceexpand
 
     # we cannot set parameters on this variable, so use it without icon:
-    [[ -z "$guitool" ]] && guitool="/usr/bin/zenity"
+    [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity"
 else
-    [[ -z "$guitool" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+    [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 fi
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
@@ -611,13 +611,13 @@ el_dependencies_install(){
 #!/bin/bash
 
 if [[ -x "\$( which urxvt )" ]] ; then
-urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; export DEBIAN_FRONTEND=noninteractive ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+    urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; export DEBIAN_FRONTEND=noninteractive ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
 else
     if [[ -n "\$TERM" ]] ; then
         su -c "source /usr/lib/elive-tools/functions ; export DEBIAN_FRONTEND=noninteractive ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
     else
         el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
-        sleep 4
+        sleep 6
     fi
 fi
 
@@ -712,14 +712,14 @@ el_aptget_update(){
         fi
 
         if [[ "$UID" = 0 ]] ; then
-            if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) ; then
+            if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]]  ; then
                 { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
                 apt-get update || apt-get update
             fi
         else
             if el_check_sudo_automated ; then
-                if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) ; then
+                if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]] ; then
                     { sudo apt-get update || sudo apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
                     sudo apt-get update || sudo apt-get update

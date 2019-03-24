@@ -90,50 +90,85 @@ main(){
         source "${XDG_CONFIG_HOME}/user-dirs.dirs"
     else
         el_error "No xdg dirs are set?"
+        exit
     fi
+
+    # check
+    if [[ -z "$LANG" ]] || ! echo "$LANG" | grep -qs "UTF-8" ; then
+        el_warning "wrong language set? LANG is '$LANG', and /etc/default/locale set to '$(cat /etc/default/locale)' "
+    fi
+
 
     # link all the files found:
     target="$( xdg-user-dir DOWNLOAD )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Downloads" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Downloads" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir DOWNLOAD"
+    fi
 
     target="$( xdg-user-dir PUBLICSHARE )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "copy"
-    done 3<<< "$( find "$demodir/Public" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "copy"
+        done 3<<< "$( find "$demodir/Public" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir PUBLICSHARE"
+    fi
 
     target="$( xdg-user-dir DOCUMENTS )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Documents" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Documents" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir DOCUMENTS"
+    fi
 
     target="$( xdg-user-dir TEMPLATES )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Templates" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Templates" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir TEMPLATES"
+    fi
 
     target="$( xdg-user-dir MUSIC )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Music" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Music" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir MUSIC"
+    fi
 
     target="$( xdg-user-dir PICTURES )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Images" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Images" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir PICTURES"
+    fi
 
     target="$( xdg-user-dir VIDEOS )"
-    while read -ru 3 file
-    do
-        demo_file_add_home "$file" "$target" "link"
-    done 3<<< "$( find "$demodir/Videos" | sed -e "s|^${demodir}/||g" )"
+    if [[ -n "$target" ]] ; then
+        while read -ru 3 file
+        do
+            demo_file_add_home "$file" "$target" "link"
+        done 3<<< "$( find "$demodir/Videos" | sed -e "s|^${demodir}/||g" )"
+    else
+        el_warning "empty result for: xdg-user-dir VIDEOS"
+    fi
 
 
     # if we are debugging give it a little pause to see what is going on

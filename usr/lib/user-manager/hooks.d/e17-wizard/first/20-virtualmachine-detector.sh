@@ -29,13 +29,6 @@ main(){
     else
         echo "W: hald not found, ignoring..." 1>&2
     fi
-
-
-    # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo "debug: sleep 2" 1>&2
-        sleep 2
-    fi
 }
 
 #

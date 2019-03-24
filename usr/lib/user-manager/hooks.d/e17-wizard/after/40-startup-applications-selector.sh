@@ -16,9 +16,34 @@ main(){
 
     if grep -qs "boot=live" /proc/cmdline ; then
         is_live=1
+    else
+        if ! el_dependencies_check "zenity" ; then
+            exit
+        fi
     fi
 
     # }}}
+
+    if [[ "$EROOT" ]] ; then
+        # e16
+        order_file="$HOME/.e16/startup-applications-order.txt"
+    else
+        if [[ "$(which enlightenment)" ]] ; then
+            E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+            case "$E_VERSION" in
+                0.17.*)
+                    order_file="$HOME/.e/e17/applications/startup/.order"
+                    ;;
+                *)
+                    el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
+                    exit
+                    ;;
+            esac
+        fi
+    fi
+
+    # create a default dir
+    mkdir -p "$(dirname "$order_file" )"
 
     while read -ru 3 file
     do
@@ -43,6 +68,13 @@ main(){
             # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
             # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
             continue
+        fi
+        # e16 cases
+        if [[ -n "$EROOT" ]] ; then
+            if echo "$filename" | grep -qsEi "^(pulseaudio)" ; then
+                # pulseaudio*: it should be already started before to run e16 or confs will fail, so its useless to run it from here
+                continue
+            fi
         fi
         # - un-needed ones }}}
         # default to enabled/disabled {{{
@@ -136,7 +168,6 @@ main(){
 
     done 3<<< "$( find /etc/xdg/autostart/ -type f -iname '*'.desktop | sort -u )"
 
-    el_dependencies_check "zenity"
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then
         message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Note that you don't have much RAM memory and they will use it. Elive has already selected the best option for you." )" )"
@@ -172,8 +203,8 @@ main(){
 
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
-        if ! grep -qs "elxstrt.desktop" "$HOME/.e/e17/applications/startup/.order" ; then
-            echo "$HOME/.local/share/applications/elxstrt.desktop" >> "$HOME/.e/e17/applications/startup/.order"
+        if ! grep -qs "elxstrt.desktop" "${order_file}" ; then
+            echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
         fi
     fi
 
@@ -192,8 +223,8 @@ main(){
                 is_gdu_notif_included=1
             fi
 
-            if ! grep -qs "^${file}$" "$HOME/.e/e17/applications/startup/.order" ; then
-                echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
+            if ! grep -qs "^${file}$" "${order_file}" ; then
+                echo "$file" >> "${order_file}"
             fi
         fi
     done 3<<< "$( echo "$answer" | tr '|' '\n' )"
@@ -209,8 +240,8 @@ main(){
                     # re-enable it
                     file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
                     if [[ -s "$file" ]] ; then
-                        if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
-                            echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
+                        if ! grep -qs "$file" "${order_file}" ; then
+                            echo "$file" >> "${order_file}"
                         fi
                     else
                         NOREPORTS=1 el_error "Polkit startup file not found"
@@ -252,8 +283,8 @@ EOF
                 # re-enable it
                 file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
                 if [[ -s "$file" ]] ; then
-                    if ! grep -qs "$file" "$HOME/.e/e17/applications/startup/.order" ; then
-                        echo "$file" >> "$HOME/.e/e17/applications/startup/.order"
+                    if ! grep -qs "$file" "${order_file}" ; then
+                        echo "$file" >> "${order_file}"
                     fi
                 else
                     # user may have removed it from the install
@@ -265,21 +296,22 @@ EOF
     fi
 
     # RUN the already selected .desktops to launch at start, otherwise we will have problems like authentications in the first boot (gparted or mounting disks failing)
-    if test -s "$HOME/.e/e17/applications/startup/.order" ; then
+    if test -s "${order_file}" ; then
         while read -ru 3 line
         do
             executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
             if [[ -n "$executable" ]] ; then
+                el_debug "running $executable"
                 bash -c "$executable & disown"
             fi
-        done 3<<< "$( cat "$HOME/.e/e17/applications/startup/.order")"
+        done 3<<< "$( cat "${order_file}")"
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

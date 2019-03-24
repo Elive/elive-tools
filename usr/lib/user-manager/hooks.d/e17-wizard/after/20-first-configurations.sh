@@ -38,7 +38,7 @@ main(){
     # import gnupg keys
     el_explain 0 "Importing Elive gpg key..."
 
-    if [[ -d "/usr/share/elive-security" ]] ; then
+    if [[ -d "/usr/share/elive-security" ]] && ! grep -qs "boot=live" /proc/cmdline ; then
         if el_dependencies_check gpg ; then
             gpg --import /usr/share/elive-security/*.asc
         fi
@@ -47,10 +47,10 @@ main(){
     # }}}
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

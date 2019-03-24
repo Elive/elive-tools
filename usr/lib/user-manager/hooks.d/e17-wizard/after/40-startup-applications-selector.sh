@@ -26,7 +26,7 @@ main(){
 
     if [[ "$EROOT" ]] ; then
         # e16
-        order_file="$HOME/.e16/startup-applications-order.txt"
+        order_file="$HOME/.e16/startup-applications.list"
     else
         if [[ "$(which enlightenment)" ]] ; then
             E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"

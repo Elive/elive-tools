@@ -29,7 +29,7 @@ main(){
 
     if [[ "$EROOT" ]] ; then
         # e16
-        order_file="$HOME/.e16/startup-applications-order.txt"
+        order_file="$HOME/.e16/startup-applications.list"
         e_version="0.16"
     else
         if [[ "$(which enlightenment)" ]] ; then

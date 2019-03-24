@@ -7,20 +7,6 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
-# know virtualized state
-if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-    /usr/sbin/hald
-    sync
-    LC_ALL=C sleep 1
-
-    lshal 2>/dev/null > /tmp/.lshal || true
-    # save some memory
-    killall hald 2>/dev/null 1>&2 || true
-fi
-if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
-    is_virtualized=1
-fi
-
 
 
 suggest_emodule_flag_keyboard(){
@@ -42,7 +28,28 @@ main(){
     # pre {{{
     local language
 
+
+    # know virtualized state
+    if [[ -x "/usr/sbin/hald" ]] ; then
+        if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
+            /usr/sbin/hald
+            sync
+            LC_ALL=C sleep 1
+
+            lshal 2>/dev/null > /tmp/.lshal || true
+            # save some memory
+            killall hald 2>/dev/null 1>&2 || true
+        fi
+        if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
+            is_virtualized=1
+        fi
+    fi
     # }}}
+    # e16: skip
+    if [[ "$EROOT" ]] ; then
+        return
+    fi
+
     source /etc/default/locale
 
     # different installs based in different languages
@@ -120,10 +127,10 @@ main(){
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

@@ -18,6 +18,12 @@ main(){
     # pre {{{
     local file dir temp
 
+    # e16
+    if [[ "$EROOT" ]] ; then
+        # nothing to do
+        return
+    fi
+
     # }}}
     # already shown, ignore
     if el_flag check "composite-details" ; then
@@ -120,10 +126,10 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 2" 1>&2
-        sleep 2
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 2" 1>&2
+        #sleep 2
+    #fi
 }
 
 #

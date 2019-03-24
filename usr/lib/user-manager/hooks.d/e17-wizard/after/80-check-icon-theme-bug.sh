@@ -9,6 +9,13 @@ main(){
 
     # }}}
 
+    # e16
+    if [[ "$EROOT" ]] ; then
+        # nothing to do
+        return
+    fi
+
+    # e17
     if [[ -d "$HOME/.e/e17" ]] ; then
         cd "$HOME/.e/e17/config/standard"
 
@@ -24,10 +31,10 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

@@ -1,0 +1,40 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file mode
+
+    # }}}
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) [start|stop]"
+        echo -e "Runs the XDG autostart applications selected by the user"
+        exit 1
+    fi
+
+    case "$mode" in
+        start)
+            is_start=1
+            ;;
+        stop)
+            is_stop=1
+            el_error "not implemented yet"
+            ;;
+        *)
+            el_error "unknown mode"
+            ;;
+    esac
+
+
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

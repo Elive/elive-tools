@@ -102,6 +102,9 @@ main(){
     # pre {{{
     local var
 
+    if ! el_dependencies_check "xdg-user-dirs-update,xdg-user-dirs-gtk-update" ; then
+        exit 1
+    fi
     # }}}
     version="1.1"
     TMP_PROGRESS_CONFIGURING_f="/tmp/.$(basename $0)-${USER}-progress.txt"
@@ -128,13 +131,15 @@ main(){
     echo 10 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
 
     # update language to the user's selected one first
-    lang="$( enlightenment_remote -lang-get )"
-    # remove extra leading blank chars
-    read -r lang <<< "$lang"
-    if [[ -n "$lang" ]] ; then
-        export LANG="$lang"
-    else
-        el_warning "unable to get lang conf by E remote"
+    if [[ -n "$E_START" ]] ; then
+        lang="$( enlightenment_remote -lang-get )"
+        read -r lang <<< "$lang"
+
+        if [[ -n "$lang" ]] ; then
+            export LANG="$lang"
+        else
+            el_warning "unable to get lang conf by E remote"
+        fi
     fi
 
     # clean conf, so create it again in case that already exists
@@ -194,7 +199,7 @@ main(){
     # XXX: note: we have already this structure thanks to our shipped xdg-default-dirs in /etc/xdg, nothing is wrong unless we change it
     desktop_d="$( basename "$(xdg-user-dir DOWNLOAD )")/$( basename "$(xdg-user-dir DESKTOP )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
-    mkdir -p "$HOME/$desktop_d"
+    mkdir -p "$HOME/$desktop_d" "$XDG_CONFIG_HOME"
 
     # replace the desktop entry
     sed -i "s|^XDG_DESKTOP_DIR.*$|XDG_DESKTOP_DIR=\"\$HOME/$desktop_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"
@@ -229,7 +234,7 @@ main(){
     # Create a better dir structure, we need this dir in any of the cases
     templates_d="$( basename "$(xdg-user-dir DOCUMENTS )")/$( basename "$(xdg-user-dir TEMPLATES )" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
-    mkdir -p "$HOME/$templates_d"
+    mkdir -p "$HOME/$templates_d" "$XDG_CONFIG_HOME"
 
     # replace the templates entry
     sed -i "s|^XDG_TEMPLATES_DIR.*$|XDG_TEMPLATES_DIR=\"\$HOME/$templates_d\"|g" "${XDG_CONFIG_HOME}/user-dirs.dirs"

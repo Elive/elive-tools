@@ -12,6 +12,9 @@ main(){
     # pre {{{
     local language
 
+    if ! el_dependencies_check "xdg-user-dirs-update,xdg-user-dirs-gtk-update" ; then
+        exit 1
+    fi
     # }}}
     source /etc/default/locale
     language="${LANG%%_*}"
@@ -33,10 +36,10 @@ main(){
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

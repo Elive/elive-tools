@@ -6,8 +6,15 @@ main(){
     # pre {{{
     local lang amount percent dir total
 
+    # ignore if we are in live, users are not so interested yet into collaborate with translations
+    if grep -qs "boot=live" /proc/cmdline ; then
+        exit
+    fi
     # }}}
 
+    if [[ -z "$LANG" ]] ; then
+        source /etc/default/locale
+    fi
     lang="${LANG%%_*}"
     if [[ -z "$lang" ]] ; then
         exit
@@ -37,10 +44,10 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 4" 1>&2
-        sleep 4
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 4" 1>&2
+        #sleep 4
+    #fi
 
 }
 

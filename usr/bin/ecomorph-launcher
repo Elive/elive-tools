@@ -1,6 +1,8 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
+
 # gettext functions
 if [[ -x "/usr/bin/gettext.sh" ]] ; then
     . gettext.sh
@@ -13,6 +15,14 @@ fi
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+# ignore if we are in e16
+if [[ -n "$EROOT" ]] ; then
+    exit
+fi
+if ! [[ -n "$E_START" ]] ; then
+    el_error "This desktop is not Enlightenment 17 ? exiting..."
+    exit 1
+fi
 
 has_glxinfo_ecomorph_compatibility=1
 # INJECTED ECOMORPH DETECTOR CODE {{{

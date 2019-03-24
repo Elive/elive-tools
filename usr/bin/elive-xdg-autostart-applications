@@ -27,7 +27,45 @@ main(){
             ;;
     esac
 
+    if [[ "$EROOT" ]] ; then
+        # e16
+        order_file="$HOME/.e16/startup-applications-order.txt"
+        e_version="0.16"
+    else
+        if [[ "$(which enlightenment)" ]] ; then
+            e_version="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+            case "$e_version" in
+                0.17.*)
+                    order_file="$HOME/.e/e17/applications/startup/.order"
+                    ;;
+                *)
+                    el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
+                    exit
+                    ;;
+            esac
+        fi
+    fi
 
+    if ! [[ -e "$order_file" ]] ; then
+        el_error "This tool requires a list of startup applications, located in '$order_file' "
+        el_info "This file is a plain text list containing the full address of the .desktop files to run"
+        el_info "example: /etc/xdg/autostart/elive-upgrader.desktop "
+        exit 1
+    fi
+
+    # run them:
+    if ((is_start)) ; then
+        if test -s "$order_file" ; then
+            while read -ru 3 line
+            do
+                executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
+                if [[ -n "$executable" ]] ; then
+                    el_debug "running $executable"
+                    bash -c "$executable & disown"
+                fi
+            done 3<<< "$( cat "$order_file")"
+        fi
+    fi
 
 
 }

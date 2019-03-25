@@ -24,7 +24,7 @@ main(){
 
     # }}}
 
-    if [[ "$EROOT" ]] ; then
+    if [[ -n "$EROOT" ]] ; then
         # e16
         order_file="$HOME/.e16/startup-applications.list"
     else

@@ -10,7 +10,7 @@ main(){
     # }}}
 
     # e16
-    if [[ "$EROOT" ]] ; then
+    if [[ -n "$EROOT" ]] ; then
         # nothing to do
         return
     fi

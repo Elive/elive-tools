@@ -23,7 +23,6 @@ main(){
             ;;
         stop)
             is_stop=1
-            el_error "not implemented yet"
             ;;
         *)
             el_error "unknown mode for $SOURCE"

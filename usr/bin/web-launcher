@@ -218,15 +218,21 @@ main(){
                     break
                 fi
                 ;;
+            *)
+                if ! [[ -e "$browser" ]] ; then
+                    unset browser
+                fi
+                ;;
         esac
     done
 
     # nothing used? open with a default one
-    if ! [[ -n "$browser" ]] ; then
+    if ! [[ -n "$browser" ]] && [[ -e "/etc/alternatives/x-www-browser" ]] ; then
         browser="$( readlink -f "/etc/alternatives/x-www-browser" )"
     fi
     if ! [[ -n "$browser" ]] ; then
         el_error "no web browsers available found"
+        $guitool --error --text="No web browsers installed found, please install one first"
     fi
 
     # run the webs

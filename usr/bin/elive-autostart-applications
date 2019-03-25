@@ -49,7 +49,7 @@ main(){
     fi
 
     if ! [[ -e "$order_file" ]] ; then
-        el_error "This tool requires a list of startup applications, located in '$order_file' "
+        el_info "This tool requires a list of startup applications, located in '$order_file' "
         el_info "This file is a plain text list containing the full address of the .desktop files to run"
         el_info "example: /etc/xdg/autostart/elive-upgrader.desktop "
         exit 1

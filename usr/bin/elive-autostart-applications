@@ -14,6 +14,8 @@ main(){
         exit 1
     fi
 
+    mode="$1"
+
     case "$mode" in
         start)
             is_start=1

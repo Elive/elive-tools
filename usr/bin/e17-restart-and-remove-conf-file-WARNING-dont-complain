@@ -1,11 +1,22 @@
 #!/bin/bash
-
-# XXX Warning: there's a .desktop that references to this (name $0) command, do not break up things
-
 source /usr/lib/elive-tools/functions
 
-killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+# XXX Note: there's a .desktop that references to this (name $0) command, do not break up things
+
+
+if [[ -n "$EROOT" ]] ; then
+    killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+    rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
+    cd "$HOME"
+    elive-skel upgrade .e16
+fi
+
+if [[ -n "$E_START" ]] ; then
+    killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+    rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+fi
+
+
 
 #killall -9 Xorg &
 

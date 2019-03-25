@@ -1,4 +1,5 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
 
 main(){
@@ -25,7 +26,7 @@ main(){
             el_error "not implemented yet"
             ;;
         *)
-            el_error "unknown mode"
+            el_error "unknown mode for $SOURCE"
             ;;
     esac
 

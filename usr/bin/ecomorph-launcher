@@ -524,10 +524,10 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
-        echo -e "debug: sleep 2" 1>&2
-        sleep 2
-    fi
+    #if grep -qs "debug" /proc/cmdline ; then
+        #echo -e "debug: sleep 2" 1>&2
+        #sleep 2
+    #fi
 
     exit 0
 }

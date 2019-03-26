@@ -53,6 +53,7 @@ main(){
         el_info "This file is a plain text list containing the full address of the .desktop files to run"
         el_info "example: /etc/xdg/autostart/elive-upgrader.desktop "
         exit 1
+
     fi
 
     # run them:

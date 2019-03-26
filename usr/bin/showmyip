@@ -37,21 +37,29 @@ main(){
         exit 1
     fi
 
-    ip="$( curl -A "Mozilla" --max-time 8 -s http://icanhazip.com | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -1 )"
-    # remove extra leading blank chars
+    # fastest one
+    # note: should not include httpS and not user-agent (should be curl?)
+    ip="$( curl --max-time 8 -s http://ipecho.net/plain | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -1 )"
     read -r ip <<< "$ip"
+
+
+    if ! verify_ip_validity ; then
+        ip="$( curl -L -A "Mozilla" --max-time 8 -s http://icanhazip.com | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -1 )"
+        # remove extra leading blank chars
+        read -r ip <<< "$ip"
+    fi
 
 
     # check and try from another if is wrong
     if ! verify_ip_validity ; then
-        ip="$( curl -A "Mozilla" --max-time 8 -s http://www.showmyip.co.uk | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        ip="$( curl -L -A "Mozilla" --max-time 8 -s http://www.showmyip.co.uk | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r ip <<< "$ip"
     fi
 
     # check and try from another if is wrong
     if ! verify_ip_validity ; then
-        ip="$( curl -A "Mozilla" --max-time 8 -s http://www.hostip.info | grep -i "IP address:.*" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
+        ip="$( curl -L -A "Mozilla" --max-time 8 -s http://www.hostip.info | grep -i "IP address:.*" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sed -e 's|^.*address:  <b>||g' -e 's|</b>.*$||g' -e 's|^.*<b>||g' | tail -1 )"
         # remove extra leading blank chars
         read -r ip <<< "$ip"
     fi

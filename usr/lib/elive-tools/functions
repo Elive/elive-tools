@@ -121,7 +121,7 @@ fi
 #fi
 
 # extra vars
-source /etc/adduser.conf
+source /etc/adduser.conf 2>/dev/null || true
 [[ -z "$DHOME" ]] && export DHOME=/home
 # set the user's home, sometimes, like if we are in an init script, the home points to /
 if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then

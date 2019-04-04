@@ -26,17 +26,22 @@ main(){
     # }}}
 
     # virtualized? {{{
-    if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-        /usr/sbin/hald
-        sync
-        LC_ALL=C sleep 1
+    if [[ -e "/etc/elive/machine-profile" ]] ; then
+        source /etc/elive/machine-profile
+    else
+        # keep wheezy compatibility by not removing hal from this code:
+        if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
+            /usr/sbin/hald
+            sync
+            LC_ALL=C sleep 1
 
-        lshal 2>/dev/null > /tmp/.lshal || true
-        # save some memory
-        killall hald 2>/dev/null 1>&2 || true
-    fi
-    if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
-        is_virtualized=1
+            lshal 2>/dev/null > /tmp/.lshal || true
+            # save some memory
+            killall hald 2>/dev/null 1>&2 || true
+        fi
+        if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
+            MACHINE_VIRTUAL=yes
+        fi
     fi
 
     # }}}
@@ -96,12 +101,12 @@ main(){
                 local message_gl
                 message_gl="$( printf "$( eval_gettext "No desktop acceleration selected. This option is more stable, but it may result in a less responsive desktop, especially during video playback. If you did not try the accelerated mode yet, it is suggested to select it. You will be able to see, then , if it is compatible with your graphic card." )" )"
 
-                if ! ((is_virtualized)) ; then
+                if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
                 fi
                 ;;
             2)
-                if ((is_virtualized)) ; then
+                if [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     local message_vbox
                     message_vbox="$( printf "$( eval_gettext "The hardware acceleration mode may not work correctly in a virtual machine" )" "" )"
                     zenity --warning --text="$message_vbox"

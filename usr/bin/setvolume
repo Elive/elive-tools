@@ -653,20 +653,19 @@ main(){
     if ((is_pulseaudio)) ; then
         case "$action" in
             *"up"|*"+")
+                action="${action//+}"
+                action="${action//%}"
                 action="+${action%% *}"
-                ;;
-            "+"*)
-                action="$( echo "$action" | sed -e 's|^+||g' -e 's|%+||g' -e 's|%||g' -e 's|+||g' )"
-                action="+${action%% *}"
-                ;;
-            "-"*)
-                action="$( echo "$action" | sed -e 's|^-||g' -e 's|%-||g' -e 's|%||g' -e 's|-||g' )"
-                action="-${action%% *}"
                 ;;
             *"down"|*"-")
+                action="${action//-}"
+                action="${action//%}"
                 action="-${action%% *}"
                 ;;
             *"%")
+                action="${action//+}"
+                action="${action//-}"
+                action="${action//%}"
                 action="+${action%% *}"
                 ;;
         esac

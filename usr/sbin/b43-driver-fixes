@@ -7,6 +7,25 @@ if [[ "$PATH" != *"/usr/sbin"* ]] ; then
     export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
 fi
 
+extra_fixes(){
+    if dmidecode -s system-manufacturer | grep -qsi "LENOVO" ; then
+        # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
+        if [[ "$( dmidecode -s system-version )" = *"G580"* ]] ; then
+            cat > "/etc/modprobe.d/10_wl.conf" <<EOF
+blacklist brcmsmac
+blacklist bcma
+softdep wl pre: lib80211_crypt_tkip lib80211_crypt_ccmp lib80211_crypt_wep
+EOF
+        fi
+
+        # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
+        if [[ "$( dmidecode -s system-version )" = *"Twist"* ]] ; then
+            cat > "/etc/modprobe.d/10_b43.conf" <<EOF
+options b43 pio=0 qos=0
+EOF
+        fi
+    fi
+}
 
 try_and_configure(){
 
@@ -15,22 +34,6 @@ try_and_configure(){
     # note: wl must be the first one
     #modules_list="wl b43 b43legacy brcm80211"
     modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb rndis_wlan"
-
-    # previous fixes
-    # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
-    if lshal | grep -qsi lenovo && lshal | grep -qsi "system.hardware.*G580" ; then
-        cat > "/etc/modprobe.d/10_wl.conf" <<EOF
-blacklist brcmsmac
-blacklist bcma
-softdep wl pre: lib80211_crypt_tkip lib80211_crypt_ccmp lib80211_crypt_wep
-EOF
-    fi
-    # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
-    if lshal | grep -qsi lenovo && lshal | grep -qsi "system.hardware.*Twist" ; then
-        cat > "/etc/modprobe.d/10_b43.conf" <<EOF
-options b43 pio=0 qos=0
-EOF
-    fi
 
     # remove every b43 module
     for j in $( seq 5 )
@@ -181,6 +184,12 @@ main(){
 
                 # configure again
                 try_and_configure
+
+                # try again with extra fixes
+                if ! ((is_wifi_working)) ; then
+                    extra_fixes
+                    try_and_configure
+                fi
 
                 # cleanups
                 if ! ((is_wifi_working)) ; then

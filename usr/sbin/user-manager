@@ -204,7 +204,7 @@ adduserelive(){
     fi
 
     # fingerprint support
-    if lshal 2>/dev/null | grep -qsi "fingerprint" || lsusb | grep -qsi "Upek" ; then
+    if grep -qsi "fingerprint" /proc/bus/input/devices || lsusb | grep -qsi "Upek" ; then
         $guitool --info --text="$( eval_gettext "Your computer supports fingerprint reader, you can follow the howto of Elive to activate it." )" || true
     fi
     # deprecated, we use e17-wizard startup now

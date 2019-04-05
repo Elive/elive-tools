@@ -2782,42 +2782,25 @@ el_config_restart(){
 #===============================================================================
 el_ram_usage_show(){
     # pre {{{
-    local arg MEMUSED MEMTOTAL MEMFREE
+    local arg
 
     arg="$1"
 
     # }}}
 
-    # get variables for memory results
-    eval $(
-      awk '
-              /^MemTotal:/ { total=$2 }
-              /^(MemFree|Buffers|Cached):/ { free+=$2 }
-              END {
-                      printf("MEMTOTAL=%d\n", int(total) / 1024)
-                      printf("MEMFREE=%d\n",  int(free) / 1024)
-                      printf("MEMUSED=%d\n",  (int(total) - int(free)) / 1024)
-              }
-      ' /proc/meminfo
-      )
-
     # all reports are in MB
       case "$arg" in
           free)
-              echo "$MEMFREE"
+              free -m | grep "^Mem: " | awk '{print $4}'
               ;;
           total)
-              echo "$MEMTOTAL"
+              free -m | grep "^Mem: " | awk '{print $2}'
               ;;
           used)
-              echo "$MEMUSED"
+              free -m | grep "^Mem: " | awk '{print $3}'
               ;;
           *)
-              printf "System Memory\t"
-              printf "[ ${MEMUSED} MB used ] "
-              printf "[ ${MEMFREE} MB free ] "
-              printf "[ ${MEMTOTAL} MB total ]"
-              printf "\n"
+              free
               ;;
       esac
 

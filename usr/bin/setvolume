@@ -10,14 +10,28 @@ export TEXTDOMAIN
 #export NOREPORTS=1
 
 conf_volume_set(){
+    local volume_actual
+
+    if ((is_pulseaudio)) ; then
+        return
+    fi
+
     volume_actual="$( get_volume )"
     if [[ -n "$volume_actual" ]] && [[ "$volume_actual" != 0 ]] ; then
         sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
         echo -e "volume: $volume_actual" >> "$conf"
     fi
+
+    echo "$volume_actual"
+    return
 }
 conf_volume_get(){
     local volume_before
+
+    if ((is_pulseaudio)) ; then
+        return
+    fi
+
     # get volume from conf
     if [[ -e "$conf" ]] && [[ -s "$conf" ]] ; then
         volume_before="$( LC_ALL=C grep "^volume:" "$conf" )"
@@ -40,8 +54,13 @@ conf_volume_get(){
 #===============================================================================
 get_meter(){
     # pre {{{
-    el_debug
-    el_security_function_loop || return
+    #el_debug
+    #el_security_function_loop || return
+
+    if ((is_pulseaudio)) ; then
+        meter="PulseAudio"
+        return
+    fi
 
     el_check_variables "list,conf"
 
@@ -275,37 +294,50 @@ mute_modes_force(){
     case "$mode" in
         muteset)
 
-            # save our last state of volume for next use
-            if [[ "$volume_actual" -gt 20 ]] ; then
-                conf_volume_set
-                el_debug "volume actual was $volume_actual"
+            if ((is_pulseaudio)) ; then
+                pulsemixer --mute
             else
-                el_debug "no actual volume known"
-            fi
+                # save our last state of volume for next use
+                if [[ "$volume_actual" -gt 20 ]] ; then
+                    conf_volume_set
+                    el_debug "volume actual was $volume_actual"
+                else
+                    el_debug "no actual volume known"
+                fi
 
-            # set volume to 0
-            "$0" "0%"
+                # set volume to 0
+                "$0" "0%"
+            fi
 
             ;;
         unmute|unmuteset)
 
-            # set volume to our previous state
-            if [[ "$volume_actual" -lt 21 ]] ; then
-                if [[ -n "$volume_before" ]] && [[ "$volume_before" -gt 20 ]] ; then
-            "$0" "${volume_before}%"
-                else
-                    "$0" "defaults"
+            if ((is_pulseaudio)) ; then
+                pulsemixer --unmute
+            else
+                # set volume to our previous state
+                if [[ "$volume_actual" -lt 21 ]] ; then
+                    if [[ -n "$volume_before" ]] && [[ "$volume_before" -gt 20 ]] ; then
+                        "$0" "${volume_before}%"
+                    else
+                        "$0" "defaults"
+                    fi
                 fi
             fi
 
             ;;
         mute|toggle)
-            el_debug "volumes was originally at $volume_before and now $volume_actual"
 
-            if [[ "$volume_actual" -lt 21 ]] ; then
-                $FUNCNAME unmute
+            if ((is_pulseaudio)) ; then
+                pulsemixer --toggle-mute
             else
-                $FUNCNAME muteset
+                el_debug "volumes was originally at $volume_before and now $volume_actual"
+
+                if [[ "$volume_actual" -lt 21 ]] ; then
+                    $FUNCNAME unmute
+                else
+                    $FUNCNAME muteset
+                fi
             fi
 
             ;;
@@ -315,6 +347,31 @@ mute_modes_force(){
     esac
 
 
+}
+#===  FUNCTION  ================================================================
+#          NAME:  get_mute_state
+#   DESCRIPTION:  get the state we are muted or not
+#    PARAMETERS:  -
+#       RETURNS:  on|off
+#===============================================================================
+get_mute_state(){
+    local state_before
+
+    if ((is_pulseaudio)) ; then
+        case "$( pulsemixer --get-mute )" in
+            1) state_before="on" ; ;;
+            0) state_before="off" ; ;;
+            *) el_warning "uknown mute state: $( pulsemixer --get-mute 2>&1)"  ; ;;
+        esac
+    else
+        #state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep Right | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "(on|off)" | LC_ALL="$EL_LC_EN" grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
+        state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
+        # remove extra leading blank chars
+        read -r state_before <<< "$state_before"
+    fi
+
+    echo "$state_before"
+    return
 }
 #===  FUNCTION  ================================================================
 #          NAME:  mute_modes
@@ -332,10 +389,8 @@ mute_modes(){
     el_check_variables "mode"
 
     # }}}
-    #state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep Right | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "(on|off)" | LC_ALL="$EL_LC_EN" grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-    state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
-    # remove extra leading blank chars
-    read -r state_before <<< "$state_before"
+
+    state_before="$( get_mute_state )"
 
     case "$mode" in
         unmute|unmuteset)
@@ -354,10 +409,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            #state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep Right | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "(on|off)" | LC_ALL="$EL_LC_EN" grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
-            # remove extra leading blank chars
-            read -r state_after <<< "$state_after"
+            state_after="$( get_mute_state )"
 
             # unsuccessful mute, force
             if [[ "$state_after" = "off" ]] ; then
@@ -385,10 +437,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            #state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
-            # remove extra leading blank chars
-            read -r state_after <<< "$state_after"
+            state_after="$( get_mute_state )"
 
             # unsuccessful mute, force
             if [[ "$state_after" = "on" ]] ; then
@@ -429,10 +478,7 @@ mute_modes(){
                 return
             fi
             # force detect {{{
-            #state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | grep Right | tail -1 | tr ' ' '\n' | grep -E "(on|off)" | grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-            state_after="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
-            # remove extra leading blank chars
-            read -r state_after <<< "$state_after"
+            state_after="$( get_mute_state )"
 
             # unsuccessful mute, force
             if [[ "$state_before" = "$state_after" ]] ; then
@@ -456,6 +502,15 @@ main(){
 
     if ! el_dependencies_check "amixer,aplay" ; then
         exit 1
+    fi
+
+    if [[ -n "$(pidof pulseaudio)" ]] ; then
+        is_pulseaudio=1
+
+        # checks and dependencies
+        if ! el_dependencies_check "pulsemixer" ; then
+            el_dependencies_install "pulsemixer"
+        fi
     fi
 
     # }}}
@@ -485,7 +540,9 @@ main(){
         mkdir -p "$( dirname "$conf" )"
     fi
 
-    meter="$( get_meter )"
+    if [[ -z "$meter" ]] ; then
+        meter="$( get_meter )"
+    fi
     if [[ -z "$meter" ]] ; then
         # get it a second time (in case that not worked we have run the configurator to get again the correct meter value, if still not working show the error)
         meter="$( get_meter )"
@@ -596,9 +653,23 @@ main(){
     # fixes percent space
     action="${action/ %/%}"
 
-    # e17 keybindings seems to segfault when using - char, so use words instead
-    action="${action/ up/+}"
-    action="${action/ down/-}"
+    if ((is_pulseaudio)) ; then
+        case "$action" in
+            *"up"|*"+")
+                action="+${action%% *}"
+                ;;
+            *"down"|*"-")
+                action="-${action%% *}"
+                ;;
+            *"%")
+                action="+${action%% *}"
+                ;;
+        esac
+    else
+        # e17 keybindings seems to segfault when using - char, so use words instead
+        action="${action/ up/+}"
+        action="${action/ down/-}"
+    fi
 
 
     # MUTE modes
@@ -630,19 +701,25 @@ main(){
     #if echo "$list" | grep -q "'$meter',1" ; then
 
     # update: let's change the volumes of all relevant tracks, sometimes PCM doesn't change the volume (where it was!) and we need to use Speaker instead
-    amixer -q set $meter $action 2>/dev/null
+    if ((is_pulseaudio)) ; then
+        pulsemixer --change-volume "$action"
+    else
+        amixer -q set $meter $action 2>/dev/null
 
-    if [[ "${meter}" != "Speaker" ]] ; then
-        amixer -q set Speaker $action 2>/dev/null
-    fi
-    if [[ "${meter}" != "Headphone" ]] ; then
-        amixer -q set Headphone $action 2>/dev/null
-    fi
-    if [[ "${meter}" != "DAC" ]] ; then
-        amixer -q set DAC $action 2>/dev/null
+        if [[ "${meter}" != "Speaker" ]] ; then
+            amixer -q set Speaker $action 2>/dev/null
+        fi
+        if [[ "${meter}" != "Headphone" ]] ; then
+            amixer -q set Headphone $action 2>/dev/null
+        fi
+        if [[ "${meter}" != "DAC" ]] ; then
+            amixer -q set DAC $action 2>/dev/null
+        fi
+
+        # alsa special elive controls
+        conf_volume_set
     fi
 
-    conf_volume_set
 
     true
 

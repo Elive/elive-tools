@@ -423,7 +423,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Use the Spacebar to select the driver version, then press Enter to confirm." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Use the SPACEBAR to Select, then press Enter to confirm." )" "" )"
 
 
 
@@ -525,7 +525,16 @@ interactive_ask_driver_version(){
     # select packages to install depending on which version we selected {{{
     case $_NVIDIA_VERSION in
         current)
-            _NVIDIA_PACKAGES="nvidia-driver nvidia-settings"
+            if apt-cache show "nvidia-driver" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="nvidia-driver $_NVIDIA_PACKAGES"
+            else
+                if apt-cache show "nvidia-driver-libs" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-driver-libs $_NVIDIA_PACKAGES"
+                fi
+            fi
+            if apt-cache show "nvidia-settings" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="nvidia-settings $_NVIDIA_PACKAGES"
+            fi
             ;;
         legacy-71xx)
 
@@ -550,7 +559,7 @@ interactive_ask_driver_version(){
 
             ;;
         *)
-            if apt-cache search "nvidia-settings-$_NVIDIA_VERSION" | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
+            if apt-cache search "nvidia-settings-$_NVIDIA_VERSION" 2>/dev/null | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver nvidia-settings-$_NVIDIA_VERSION"
             else
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver"
@@ -632,14 +641,14 @@ install_driver(){
     # force dpi size to 96 {{{
 
     local message_dpi_force
-    message_dpi_force="$( printf "$( eval_gettext "Use the same DPI size as other Elive systems. By selecting YES your font size will be set to 96 DPI, which is the common standard. Otherwise it will autodetect the dpi for your screen. This may result in an odd configuration of your fonts, making your overall system to look ugly. Select YES if you don't know." )" "" )"
+    message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96  DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
 
     if ((is_mode_auto)) ; then
         ret=0
     else
         dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-            --title "DPI defaults" \
-            --yesno "$message_dpi_force" \
+            --title "Force DPI defaults?" \
+            --yesno "$message_dpi_force" --defaultno \
             0 0
         ret="$?"
     fi
@@ -715,8 +724,21 @@ install_driver(){
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
                         sleep 4
-                        echo -e "\nE: Installing nvidia packages failed, report the previous error messages to Elive" 1>&2
-                        sleep 10
+                        if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
+                            echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
+                            sleep 10
+                        else
+                            if [[ "$_NVIDIA_VERSION" = "current" ]] ; then
+                                echo -e "\nE: Installing nvidia packages failed, please try to install them yourself" 1>&2
+                                echo -e "\nE: Boot Elive with the nox11autologin parameter to not start the graphical system" 1>&2
+                                echo -e "\nE: If you see that Elive has a missing configuration or package for the 'current'" 1>&2
+                                echo -e "\nE: version, please report what is needed to include to have the tool working for all" 1>&2
+                                sleep 25
+                            else
+                                echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
+                                sleep 10
+                            fi
+                        fi
                     fi
                 done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
             fi
@@ -878,13 +900,13 @@ uninstall_driver(){
     if [[ -n "$_NVIDIA_PACKAGES" ]] ; then
         log_progress_msg "Removing Nvidia proprietary drivers, this machine doesn't has it"
 
-        if ((is_mode_auto)) ; then
+        #if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
             DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_NVIDIA_PACKAGES
-        else
-            el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
-        fi
+        #else
+            #el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
+            #DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
+        #fi
     else
         el_info "Nvidia packages already removed"
     fi

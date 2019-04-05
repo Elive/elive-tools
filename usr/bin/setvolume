@@ -21,9 +21,6 @@ conf_volume_set(){
         sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
         echo -e "volume: $volume_actual" >> "$conf"
     fi
-
-    echo "$volume_actual"
-    return
 }
 conf_volume_get(){
     local volume_before

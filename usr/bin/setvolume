@@ -580,6 +580,11 @@ main(){
         # Mic configurations
         amixer -q set Capture unmute 2>/dev/null
         amixer -q set Capture 100% 2>/dev/null
+        # multiple calls are needed to set it to 100% in pulseaudio
+        amixer -q set Capture 100% 2>/dev/null
+        amixer -q set Capture 100% 2>/dev/null
+        amixer -q set Capture 100% 2>/dev/null
+        amixer -q set Capture 100% 2>/dev/null
         amixer -q set "Front Mic" unmute 2>/dev/null
         amixer -q set "Front Mic" 100% 2>/dev/null
         amixer -q set "Rear Mic" unmute 2>/dev/null

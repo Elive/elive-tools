@@ -56,7 +56,6 @@ get_meter(){
 
     if ((is_pulseaudio)) ; then
         meter="PulseAudio"
-        return
     fi
 
     el_check_variables "list,conf"
@@ -241,8 +240,8 @@ get_volume(){
 set_volume(){
     # pre {{{
     local action
-    el_debug
-    el_security_function_loop || return
+    #el_debug
+    #el_security_function_loop || return
 
     action="$1"
     el_check_variables "action,list,meter"
@@ -268,8 +267,8 @@ set_volume(){
 mute_modes_force(){
     # pre {{{
     local mode volume_before volume_actual
-    el_debug
-    el_security_function_loop 8 || return
+    #el_debug
+    #el_security_function_loop 8 || return
 
     mode="$1"
     el_check_variables "mode"
@@ -379,78 +378,25 @@ get_mute_state(){
 mute_modes(){
     # pre {{{
     local state_before state_after mode
-    el_debug
-    el_security_function_loop 8 || return
+    #el_debug
+    #el_security_function_loop 8 || return
 
     mode="$1"
     el_check_variables "mode"
 
     # }}}
 
-    state_before="$( get_mute_state )"
+    if ! ((is_pulseaudio)) ; then
+        state_before="$( get_mute_state )"
+    fi
 
     case "$mode" in
         unmute|unmuteset)
             # set talk
-            if [[ -n "$state_before" ]] ; then
-                if amixer -q set "$meter" unmute 2>/dev/null ; then
-                    el_debug "mute was on"
-                else
-                    # failed to set, force
-                    mute_modes_force unmute
-                    return
-                fi
-            else
-                # we dont know about mute values for this channel/card, force
+            if ((is_pulseaudio)) ; then
                 mute_modes_force unmute
-                return
-            fi
-            # force detect {{{
-            state_after="$( get_mute_state )"
-
-            # unsuccessful mute, force
-            if [[ "$state_after" = "off" ]] ; then
-                el_debug "mute has not changed, forcing it"
-                mute_modes_force unmute
-                return
-            fi
-
-            # - force detect }}}
-
-            ;;
-        muteset)
-            # set silent
-            if [[ -n "$state_before" ]] ; then
-                if amixer -q set "$meter" mute 2>/dev/null ; then
-                    el_debug "mute was off"
-                else
-                    # failed to set, force
-                    mute_modes_force muteset
-                    return
-                fi
             else
-                # we dont know about mute values for this channel/card, force
-                mute_modes_force muteset
-                return
-            fi
-            # force detect {{{
-            state_after="$( get_mute_state )"
-
-            # unsuccessful mute, force
-            if [[ "$state_after" = "on" ]] ; then
-                el_debug "mute has not changed, forcing it"
-                mute_modes_force mute
-                return
-            fi
-
-            # - force detect }}}
-
-            ;;
-        mute|toggle)
-            # Toggle mute modes
-            if [[ -n "$state_before" ]] ; then
-
-                if [[ "$state_before" = "off" ]] ; then
+                if [[ -n "$state_before" ]] ; then
                     if amixer -q set "$meter" unmute 2>/dev/null ; then
                         el_debug "mute was on"
                     else
@@ -458,9 +404,31 @@ mute_modes(){
                         mute_modes_force unmute
                         return
                     fi
+                else
+                    # we dont know about mute values for this channel/card, force
+                    mute_modes_force unmute
+                    return
                 fi
+                # force detect {{{
+                state_after="$( get_mute_state )"
 
-                if [[ "$state_before" = "on" ]] ; then
+                # unsuccessful mute, force
+                if [[ "$state_after" = "off" ]] ; then
+                    el_debug "mute has not changed, forcing it"
+                    mute_modes_force unmute
+                    return
+                fi
+            fi
+
+            # - force detect }}}
+
+            ;;
+        muteset)
+            # set silent
+            if ((is_pulseaudio)) ; then
+                mute_modes_force muteset
+            else
+                if [[ -n "$state_before" ]] ; then
                     if amixer -q set "$meter" mute 2>/dev/null ; then
                         el_debug "mute was off"
                     else
@@ -468,20 +436,65 @@ mute_modes(){
                         mute_modes_force muteset
                         return
                     fi
+                else
+                    # we dont know about mute values for this channel/card, force
+                    mute_modes_force muteset
+                    return
                 fi
-            else
-                # we dont know about mute values for this channel/card, force
-                mute_modes_force toggle
-                return
-            fi
-            # force detect {{{
-            state_after="$( get_mute_state )"
+                # force detect {{{
+                state_after="$( get_mute_state )"
 
-            # unsuccessful mute, force
-            if [[ "$state_before" = "$state_after" ]] ; then
-                el_debug "mute has not changed, forcing it"
+                # unsuccessful mute, force
+                if [[ "$state_after" = "on" ]] ; then
+                    el_debug "mute has not changed, forcing it"
+                    mute_modes_force mute
+                    return
+                fi
+            fi
+
+            # - force detect }}}
+
+            ;;
+        mute|toggle)
+            # Toggle mute modes
+            if ((is_pulseaudio)) ; then
                 mute_modes_force toggle
-                return
+            else
+                if [[ -n "$state_before" ]] ; then
+
+                    if [[ "$state_before" = "off" ]] ; then
+                        if amixer -q set "$meter" unmute 2>/dev/null ; then
+                            el_debug "mute was on"
+                        else
+                            # failed to set, force
+                            mute_modes_force unmute
+                            return
+                        fi
+                    fi
+
+                    if [[ "$state_before" = "on" ]] ; then
+                        if amixer -q set "$meter" mute 2>/dev/null ; then
+                            el_debug "mute was off"
+                        else
+                            # failed to set, force
+                            mute_modes_force muteset
+                            return
+                        fi
+                    fi
+                else
+                    # we dont know about mute values for this channel/card, force
+                    mute_modes_force toggle
+                    return
+                fi
+                # force detect {{{
+                state_after="$( get_mute_state )"
+
+                # unsuccessful mute, force
+                if [[ "$state_before" = "$state_after" ]] ; then
+                    el_debug "mute has not changed, forcing it"
+                    mute_modes_force toggle
+                    return
+                fi
             fi
 
             # - force detect }}}
@@ -656,11 +669,13 @@ main(){
                 action="${action//%}"
                 action="${action//+}"
                 action="${action//up}"
+                action="+${action}"
                 ;;
             *"down"|*"-"*)
                 action="${action//%}"
                 action="${action//-}"
                 action="${action//down}"
+                action="-${action}"
                 ;;
             *"%")
                 action="${action//%}"

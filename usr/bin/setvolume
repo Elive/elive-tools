@@ -652,21 +652,21 @@ main(){
 
     if ((is_pulseaudio)) ; then
         case "$action" in
-            *"up"|*"+")
+            *"up"|*"+"*)
                 action="${action//%}"
                 action="${action//+}"
-                action="+${action%% *}"
+                action="${action//up}"
                 ;;
-            *"down"|*"-")
+            *"down"|*"-"*)
                 action="${action//%}"
                 action="${action//-}"
-                action="-${action%% *}"
+                action="${action//down}"
                 ;;
             *"%")
                 action="${action//%}"
                 action="${action//+}"
                 action="${action//-}"
-                action="+${action%% *}"
+                is_value_total_percent=1
                 ;;
         esac
     else
@@ -706,7 +706,11 @@ main(){
 
     # update: let's change the volumes of all relevant tracks, sometimes PCM doesn't change the volume (where it was!) and we need to use Speaker instead
     if ((is_pulseaudio)) ; then
-        pulsemixer --change-volume "$action"
+        if ((is_value_total_percent)) ; then
+            pulsemixer --set-volume "$action"
+        else
+            pulsemixer --change-volume "$action"
+        fi
     else
         amixer -q set $meter $action 2>/dev/null
 

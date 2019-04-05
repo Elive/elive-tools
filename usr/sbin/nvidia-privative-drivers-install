@@ -447,6 +447,12 @@ interactive_ask_driver_version(){
                     # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                     _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                     ;;
+                *legacy-390xx)
+                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
+                    ;;
+                *legacy-340xx)
+                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
+                    ;;
                 *legacy-304xx)
                     _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
                     ;;

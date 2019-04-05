@@ -537,7 +537,15 @@ get_filesystem(){
     # make sure that we get the filesystem
 
     # use hal
-    fs="$(get_filesystem_hal "$dev" )"
+    #fs="$(get_filesystem_hal "$dev" )"
+    #if [[ -n "$fs" ]] ; then
+        #echo "$fs"
+        #return 0
+    #fi
+
+    # use hal
+    fs="$(get_filesystem_lsblk "$dev" )"
+    read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
         return 0
@@ -545,6 +553,7 @@ get_filesystem(){
 
     # use "file"
     fs="$(get_filesystem_file "$dev" )"
+    read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
         return 0
@@ -552,6 +561,7 @@ get_filesystem(){
 
     # use "id"
     fs="$(get_filesystem_id "$dev" )"
+    read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
         return 0
@@ -560,15 +570,17 @@ get_filesystem(){
     # we have not get it?
     return 1
 }
-
-get_filesystem_hal(){
-    local udi
-    #actually the only used
-    #/etc/init.d/dbus restart 1>/dev/null 2>&1
-    #/etc/init.d/hal restart 1>/dev/null 2>&1
-    udi=$( LC_ALL="$EL_LC_EN" hal-find-by-property --key "block.device" --string "$1" 2>/dev/null )
-    hal-get-property --udi "$udi" --key "volume.fstype" 2>/dev/null
+get_filesystem_lsblk(){
+    lsblk -d -rino FSTYPE "$1"
 }
+#get_filesystem_hal(){
+    #local udi
+    ##actually the only used
+    ##/etc/init.d/dbus restart 1>/dev/null 2>&1
+    ##/etc/init.d/hal restart 1>/dev/null 2>&1
+    #udi=$( LC_ALL="$EL_LC_EN" hal-find-by-property --key "block.device" --string "$1" 2>/dev/null )
+    #hal-get-property --udi "$udi" --key "volume.fstype" 2>/dev/null
+#}
 
 get_filesystem_file(){
     local ret

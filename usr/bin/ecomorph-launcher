@@ -405,20 +405,10 @@ main(){
     fi
 
     # }}}
-    lshal 2>/dev/null > /tmp/.lshal || true
-    if ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-        /usr/sbin/hald
-        sync
-        LC_ALL=C sleep 1
-
-        lshal 2>/dev/null > /tmp/.lshal || true
-
-        # save some memory
-        killall hald 2>/dev/null 1>&2 || true
-    fi
+    source /etc/elive/machine-profile
 
     # abort in VM
-    if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
+    if [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         abort_with_fallback_wm virtual
     fi
 

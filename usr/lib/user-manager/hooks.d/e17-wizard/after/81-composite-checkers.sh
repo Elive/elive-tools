@@ -28,22 +28,7 @@ main(){
     # virtualized? {{{
     if [[ -e "/etc/elive/machine-profile" ]] ; then
         source /etc/elive/machine-profile
-    else
-        # keep wheezy compatibility by not removing hal from this code:
-        if ! [[ -s "/tmp/.lshal" ]] || ! [[ "$( wc -l "/tmp/.lshal" | cut -f 1 -d ' ' )" -gt 100 ]] ; then
-            /usr/sbin/hald
-            sync
-            LC_ALL=C sleep 1
-
-            lshal 2>/dev/null > /tmp/.lshal || true
-            # save some memory
-            killall hald 2>/dev/null 1>&2 || true
-        fi
-        if grep -qsi "system.hardware.product =.*VirtualBox" /tmp/.lshal || grep -qsi "system.hardware.product =.*vmware" /tmp/.lshal || grep "QEMU" /tmp/.lshal | egrep -q "^\s+info.vendor" ;  then
-            MACHINE_VIRTUAL=yes
-        fi
     fi
-
     # }}}
 
     # e16 {{{

@@ -50,17 +50,12 @@ conf_volume_get(){
 #       RETURNS:  meter name in a string value
 #===============================================================================
 get_meter(){
-    # pre {{{
-    #el_debug
-    #el_security_function_loop || return
-
     if ((is_pulseaudio)) ; then
         meter="PulseAudio"
+        return
     fi
 
     el_check_variables "list,conf"
-
-    # }}}
 
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'PCM'"* ]] ; then
@@ -215,6 +210,10 @@ get_volume(){
     # pre {{{
     #el_debug
     #el_security_function_loop || return
+    if ((is_pulseaudio)) ; then
+        pulsemixer --get-volume | awk '{print $1}'
+        return
+    fi
 
     el_check_variables "meter,list"
 

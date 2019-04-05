@@ -655,6 +655,14 @@ main(){
             *"up"|*"+")
                 action="+${action%% *}"
                 ;;
+            "+"*)
+                action="$( echo "$action" | sed -e 's|^+||g' -e 's|%+||g' -e 's|%||g' -e 's|+||g' )"
+                action="+${action%% *}"
+                ;;
+            "-"*)
+                action="$( echo "$action" | sed -e 's|^-||g' -e 's|%-||g' -e 's|%||g' -e 's|-||g' )"
+                action="-${action%% *}"
+                ;;
             *"down"|*"-")
                 action="-${action%% *}"
                 ;;

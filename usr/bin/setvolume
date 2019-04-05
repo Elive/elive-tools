@@ -708,6 +708,7 @@ main(){
     if ((is_pulseaudio)) ; then
         if ((is_value_total_percent)) ; then
             pulsemixer --set-volume "$action"
+            unset is_value_total_percent
         else
             pulsemixer --change-volume "$action"
         fi

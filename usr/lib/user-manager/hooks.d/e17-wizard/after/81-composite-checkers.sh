@@ -42,6 +42,11 @@ main(){
         fi
 
         if eesh -w "compmgr ?" | grep -qs "on=1" ; then
+            # fix conky conf
+            if [[ -e "$HOME/.conkyrc" ]] ; then
+                sed -i -e "s|^.*own_window_argb_visual.*$|own_window_argb_visual yes|gI" "$HOME/.conkyrc"
+            fi
+
             zenity --info --text="$( eval_gettext "Composite in E16 should give you a better experience,  but if you see any issue or a reason to not enable it by default in Elive in the future, please share your comments in our forums. You can disable it in any moment from the configurations." )"
         else
             # report if failed

@@ -30,6 +30,23 @@ main(){
         fi
     fi
 
+    # change conky network configuration
+    if [[ -e "$HOME/.conkyrc" ]] ; then
+        if el_verify_internet ; then
+            iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
+            if [[ -n "$iface" ]] ; then
+                case "$iface" in
+                    eth|enp)
+                        # ETH lan cable networks, disable wifi features
+                        sed -i -e "s|^\(ESSID.*\)$|#\1|gI" "$HOME/.conkyrc"
+                        sed -i -e "s|^\(Connection quality.*\)$|#\1|gI" "$HOME/.conkyrc"
+                        ;;
+                esac
+                # change iface to our used one
+                sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
+            fi
+        fi
+    fi
 
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then

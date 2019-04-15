@@ -513,7 +513,7 @@ main(){
         exit 1
     fi
 
-    if [[ -n "$(pidof pulseaudio)" ]] && [[ -n "$( grep -E "^(7\.|wheezy)" /etc/debian_version 2>/dev/null )" ]] ; then
+    if [[ -n "$(pidof pulseaudio)" ]] && ! [[ -n "$( grep -E "^(7\.|wheezy)" /etc/debian_version 2>/dev/null )" ]] ; then
         is_pulseaudio=1
 
         # checks and dependencies

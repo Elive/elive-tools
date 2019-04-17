@@ -4,6 +4,8 @@
 
 main(){
     # pre {{{
+    local i flag_busy
+
     if [[ -z "$1" ]] ; then
         echo -e "Usage: $(basename $0) command args"
         exit
@@ -14,15 +16,40 @@ main(){
 
     # }}}
 
+    case "$command" in
 
-    while ps ux | grep "$command" | grep -v "grep $command" | grep -v "$(basename $0)" | grep -v "vi.* .*$command" 1>/dev/null
-    do
-        if ! ((flag_busy)) ; then
-            echo -e "$command busy, waiting..."
-        fi
-        flag_busy=1
-        sleep 4
-    done
+        apt|apt-*|dpkg|dpkg*)
+            #el_info "apt/dpkg mode"
+            tput sc
+            i=0
+
+            while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+                case $(($i % 4)) in
+                    0 ) j="-" ;;
+                    1 ) j="\\" ;;
+                    2 ) j="|" ;;
+                    3 ) j="/" ;;
+                esac
+                tput rc
+                echo -en "\r[$j] Waiting for other software managers to finish..."
+                flag_busy=1
+
+                sleep 0.5
+                ((i=i+1))
+            done
+            ;;
+
+        *)
+            while ps ux | grep "$command" | grep -v "grep $command" | grep -v "$(basename $0)" | grep -v "vi.* .*$command" 1>/dev/null
+            do
+                if ! ((flag_busy)) ; then
+                    echo -e "$command busy, waiting..."
+                fi
+                flag_busy=1
+                sleep 3
+            done
+            ;;
+    esac
 
     if ((flag_busy)) ; then
         echo "Previous $command process finished, continuing..."

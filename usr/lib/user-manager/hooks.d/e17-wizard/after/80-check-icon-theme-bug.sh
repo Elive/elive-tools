@@ -19,14 +19,18 @@ main(){
     if [[ -d "$HOME/.e/e17" ]] ; then
         cd "$HOME/.e/e17/config/standard"
 
-        eet -d e.cfg config e.cfg.src
+        if [[ -x "$(which eet)" ]] ; then
+            eet -d e.cfg config e.cfg.src
 
-        if ! grep -qs "value \"icon_theme\" string: \"gnome\";" e.cfg.src && [[ -s "/usr/share/icons/gnome/index.theme" ]] ; then
-            zenity --warning --text="$( eval_gettext "Your icons seems to be wrongly configured, press ok to restart your configuration" )"
-            e17-restart-and-remove-conf-file-WARNING-dont-complain
+            if ! grep -qs "value \"icon_theme\" string: \"gnome\";" e.cfg.src && [[ -s "/usr/share/icons/gnome/index.theme" ]] ; then
+                zenity --warning --text="$( eval_gettext "Your icons seems to be wrongly configured, press ok to restart your configuration" )"
+                e17-restart-and-remove-conf-file-WARNING-dont-complain
+            fi
+
+            rm -f e.cfg.src
+        else
+            el_warning "eet command not found"
         fi
-
-        rm -f e.cfg.src
     fi
 
 

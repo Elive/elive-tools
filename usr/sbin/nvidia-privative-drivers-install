@@ -193,15 +193,15 @@ detect_driver_version(){
                     mkdir -p /var/tmp/nvidia-tmp
                     cd /var/tmp/nvidia-tmp
 
-                    for packagename in $( apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
+                    for packagename in $( LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
                     do
-                        url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+                        url_repository="$( LC_ALL=C apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
                         while read -ru 3 line
                         do
                             #url_package_dir="${url_repository%/}/${line%/*}/"
                             el_debug "downloading: ${line##*/}"
                             wget -q "${url_repository%/}/${line}"
-                        done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+                        done 3<<< "$( LC_ALL=C apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
                     done
                 else
                     NOREPORTS=1 el_error "no connection to internet found"
@@ -445,7 +445,7 @@ interactive_ask_driver_version(){
                 *nvidia|current)
                     _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
                     # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
-                    _desc="$_desc ($( apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
+                    _desc="$_desc ($( LC_ALL=C apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                     ;;
                 *legacy-390xx)
                     _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
@@ -484,7 +484,7 @@ interactive_ask_driver_version(){
                 echo -e "'$_id' '$_desc' off"
             fi
 
-        done 3<<< "$( { echo "current" ;  apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
+        done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
             | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
         # user canceled? uninstall and exit
@@ -559,7 +559,7 @@ interactive_ask_driver_version(){
 
             ;;
         *)
-            if apt-cache search "nvidia-settings-$_NVIDIA_VERSION" 2>/dev/null | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
+            if LC_ALL=C apt-cache search "nvidia-settings-$_NVIDIA_VERSION" 2>/dev/null | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver nvidia-settings-$_NVIDIA_VERSION"
             else
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver"

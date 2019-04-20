@@ -1408,8 +1408,8 @@ do_cherry_pick(){
         el_explain 0 "__Successfully applied!__"
         #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
 
-        echo -e "Press Enter to continue"
-        read nothing
+        #echo -e "Press Enter to continue"
+        #read nothing
         #sleep 1
 
         # store actual position for future calls of this tool

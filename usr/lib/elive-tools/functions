@@ -169,7 +169,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         return
     fi
 
-    if [[ -z "${DISPLAY}" ]] || [[ -z "${E_IPC_SOCKET}" ]] ; then
+    if [[ -z "${DISPLAY}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
             display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
 
@@ -191,17 +191,27 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
                 DISPLAY="${display}"
                 export DISPLAY
             fi
-
-            if [[ -z "${E_IPC_SOCKET}" ]] ; then
-                E_IPC_SOCKET="${e_ipc_socket}"
-                export E_IPC_SOCKET
-            fi
         fi
+    fi
 
+    # e17 not running or not fetch, let's try an alternative to fetch the display value
+    if [[ -z "${DISPLAY}" ]] ; then
+        display="$( ps -u $(id -u) -o pid= | \
+            while read pid; do
+                cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep '^DISPLAY=:'
+            done | grep -o ':[0-9]*' | sort -u | tail -1 )"
+
+        DISPLAY="${display}"
+        export DISPLAY
+    fi
+
+    if [[ -z "${E_IPC_SOCKET}" ]] && [[ -n "${e_ipc_socket}" ]] ; then
+        E_IPC_SOCKET="${e_ipc_socket}"
+        export E_IPC_SOCKET
     fi
     # END from enlightenment values }}}
     # xauthority {{{
-    if [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
+    if [[ -n "$DISPLAY" ]] && [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
         XAUTHORITY="$HOME/.Xauthority"
         export XAUTHORITY
     fi

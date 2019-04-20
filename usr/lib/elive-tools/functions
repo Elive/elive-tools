@@ -205,6 +205,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export DISPLAY
     fi
 
+    # fetch dbus address to we can use things like notify-send or dbus-send
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
+        export DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+    fi
+
     if [[ -z "${E_IPC_SOCKET}" ]] && [[ -n "${e_ipc_socket}" ]] ; then
         E_IPC_SOCKET="${e_ipc_socket}"
         export E_IPC_SOCKET

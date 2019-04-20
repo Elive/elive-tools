@@ -1114,9 +1114,9 @@ udisks_mount(){
         fi
     else
         if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            timeout 60 udisksctl mount "$dev" "$@"
+            timeout 60 udisksctl mount -b "$dev" "$@"
         else
-            timeout 60 udisksctl mount "$dev" "$@" 1>/dev/null
+            timeout 60 udisksctl mount -b "$dev" "$@" 1>/dev/null
         fi
     fi
 }

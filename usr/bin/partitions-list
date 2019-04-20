@@ -402,7 +402,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL="$EL_LC_EN" lsblk -lnbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -nbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 

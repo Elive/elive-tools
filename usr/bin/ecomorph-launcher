@@ -423,9 +423,8 @@ main(){
     fi
 
 
-
-
-    if ((has_glxinfo_ecomorph_compatibility)) ; then
+    # note: ecomp.sh is needed to detect if emodule-ecomorph is installed (not the lib but the module)
+    if ((has_glxinfo_ecomorph_compatibility)) && [[ -x "$(which ecomorph)" ]] && [[ "$( which ecomp.sh )" ]] ; then
         if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer and sometimes will be faster. You can deactivate them later disabling the Ecomorph module." )" ; then
             #Some slow computers can also have the desktop slower.
 

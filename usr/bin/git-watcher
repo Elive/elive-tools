@@ -1404,7 +1404,7 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick -Xpatience -x -s '$commit_id'"
     if command git cherry-pick -Xpatience -x -s "$commit_id" ; then
-        command git show
+        command git --no-pager show
         el_explain 0 "__Successfully applied!__"
         #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
 
@@ -1809,7 +1809,7 @@ options_main_interact(){
             fi
 
             # edit files
-            $EDITOR $(git show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )
+            $EDITOR $(git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )
 
 
             # show back the diff, we always want to see it again

@@ -663,6 +663,7 @@ el_umount(){
         sync
 
         unset device mountpoint is_device is_mountpoint
+
         if [[ ! -b "$arg" ]] && [[ ! -d "$arg" ]] && [[ ! -L "$arg" ]] && [[ ! -e "$arg" ]] ; then
             el_warning "What $arg is ? skipping.."
         fi
@@ -719,102 +720,100 @@ el_umount(){
         fi
 
 
-        # try to umount
-        if ((is_mountpoint)) ; then
-            if [[ "$EL_DEBUG" -ge 3 ]] ; then
-                command umount "$mountpoint" || command umount "$device"
-            else
-                command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
-            fi
+        ## try to umount
+        #if ((is_mountpoint)) ; then
+            #if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                #command umount "$mountpoint" || command umount "$device"
+            #else
+                #command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+            #fi
 
-            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
-            else
-                # special dir created by this own tool, we don't need it anymore
-                for dir in  /mnt/*_elive
-                do
-                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
-                        rmdir "$dir"
-                    fi
-                done
+            #if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+                #el_debug "unable to umount (umount) $dev for ${mountpoint}, trying with another alternative..."
+            #else
+                ## special dir created by this own tool, we don't need it anymore
+                #for dir in  /mnt/*_elive
+                #do
+                    #if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
+                        #rmdir "$dir"
+                    #fi
+                #done
 
-                el_debug "Umounted: $@"
-                return 0
-            fi
-        fi
+                #el_debug "Umounted: $@"
+                #return 0
+            #fi
+        #fi
 
 
         # try with gvfs-mount first, since seems like it is unable to umount with the other ones
-        if ((is_device)) ; then
-            if [[ "$EL_DEBUG" -ge 3 ]] ; then
-                gvfs-mount -u "$mountpoint"
-            else
-                gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
-            fi
-            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
-            else
-                # special dir created by this own tool, we don't need it anymore
-                for dir in  /mnt/*_elive
-                do
-                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
-                        rmdir "$dir"
-                    fi
-                done
+        #if ((is_device)) ; then
 
-                el_debug "Umounted: $@"
-                return 0
-            fi
+        gvfs_umount "$mountpoint"
 
-            # try with udisks maybe
-            if ((is_wheezy)) ; then
-                if [[ "$EL_DEBUG" -ge 3 ]] ; then
-                    udisks --unmount "$mountpoint"
-                else
-                    udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+            el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+        else
+            # special dir created by this own tool, we don't need it anymore
+            for dir in  /mnt/*_elive
+            do
+                if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
+                    rmdir "$dir"
                 fi
-            else
-                # note: atm this seems like to not work
-                udisksctl unmount -p "$mountpoint" # 1>/dev/null 2>&1
-            fi
+            done
 
-
-            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
-            else
-                # special dir created by this own tool, we don't need it anymore
-                for dir in  /mnt/*_elive
-                do
-                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
-                        rmdir "$dir"
-                    fi
-                done
-
-                el_debug "Umounted: $@"
-                return 0
-            fi
-
-
-            if [[ "$EL_DEBUG" -ge 3 ]] ; then
-                command umount "$mountpoint" || command umount "$device"
-            else
-                command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
-            fi
-            if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
-            else
-                # special dir created by this own tool, we don't need it anymore
-                for dir in  /mnt/*_elive
-                do
-                    if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
-                        rmdir "$dir"
-                    fi
-                done
-
-                el_debug "Umounted: $@"
-                return 0
-            fi
+            el_debug "Umounted: $@"
+            return 0
         fi
+
+        # try with udisks maybe
+        if ((is_wheezy)) ; then
+            if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                udisks --unmount "$mountpoint"
+            else
+                udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+            fi
+        else
+            # note: atm this seems like to not work
+            udisksctl unmount -p "$mountpoint" # 1>/dev/null 2>&1
+        fi
+
+
+        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+            el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
+        else
+            # special dir created by this own tool, we don't need it anymore
+            for dir in  /mnt/*_elive
+            do
+                if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
+                    rmdir "$dir"
+                fi
+            done
+
+            el_debug "Umounted: $@"
+            return 0
+        fi
+
+
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            command umount "$mountpoint" || command umount "$device"
+        else
+            command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+        fi
+        if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
+            el_debug "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
+        else
+            # special dir created by this own tool, we don't need it anymore
+            for dir in  /mnt/*_elive
+            do
+                if [[ -d "$dir" ]] && ! check_is_mounted "$dir" 1>/dev/null ; then
+                    rmdir "$dir"
+                fi
+            done
+
+            el_debug "Umounted: $@"
+            return 0
+        fi
+
 
         # try to know why we cannot umount it
         el_processes_using_mountpoint "$mountpoint"
@@ -825,7 +824,8 @@ el_umount(){
             el_processes_using_mountpoint "$mountpoint" kill 1>/dev/null
             el_processes_using_mountpoint "$mountpoint" kill 1>/dev/null
 
-            gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
+            gvfs_umount "$mountpoint"
+
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
                 el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
             else
@@ -1117,6 +1117,26 @@ udisks_mount(){
             timeout 60 udisksctl mount -b "$dev" "$@"
         else
             timeout 60 udisksctl mount -b "$dev" "$@" 1>/dev/null
+        fi
+    fi
+}
+
+gvfs_umount(){
+    local mountpoint
+    mountpoint="$1"
+    shift
+
+    if ((is_wheezy)) ; then
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            gvfs-mount -u "$mountpoint"
+        else
+            gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
+        fi
+    else
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            gio mount -u "$mountpoint"
+        else
+            gio mount -u "$mountpoint" 2>/dev/null 1>&2
         fi
     fi
 }

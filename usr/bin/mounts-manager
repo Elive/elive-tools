@@ -8,6 +8,8 @@ if [[ "$PATH" != *"/usr/sbin"* ]] ; then
 fi
 
 
+
+
 #===  FUNCTION  ================================================================
 #          NAME:  restart_daemons
 #   DESCRIPTION:  Restarts udisks and polkit when we found an error trying to use the disk
@@ -23,16 +25,20 @@ restart_daemons(){
     # restart daemons {{{
     if [[ "$UID" = 0 ]] ; then
         killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
+        killall udisksd 2>/dev/null || killall -9 udisksd 2>/dev/null || true
         killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
 
         { /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        { /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         { /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
     else
         if el_check_sudo_automated ; then
-            sudo killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
-            sudo killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+            sudo killall udisks-daemon 2>/dev/null || sudo killall -9 udisks-daemon 2>/dev/null || true
+            sudo killall udisksd 2>/dev/null || sudo killall -9 udisksd 2>/dev/null || true
+            sudo killall polkitd 2>/dev/null || sudo killall -9 polkitd 2>/dev/null || true
 
             { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            { sudo /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
             { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
         else
             el_info "Is needed to restart some polkitd services, run again this tool from root"
@@ -43,11 +49,11 @@ restart_daemons(){
     sync
     sleep 1
 
-    if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         sleep 1
-        if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
             sleep 2
-            if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+            if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
                 sleep 5
             fi
         fi
@@ -418,7 +424,11 @@ get_mountpoint(){
 
     dev="$1"
     el_check_variables "dev"
-    el_dependencies_check "udisks"
+    if ((is_wheezy)) ; then
+        el_dependencies_check "udisks"
+    else
+        el_dependencies_check "udisksctl"
+    fi
 
     # }}}
 
@@ -441,13 +451,24 @@ get_mountpoint(){
     fi
 
 
-    mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    #mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     # we should never use LC_ALL because UTF-8 mountpoint names will break, but we need to grep for "mount paths:" so just use this option if we don't have other choice
-    if [[ -z "$mountpoint" ]] ; then
+    # update: EL_LC_EN points to en_US.UTF-8
+    #if [[ -z "$mountpoint" ]] ; then
+        #mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    #fi
+    if ((is_wheezy)) ; then
         mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    else
+        mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+        # dev state test
+        if [[ "$( echo "$mountpoint" | tr ' ' '\n' | sed -e 's|^\s*||g' | wc -l )" -gt 1 ]] ; then
+            el_warning "multiple mountpoints found? from $(basename $0) (udisksctl info -b "$dev" | grep MountPoints: ):  $mountpoint"
+        fi
     fi
+
     read -r mountpoint <<< "$mountpoint"
-    mountpoint="$(readlink -f "$mountpoint" )"
+    mountpoint="$( readlink -f "$mountpoint" )"
 
     # not mounted ? mount it first
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -459,13 +480,20 @@ get_mountpoint(){
         if el_mount "$dev" 1>/dev/null ; then
 
             # get data again
-            mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
-            if [[ -z "$mountpoint" ]] ; then
+            if ((is_wheezy)) ; then
                 mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+            else
+                mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+                # dev state test
+                if [[ "$( echo "$mountpoint" | tr ' ' '\n' | sed -e 's|^\s*||g' | wc -l )" -gt 1 ]] ; then
+                    el_warning "multiple mountpoints found? from $(basename $0) (udisksctl info -b "$dev" | grep MountPoints: ):  $mountpoint"
+                fi
             fi
+
             # remove extra leading blank chars
             read -r mountpoint <<< "$mountpoint"
             mountpoint="$(readlink -f "$mountpoint" )"
+
             # umount it
             if [[ -n "$mountpoint" ]] ; then
                 el_umount "$mountpoint" 1>/dev/null
@@ -476,10 +504,10 @@ get_mountpoint(){
     # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example, or not-formatted (without uuid) partitions)
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
         # get the uuid
-        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        if [[ -z "$uuid" ]] ; then
+        #uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #if [[ -z "$uuid" ]] ; then
             uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        fi
+        #fi
 
         if [[ -z "$uuid" ]] ; then
             #el_debug "Unable to mount $dev because has not an uuid"
@@ -487,10 +515,10 @@ get_mountpoint(){
         fi
 
         # get FS
-        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        if [[ -z "$filesystem" ]] ; then
+        #filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #if [[ -z "$filesystem" ]] ; then
             filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        fi
+        #fi
 
         # ignore unmountable partitions:
         if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
@@ -544,14 +572,14 @@ check_is_mounted(){
             return 1
         fi
         # redirect to the correct device if we found it easly
-        if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
-            dev="${dev##*/}"
+        if file -s "$device" | grep -qs "sticky LUKS encrypted" ; then
+            device="${device##*/}"
 
-            if [[ -b "/dev/mapper/${dev}" ]] ; then
-                dev="/dev/mapper/${dev}"
+            if [[ -b "/dev/mapper/${device}" ]] ; then
+                device="/dev/mapper/${device}"
             else
-                if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
-                    dev="/dev/mapper/${dev}_crypt"
+                if [[ -b "/dev/mapper/${device}_crypt" ]] ; then
+                    device="/dev/mapper/${device}_crypt"
                 fi
             fi
         fi
@@ -565,7 +593,7 @@ check_is_mounted(){
     if ((is_mountpoint)) ; then
         #if LC_ALL="$EL_LC_EN" grep -qs " ${mountpoint} " /proc/mounts ; then
         # this should be a more reliable way, more regex
-        if LC_ALL="$EL_LC_EN" mount | grep -qs "on ${mountpoint} type" ; then
+        if LC_ALL="$EL_LC_EN" mount | grep -qs " on ${mountpoint} type " ; then
 
             el_debug "Mountpoint $mountpoint mounted"
             echo "Mounted"
@@ -577,28 +605,44 @@ check_is_mounted(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
-        restart_daemons
-    fi
 
     if ((is_device)) ; then
-        # mounted
-        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
-            el_debug "Device $device mounted"
-            echo "Mounted"
-            return 0
-        fi
-        # not mounted
-        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" | grep -qs "is mounted:.*0" ; then
-            el_debug "Device $device not mounted"
-            echo "Not mounted"
+
+        check_device "$device"
+
+        if ((is_wheezy)) ; then
+            # mounted
+            if LC_ALL="$EL_LC_EN" udisks --show-info "$device" | grep -qs "is mounted:.*1" ; then
+                el_debug "Device $device mounted"
+                echo "Mounted"
+                return 0
+            fi
+            # not mounted
+            if LC_ALL="$EL_LC_EN" udisks --show-info "$device" | grep -qs "is mounted:.*0" ; then
+                el_debug "Device $device not mounted"
+                echo "Not mounted"
+                return 1
+            fi
+
+            # nothing? return 1
+
+            el_warning "unable to determine if $device is mounted or not, assuming is not"
             return 1
+        else
+            mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+            # dev state test
+            if [[ "$( echo "$mountpoint" | tr ' ' '\n' | sed -e 's|^\s*||g' | wc -l )" -gt 1 ]] ; then
+                el_warning "multiple mountpoints found? from $(basename $0) (udisksctl info -b "$device" | grep MountPoints: ):  $mountpoint"
+            fi
+
+            if [[ -n "$mountpoint" ]] ; then
+                echo "Mounted"
+                return 0
+            else
+                echo "Not mounted"
+                return 1
+            fi
         fi
-
-        # nothing? return 1
-
-        el_warning "unable to determine if $device is mounted or not, assuming is not"
-        return 1
     fi
 
 }
@@ -723,13 +767,20 @@ el_umount(){
             fi
 
             # try with udisks maybe
-            if [[ "$EL_DEBUG" -ge 3 ]] ; then
-                udisks --unmount "$mountpoint"
+            if ((is_wheezy)) ; then
+                if [[ "$EL_DEBUG" -ge 3 ]] ; then
+                    udisks --unmount "$mountpoint"
+                else
+                    udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+                fi
             else
-                udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+                # note: atm this seems like to not work
+                udisksctl unmount -p "$mountpoint" # 1>/dev/null 2>&1
             fi
+
+
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
+                el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -742,6 +793,7 @@ el_umount(){
                 el_debug "Umounted: $@"
                 return 0
             fi
+
 
             if [[ "$EL_DEBUG" -ge 3 ]] ; then
                 command umount "$mountpoint" || command umount "$device"
@@ -771,6 +823,7 @@ el_umount(){
         if ((is_forced)) ; then
             # kill all the children processes used on this mountpoint:
             el_processes_using_mountpoint "$mountpoint" kill 1>/dev/null
+            el_processes_using_mountpoint "$mountpoint" kill 1>/dev/null
 
             gvfs-mount -u "$mountpoint" 2>/dev/null 1>&2
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
@@ -789,9 +842,14 @@ el_umount(){
             fi
 
             # try with udisks maybe
-            udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+            if ((is_wheezy)) ; then
+                udisks --unmount "$mountpoint" 2>/dev/null 1>&2
+            else
+                udisksctl unmount -f -p "$mountpoint"
+            fi
+
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (udisks) $dev for ${mountpoint}, trying with umount..."
+                el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -884,7 +942,7 @@ el_mount(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         restart_daemons
     fi
 
@@ -924,12 +982,7 @@ el_mount(){
 
 
     # try to mount
-    if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$dev" "$@"
-    else
-        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    fi
-
+    udisks_mount "$dev" "$@"
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -942,11 +995,7 @@ el_mount(){
     refresh_partition_table "$dev"
 
     # try to mount
-    if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$dev" "$@"
-    else
-        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    fi
+    udisks_mount "$dev" "$@"
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -959,11 +1008,7 @@ el_mount(){
     refresh_partition_table "$dev"
 
     # try to mount
-    if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$dev" "$@"
-    else
-        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    fi
+    udisks_mount "$dev" "$@"
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -977,11 +1022,7 @@ el_mount(){
     #fsck -a "$dev"
 
     # try to mount
-    if [[ "$EL_DEBUG" -ge 3 ]] ; then
-        timeout 60 udisks --mount "$dev" "$@"
-    else
-        timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
-    fi
+    udisks_mount "$dev" "$@"
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -1036,7 +1077,7 @@ el_mount(){
 
         # hibernated NTFS requires hack
         # check if mounted
-        if ! check_is_mounted "$dev" 2>/dev/null 1>&2 && [[ "$filesystem" = ntfs ]] ; then
+        if ! check_is_mounted "$dev" 2>/dev/null 1>&2 && [[ "$filesystem" = "ntfs" ]] ; then
             mount -t ntfs-3g -o remove_hiberfile "$dev" "$target"
         fi
 
@@ -1051,6 +1092,50 @@ el_mount(){
         el_error "unable to mount $dev, try the same command from root"
     fi
 }
+
+udisks_dump(){
+    if ((is_wheezy)) ; then
+        udisks --dump
+    else
+        udisksctl dump
+    fi
+}
+
+udisks_mount(){
+    local dev
+    dev="$1"
+    shift
+
+    if ((is_wheezy)) ; then
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            timeout 60 udisks --mount "$dev" "$@"
+        else
+            timeout 60 udisks --mount "$dev" "$@" 1>/dev/null
+        fi
+    else
+        if [[ "$EL_DEBUG" -ge 3 ]] ; then
+            timeout 60 udisksctl mount "$dev" "$@"
+        else
+            timeout 60 udisksctl mount "$dev" "$@" 1>/dev/null
+        fi
+    fi
+}
+
+check_device(){
+    local device
+    device="$1"
+
+    if ((is_wheezy)) ; then
+        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+            restart_daemons
+        fi
+    else
+        if ! udisksctl info -b "$device" 1>/dev/null 2>&1 ; then
+            restart_daemons
+        fi
+    fi
+}
+
 
 
 main(){
@@ -1079,10 +1164,21 @@ main(){
     fi
 
     # checks {{{
-    if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    # wheezy uses udisks, but newer (buster?) uses udisks2 which is different
+    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
+        if [[ -x "$(which udisks)" ]] ; then
+            is_wheezy=1
+        fi
+    else
+        if ! [[ -x "$(which udisksctl)" ]] && [[ -x "$(which udisks)" ]] ; then
+            is_wheezy=1
+        fi
+    fi
+
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
         restart_daemons
-        if LC_ALL="$EL_LC_EN" udisks --dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
-            el_array_member_add "Command 'udisks --dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
+        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+            el_array_member_add "Function 'udisks_dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi
     fi
     # - checks }}}

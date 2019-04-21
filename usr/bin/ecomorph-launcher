@@ -428,6 +428,11 @@ main(){
         if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer and sometimes will be faster. You can deactivate them later disabling the Ecomorph module." )" ; then
             #Some slow computers can also have the desktop slower.
 
+            if ! grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
+                zenity --error --text="$( eval_gettext "Woops, unfortunately this feature not works yet on the new versions, you can collaborate by helping to solve the small issue that it has, you can found more info about it in the Elive forums." )"
+                exit
+            fi
+
             local message_warn_user
             message_warn_user="$( printf "$( eval_gettext "Note: If your desktop feels slower or shows any strange behaviour, simply disable the Ecomorph module. You can also change the type of effects in the Ecomorph preferences." )" "" )"
 

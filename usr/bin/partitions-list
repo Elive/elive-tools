@@ -193,6 +193,12 @@ main(){
         fi
     fi
 
+    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
+        is_wheezy=1
+        sfdisk_print_id="--print-id"
+    else
+        sfdisk_print_id="--part-id"
+    fi
 
     # }}}
 
@@ -628,36 +634,36 @@ get_filesystem_file(){
 get_filesystem_id(){
     local ret
     if [[ "$1" = /dev/nvme* ]] ; then
-        ret="$(sfdisk --print-id $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
+        ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
         if [[ -z "$ret" ]] ; then
-            ret="$(sfdisk --print-id $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
         fi
     else
         if [[ "$1" = /dev/mmcblk* ]] ; then
-            ret="$(sfdisk --print-id $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
-                ret="$(sfdisk --print-id $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
             fi
         else
-            ret="$(sfdisk --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
         fi
     fi
 
     # force mode
     if [[ -z "$ret" ]] ; then
         if [[ "$1" = /dev/nvme* ]] ; then
-            ret="$(sfdisk --force --print-id $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
-                ret="$(sfdisk --force --print-id $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
             fi
         else
             if [[ "$1" = /dev/mmcblk* ]] ; then
-                ret="$(sfdisk --force --print-id $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
                 if [[ -z "$ret" ]] ; then
-                    ret="$(sfdisk --force --print-id $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                    ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
                 fi
             else
-                ret="$(sfdisk --force --print-id $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
             fi
         fi
     fi

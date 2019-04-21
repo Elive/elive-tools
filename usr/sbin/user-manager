@@ -211,6 +211,11 @@ adduserelive(){
     #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
     #su -c "/usr/share/user-manager/hooks/newuser-dynamic.sh" "$username"
 
+    # add a lightdm icon reference for the username for its login
+    mkdir -p /var/lib/AccountsService/users
+    echo -e "[User]\nIcon=/usr/share/icons/gnome/256x256/apps/logo-elive.png" > "/var/lib/AccountsService/users/$username"
+
+
     messagedone
 }
 

@@ -2843,45 +2843,50 @@ el_get_machine_id(){
 
     # }}}
 
+    # get system uuid
+    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+        machine_id="$( dmidecode -s system-uuid )"
+        read -r machine_id <<< "$machine_id"
+        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+            unset machine_id
+        else
+            machine_id="systemuuid${machine_id}"
+        fi
+    fi
+
     # get board serial number
-    machine_id="$( cat /sys/class/dmi/id/board_serial )"
-    read -r machine_id <<< "$machine_id"
-    if [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        unset machine_id
-    else
-        machine_id="boardserial${machine_id}"
+    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+        machine_id="$( cat /sys/class/dmi/id/board_serial )"
+        read -r machine_id <<< "$machine_id"
+        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+            unset machine_id
+        else
+            machine_id="boardserial${machine_id}"
+        fi
     fi
 
     # get system serial number
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] ; then
+    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
         machine_id="$( dmidecode -s system-serial-number )"
-    fi
-    if [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        unset machine_id
-    else
-        machine_id="systemserialnumber${machine_id}"
-    fi
-
-    # get system uuid
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] ; then
-        machine_id="$( dmidecode -s system-uuid )"
-    fi
-    if [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        unset machine_id
-    else
-        machine_id="systemuuid${machine_id}"
+        read -r machine_id <<< "$machine_id"
+        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+            unset machine_id
+        else
+            machine_id="systemserialnumber${machine_id}"
+        fi
     fi
 
     # get product name
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] ; then
+    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
         machine_id="$( dmidecode -s system-product-name )"
-    fi
-    if [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        unset machine_id
+        read -r machine_id <<< "$machine_id"
+        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
+            unset machine_id
+        fi
     fi
 
     # pack a combination of identifiers to make sure we have a machine id
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] ; then
+    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
         machine_id="$( dmidecode -s bios-vendor )$machine_id"
         machine_id="$( dmidecode -s bios-version )$machine_id"
         machine_id="$( dmidecode -s system-manufacturer )$machine_id"

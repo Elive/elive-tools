@@ -326,10 +326,6 @@ autologinconf(){
 
     username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically login with." )" || echo cancel )"
 
-    if ! grep -qsE "^(#)?autologin-user=" /etc/lightdm/lightdm.conf ; then
-        echo no
-    fi
-
     if [[ "$username" = "cancel" ]] ; then
         sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf"
         $guitool --info --text="$( eval_gettext "Autologin disabled" )" || true

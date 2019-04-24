@@ -149,12 +149,23 @@ chroot_layers_mount(){
     fi
 
     # selinux
-    if [[ -e "/selinux/enforce" ]] && [[ "$(cat /selinux/enforce)" = "1" ]] ; then
-        mkdir -p "$dir/selinux"
-        if ((is_mode_bind)) ; then
-            mount --bind "/selinux" "${dir}/selinux"
-        else
-            mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+    if ((is_wheezy)) ; then
+        if [[ -e "/selinux/enforce" ]] && [[ "$(cat /selinux/enforce)" = "1" ]] ; then
+            mkdir -p "$dir/selinux"
+            if ((is_mode_bind)) ; then
+                mount --bind "/selinux" "${dir}/selinux"
+            else
+                mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+            fi
+        fi
+    else
+        if [[ -e "/sys/fs/selinux/enforce" ]] ; then
+            mkdir -p "$dir/sys/fs/selinux"
+            if ((is_mode_bind)) ; then
+                mount --bind "/sys/fs/selinux" "${dir}/sys/fs/selinux"
+            else
+                mount selinuxfs-$id -t selinuxfs "${dir}/sys/fs/selinux" || true
+            fi
         fi
     fi
 
@@ -166,17 +177,29 @@ chroot_layers_mount(){
         mount sysfs-$id -t sysfs "${dir}/sys" || true
     fi
 
-    # dbus
-    if ((is_mode_bind)) ; then
-        mkdir -p "$dir/run/dbus"
-        mount --bind "/run/dbus" "${dir}/run/dbus"
-        # enable access to graphical system too
-        xhost local:localhost 1>/dev/null
-    fi
-
     # debian chroot mark
     mkdir -p "$dir/etc"
+    if [[ -e "$dir/etc/debian_chroot" ]] ; then
+        mv "$dir/etc/debian_chroot" "$dir/etc/debian_chroot.orig"
+    fi
     echo "live" > "${dir}/etc/debian_chroot"
+
+    # dbus / run
+    if ((is_wheezy)) ; then
+        if ((is_mode_bind)) ; then
+            mkdir -p "$dir/run/dbus"
+            mount --bind "/run/dbus" "${dir}/run/dbus"
+            # enable access to graphical system too
+            xhost local:localhost 1>/dev/null
+        fi
+    else
+        if ((is_mode_bind)) ; then
+            mkdir -p "$dir/run"
+            mount --bind "/run" "${dir}/run"
+            # enable access to graphical system too
+            xhost local:localhost 1>/dev/null
+        fi
+    fi
 
     # custom start-stop-daemon
     if [[ -e "$dir/sbin/start-stop-daemon" ]] ; then
@@ -192,8 +215,9 @@ chroot_layers_mount(){
     # flash-kernel
     if [[ -e "$dir/usr/sbin/flash-kernel" ]] ; then
         chroot "$dir" dpkg-divert --rename --quiet --add /usr/sbin/flash-kernel
-        ln -s /bin/true "${dir}/usr/sbin/flash-kernel"
+        ln -fs /bin/true "${dir}/usr/sbin/flash-kernel"
     fi
+
 
     # sysv-rc
     mkdir -p "$dir/usr/sbin" 2>/dev/null
@@ -220,13 +244,11 @@ chroot_layers_mount(){
 
     # resolv.conf
     mkdir -p "$dir/etc"
-    if [[ -e "$dir/etc/resolv.conf" ]] ; then
+    if [[ -e "$dir/etc/resolv.conf" ]] || [[ -L "$dir/etc/resolv.conf" ]] ; then
         mv "$dir/etc/resolv.conf" "$dir/etc/resolv.conf.orig"
-        : > "$dir/etc/resolv.conf"
-    elif [[ -L "$dir/etc/resolv.conf" ]] ; then
-        mv "$dir/etc/resolv.conf" "$dir/etc/resolv.conf.orig"
+        rm -f "$dir/etc/resolv.conf"
     fi
-    cp /etc/resolv.conf "$dir/etc/resolv.conf"
+    cp -f /etc/resolv.conf "$dir/etc/resolv.conf"
 
     # hostname
     mkdir -p "$dir/etc" "$dir/bin"
@@ -322,13 +344,25 @@ chroot_layers_umount(){
     fi
 
     # selinux
-    if ((is_mode_bind)) ; then
-        if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 ; then
-            umount "$dir/selinux"
+    if ((is_wheezy)) ; then
+        if ((is_mode_bind)) ; then
+            if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 ; then
+                umount "$dir/selinux"
+            fi
+        else
+            if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 || [[ -e "$dir/selinux/enforce" ]] ; then
+                umount "$dir/selinux"
+            fi
         fi
     else
-        if check_is_mounted "$dir/selinux" 2>/dev/null 1>&2 || [[ -e "$dir/selinux/enforce" ]] ; then
-            umount "$dir/selinux"
+        if ((is_mode_bind)) ; then
+            if check_is_mounted "$dir/sys/fs/selinux" 2>/dev/null 1>&2 ; then
+                umount "$dir/sys/fs/selinux"
+            fi
+        else
+            if check_is_mounted "$dir/sys/fs/selinux" 2>/dev/null 1>&2 || [[ -e "$dir/sys/fs/selinux/enforce" ]] ; then
+                umount "$dir/sys/fs/selinux"
+            fi
         fi
     fi
 
@@ -338,34 +372,50 @@ chroot_layers_umount(){
             umount "$dir/sys"
         fi
     else
-        if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 ; then
+        if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 || [[ -e "$dir/sys/class" ]] ; then
             umount "$dir/sys"
         fi
     fi
+
+    # debian chroot mark
+    if [[ -e "$dir/etc/debian_chroot.orig" ]] ; then
+        rm -f "${dir}/etc/debian_chroot"
+        mv "$dir/etc/debian_chroot.orig" "$dir/etc/debian_chroot"
+    else
+        rm -f "${dir}/etc/debian_chroot"
+    fi
+
     # dbus
-    if ((is_mode_bind)) ; then
-        if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
-            umount "$dir/run/dbus"
-            xhost -local:localhost 1>/dev/null
+    if ((is_wheezy)) ; then
+        if ((is_mode_bind)) ; then
+            if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
+                umount "$dir/run/dbus"
+                xhost -local:localhost 1>/dev/null
+            fi
+        fi
+    else
+        if ((is_mode_bind)) ; then
+            if check_is_mounted "$dir/run" 2>/dev/null 1>&2 ; then
+                umount "$dir/run"
+                xhost -local:localhost 1>/dev/null
+            fi
         fi
     fi
 
 
-    # debian chroot mark
-    rm -f "${dir}/etc/debian_chroot"
-
-    # flash-kernel
-    if [[ -e "$dir/usr/sbin/flash-kernel.distrib" ]] ; then
-        rm -f "${dir}/usr/sbin/flash-kernel"
-        chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/flash-kernel
-    fi
     # custom start-stop-daemon
     if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
         rm -f "${dir}/sbin/start-stop-daemon"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/start-stop-daemon
     fi
+    # flash-kernel
+    if [[ -e "$dir/usr/sbin/flash-kernel.distrib" ]] ; then
+        rm -f "${dir}/usr/sbin/flash-kernel"
+        chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/flash-kernel
+    fi
     # disable dpkg syncin
     rm -f "${dir}/etc/dpkg/dpkg.cfg.d/live-build"
+
 
     # sysv-rc
     if [[ -e "$dir/usr/sbin/policy-rc.d.distrib" ]] ; then
@@ -381,16 +431,16 @@ chroot_layers_umount(){
 
     # hosts file
     if [[ -f "$dir/etc/hosts.orig" ]] ; then
-        mv "$dir/etc/hosts.orig" "$dir/etc/hosts"
+        mv -f "$dir/etc/hosts.orig" "$dir/etc/hosts"
     else
-        : > "$dir/etc/hosts"
+        rm -f "$dir/etc/hosts"
     fi
 
     # resolv.conf
-    if [[ -f "$dir/etc/resolv.conf.orig" ]] ; then
-        mv "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf"
+    if [[ -e "$dir/etc/resolv.conf.orig" ]] || [[ -L "$dir/etc/resolv.conf.orig" ]] ; then
+        mv -f "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf"
     else
-        : > "$dir/etc/resolv.conf"
+        rm -f "$dir/etc/resolv.conf"
     fi
     if [[ -e "$dir/etc/resolv.conf.d" ]] ; then
         rm -f "$dir/etc/resolv.conf.d/original"

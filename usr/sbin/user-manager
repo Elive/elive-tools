@@ -330,7 +330,8 @@ autologinconf(){
         sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf"
         $guitool --info --text="$( eval_gettext "Autologin disabled" )" || true
     else
-        /usr/lib/*/lightdm/lightdm-set-defaults --autologin "${username}"
+        # enable autologin for user
+        sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$autologin_username|g" "/etc/lightdm/lightdm.conf"
 
         local message_autologin_set
         message_autologin_set="$( printf "$( eval_gettext "Autologin set to %s" )" "$username" )"

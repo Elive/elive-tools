@@ -130,7 +130,11 @@ chroot_layers_mount(){
         mount --bind "/dev" "${dir}/dev"
         mount --bind "/dev/pts" "${dir}/dev/pts"
     else
-        mount devpts-$id -t devpts "${dir}/dev/pts" || true
+        if ((is_wheezy)) ; then
+            mount devpts-$id -t devpts "${dir}/dev/pts" || true
+        else
+            mount devpts-$id -t devpts -o gid=5,mode=620 "${dir}/dev/pts" || true
+        fi
     fi
 
     # proc

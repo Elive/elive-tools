@@ -283,8 +283,9 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 #-------------------------------------------------------------------------------
 el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
     # pre {{{
-    local timeout count target
+    local timeout count target mode
     timeout="$1"
+    mode="$2"
     # note: this code contains commented lines used for debug (to simulate a full lag)
 
     # note: dns resolving can be very slow if we are for example using torrents
@@ -318,7 +319,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
         if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
             return 0
         fi
-        LC_ALL=C sleep 2
+        LC_ALL=C sleep 1
         #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
         if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
             return 0
@@ -327,6 +328,10 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
         #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
         if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
             return 0
+        fi
+        # exit if we need a fast test
+        if [[ "$mode" = "fast" ]] ; then
+            return 1
         fi
         LC_ALL=C sleep 3
         #if timeout 3 sleep 100000 2>/dev/null 1>&2 ; then
@@ -448,7 +453,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
     # do a ping check
-    if el_verify_internet_ping $timeout ; then
+    if el_verify_internet_ping $timeout $mode ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
         if [[ "${EL_DEBUG}" -gt "3" ]] ; then
             el_debug "connection to internet found at ping level"

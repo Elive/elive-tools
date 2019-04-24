@@ -203,7 +203,7 @@ chroot_layers_mount(){
 
     # custom start-stop-daemon
     if [[ -e "$dir/sbin/start-stop-daemon" ]] ; then
-        chroot "$dir" dpkg-divert --rename --quiet --add /sbin/start-stop-daemon
+        chroot "$dir" dpkg-divert --rename --quiet --add /sbin/start-stop-daemon  2>/dev/null
         echo -e "#!/bin/sh\nexit 0" > "${dir}/sbin/start-stop-daemon"
         chmod 755 "${dir}/sbin/start-stop-daemon"
     fi
@@ -257,7 +257,7 @@ chroot_layers_mount(){
     fi
     echo "localhost.localdomain" > "$dir/etc/hostname"
     if [[ -x "$dir/usr/bin/dpkg-divert" ]] ; then
-        chroot "$dir" dpkg-divert --rename --quiet --add /bin/hostname
+        chroot "$dir" dpkg-divert --rename --quiet --add /bin/hostname  2>/dev/null
         echo -e "#!/bin/sh\necho 'localhost.localdomain'" > "$dir/bin/hostname"
         chmod 755 "$dir/bin/hostname"
     fi

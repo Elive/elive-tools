@@ -249,8 +249,8 @@ chroot_layers_mount(){
 
     # hosts file
     mkdir -p "$dir/etc"
-    if [[ -f "$dir/etc/hosts" ]] ; then
-        mv "$dir/etc/hosts" "$dir/etc/hosts.orig"
+    if [[ -e "$dir/etc/hosts" ]] || [[ -L "$dir/etc/hosts" ]] ; then
+        mv -f "$dir/etc/hosts" "$dir/etc/hosts.orig"
     fi
     echo -e "127.0.0.1\tlocalhost localhost.localdomain\n127.0.1.1\tdebian" > "$dir/etc/hosts"
     cat /etc/hosts >> "$dir/etc/hosts"
@@ -450,15 +450,11 @@ chroot_layers_umount(){
     # hosts file
     if [[ -f "$dir/etc/hosts.orig" ]] ; then
         mv -f "$dir/etc/hosts.orig" "$dir/etc/hosts"
-    else
-        rm -f "$dir/etc/hosts"
     fi
 
     # resolv.conf
     if [[ -e "$dir/etc/resolv.conf.orig" ]] || [[ -L "$dir/etc/resolv.conf.orig" ]] ; then
         mv -f "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf"
-    else
-        rm -f "$dir/etc/resolv.conf"
     fi
     if [[ -e "$dir/etc/resolv.conf.d" ]] ; then
         rm -f "$dir/etc/resolv.conf.d/original"

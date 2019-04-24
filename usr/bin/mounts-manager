@@ -184,20 +184,33 @@ chroot_layers_mount(){
     fi
     echo "live" > "${dir}/etc/debian_chroot"
 
-    # dbus / run
-    if ((is_wheezy)) ; then
-        if ((is_mode_bind)) ; then
+    # /run:  dbus, lvm
+    if ((is_mode_bind)) ; then
+        if [[ -d "/run/dbus" ]] ; then
             mkdir -p "$dir/run/dbus"
             mount --bind "/run/dbus" "${dir}/run/dbus"
             # enable access to graphical system too
             xhost local:localhost 1>/dev/null
         fi
-    else
-        if ((is_mode_bind)) ; then
-            mkdir -p "$dir/run"
-            mount --bind "/run" "${dir}/run"
-            # enable access to graphical system too
-            xhost local:localhost 1>/dev/null
+        if [[ -d "/run/lvm" ]] ; then
+            mkdir -p "$dir/run/lvm"
+            mount --bind "/run/lvm" "${dir}/run/lvm"
+        fi
+        if [[ -d "/run/cryptsetup" ]] ; then
+            mkdir -p "$dir/run/cryptsetup"
+            mount --bind "/run/cryptsetup" "${dir}/run/cryptsetup"
+        fi
+        if [[ -d "/run/blkid" ]] ; then
+            mkdir -p "$dir/run/blkid"
+            mount --bind "/run/blkid" "${dir}/run/blkid"
+        fi
+        if [[ -d "/run/udev" ]] ; then
+            mkdir -p "$dir/run/udev"
+            mount --bind "/run/udev" "${dir}/run/udev"
+        fi
+        if [[ -d "/run/udisks2" ]] ; then
+            mkdir -p "$dir/run/udisks2"
+            mount --bind "/run/udisks2" "${dir}/run/udisks2"
         fi
     fi
 
@@ -386,22 +399,27 @@ chroot_layers_umount(){
     fi
 
     # dbus
-    if ((is_wheezy)) ; then
-        if ((is_mode_bind)) ; then
-            if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
-                umount "$dir/run/dbus"
-                xhost -local:localhost 1>/dev/null
-            fi
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/dbus"
+            xhost -local:localhost 1>/dev/null
         fi
-    else
-        if ((is_mode_bind)) ; then
-            if check_is_mounted "$dir/run" 2>/dev/null 1>&2 ; then
-                umount "$dir/run"
-                xhost -local:localhost 1>/dev/null
-            fi
+        if check_is_mounted "$dir/run/lvm" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/lvm"
+        fi
+        if check_is_mounted "$dir/run/cryptsetup" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/cryptsetup"
+        fi
+        if check_is_mounted "$dir/run/blkid" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/blkid"
+        fi
+        if check_is_mounted "$dir/run/udev" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/udev"
+        fi
+        if check_is_mounted "$dir/run/udisks2" 2>/dev/null 1>&2 ; then
+            umount "$dir/run/udisks2"
         fi
     fi
-
 
     # custom start-stop-daemon
     if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
@@ -640,11 +658,17 @@ check_is_mounted(){
     else
         is_mountpoint=1
         mountpoint="${arg%/}"
-        mountpoint="$(readlink -f "$mountpoint" )"
+        mountpoint="$(readlink -f "$mountpoint" 2>/dev/null )"
     fi
 
 
     if ((is_mountpoint)) ; then
+
+        # nothing is mounted on the mountpoint if mountpoint is not a dir (or not exist at all)
+        if ! [[ -d "$mountpoint" ]] ; then
+            return 1
+        fi
+
         #if LC_ALL="$EL_LC_EN" grep -qs " ${mountpoint} " /proc/mounts ; then
         # this should be a more reliable way, more regex
         if LC_ALL="$EL_LC_EN" mount | grep -qs " on ${mountpoint} type " ; then

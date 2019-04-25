@@ -429,7 +429,9 @@ main(){
             #Some slow computers can also have the desktop slower.
 
             if ! grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
-                zenity --error --text="$( eval_gettext "Woops, unfortunately this feature not works yet on the new versions, you can collaborate by helping to solve the small issue that it has, you can found more info about it in the Elive forums." )"
+                if zenity --question --text="$( eval_gettext "This feature is not yet working on the new versions, we have an issue with library linking in the compilation. But you can help make it working if you know C programming or Makefiles compiling. Do you want to help us make it working?" )" ; then
+                    web-launcher "https://forum.elivelinux.org/t/ecomorph-issue-to-include-it-in-newer-versions/1000"
+                fi
                 exit
             fi
 

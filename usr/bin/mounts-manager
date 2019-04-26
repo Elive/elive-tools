@@ -448,7 +448,7 @@ chroot_layers_umount(){
     fi
 
     # hosts file
-    if [[ -f "$dir/etc/hosts.orig" ]] ; then
+    if [[ -e "$dir/etc/hosts.orig" ]] ; then
         mv -f "$dir/etc/hosts.orig" "$dir/etc/hosts"
     fi
 

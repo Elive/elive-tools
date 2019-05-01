@@ -175,9 +175,6 @@ main(){
 
     # }}}
 
-    # load configurations
-    el_config_get
-
     while getopts ":drswphq:" opt; do
         case "$opt" in
             #a)

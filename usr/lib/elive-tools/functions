@@ -2725,6 +2725,10 @@ el_config_save(){
         return
     fi
 
+    if ! [[ "$entry" = "conf_"* ]] ; then
+        el_warning "variables to save should be prepended as conf_*, this will ensure that you know that is a conf variable and to NEVER set them as a local variable in your code, otherwise will not work since bash 5.0"
+    fi
+
     # }}}
 
     local tmp_conf_f

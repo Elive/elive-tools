@@ -2674,6 +2674,7 @@ el_request_donation(){
 #                 to force conf file: prepend the variable SOURCE ($0) to the function call
 #       RETURNS:  sources the file configuration, so it gets the variables
 #          NOTE:  this tool cannot work with array variables
+#          NOTE:  NEVER set a variable as "local" in your functions or it will be set back to local (so, not fetching any conf), since bash 5.0
 #===============================================================================
 el_config_get(){
     # pre {{{

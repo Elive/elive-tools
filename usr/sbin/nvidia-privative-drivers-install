@@ -646,9 +646,9 @@ install_driver(){
     if ((is_mode_auto)) ; then
         ret=0
     else
-        dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+        dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Force DPI defaults?" \
-            --yesno "$message_dpi_force" --defaultno \
+            --yesno "$message_dpi_force" \
             0 0
         ret="$?"
     fi

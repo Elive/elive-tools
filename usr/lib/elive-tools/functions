@@ -2092,7 +2092,7 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack counter_reports_sent tmp_conf_f limit_reports_amount limit_reports_seconds buf
+    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack tmp_conf_f limit_reports_amount limit_reports_seconds buf
     el_security_function_loop || return
     # max 5 reports per tool
     limit_reports_amount=5
@@ -2146,7 +2146,7 @@ el_report_to_elive(){
 
 
     # accept a max number of reports to send {{{
-    counter_reports_sent=0
+    conf_counter_reports_sent=0
 
     el_config_get
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
@@ -2155,11 +2155,11 @@ el_report_to_elive(){
     if [[ -s "$tmp_conf_f" ]] ; then
         buf="$( echo "$(date +%s) - $( stat -c %Y "$tmp_conf_f" 2>/dev/null )" | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
         if [[ -n "$buf" ]] && [[ "$buf" -gt "$limit_reports_seconds" ]] ; then
-            counter_reports_sent=0
-            el_config_save "counter_reports_sent"
+            conf_counter_reports_sent=0
+            el_config_save "conf_counter_reports_sent"
         fi
 
-        if [[ "$counter_reports_sent" -ge "$limit_reports_amount" ]] ; then
+        if [[ "$conf_counter_reports_sent" -ge "$limit_reports_amount" ]] ; then
             return
         fi
     fi
@@ -2276,8 +2276,8 @@ el_report_to_elive(){
             fi
         fi
 
-        counter_reports_sent="$(( $counter_reports_sent + 1 ))"
-        el_config_save "counter_reports_sent"
+        conf_counter_reports_sent="$(( $conf_counter_reports_sent + 1 ))"
+        el_config_save "conf_counter_reports_sent"
     fi
     # }}}
 }

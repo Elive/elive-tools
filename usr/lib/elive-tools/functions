@@ -2695,6 +2695,7 @@ el_config_get(){
 
     # }}}
     if [[ -s "$tmp_conf_f" ]] ; then
+        # Warning: never use "local" variables in your function for the ones that you are going to get
         source "$tmp_conf_f" 1>/dev/null 2>&1
     fi
 }
@@ -2764,6 +2765,7 @@ el_config_save(){
     fi
 
     # append configuration, and save the variable as global so it can work outside this function
+    # Warning: never use "local" variables in your function for the ones that you are going to save
     declare -p "$@" | sed -e 's|declare\s--|declare -|g' -e 's|declare -|declare -g|g' | awk '{$2 = $2" --"; print $0}' >> "$tmp_conf_f"
 }
 

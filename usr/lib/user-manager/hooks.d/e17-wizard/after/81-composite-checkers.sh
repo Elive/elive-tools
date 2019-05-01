@@ -120,7 +120,7 @@ main(){
                 # intel card for wheezy?
                 # update: not needed anymore
                 #if lspci | grep VGA | grep -qs "Intel" ; then
-                #if grep debian_version /etc/elive-version | grep -i wheezy ; then
+                #if grep debian_version /etc/elive-version | grep -i wheXXXXezy ; then
                 #local message_intel_buggy
                 #message_intel_buggy="$( printf "$( eval_g
                 #ettext "Note Intel cards: There's a known problem with the blanking (screensaver) powersavign feature on this version of the Intel drivers, which turns your desktop unrensponsive, if you really want automatic screen blanking you should use instead the software-mode of composite, but if you don't need it, just don't turn it on and everything else is fine." )" )"

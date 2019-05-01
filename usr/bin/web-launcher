@@ -25,12 +25,10 @@ verify_version_at_least(){
 }
 main(){
     # pre {{{
-    local url debian_version elive_version is_wheezy browsers arg
-
-    debian_version="$( cat "/etc/debian_version" )"
+    local url elive_version is_wheezy browsers arg
 
     # wheezy
-    if [[ "$debian_version" = 7.* ]] ; then
+    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
         is_wheezy=1
     fi
 

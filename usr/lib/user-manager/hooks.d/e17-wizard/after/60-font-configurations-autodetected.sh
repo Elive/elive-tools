@@ -80,6 +80,8 @@ main(){
         fi
     fi
 
+    # TODO: add terminology support (12 default, 10 for medium-small, since buster)
+
     # save confs
     ERM -save
 

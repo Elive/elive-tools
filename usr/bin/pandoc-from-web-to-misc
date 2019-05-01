@@ -40,7 +40,10 @@ main(){
         exit 1
     fi
 
-    el_dependencies_check "pandoc,wget,sed"
+    if ! el_dependencies_check pandoc ; then
+        el_dependencies_install pandoc
+    fi
+    el_dependencies_check "wget,sed"
 
     if [[ "${url}" = "https"* ]] ; then
         http="https"

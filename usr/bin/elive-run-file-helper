@@ -10,10 +10,6 @@ not_supported(){
     local mime
     mime="$1"
 
-    local message_notsupported
-    message_notsupported="$( printf "$( eval_gettext "The mimetype %s is not implemented. You can report this with an example of how this file should be run to the Elive BTS in order to have it running for you and everybody." )" "$mime" )"
-
-    #zenity --info --text="$message_notsupported"
     el_warning "mimetype '$mime' not implemented"
 }
 
@@ -236,7 +232,10 @@ main(){
                 run_edje "$file"
                 ;;
             *)
-                not_supported "$mime"
+                # already supported by default list (they just works using thunar), tested with starting by application/
+                if ! echo "$mime" | grep -qsE "/(x-debian-package)$" ; then
+                    not_supported "$mime"
+                fi
                 # run a default launcher!
                 if [[ -x "/usr/bin/thunar" ]] ; then
                     thunar "$file"

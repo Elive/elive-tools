@@ -34,7 +34,7 @@ temp_error="/tmp/$(basename $0)-${USER}-$$"
 el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},useradd,${USERDEL}"
 
 ###########################################################################
-errorexit(){
+exit_error(){
     $guitool --error --text="Error, $( cat "${temp_error}" )"
 
     rm -f "${temp_error}" 2>/dev/null
@@ -42,37 +42,15 @@ errorexit(){
 }
 
 ###########################################################################
-messagedone(){
-
-    local translated_message
-    translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"
-
-    $guitool --info --text="$translated_message" || true
-
-    exit 0
-}
-
-###########################################################################
-messageuserdeleted(){
-
-    local translated_message
-    translated_message="$( printf "$( eval_gettext "You have removed successfully the %s user" )" "$username" )"
-
-    $guitool --info --text="$translated_message" || true
-
-    exit 0
-}
-
-###########################################################################
-passverify(){
+pass_verify(){
     if [[ "$userpass" != "$repeatpass" ]] ; then
         $guitool --error --text="$( eval_gettext "The passwords are not the same, try again" )"
-        passstep
+        pass_step
     fi
 }
 
 ###########################################################################
-passstep(){
+pass_step(){
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "Insert a new password for user %s" )" "$username" )"
@@ -87,11 +65,11 @@ passstep(){
     #userpass="$( echo "$userpass" | sed "s|'|'\\\''|g" )"
     #repeatpass="$( echo "$repeatpass" | sed "s|'|'\\\''|g" )"
 
-    passverify
+    pass_verify
 }
 
 ###########################################################################
-addgroups(){
+groups_add(){
     local group
 
     # TODO: add this to the installer too
@@ -106,7 +84,7 @@ addgroups(){
 }
 
 ###########################################################################
-delgroups(){
+groups_del(){
     local group
 
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
@@ -118,7 +96,7 @@ delgroups(){
     done
 }
 
-sudoersadd(){
+sudoers_add(){
     local username
     username="$1"
 
@@ -140,7 +118,7 @@ sudoersadd(){
     chmod 0440 /etc/sudoers
 }
 
-sudoersdel(){
+sudoers_del(){
     local username
     username="$1"
 
@@ -152,7 +130,7 @@ sudoersdel(){
 }
 
 ###########################################################################
-adduserelive(){
+user_add(){
     username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
@@ -161,22 +139,22 @@ adduserelive(){
         #exit 1
     #fi
 
-    passstep
+    pass_step
 
     # this comes from /etc/adduser.conf
     if [[ "$USERGROUPS" = "yes" ]] ; then
         USERGROUP="$username"
         # do not create it or adduser will fail
-        #groupadd $USERGROUP 2>"${temp_error}" || errorexit
+        #groupadd $USERGROUP 2>"${temp_error}" || exit_error
     else
         USERGROUP="$USERS_GID"
     fi
 
     # create user
-    #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || errorexit
-    #$USERADD -m $username 2>/tmp/.errormessage || errorexit
-    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
-    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || errorexit
+    #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || exit_error
+    #$USERADD -m $username 2>/tmp/.errormessage || exit_error
+    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit_error
+    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit_error
     # update: adduser doesn't accepts names like Владимир
     useradd -c "Elive User" -m -s "/bin/zsh" "$username"
     # create / fix the files too
@@ -192,15 +170,15 @@ adduserelive(){
     #echo "$username:$userpass" | chpasswd $chpassopt
     bash -c 'printf "%s:%s\\n" "$1" "$2" | chpasswd -m' -- "$username" "$userpass"
 
-    #elive-skel user $username $USERGROUP 2>"${temp_error}" || errorexit
+    #elive-skel user $username $USERGROUP 2>"${temp_error}" || exit_error
 
-    addgroups
+    groups_add
 
     #chown -R "$username:$USERGROUP" "$DHOME/$username"
 
     # sudo configuration
     if $guitool --question --text="$( eval_gettext "Do you want to activate sudo privileges for this user?" )" ; then
-        sudoersadd "$username"
+        sudoers_add "$username"
     fi
 
     # fingerprint support
@@ -216,11 +194,14 @@ adduserelive(){
     echo -e "[User]\nIcon=/usr/share/icons/gnome/256x256/apps/logo-elive.png" > "/var/lib/AccountsService/users/$username"
 
 
-    messagedone
+    local translated_message
+    translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"
+
+    $guitool --info --text="$translated_message" || true
 }
 
 ###########################################################################
-deluserelive(){
+user_del(){
     local uid user userlist line pid
 
     while read -ru 3 line
@@ -246,7 +227,7 @@ deluserelive(){
 
     $guitool --question --text="$translated_message" || exit 1
 
-    delgroups
+    groups_del
 
 
     local translated_message
@@ -262,18 +243,22 @@ deluserelive(){
     done
 
     if $guitool --question --text="$translated_message" ; then
-        $USERDEL -r "$username" 2>"${temp_error}" || errorexit
+        $USERDEL -r "$username" 2>"${temp_error}" || exit_error
     else
-        $USERDEL "$username" 2>"${temp_error}" || errorexit
+        $USERDEL "$username" 2>"${temp_error}" || exit_error
     fi
 
-    sudoersdel "$username"
+    sudoers_del "$username"
 
-    messageuserdeleted
+    local translated_message
+    translated_message="$( printf "$( eval_gettext "You have removed successfully the %s user" )" "$username" )"
+
+    $guitool --info --text="$translated_message" || true
+
 }
 
 ###########################################################################
-changepass(){
+pass_change(){
     local uid user userlist line
 
     while read -ru 3 line
@@ -292,7 +277,7 @@ changepass(){
     username="$( echo "root ${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user in which to change its password" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
-    passstep
+    pass_step
     if chpasswd -h 2>&1 | grep -iq md5 ; then
         chpassopt="-m"
     else
@@ -308,7 +293,7 @@ changepass(){
 }
 
 ###########################################################################
-autologinconf(){
+autologin_conf(){
     local uid user userlist line
 
     while read -ru 3 line
@@ -343,22 +328,43 @@ autologinconf(){
 }
 
 ###########################################################################
-firstoption(){
+main(){
+    local selection
+
     selection="$( $guitool --width=400 --height=280 --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" '4' "$( eval_gettext "Automated login configuration" )" || echo cancel )"
 
-    [[ "$selection" = "cancel" ]] && exit 1
-    [[ "$selection" = "1" ]] && { adduserelive ; exit 0 ; }
-    [[ "$selection" = "2" ]] && { deluserelive ; exit 0 ; }
-    [[ "$selection" = "3" ]] && { changepass ; exit 0 ; }
-    [[ "$selection" = "4" ]] && { autologinconf ; exit 0 ; }
+    case "$selection" in
+        cancel)
+            exit 1
+            ;;
+        1)
+            user_add
+            ;;
+        2)
+            user_del
+            ;;
+        3)
+            pass_change
+            ;;
+        4)
+            autologin_conf
+            ;;
+    esac
+
+    #[[ "$selection" = "cancel" ]] && exit 1
+    #[[ "$selection" = "1" ]] && { user_add ; exit 0 ; }
+    #[[ "$selection" = "2" ]] && { user_del ; exit 0 ; }
+    #[[ "$selection" = "3" ]] && { pass_change ; exit 0 ; }
+    #[[ "$selection" = "4" ]] && { autologin_conf ; exit 0 ; }
+
+    rm -f "${temp_error}"
 }
 
 
 ############ main
 
-firstoption
+main
 
-rm -f "${temp_error}"
 
 
 ############################

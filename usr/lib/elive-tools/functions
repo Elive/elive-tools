@@ -2092,7 +2092,7 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion send_debug_reports send_debug_reports_email execution_stack tmp_conf_f limit_reports_amount limit_reports_seconds buf
+    local message message_stripped return_status id eliveversion execution_stack tmp_conf_f limit_reports_amount limit_reports_seconds buf
     el_security_function_loop || return
     # max 5 reports per tool
     limit_reports_amount=5
@@ -2184,7 +2184,7 @@ el_report_to_elive(){
     fi
 
     # not configured? ask for it
-    if [[ -z "$send_debug_reports" ]] ; then
+    if [[ -z "$conf_send_debug_reports" ]] ; then
 
         # ask for reports
         if ! grep -qs "boot=live" /proc/cmdline ; then
@@ -2192,32 +2192,32 @@ el_report_to_elive(){
                 local message_ask_email
                 # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
                 message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform about it to Elive so we can fix the bugs automatically. We will only contact you in case it is an important problem on which we need more details." )" "$(basename $0)" )"
-                send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
+                conf_send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
 
                 # set conf
-                if echo "$send_debug_reports_email" | grep -qs "@.*\." ; then
-                    send_debug_reports="yes"
+                if echo "$conf_send_debug_reports_email" | grep -qs "@.*\." ; then
+                    conf_send_debug_reports="yes"
                 else
-                    send_debug_reports="no"
+                    conf_send_debug_reports="no"
                 fi
 
                 # save conf
                 mkdir -p "$HOME/.config/elive"
-                sed -i -e "/send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
-                sed -i -e "/send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
+                sed -i -e "/conf_send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
+                sed -i -e "/conf_send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
 
-                echo -e "send_debug_reports=\"$send_debug_reports\"" >> "$HOME/.config/elive/settings"
-                echo -e "send_debug_reports_email=\"$send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
+                echo -e "conf_send_debug_reports=\"$conf_send_debug_reports\"" >> "$HOME/.config/elive/settings"
+                echo -e "conf_send_debug_reports_email=\"$conf_send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
             fi
         else
             # don't ask the user for his contact if he's running on live mode
-            send_debug_reports="yes"
-            send_debug_reports_email="Live"
+            conf_send_debug_reports="yes"
+            conf_send_debug_reports_email="Live"
         fi
     fi
 
     # user don't wants to report, so ignore it
-    if [[ "$send_debug_reports" = "no" ]] || [[ -z "$send_debug_reports" ]] ; then
+    if [[ "$conf_send_debug_reports" = "no" ]] || [[ -z "$conf_send_debug_reports" ]] ; then
         return
     fi
 
@@ -2241,8 +2241,8 @@ el_report_to_elive(){
         id="$( ip a | grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
     fi
 
-    if [[ -z "$send_debug_reports_email" ]] ; then
-        send_debug_reports_email="anonymous:${id}"
+    if [[ -z "$conf_send_debug_reports_email" ]] ; then
+        conf_send_debug_reports_email="anonymous:${id}"
     fi
 
 
@@ -2257,19 +2257,19 @@ el_report_to_elive(){
         execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
 
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL="$EL_LC_EN" sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL="$EL_LC_EN" sleep 1
-                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     #true
 
                     #LC_ALL="$EL_LC_EN" sleep 1
-                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         #true
                     #fi
                 #fi
@@ -2316,7 +2316,7 @@ el_mark_state(){
     fi
 
     # exit if not wanted
-    if [[ "${send_debug_reports}" != "yes" ]] ; then
+    if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
         return
     fi
 

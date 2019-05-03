@@ -27,14 +27,12 @@ if [ -z "$USERS_GID" ]; then
     USERS_GID=100
 fi
 
-trap "exit_ok" EXIT
-trap "exit_error" 1 3 5 6 14 15 ERR TERM
-
 
 guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 temp_error="/tmp/$(basename $0)-${USER}-$$"
 
-el_dependencies_check "${guitool},chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},useradd,${USERDEL}"
+el_dependencies_check "zenity,yad,chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},useradd,${USERDEL}"
+
 
 ###########################################################################
 exit_error(){
@@ -50,6 +48,12 @@ exit_error(){
 exit_ok(){
     rm -f "${temp_error}" 2>/dev/null
 }
+###########################################################################
+trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 15 ERR TERM
+###########################################################################
+
+
 
 ###########################################################################
 pass_verify(){
@@ -151,7 +155,7 @@ user_add(){
     fi
 
     result="$( yad \
-        --title "$( eval_gettext "New user" )" --form \
+        --title "$( eval_gettext "New user" )" --center --form \
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
         --field="User's real name" "$username_real" \
         --field="Email (optional, gravatar logo)" "$user_email" \
@@ -252,6 +256,7 @@ user_add(){
         gravatar_id="$( echo -n "$user_email" | md5sum | awk '{print $1}' )"
 
         wget "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
+        chown "${username}:${username}" "$DHOME/${username}/.config/elive/user-logo.png"
         echo -e "[User]\nIcon=${DHOME}/${usernam}/.config/elive/user-logo.png" > "/var/lib/AccountsService/users/$username"
 
     else

@@ -141,15 +141,55 @@ sudoers_del(){
 
 ###########################################################################
 user_add(){
-    username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
-    [[ "$username" = "cancel" ]] && exit 1
+    local result
+
+    #username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
+    #[[ "$username" = "cancel" ]] && exit 1
+
+    if [[ -z "$username_real" ]] ; then
+        username_real="John Smith"
+    fi
+
+    result="$( yad \
+        --title "$( eval_gettext "New user" )" --form \
+        --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
+        --field="User's real name" "$username_real" \
+        --field="Email (optional, gravatar logo)" "$user_email" \
+        --field="Password:H" \
+        --field="Password (confirm):H" || echo cancel )"
+
+    [[ "$result" = "cancel" ]] && exit 1
+
+    username="$( echo "$result" | awk -v FS="|" '{print $1}' )"
+    username_real="$( echo "$result" | awk -v FS="|" '{print $2}' )"
+    user_email="$( echo "$result" | awk -v FS="|" '{print $3}' )"
+    userpass="$( echo "$result" | awk -v FS="|" '{print $4}' )"
+    repeatpass="$( echo "$result" | awk -v FS="|" '{print $5}' )"
+
+
+    # verifications
+    if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] || [[ -z "$repeatpass" ]] ; then
+        $guitool --error --text="$( eval_gettext "Please fill all the needed information" )"
+        # recursive
+        $FUNCNAME "$@"
+        return
+    fi
+
+    if [[ "$userpass" != "$repeatpass" ]] ; then
+        $guitool --error --text="$( eval_gettext "Passwords should match, use the same one in both entries." )"
+        # recursive
+        $FUNCNAME "$@"
+        return
+    fi
+
+
 
     #if [[ "$username" = "eliveuser" ]] ; then
         #$guitool --error --text="$( eval_gettext "Username -eliveuser- is not accepted, use a different name" )"
         #exit 1
     #fi
 
-    pass_step
+    #pass_step
 
     # this comes from /etc/adduser.conf
     if [[ "$USERGROUPS" = "yes" ]] ; then
@@ -161,12 +201,16 @@ user_add(){
     fi
 
     # create user
-    #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "Elive User" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || exit 1
+    #$USERADD -d "$DHOME/$username" -m -k /etc/skel -c "$username_real" -g "$USERGROUP" -s /bin/bash "$username" 2>"${temp_error}" || exit 1
     #$USERADD -m $username 2>/tmp/.errormessage || exit 1
-    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
-    #$ADDUSER --force-badname --disabled-password --gecos 'Elive User' --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
+    #$ADDUSER --force-badname --disabled-password --gecos "$username_real" --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
+    #$ADDUSER --force-badname --disabled-password --gecos "$username_real" --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
     # update: adduser doesn't accepts names like Владимир
-    useradd -c "Elive User" -m -s "/bin/zsh" "$username"
+    if [[ -x "$(which zsh)" ]]; then
+        useradd -c "$username_real" -m -s "/bin/zsh" "$username"
+    else
+        useradd -c "$username_real" -m -s "/bin/bash" "$username"
+    fi
     # create / fix the files too
     elive-skel newuser "$username"
 
@@ -201,7 +245,19 @@ user_add(){
 
     # add a lightdm icon reference for the username for its login
     mkdir -p /var/lib/AccountsService/users
-    echo -e "[User]\nIcon=/usr/share/icons/gnome/256x256/apps/logo-elive.png" > "/var/lib/AccountsService/users/$username"
+
+    # set the gravatar logo to the user or fallback to the elive logo
+    if [[ -n "$user_email" ]] && el_verify_internet ; then
+        mkdir -p "$DHOME/${username}/.config/elive"
+        gravatar_id="$( echo -n "$user_email" | md5sum | awk '{print $1}' )"
+
+        wget "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
+        echo -e "[User]\nIcon=${DHOME}/${usernam}/.config/elive/user-logo.png" > "/var/lib/AccountsService/users/$username"
+
+    else
+        # normal logo for user
+        echo -e "[User]\nIcon=/usr/share/icons/gnome/256x256/apps/logo-elive.png" > "/var/lib/AccountsService/users/$username"
+    fi
 
 
     local translated_message
@@ -369,7 +425,6 @@ main(){
 
     rm -f "${temp_error}"
 }
-
 
 ############ main
 

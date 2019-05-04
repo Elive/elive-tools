@@ -282,7 +282,7 @@ detect_driver_version(){
     fi
 
     if [[ -z "$_NVIDIA_VERSION" ]] ; then
-        el_warning "unable to detect your driver version, assuming current"
+        NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
         _NVIDIA_VERSION="current"
     fi
 

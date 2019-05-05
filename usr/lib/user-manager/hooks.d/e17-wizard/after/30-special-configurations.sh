@@ -1,6 +1,12 @@
 #!/bin/bash
 main(){
     # pre {{{
+    # include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+    if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+        # needed for: iwconfig
+        export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+    fi
+
 
     # }}}
 
@@ -43,6 +49,10 @@ main(){
                         ;;
                 esac
                 # change iface to our used one
+                iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
+                if [[ -z "$iface" ]] ; then
+                    iface="wlan0"
+                fi
                 sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
             fi
         fi

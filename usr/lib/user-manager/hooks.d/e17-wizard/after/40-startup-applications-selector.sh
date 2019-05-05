@@ -59,15 +59,31 @@ main(){
 
         # - checks }}}
         # un-needed / blacklisted ones {{{
-        if echo "$filename" | grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations)" ; then
-            # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
-            # nm-applet: already integrated in elive correctly and saving mem
-            # wicd-: deprecated and not needed for elive
-            # print-applet: useless
-            # notification-daemon: dont include it if we are going to use e17's one
-            # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
-            # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
-            continue
+        if [[ -n "$EROOT" ]] ; then
+            # E16 requires different ones
+            if echo "$filename" | grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations)" ; then
+                # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
+                # nm-applet: already integrated in elive correctly and saving mem
+                #       e16 doesn't has a module or anything so keep it running from the trayer
+                # wicd-: deprecated and not needed for elive
+                # print-applet: useless
+                # notification-daemon: dont include it if we are going to use e17's one
+                # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
+                # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
+                continue
+            fi
+
+        else
+            if echo "$filename" | grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations)" ; then
+                # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
+                # nm-applet: already integrated in elive correctly and saving mem
+                # wicd-: deprecated and not needed for elive
+                # print-applet: useless
+                # notification-daemon: dont include it if we are going to use e17's one
+                # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
+                # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
+                continue
+            fi
         fi
         # e16 cases
         if [[ -n "$EROOT" ]] ; then

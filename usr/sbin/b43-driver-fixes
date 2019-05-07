@@ -94,7 +94,7 @@ try_and_configure(){
         el_debug "Wireless interface found '$wifi_dev' using driver '$driver_good' "
         # delete previous conf
         if ! [[ -s /etc/modprobe.d/broadcom-sta-dkms.conf ]] ; then
-            el_warning "/etc/modprobe.d/broadcom-sta-dkms.conf doesnt exist, ignoring..."
+            el_debug "/etc/modprobe.d/broadcom-sta-dkms.conf doesnt exist, ignoring..."
         fi
         rm -f /etc/modprobe.d/broadcom-sta-dkms.conf
 

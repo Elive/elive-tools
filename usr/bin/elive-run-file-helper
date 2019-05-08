@@ -7,10 +7,11 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 not_supported(){
-    local mime
+    local mime file
     mime="$1"
+    file="$2"
 
-    el_warning "mimetype '$mime' not implemented"
+    el_warning "mimetype '$mime' not implemented for '$(basename "$file")' "
 }
 
 run_edje(){
@@ -234,7 +235,7 @@ main(){
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/
                 if ! echo "$mime" | grep -qsE "/(x-debian-package)$" ; then
-                    not_supported "$mime"
+                    not_supported "$mime" "$file"
                 fi
                 # run a default launcher!
                 if [[ -x "/usr/bin/thunar" ]] ; then

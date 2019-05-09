@@ -324,7 +324,7 @@ interactive_ask_privative(){
     # - more than one card }}}
     # ask if want to install the privative one or the free {{{
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-        echo -e "Using free drivers only because 'onlyfree' is set in your boot parameters" 1>&2
+        echo -e "Using free-drivers only because 'onlyfree' is set in your boot parameters" 1>&2
         ret=1
     else
 
@@ -350,7 +350,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free drivers." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free-drivers." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -386,14 +386,14 @@ interactive_ask_privative(){
                 if ((is_mode_live)) ; then
 
                     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                        log_progress_msg "Using the free driver..."
+                        log_progress_msg "Using the free-driver..."
                     else
                         # tell the user to reboot with onlyfree option
                         local message_onlyfree
                         message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                            --title "Free Driver Option" \
+                            --title "Free-Driver Option" \
                             --msgbox "$message_onlyfree" \
                             0 0
                     fi
@@ -791,14 +791,14 @@ install_driver(){
 
         if modprobe nvidia 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free drivers." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free-drivers." )" "" )"
 
         fi
 
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free drivers if they works for you." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
         fi
 
 

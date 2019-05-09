@@ -201,7 +201,7 @@ interactive_ask_privative(){
     # - more than one card }}}
     # ask if want to install the privative one or the free {{{
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-        echo -e "Using free drivers only because 'onlyfree' is set in your boot parameters" 1>&2
+        echo -e "Using free-drivers only because 'onlyfree' is set in your boot parameters" 1>&2
         ret=1
     else
 
@@ -261,21 +261,21 @@ interactive_ask_privative(){
         1) # no
             if ((is_mode_live)) ; then
                 if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                    log_progress_msg "Using the free drivers..."
+                    log_progress_msg "Using the free-drivers..."
                 else
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "To use the free drivers reboot and select the 'Only free drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                    message_onlyfree="$( printf "$( eval_gettext "To use the free-drivers reboot and select the 'Only free-drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free-drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
-                        --title "Free Driver Option" \
+                        --title "Free-Driver Option" \
                         --msgbox "$message_onlyfree" \
                         0 0
                 fi
             fi
 
             # not needed to do anything, just exit
-            el_debug "We don't need to do anything, continue using the free drivers..."
+            el_debug "We don't need to do anything, continue using the free-drivers..."
             exit
             ;;
     esac
@@ -306,7 +306,7 @@ interactive_ask_driver_version(){
         fi
 
         dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
-            "free driver" "$( eval_gettext "Suggested Free option" )" on \
+            "free-driver" "$( eval_gettext "Suggested Free option" )" on \
             "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
             "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \
             2>"/tmp/.$(basename $0)-ret"
@@ -518,14 +518,14 @@ install_driver(){
 
         if modprobe fglrx 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free drivers." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free-drivers." )" "" )"
 
         fi
 
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free drivers if they works for you." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
         fi
 
 
@@ -555,7 +555,7 @@ install_driver(){
     # inform {{{
     if ! ((is_mode_auto)) ; then
         local message_remember
-        message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the free drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
+        message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the free-drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
             --title "Ready to be run" \

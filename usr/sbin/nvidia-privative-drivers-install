@@ -350,7 +350,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of Nvidia? We suggest to use it to have a better experience, it offers 3D acceleration and other features like a smoother desktop, it is most of the times also more stable than the free-drivers." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers needs them, while other ones works better with the open drivers. You must try both modes to know which one  is more suitable for you." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -385,17 +385,21 @@ interactive_ask_privative(){
             1) # no
                 if ((is_mode_live)) ; then
 
-                    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                        log_progress_msg "Using the free-driver..."
-                    else
+                    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" ; then
                         # tell the user to reboot with onlyfree option
                         local message_onlyfree
-                        message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
+                        if ((is_wheezy)) ; then
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
+                        else
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the privative drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=nouveau" )"
+                        fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                             --title "Free-Driver Option" \
                             --msgbox "$message_onlyfree" \
                             0 0
+                    else
+                        log_progress_msg "Using the free-driver..."
                     fi
                 fi
 
@@ -723,7 +727,7 @@ install_driver(){
                 while read -ru 3 package
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
-                        sleep 4
+                        sleep 2
                         if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
                             echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
                             sleep 10
@@ -943,6 +947,10 @@ main(){
     _CMDLINE="$(cat /proc/cmdline)"
 
     el_dependencies_check "dialog,apt-cache,wget"
+
+    if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
+        is_wheezy=1
+    fi
 
     # }}}
 

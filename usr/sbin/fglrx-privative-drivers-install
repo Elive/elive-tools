@@ -228,7 +228,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary drivers of ATI? These are known as the most problematic graphic cards ever made. So we cannot tell you if the open or the privative drivers will work best for your case, you must try all of them. To know it better, you can found things like your computer entirely blocked, strange visual artifacts, black windows, and any type of problem, specialy headaches. Our best suggestion is to buy a true graphic card the next time, but our best wishes are with you." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of ATI? Some computers needs them, while other ones works better with the open drivers. You must try both modes to know which one  is more suitable for you. But if you cannot make them working correctly, or you have graphical issues, we suggest you to use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                     --title "$message_title" \
@@ -260,17 +260,21 @@ interactive_ask_privative(){
             ;;
         1) # no
             if ((is_mode_live)) ; then
-                if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
-                    log_progress_msg "Using the free-drivers..."
-                else
+                if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=radeon" ; then
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
-                    message_onlyfree="$( printf "$( eval_gettext "To use the free-drivers reboot and select the 'Only free-drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free-drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                    if ((is_wheezy)) ; then
+                        message_onlyfree="$( printf "$( eval_gettext "To use the free-drivers reboot and select the 'Only free-drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free-drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                    else
+                        message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the privative drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=radeon*" )"
+                    fi
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "Free-Driver Option" \
                         --msgbox "$message_onlyfree" \
                         0 0
+                else
+                    log_progress_msg "Using the free-drivers..."
                 fi
             fi
 
@@ -672,6 +676,10 @@ main(){
     _CMDLINE="$(cat /proc/cmdline)"
 
     el_dependencies_check "dialog,apt-cache,wget"
+
+    if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
+        is_wheezy=1
+    fi
 
     # }}}
 

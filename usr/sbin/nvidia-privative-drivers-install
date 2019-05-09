@@ -372,7 +372,7 @@ interactive_ask_privative(){
 
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer when running the graphical user interface, try the free drivers instead or the VESA compatibility mode." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer when running the graphical interface, try using the boot option with the free-drivers instead. If you need the privative drivers you can also try different versions of Elive which includes different versions of the drivers." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                         --title "If the install fails..." \
@@ -390,7 +390,7 @@ interactive_ask_privative(){
                     else
                         # tell the user to reboot with onlyfree option
                         local message_onlyfree
-                        message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free drivers' option. Due to compatibility reasons the nouveau module is blacklisted on this boot, to have the free drivers correctly working you need to reboot and select this option or to remove the blacklist of nouveau from the boot parameter options." )" "" )"
+                        message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
                             --title "Free Driver Option" \

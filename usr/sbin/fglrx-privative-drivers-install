@@ -246,6 +246,22 @@ interactive_ask_privative(){
         0|255|123) # yes, timeout, cancel
             if ((is_mode_live)) ; then
                 log_progress_msg "Installing proprietary ATI drivers"
+                # checks if we can install it {{{
+                if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=radeon" && lsmod | grep -qs '^radeon' ; then
+                    local message_reboot_and_select_privative
+                    message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select that option from the boot menu. Or you can select any mode but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
+
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                        --title "Free-Driver Option" \
+                        --msgbox "$message_reboot_and_select_privative" \
+                        0 0
+
+                    if ((is_mode_live)) ; then
+                        reboot
+                    fi
+
+                fi
+                # }}}
                 # remember that this is not stable {{{
                 local message_remember
                 message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try with another option from the list, or use the open drivers too. If none works in a stable way experience, buy an Nvidia or Intel card instead, your computer and even your filesystem will be grateful to you." )" "" )"

@@ -370,6 +370,22 @@ interactive_ask_privative(){
                 if ((is_mode_live)) ; then
                     log_progress_msg "Installing proprietary Nvidia drivers"
 
+                    # checks if we can install it {{{
+                    if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" && lsmod | grep -qs '^nouveau' ; then
+                        local message_reboot_and_select_privative
+                        message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select that option from the boot menu. Or you can select any mode but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=nouveau" "" )"
+
+                        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                            --title "Free-Driver Option" \
+                            --msgbox "$message_reboot_and_select_privative" \
+                            0 0
+
+                        if ((is_mode_live)) ; then
+                            reboot
+                        fi
+
+                    fi
+                    # }}}
                     # remember that this is not stable {{{
                     local message_remember
                     message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer when running the graphical interface, try using the boot option with the free-drivers instead. If you need the privative drivers you can also try different versions of Elive which includes different versions of the drivers." )" "" )"

@@ -206,7 +206,7 @@ main(){
         # needed to make sure that the gui is launched?
         #timeout 1 zenity --info 2>/dev/null || true
         # interactive mode, default
-        answer="$( timeout 240 zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+        answer="$( timeout 340 zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
 
         # use defaults if failed or canceled
         if [[ -z "$answer" ]] || [[ "$answer" = "cancel" ]] ; then

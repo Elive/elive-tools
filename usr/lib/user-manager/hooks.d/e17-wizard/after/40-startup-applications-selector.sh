@@ -88,7 +88,8 @@ main(){
         # e16 cases
         if [[ -n "$EROOT" ]] ; then
             if echo "$filename" | grep -qsEi "^(pulseaudio)" ; then
-                # pulseaudio*: it should be already started before to run e16 or confs will fail, so its useless to run it from here
+                # pulseaudio*: starte16 already starts it, and its needed to start it before the desktop starts otherwise we could have an error in desktop
+                # update: not sure if this is needed anymore (and remove from starte16)
                 continue
             fi
         fi
@@ -96,7 +97,7 @@ main(){
         # default to enabled/disabled {{{
 
         if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|elive-)" ; then
+            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 el_debug "state: TRUE"
@@ -105,7 +106,7 @@ main(){
                 el_debug "state: FALSE"
             fi
         else
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|elive-)" ; then
+            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 el_debug "state: TRUE"
@@ -116,7 +117,7 @@ main(){
         fi
 
         # auto menu for live mode
-        if echo "$filename" | grep -qsEi "^(polkit|elive-|gnome-)" ; then
+        if echo "$filename" | grep -qsEi "^(polkit|elive-|gnome-|pulseaudio)" ; then
             menu_auto_live+=("$file")
         fi
         # - default to enabled/disabled }}}
@@ -205,7 +206,7 @@ main(){
         # needed to make sure that the gui is launched?
         #timeout 1 zenity --info 2>/dev/null || true
         # interactive mode, default
-        answer="$( timeout 180 zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
+        answer="$( timeout 240 zenity --list --checklist --height=580 --width=630 --text="$message_gui"  --column="" --column="" --column="$( eval_gettext "Name" )" --column="$( eval_gettext "Comment" )" "${menu[@]}" --print-column=2 --hide-column=2 || echo cancel )"
 
         # use defaults if failed or canceled
         if [[ -z "$answer" ]] || [[ "$answer" = "cancel" ]] ; then

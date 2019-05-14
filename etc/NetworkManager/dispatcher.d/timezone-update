@@ -152,7 +152,7 @@ update_ntp_time_from_server(){
 has_windows(){
     if ! ((has_os_prober_run)) ; then
 
-        if os-prober 2>/dev/null | grep -qsE "Windows" ;  then
+        if [[ -n "$( partitions-list --show-all | awk -v FS="::" '{ if ($3 == "ntfs") print $1}' )" ]] ; then
             has_windows=1
             has_os_prober_run=1
         fi

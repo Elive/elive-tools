@@ -221,10 +221,10 @@ main(){
             mode_clean=1
             unset iface
             ;;
-        wlan*|ath*|ra*)
+        wlan*|ath*|ra*|w*)
             is_wifi=1
             ;;
-        #eth*)
+        #eth*|e*)
             #is_lan=1
             #;;
     esac
@@ -400,5 +400,7 @@ log_daemon_msg "Starting $(basename $0)"
 main "$@"
 
 log_end_msg 0
+
+
 # vim: set foldmethod=marker :
 

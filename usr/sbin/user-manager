@@ -173,6 +173,11 @@ user_add(){
     repeatpass="$( echo "$result" | awk -v FS="|" '{print $5}' )"
     autologin="$( echo "$result" | awk -v FS="|" '{print $6}' )"
 
+    # useful output result to fetch from a possible wrapper tool (like the installer)
+    if [[ "$mode" = "--show-output" ]] ; then
+        echo "$result"
+    fi
+
 
     # verifications
     if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] || [[ -z "$repeatpass" ]] ; then
@@ -411,10 +416,19 @@ main(){
 
     if [[ -n "$1" ]] ; then
         selection="$1"
+        shift
     fi
 
-    if [[ -n "$2" ]] ; then
-        username="$2"
+    if [[ -n "$1" ]] ; then
+        username="$1"
+        shift
+    fi
+
+    if [[ -n "$1" ]] ; then
+        mode="$1"
+        shift
+        # examples:
+        #   --show-output
     fi
 
 

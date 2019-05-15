@@ -157,10 +157,12 @@ user_add(){
     result="$( yad \
         --title "$( eval_gettext "New user" )" --center --form \
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
-        --field="User's real name" "$username_real" \
-        --field="Email (optional, gravatar logo)" "$user_email" \
-        --field="Password:H" \
-        --field="Password (confirm):H" || echo cancel )"
+        --field="$( eval_gettext "User's real name" )" "$username_real" \
+        --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
+        --field="$( eval_gettext "Password" ):H" "" \
+        --field="$( eval_gettext "Password (confirm)" ):H" "" \
+        --field="$( eval_gettext "Auto login to desktop" ):CHK" "FALSE" \
+        || echo cancel )"
 
     [[ "$result" = "cancel" ]] && exit 1
 
@@ -169,6 +171,7 @@ user_add(){
     user_email="$( echo "$result" | awk -v FS="|" '{print $3}' )"
     userpass="$( echo "$result" | awk -v FS="|" '{print $4}' )"
     repeatpass="$( echo "$result" | awk -v FS="|" '{print $5}' )"
+    autologin="$( echo "$result" | awk -v FS="|" '{print $6}' )"
 
 
     # verifications
@@ -264,6 +267,10 @@ user_add(){
         echo -e "[User]\nIcon=/usr/share/icons/gnome/256x256/apps/logo-elive.png" > "/var/lib/AccountsService/users/$username"
     fi
 
+    # set autologin
+    if [[ "$autologin" = "TRUE" ]] ; then
+        sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$username|g" "/etc/lightdm/lightdm.conf"
+    fi
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"

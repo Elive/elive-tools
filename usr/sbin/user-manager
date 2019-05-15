@@ -175,7 +175,7 @@ user_add(){
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
     if [[ "$mode" = "--show-output" ]] ; then
-        echo "$result"
+        echo "result: $result"
     fi
 
 

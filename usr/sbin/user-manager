@@ -156,6 +156,8 @@ user_add(){
 
     result="$( yad \
         --title "$( eval_gettext "New user" )" --center --form \
+        --field="$( eval_gettext "Configure a new user" ):LBL" "" \
+        --field=":LBL" "" \
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
@@ -166,12 +168,12 @@ user_add(){
 
     [[ "$result" = "cancel" ]] && exit 1
 
-    username="$( echo "$result" | awk -v FS="|" '{print $1}' )"
-    username_real="$( echo "$result" | awk -v FS="|" '{print $2}' )"
-    user_email="$( echo "$result" | awk -v FS="|" '{print $3}' )"
-    userpass="$( echo "$result" | awk -v FS="|" '{print $4}' )"
-    repeatpass="$( echo "$result" | awk -v FS="|" '{print $5}' )"
-    autologin="$( echo "$result" | awk -v FS="|" '{print $6}' )"
+    username="$( echo "$result" | awk -v FS="|" '{print $3}' )"
+    username_real="$( echo "$result" | awk -v FS="|" '{print $4}' )"
+    user_email="$( echo "$result" | awk -v FS="|" '{print $5}' )"
+    userpass="$( echo "$result" | awk -v FS="|" '{print $6}' )"
+    repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
+    autologin="$( echo "$result" | awk -v FS="|" '{print $8}' )"
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
     if [[ "$mode" = "--show-output" ]] ; then
@@ -274,7 +276,7 @@ user_add(){
 
     # set autologin
     if [[ "$autologin" = "TRUE" ]] ; then
-        sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$username|g" "/etc/lightdm/lightdm.conf"
+        sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$username|g" "/etc/lightdm/lightdm.conf" 2>/dev/null || true
     fi
 
     local translated_message

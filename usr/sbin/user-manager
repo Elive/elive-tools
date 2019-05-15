@@ -92,7 +92,7 @@ groups_add(){
         # remove extra leading blank chars
         read -r group <<< "$group"
 
-        "$ADDUSER" "$username" "${group}" || true
+        "$ADDUSER" -q "$username" "${group}" 1>/dev/null || true
     done
 
 }
@@ -120,7 +120,7 @@ sudoers_add(){
     fi
 
     # add to group
-    "$ADDUSER" "$username" "sudo" || true
+    "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
 
     # default timeout value
     if ! grep -qs "Defaults:ALL timestamp_timeout=10" "/etc/sudoers.d/timeout_inmediate" ; then
@@ -465,7 +465,7 @@ main(){
 
 ############ main
 
-main
+main "$@"
 
 
 

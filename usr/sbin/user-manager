@@ -172,8 +172,8 @@ user_add(){
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
-        --field="$( eval_gettext "Password" ):H" "$password" \
-        --field="$( eval_gettext "Password (confirm)" ):H" "$password" \
+        --field="$( eval_gettext "Password" )" "$password" \
+        --field="$( eval_gettext "Password (confirm)" )" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "$want_sudo" \
         || echo cancel )"
@@ -189,8 +189,8 @@ user_add(){
     activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
-    if [[ "$mode" = "show-output" ]] ; then
-        echo "result: $result"
+    if ((is_show_output_wanted)) ; then
+        echo "username=\"$username\""
     fi
 
 
@@ -450,9 +450,8 @@ main(){
                 password="${arg#--password=}"
                 shift
                 ;;
-            --mode=*)
-                mode="${mode#--mode=}"
-                shift
+            --show-output)
+                is_show_output_wanted=1
                 ;;
             --want-sudo)
                 is_sudo_wanted=1

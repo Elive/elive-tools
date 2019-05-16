@@ -164,6 +164,7 @@ user_add(){
         --field="$( eval_gettext "Password" ):H" "" \
         --field="$( eval_gettext "Password (confirm)" ):H" "" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "FALSE" \
+        --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "FALSE" \
         || echo cancel )"
 
     [[ "$result" = "cancel" ]] && exit 1
@@ -174,6 +175,7 @@ user_add(){
     userpass="$( echo "$result" | awk -v FS="|" '{print $6}' )"
     repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
     autologin="$( echo "$result" | awk -v FS="|" '{print $8}' )"
+    activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
     if [[ "$mode" = "--show-output" ]] ; then
@@ -245,13 +247,13 @@ user_add(){
     #chown -R "$username:$USERGROUP" "$DHOME/$username"
 
     # sudo configuration
-    if $guitool --question --text="$( eval_gettext "Do you want to activate sudo privileges for this user?" )" ; then
+    if [[ "$activatesudo" = "TRUE" ]] ; then
         sudoers_add "$username"
     fi
 
     # fingerprint support
     if grep -qsi "fingerprint" /proc/bus/input/devices || lsusb | grep -qsi "Upek" ; then
-        $guitool --info --text="$( eval_gettext "Your computer supports fingerprint reader, you can follow the howto of Elive to activate it." )" || true
+        $guitool --info --text="$( eval_gettext "Your computer has a fingerprint reader, check the Elive howtos to know how to enable the login using your fingerprint." )" || true
     fi
     # deprecated, we use e17-wizard startup now
     #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"
@@ -265,7 +267,7 @@ user_add(){
         mkdir -p "$DHOME/${username}/.config/elive"
         gravatar_id="$( echo -n "$user_email" | md5sum | awk '{print $1}' )"
 
-        wget "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
+        wget -q "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
         chown "${username}:${username}" "$DHOME/${username}/.config/elive/user-logo.png"
         echo -e "[User]\nIcon=${DHOME}/${usernam}/.config/elive/user-logo.png" > "/var/lib/AccountsService/users/$username"
 

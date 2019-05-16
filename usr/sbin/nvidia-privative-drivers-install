@@ -381,7 +381,21 @@ interactive_ask_privative(){
                             0 0
 
                         if ((is_mode_live)) ; then
-                            reboot
+                            dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                                --title "Reboot now?" \
+                                --yesno "$( eval_gettext "Do you want to reboot now to select the privative option? If you select no, we will continue using the open driver." )" \
+                                0 0
+                            ret="$?"
+
+                            case "$ret" in
+                                0|255|123) # yes, timeout, cancel
+                                    reboot
+                                    exit
+                                    ;;
+                                1) # no
+                                    true
+                                    ;;
+                            esac
                         fi
 
                     fi

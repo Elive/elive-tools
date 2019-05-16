@@ -34,12 +34,13 @@ main(){
     # e16 {{{
     if [[ -n "$EROOT" ]] ; then
 
-        if zenity --question --text="$( eval_gettext "Do you want to enable composite layer? It will give you transparencies and a nicer looking desktop." )" ; then
-            eesh compmgr start
-            is_composite_e16_started=1
-        else
-            eesh compmgr stop
-        fi
+        # update: not needed, user don't needs this
+        #if zenity --question --text="$( eval_gettext "Do you want to enable composite layer? It will give you transparencies and a nicer looking desktop." )" ; then
+            #eesh compmgr start
+            #is_composite_e16_started=1
+        #else
+            #eesh compmgr stop
+        #fi
 
         if eesh -w "compmgr ?" | grep -qs "on=1" ; then
             # fix conky conf

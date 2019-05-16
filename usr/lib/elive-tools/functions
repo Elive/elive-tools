@@ -2821,7 +2821,7 @@ el_ram_usage_show(){
     # all reports are in MB
       case "$arg" in
           free)
-              free -m | grep "^Mem: " | awk '{print $4}'
+              free -m | grep "^Mem: " | awk '{print $7}'
               ;;
           total)
               free -m | grep "^Mem: " | awk '{print $2}'

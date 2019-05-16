@@ -145,13 +145,24 @@ sudoers_del(){
 
 ###########################################################################
 user_add(){
-    local result
+    local result want_autologin want_sudo
 
     #username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
     #[[ "$username" = "cancel" ]] && exit 1
 
     if [[ -z "$username_real" ]] ; then
         username_real="John Smith"
+    fi
+
+    if ((is_sudo_wanted)) ; then
+        want_sudo="TRUE"
+    else
+        want_sudo="FALSE"
+    fi
+    if ((is_autologin_wanted)) ; then
+        want_autologin="TRUE"
+    else
+        want_autologin="FALSE"
     fi
 
     result="$( yad \
@@ -161,10 +172,10 @@ user_add(){
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
-        --field="$( eval_gettext "Password" ):H" "" \
-        --field="$( eval_gettext "Password (confirm)" ):H" "" \
-        --field="$( eval_gettext "Auto login to desktop" ):CHK" "FALSE" \
-        --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "FALSE" \
+        --field="$( eval_gettext "Password" ):H" "$password" \
+        --field="$( eval_gettext "Password (confirm)" ):H" "$password" \
+        --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
+        --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "$want_sudo" \
         || echo cancel )"
 
     [[ "$result" = "cancel" ]] && exit 1
@@ -284,7 +295,9 @@ user_add(){
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"
 
-    $guitool --info --text="$translated_message" || true
+    if ! ((is_quiet)) ; then
+        $guitool --info --text="$translated_message" || true
+    fi
 }
 
 ###########################################################################
@@ -416,24 +429,39 @@ autologin_conf(){
 
 ###########################################################################
 main(){
-    local selection
+    local selection arg
 
-    if [[ -n "$1" ]] ; then
-        selection="$1"
-        shift
-    fi
-
-    if [[ -n "$1" ]] ; then
-        username="$1"
-        shift
-    fi
-
-    if [[ -n "$1" ]] ; then
-        mode="$1"
-        shift
-        # examples:
-        #   --show-output
-    fi
+    for arg in "$@"
+    do
+        case "$arg" in
+            --user-add|--user-del|--user-change|--autologin-conf)
+                selection="$arg"
+                shift
+                ;;
+            --quiet|-q)
+                is_quiet=1
+                shift
+                ;;
+            --user=*)
+                username="${arg#--user=}"
+                shift
+                ;;
+            --password=*)
+                password="${arg#--password=}"
+                shift
+                ;;
+            --mode=*)
+                mode="${mode#--mode=}"
+                shift
+                ;;
+            --with-sudo)
+                is_sudo_wanted=1
+                ;;
+            --with-autologin)
+                is_autologin_wanted=1
+                ;;
+        esac
+    done
 
 
     if [[ -z "$selection" ]] ;then

@@ -61,6 +61,46 @@ pass_verify(){
         $guitool --error --text="$( eval_gettext "The passwords are not the same, try again" )"
         pass_step
     fi
+
+    if [[ -z "$userpass" ]] ; then
+        $guitool --error --text="$( eval_gettext "You need to insert a password to continue. This password of your choice will be used to secure your system." )"
+        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+    fi
+
+    # request valid chars {{{
+    if printf "%s" "$userpass" | grep -qs '\\' ; then
+        $guitool --error --text="$( eval_gettext "You cannot use the slash character, use a different password" )"" (\\)."
+        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+    fi
+    if printf "%s" "$userpass" | grep -qs '\\' ; then
+        unset userpass
+    fi
+
+    if printf "%s" "$userpass" | grep -qs -- "-" ; then
+        $guitool --error --text="$( eval_gettext "You cannot use this character, use a different password:" )"" (-)."
+        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+    fi
+    if printf "%s" "$userpass" | grep -qs -- "-" ; then
+        unset userpass
+    fi
+
+
+    if printf "%s" "$userpass" | grep -qs "'" ; then
+        $guitool --error --text="$( eval_gettext "You cannot use quotes. Choose a different password." )"" (')."
+        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+    fi
+    if printf "%s" "$userpass" | grep -qs "'" ; then
+        unset userpass
+    fi
+
+    if printf "%s" "$userpass" | grep -qs '"' ; then
+        $guitool --error --text="$( eval_gettext "You cannot use the double-quote character, use a different password" )"" (\")."
+        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+    fi
+
+    if printf "%s" "$userpass" | grep -qs '"' ; then
+        unset userpass
+    fi
 }
 
 ###########################################################################
@@ -173,7 +213,6 @@ user_add(){
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password" )" "$password" \
-        --field="$( eval_gettext "Password (confirm)" )" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "$want_sudo" \
         || echo cancel )"
@@ -184,9 +223,9 @@ user_add(){
     username_real="$( echo "$result" | awk -v FS="|" '{print $4}' )"
     user_email="$( echo "$result" | awk -v FS="|" '{print $5}' )"
     userpass="$( echo "$result" | awk -v FS="|" '{print $6}' )"
-    repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
-    autologin="$( echo "$result" | awk -v FS="|" '{print $8}' )"
-    activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
+    #repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
+    autologin="$( echo "$result" | awk -v FS="|" '{print $7}' )"
+    activatesudo="$( echo "$result" | awk -v FS="|" '{print $8}' )"
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
     if ((is_show_output_wanted)) ; then
@@ -194,15 +233,43 @@ user_add(){
     fi
 
 
-    # verifications
-    if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] || [[ -z "$repeatpass" ]] ; then
+    # verifications {{{
+    if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] ; then
         $guitool --error --text="$( eval_gettext "Please fill all the needed information" )"
         # recursive
         $FUNCNAME "$@"
         return
     fi
 
-    if [[ "$userpass" != "$repeatpass" ]] ; then
+    username_bak="$username"
+    # cleanup to valid username
+    username="${username// /_}"
+    username="${username//[![:alnum:]]/-}"
+
+    # remove non-ascii characters
+    username="$( echo "$username" | perl -p -e 's|[^[:ascii:]]||g' )"
+    username="${username##+(-)}"
+    username="${username%%+(-)}"
+    if [[ -n "$answer" ]] && [[ "$username" != "$answer" ]] ; then
+        answer="$( $guitool --entry --entry-text="$username" --text="$( eval_gettext "Warning: Invalid user name because of invalid characters. It has been converted to this one instead. Continue or choose a different one." )" )"
+        verify_result "$answer"
+        username="$answer"
+        username="${username// /_}"
+        username="${username//[![:alnum:]]/-}"
+        if [[ -n "$answer" ]] && [[ "$username" != "$answer" ]] ; then
+            local message_loginname
+            message_loginname="$( printf "$( eval_gettext "Important: Your login name is %s" )" "$username" )"
+            $guitool --info --text="$message_loginname"
+        fi
+    fi
+
+    if ! [[ -n "$username" ]] ; then
+        $guitool --error --text="$( eval_gettext "Invalid username" )"
+        exit 1
+    fi
+
+
+    if [[ -z "$userpass" ]] ; then
         $guitool --error --text="$( eval_gettext "Passwords should match, use the same one in both entries." )"
         # recursive
         $FUNCNAME "$@"
@@ -217,7 +284,10 @@ user_add(){
     #fi
 
     #pass_step
+    pass_verify
 
+
+    # }}}
     # this comes from /etc/adduser.conf
     if [[ "$USERGROUPS" = "yes" ]] ; then
         USERGROUP="$username"

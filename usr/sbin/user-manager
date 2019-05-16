@@ -365,6 +365,7 @@ user_add(){
     if ((is_show_output_wanted)) ; then
         echo "username=\"$username\""
         echo "user_password=\"$userpass\""
+        echo "autologin=\"${want_autologin}\""
     fi
 
     if ! ((is_quiet)) ; then

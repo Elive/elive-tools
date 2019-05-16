@@ -224,14 +224,9 @@ user_add(){
     user_email="$( echo "$result" | awk -v FS="|" '{print $5}' )"
     userpass="$( echo "$result" | awk -v FS="|" '{print $6}' )"
     #repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
+    repeatpass="$userpass"
     autologin="$( echo "$result" | awk -v FS="|" '{print $7}' )"
     activatesudo="$( echo "$result" | awk -v FS="|" '{print $8}' )"
-
-    # useful output result to fetch from a possible wrapper tool (like the installer)
-    if ((is_show_output_wanted)) ; then
-        echo "username=\"$username\""
-    fi
-
 
     # verifications {{{
     if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] ; then
@@ -364,6 +359,13 @@ user_add(){
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have added successfully the %s user, you can use it now" )" "$username" )"
+
+    # useful output result to fetch from a wrapper tool (like the installer)
+    # required for: post-configuration of $username - configure root password as the same as the user if no system password has been set
+    if ((is_show_output_wanted)) ; then
+        echo "username=\"$username\""
+        echo "user_password=\"$userpass\""
+    fi
 
     if ! ((is_quiet)) ; then
         $guitool --info --text="$translated_message" || true

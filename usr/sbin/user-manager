@@ -189,7 +189,7 @@ user_add(){
     activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
 
     # useful output result to fetch from a possible wrapper tool (like the installer)
-    if [[ "$mode" = "--show-output" ]] ; then
+    if [[ "$mode" = "show-output" ]] ; then
         echo "result: $result"
     fi
 
@@ -454,10 +454,10 @@ main(){
                 mode="${mode#--mode=}"
                 shift
                 ;;
-            --with-sudo)
+            --want-sudo)
                 is_sudo_wanted=1
                 ;;
-            --with-autologin)
+            --want-autologin)
                 is_autologin_wanted=1
                 ;;
         esac

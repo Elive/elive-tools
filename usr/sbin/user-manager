@@ -525,12 +525,19 @@ main(){
                 ;;
             --show-output)
                 is_show_output_wanted=1
+                shift
                 ;;
             --want-sudo)
                 is_sudo_wanted=1
+                shift
                 ;;
             --want-autologin)
                 is_autologin_wanted=1
+                shift
+                ;;
+            --email=*)
+                user_email="${arg#--email=}"
+                shift
                 ;;
         esac
     done

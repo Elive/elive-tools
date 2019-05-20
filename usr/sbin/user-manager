@@ -232,7 +232,7 @@ sudoers_user(){
             "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
             ;;
         del)
-            "$DELUSER" "$username" "sudo" || true
+            "$DELUSER" "$username" "sudo" 2>/dev/null || true
             ;;
     esac
 
@@ -604,6 +604,11 @@ main(){
                 selection="$arg"
                 shift
                 ;;
+            --user-sudo-generic-add)
+                username="${arg#--user-sudo-generic-add=}"
+                selection="--user-sudo-generic-add"
+                shift
+                ;;
             --quiet|-q)
                 is_quiet=1
                 shift
@@ -659,6 +664,9 @@ main(){
             ;;
         4|--autologin-conf)
             autologin_conf "$username"
+            ;;
+        --user-sudo-generic-add)
+            sudoers_user_generic "$username"
             ;;
     esac
 

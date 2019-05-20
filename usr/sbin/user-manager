@@ -150,17 +150,65 @@ groups_del(){
     done
 }
 
-sudoers_add(){
-    local username
+sudoers_user_apt(){
+    local username mode
+    mode="$1"
+    shift
     username="$1"
+    shift
 
-    # add sudoers configuration
-    if ! grep -qsE "^${username}\s+" /etc/sudoers ; then
-        echo -e "$username ALL=(ALL) ALL" >> /etc/sudoers
-    fi
+    rm -f "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+    # always delete first
+    rm -f "/etc/sudoers.d/sudo_nopasswd_all_${username}" 2>/dev/null || true
 
-    # add to group
-    "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
+    case "$mode" in
+        add)
+            echo "$username ALL=(ALL) NOPASSWD: /usr/bin/apt" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/bin/apt-get" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/bin/apt-cache" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/bin/dpkg" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/bin/aptitude" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/synaptic" >> "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            chmod 0440 "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
+            ;;
+    esac
+}
+sudoers_user_nopass(){
+    local username mode
+    mode="$1"
+    shift
+    username="$1"
+    shift
+
+    # always delete first
+    rm -f "/etc/sudoers.d/sudo_nopasswd_all_${username}" 2>/dev/null || true
+
+    case "$mode" in
+        add)
+            echo "${username} ALL=(ALL) NOPASSWD: ALL" >> "/etc/sudoers.d/sudo_nopasswd_all_${username}"
+            chmod 0440 "/etc/sudoers.d/sudo_nopasswd_all_${username}"
+            ;;
+    esac
+}
+sudoers_user(){
+    local username mode
+    mode="$1"
+    shift
+    username="$1"
+    shift
+
+    # info:
+    # ALL1 = (ALL2:ALL3) ALL4 means 1) users matched for this rule 2)hostnames allowed to run the following commands 3)users allowed to run the following commands 4) the commands allowed
+
+    case "$mode" in
+        add)
+            # add to group
+            "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
+            ;;
+        del)
+            "$DELUSER" "$username" "sudo" || true
+            ;;
+    esac
 
     # default timeout value
     if ! grep -qs "Defaults:ALL timestamp_timeout=10" "/etc/sudoers.d/timeout_inmediate" ; then
@@ -168,24 +216,19 @@ sudoers_add(){
         chmod 0440 "/etc/sudoers.d/timeout_inmediate"
     fi
 
+    if ! grep -qsE "^%sudo\s+ALL=\(ALL:ALL\)\s+ALL$" /etc/sudoers ; then
+        echo -e "\n# generic sudo group conf:" >> /etc/sudoers
+        echo "%sudo   ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    fi
+
     # fix permissions
     chmod 0440 /etc/sudoers
 }
 
-sudoers_del(){
-    local username
-    username="$1"
-
-    if grep -qsE "^${username}\s+" /etc/sudoers ; then
-        sed -i "/^${username}/d" /etc/sudoers
-    fi
-    #sed -i '/^$/d' /etc/sudoers
-    chmod 0440 /etc/sudoers
-}
 
 ###########################################################################
 user_add(){
-    local result want_autologin want_sudo
+    local result want_autologin want_sudo want_sudo_apt
 
     #username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
     #[[ "$username" = "cancel" ]] && exit 1
@@ -214,7 +257,9 @@ user_add(){
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password" )" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
-        --field="$( eval_gettext "Activate admin privileges (sudo)" ):CHK" "$want_sudo" \
+        --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
+        --field="$( eval_gettext "Grant admin privileges (sudo)" ):CHK" "$want_sudo" \
+        --field="$( eval_gettext "Never request the password for SUDO (not recommended)" ):CHK" "$want_sudo_apt" \
         || echo cancel )"
 
     [[ "$result" = "cancel" ]] && exit 1
@@ -226,7 +271,9 @@ user_add(){
     #repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
     repeatpass="$userpass"
     autologin="$( echo "$result" | awk -v FS="|" '{print $7}' )"
-    activatesudo="$( echo "$result" | awk -v FS="|" '{print $8}' )"
+    activatesudoapt="$( echo "$result" | awk -v FS="|" '{print $8}' )"
+    activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
+    activatesudonopass="$( echo "$result" | awk -v FS="|" '{print $10}' )"
 
     # verifications {{{
     if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] ; then
@@ -324,7 +371,19 @@ user_add(){
 
     # sudo configuration
     if [[ "$activatesudo" = "TRUE" ]] ; then
-        sudoers_add "$username"
+        sudoers_user "add" "$username"
+    else
+        sudoers_user "del" "$username"
+    fi
+    if [[ "$activatesudonopass" = "TRUE" ]] ; then
+        sudoers_user_nopass "add" "$username"
+    else
+        sudoers_user_nopass "del" "$username"
+    fi
+    if [[ "$activatesudoapt" = "TRUE" ]] ; then
+        sudoers_user_apt "add" "$username"
+    else
+        sudoers_user_apt "del" "$username"
     fi
 
     # fingerprint support
@@ -421,7 +480,10 @@ user_del(){
         $USERDEL "$username" 2>"${temp_error}" || exit 1
     fi
 
-    sudoers_del "$username"
+    # remove possible sudo configurations
+    sudoers_user "del" "$username"
+    sudoers_user_apt "del" "$username"
+    sudoers_user_nopass "del" "$username"
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have removed successfully the %s user" )" "$username" )"
@@ -529,6 +591,10 @@ main(){
                 ;;
             --want-sudo)
                 is_sudo_wanted=1
+                shift
+                ;;
+            --want-sudo-apt)
+                is_sudo_apt_wanted=1
                 shift
                 ;;
             --want-autologin)

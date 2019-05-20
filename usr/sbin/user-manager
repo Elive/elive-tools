@@ -150,6 +150,33 @@ groups_del(){
     done
 }
 
+sudoers_user_generic(){
+    local username mode
+    mode="$1"
+    shift
+    username="$1"
+    shift
+
+    # always delete first
+    rm -f "/etc/sudoers.d/sudo_nopasswd_generic_${username}" 2>/dev/null || true
+
+    case "$mode" in
+        add)
+            # network privileges
+            echo -e "# User should always have access to rfkill and ifconfig, elive has an unblock wifi feature in desktop startup that requires it too\n%sudo   ALL=(ALL) NOPASSWD: /sbin/ifconfig\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/rfkill" > "/etc/sudoers.d/privileges_nopasswd_generic_${username}"
+
+            # elive upgrader privileges
+            echo -e "# We don't want to ask for admin password in every security update needed of the system\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/elive-upgrader-root" > "/etc/sudoers.d/privileges_nopasswd_generic_${username}"
+
+            # brightness control
+            echo -e "# User should always be able to change the brightness of the screen\n${username}   ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl" > "/etc/sudoers.d/privileges_nopasswd_generic_${username}"
+
+
+            # permissions
+            chmod 0440 "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
+            ;;
+    esac
+}
 sudoers_user_apt(){
     local username mode
     mode="$1"
@@ -157,9 +184,8 @@ sudoers_user_apt(){
     username="$1"
     shift
 
-    rm -f "/etc/sudoers.d/sudo_nopasswd_packagers_${username}"
     # always delete first
-    rm -f "/etc/sudoers.d/sudo_nopasswd_all_${username}" 2>/dev/null || true
+    rm -f "/etc/sudoers.d/sudo_nopasswd_packagers_${username}" 2>/dev/null || true
 
     case "$mode" in
         add)
@@ -292,6 +318,7 @@ user_add(){
     username="$( echo "$username" | perl -p -e 's|[^[:ascii:]]||g' )"
     username="${username##+(-)}"
     username="${username%%+(-)}"
+
     if [[ -n "$answer" ]] && [[ "$username" != "$answer" ]] ; then
         answer="$( $guitool --entry --entry-text="$username" --text="$( eval_gettext "Warning: Invalid user name because of invalid characters. It has been converted to this one instead. Continue or choose a different one." )" )"
         verify_result "$answer"
@@ -370,6 +397,9 @@ user_add(){
     #chown -R "$username:$USERGROUP" "$DHOME/$username"
 
     # sudo configuration
+    # always apply these generic ones
+    sudoers_user_generic "add" "$username"
+
     if [[ "$activatesudo" = "TRUE" ]] ; then
         sudoers_user "add" "$username"
     else
@@ -484,6 +514,7 @@ user_del(){
     sudoers_user "del" "$username"
     sudoers_user_apt "del" "$username"
     sudoers_user_nopass "del" "$username"
+    sudoers_user_generic "del" "$username"
 
     local translated_message
     translated_message="$( printf "$( eval_gettext "You have removed successfully the %s user" )" "$username" )"

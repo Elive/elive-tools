@@ -339,7 +339,7 @@ user_add(){
     mkdir -p /var/lib/AccountsService/users
 
     # set the gravatar logo to the user or fallback to the elive logo
-    if [[ -n "$user_email" ]] && el_verify_internet ; then
+    if [[ -n "$user_email" ]] && [[ -x "$(which wget)" ]] && el_verify_internet ; then
         mkdir -p "$DHOME/${username}/.config/elive"
         gravatar_id="$( echo -n "$user_email" | md5sum | awk '{print $1}' )"
 

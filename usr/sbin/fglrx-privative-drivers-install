@@ -193,7 +193,7 @@ interactive_ask_privative(){
         message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "Multiple Graphic Cards found" \
             --msgbox "$message_multiple_cards" \
             0 0
@@ -214,7 +214,7 @@ interactive_ask_privative(){
                 local message_low_memory
                 message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
 
-                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Low Memory Computer" \
                     --msgbox "$message_low_memory" \
                     0 0
@@ -230,7 +230,7 @@ interactive_ask_privative(){
                 local message_message
                 message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of ATI? Some computers needs them, while other ones works better with the open drivers. You must try both modes to know which one  is more suitable for you. But if you cannot make them working correctly, or you have graphical issues, we suggest you to use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
 
-                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
                     --yesno "$message_message" \
                     0 0
@@ -251,7 +251,7 @@ interactive_ask_privative(){
                     local message_reboot_and_select_privative
                     message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select that option from the boot menu. Or you can select any mode but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
 
-                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "Free-Driver Option" \
                         --msgbox "$message_reboot_and_select_privative" \
                         0 0
@@ -266,7 +266,7 @@ interactive_ask_privative(){
                 local message_remember
                 message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try with another option from the list, or use the open drivers too. If none works in a stable way experience, buy an Nvidia or Intel card instead, your computer and even your filesystem will be grateful to you." )" "" )"
 
-                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "If the install fails..." \
                     --msgbox "$message_remember" \
                     0 0
@@ -285,7 +285,7 @@ interactive_ask_privative(){
                         message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the privative drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=radeon*" )"
                     fi
 
-                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+                    dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "Free-Driver Option" \
                         --msgbox "$message_onlyfree" \
                         0 0
@@ -319,16 +319,16 @@ interactive_ask_driver_version(){
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
         local message_select_driver
-        message_select_driver="$( printf "$( eval_gettext "Use the Spacebar to select the driver that you want to install, then press Enter to confirm." )" "" )"
+        message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphical card needs." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is maybe the one that you need." )" "$_FGLRX_VERSION" )"
         fi
 
-        dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" --radiolist "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
-            "free-driver" "$( eval_gettext "Suggested Free option" )" on \
-            "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" off \
-            "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" off \
+        dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
+            "free-driver" "$( eval_gettext "Suggested Free option" )" \
+            "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" \
+            "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" \
             2>"/tmp/.$(basename $0)-ret"
 
 
@@ -450,7 +450,7 @@ install_driver(){
             message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "Multiple Graphic Cards found" \
             --msgbox "$message_multiple_cards" \
             0 0
@@ -551,7 +551,7 @@ install_driver(){
 
         # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
-            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Unable to load module" \
                 --msgbox "$message_unable_to_load" \
                 0 0
@@ -577,7 +577,7 @@ install_driver(){
         local message_remember
         message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the free-drivers should solve the problem, or in the inverse way maybe you need the proprietary version, only your own experience will tell you." )" "" )"
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB or Space to select, Enter to confirm" \
+        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "Ready to be run" \
             --msgbox "$message_remember" \
             0 0

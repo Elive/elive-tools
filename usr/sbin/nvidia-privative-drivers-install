@@ -199,8 +199,10 @@ detect_driver_version(){
                         while read -ru 3 line
                         do
                             #url_package_dir="${url_repository%/}/${line%/*}/"
-                            el_debug "downloading: ${line##*/}"
-                            wget -q "${url_repository%/}/${line}"
+                            if [[ -x "$(which wget)" ]] ; then
+                                el_debug "downloading: ${line##*/}"
+                                wget -q "${url_repository%/}/${line}"
+                            fi
                         done 3<<< "$( LC_ALL=C apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
                     done
                 else
@@ -976,7 +978,7 @@ main(){
 
     _CMDLINE="$(cat /proc/cmdline)"
 
-    el_dependencies_check "dialog,apt-cache,wget"
+    el_dependencies_check "dialog,apt-cache"
 
     if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
         is_wheezy=1

@@ -63,6 +63,10 @@ module_ecomorph_unload(){
     # pre {{{
     local module address
 
+    if [[ -n "$EROOT" ]] ; then
+        return
+    fi
+
     #module="$1"
     module="ecomorph"
     el_check_variables "module"
@@ -256,9 +260,11 @@ configure_multiscreens(){
             # note: never restart E because we also run this tool from the E restart, so it could end into a loop
             true
             # re-load the bar to the correct new desktop
-            if enlightenment_remote -module-list | grep --color=never "^engage -- Enabled" ; then
-                enlightenment_remote -module-disable "engage"
-                enlightenment_remote -module-enable "engage"
+            if ! [[ -n "$EROOT" ]] ; then
+                if enlightenment_remote -module-list 2>/dev/null | grep --color=never "^engage -- Enabled" ; then
+                    enlightenment_remote -module-disable "engage"
+                    enlightenment_remote -module-enable "engage"
+                fi
             fi
         else
             if ! (($is_mode_previous_desktop)) ; then

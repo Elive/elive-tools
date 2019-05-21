@@ -5,7 +5,7 @@ main(){
     #local file dir temp
 
     if [ -e "/etc/elive/machine-profile" ] ; then
-        source /etc/elive/machine-profile
+        . /etc/elive/machine-profile
     fi
     # }}}
 

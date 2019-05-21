@@ -276,6 +276,11 @@ user_add(){
     else
         want_autologin="FALSE"
     fi
+    if ((is_sudo_apt_wanted)) ; then
+        want_sudo_apt="TRUE"
+    else
+        want_sudo_apt="FALSE"
+    fi
 
     result="$( yad \
         --title "$( eval_gettext "New user" )" --center --form \

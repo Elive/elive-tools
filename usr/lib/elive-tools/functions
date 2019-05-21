@@ -2099,7 +2099,7 @@ el_report_to_elive(){
     # min 4 hours passed if limit is reached to send more reports
     limit_reports_seconds=14400
 
-    if ! [[ "$(which nc)" ]] ; then
+    if ! [[ -x "$(which nc)" ]] ; then
         return
     fi
 

@@ -2099,6 +2099,10 @@ el_report_to_elive(){
     # min 4 hours passed if limit is reached to send more reports
     limit_reports_seconds=14400
 
+    if ! [[ "$(which nc)" ]] ; then
+        return
+    fi
+
     # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
     # TODO: or we can instead just call this function in parts of  the code where we want to report things (but will not have fancy colors unless we pass another parameter for 'importancy', so the generator of E: W: etc.. will deal it and put colors)
     #if ! [[ "$EL_REPORTS" = "yes" ]] ; then

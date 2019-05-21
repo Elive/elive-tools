@@ -120,17 +120,28 @@ fi
     EL_DEBUG=${EL_DEBUG:-"2"}
 #fi
 
+    # temporal: are we calling this from another user?
+    if [[ "$USER" = "root" ]] && [[ "$HOME" = "/home"* ]] ; then
+        el_warning "calling elive-functions with user root and home set to '${HOME}', from SOURCE $SOURCE , \$0 $0 , BASH $BASH "
+    fi
+
 # extra vars
 source /etc/adduser.conf 2>/dev/null || true
 [[ -z "$DHOME" ]] && export DHOME=/home
 # set the user's home, sometimes, like if we are in an init script, the home points to /
 if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
-    if [[ "$UID" = "0" ]] ; then
+    if [[ "$UID" = "0" ]] || [[ "$USER" = "root" ]] ; then
         export HOME="/root"
     else
         export HOME="$DHOME/$(id -un)"
     fi
 fi
+
+    # temporal: are we calling this from another user?
+    if [[ "$USER" = "root" ]] && [[ "$HOME" = "/home"* ]] ; then
+        el_warning "calling elive-functions with user root and home set to '${HOME}', from SOURCE $SOURCE , \$0 $0 , BASH $BASH "
+    fi
+
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
 if grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then

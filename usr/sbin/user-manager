@@ -211,6 +211,9 @@ sudoers_user_nopass(){
 
     case "$mode" in
         add)
+            # add to group needed too
+            "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
+
             echo "${username} ALL=(ALL) NOPASSWD: ALL" >> "/etc/sudoers.d/sudo_nopasswd_all_${username}"
             chmod 0440 "/etc/sudoers.d/sudo_nopasswd_all_${username}"
             ;;
@@ -284,8 +287,8 @@ user_add(){
         --field="$( eval_gettext "Password" )" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
-        --field="$( eval_gettext "Grant admin privileges (sudo)" ):CHK" "$want_sudo" \
-        --field="$( eval_gettext "Never request the password for SUDO (not recommended)" ):CHK" "$want_sudo_apt" \
+        --field="$( eval_gettext "Grant admin privileges (SUDO)" ):CHK" "$want_sudo" \
+        --field="$( eval_gettext "Grant admin, and never request password (not recommended)" ):CHK" "$want_sudo_apt" \
         || echo cancel )"
 
     [[ "$result" = "cancel" ]] && exit 1

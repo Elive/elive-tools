@@ -2743,7 +2743,9 @@ el_config_save(){
 
     # create conf file
     if ! [[ -s "$tmp_conf_f" ]] ; then
-        mkdir -p "$( dirname "$tmp_conf_f" )"
+        if ! mkdir -p "$( dirname "$tmp_conf_f" )" ; then
+            el_error "unable to create confs dir: \"$( dirname "$tmp_conf_f" )\""
+        fi
 
         touch "$tmp_conf_f"
     fi

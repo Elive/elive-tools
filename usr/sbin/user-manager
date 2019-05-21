@@ -604,9 +604,14 @@ main(){
                 selection="$arg"
                 shift
                 ;;
-            --user-sudo-generic-add)
+            --user-sudo-generic-add=*)
                 username="${arg#--user-sudo-generic-add=}"
                 selection="--user-sudo-generic-add"
+                shift
+                ;;
+            --user-sudo-apt-add=*)
+                username="${arg#--user-sudo-apt-add=}"
+                selection="--user-sudo-apt-add"
                 shift
                 ;;
             --quiet|-q)
@@ -666,7 +671,10 @@ main(){
             autologin_conf "$username"
             ;;
         --user-sudo-generic-add)
-            sudoers_user_generic "$username"
+            sudoers_user_generic "add" "$username"
+            ;;
+        --user-sudo-apt-add)
+            sudoers_user_apt "add" "$username"
             ;;
     esac
 

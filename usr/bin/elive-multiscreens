@@ -27,6 +27,15 @@ usage(){
 "
 }
 
+# wrapper to avoid GUI's when not wanted (blocks e16)
+guitool(){
+    if ((is_mode_auto)) ; then
+        el_warning "trying to use a GUI widget while in mode_auto, ignoring it, fix required in '${FUNCNAME[1]}' for lines '${BASH_LINENO[*]}'"
+    else
+        zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png "$@"
+    fi
+}
+
 # generates a usable menu output with more info for select screen
 screens_connected_names_menu_gen(){
     local screen line menu
@@ -105,7 +114,7 @@ module_ecomorph_unload(){
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 
-                timeout 30 zenity --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
+                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't works good with multiple screens. If you want this feature working we have the source code at Github." )"
             fi
 
         else
@@ -141,7 +150,7 @@ configure_multiscreens(){
         el_dependencies_install "arandr"
 
         if ! el_dependencies_check "arandr" 1>/dev/null 2>&1 ; then
-            zenity --error --text="Arandr tool is required, install it first"
+            $guitool --error --text="Arandr tool is required, install it first"
             exit 1
         fi
     fi
@@ -153,10 +162,10 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 zenity --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
+    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 zenity --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the menus or using ctrl+q." )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the menus or using ctrl+q." )"
     fi
 
     # - explain }}}
@@ -172,7 +181,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 zenity --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
+        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
 
             # configure
             arandr
@@ -229,7 +238,7 @@ configure_multiscreens(){
                         break
                     fi
                     # TODO: include more info in the selector about the screens, like their resolution and size dimensions
-                    primary="$( screens_connected_names_menu_gen | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" --column="Resolution" || echo cancel )"
+                    primary="$( screens_connected_names_menu_gen | $guitool --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" --column="Resolution" || echo cancel )"
                 fi
             done
         fi
@@ -268,22 +277,22 @@ configure_multiscreens(){
             fi
         else
             if ! (($is_mode_previous_desktop)) ; then
-                zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                $guitool --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
             fi
         fi
         )
 
-        timeout 40 zenity --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+        timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
 
         sleep 1
 
-        if timeout 25 zenity --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start your graphical system?" )" ; then
+        if timeout 25 $guitool --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start your graphical system?" )" ; then
 
             conf_multiscreens_last_autoload_wanted="yes"
             el_debug "user wanted to save permanently this configuration"
 
             if ((is_mode_configure)) ; then
-                timeout 90 zenity --info --text="$( eval_gettext "Note: if the desktop doesn't acts as expected, try to restart to a new desktop configuration" )"
+                timeout 90 $guitool --info --text="$( eval_gettext "Note: if the desktop doesn't acts as expected, try to restart to a new desktop configuration" )"
             fi
         else
             conf_multiscreens_last_autoload_wanted="no"
@@ -317,7 +326,7 @@ load_multiscreens_configuration(){
         el_dependencies_install "x11-server-utils"
 
         if ! el_dependencies_check "xrandr" 1>/dev/null 2>&1 ; then
-            zenity --error --text="xrandr tool is required, install it first"
+            $guitool --error --text="xrandr tool is required, install it first"
             exit 1
         fi
     fi
@@ -353,7 +362,7 @@ load_multiscreens_configuration(){
                         true
                     else
                         if ! (($is_mode_previous_desktop)) ; then
-                            zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                            $guitool --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                         fi
                     fi
                     )
@@ -365,7 +374,7 @@ load_multiscreens_configuration(){
                 # we have different screens connected, hum?
                 #if [[ "$screens_connected_number" -gt 1 ]] ; then
                     ## TODO: implement:
-                    #zenity --warning --text="You have different screens connected than in your last configuration, this feature is not yet implemented in Elive, you can collaborate improving this tool from ${0}, donate, making the project more known to have more resources, etc..."
+                    #$guitool --warning --text="You have different screens connected than in your last configuration, this feature is not yet implemented in Elive, you can collaborate improving this tool from ${0}, donate, making the project more known to have more resources, etc..."
                 #fi
 
                 # cleanups, because we don't know what to do with different screens - so it will ask again about configuring screens (generate new conf)
@@ -395,7 +404,7 @@ load_multiscreens_configuration(){
             if ((is_mode_delayed)) ; then
                 sleep 5
             fi
-            if timeout 120 zenity --question --text="$( eval_gettext "You have a new configuration for multiple screens, do you want to use it?" )" ; then
+            if timeout 120 $guitool --question --text="$( eval_gettext "You have a new configuration for multiple screens, do you want to use it?" )" ; then
 
                 # check and set primary screen {{{
                 if ! grep -qs " --primary" "$file" ; then
@@ -408,7 +417,7 @@ load_multiscreens_configuration(){
                                 unset primary
                                 break
                             fi
-                            primary="$( screens_connected_names_menu_gen | zenity --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                            primary="$( screens_connected_names_menu_gen | $guitool --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
                         fi
                     done
 
@@ -433,12 +442,12 @@ load_multiscreens_configuration(){
                     # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
                     true
                 else
-                    zenity --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                    $guitool --warning --text="$( eval_gettext "Failed to load your screens configuration. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                 fi
                 )
 
                 # ask for confirmation
-                if timeout 180 zenity --question --text="$( eval_gettext "Move your mouse among your screens to verify the settings. Do you want to always load this configuration when starting Elive?" )" ; then
+                if timeout 180 $guitool --question --text="$( eval_gettext "Move your mouse among your screens to verify the settings. Do you want to always load this configuration when starting Elive?" )" ; then
                     el_debug "user wants to re-use the conf"
                     conf_multiscreens_last_autoload_wanted="yes"
                 else
@@ -464,7 +473,7 @@ load_multiscreens_configuration(){
 
     else
         # if we don't have a valid configuration, ask for a new one
-        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] ; then
+        if ! [[ "$conf_multiscreens_last_autoload_wanted" = "no" ]] && ! ((is_mode_auto)) ; then
             if [[ "$screens_connected_number" -gt 1 ]] ; then
                 el_debug "we dont have anything to load, but we found multiple screens connected, to ask the user if wants to configure them"
 
@@ -473,7 +482,7 @@ load_multiscreens_configuration(){
                     sleep 15
                 fi
 
-                if timeout 180 zenity --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive?" )" ; then
+                if timeout 180 $guitool --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive?" )" ; then
 
                     # configure
                     configure_multiscreens
@@ -499,7 +508,7 @@ load_multiscreens_configuration(){
                     #( . "$file" )
 
                     ## done
-                    #timeout 60 zenity --info --text="$( eval_gettext "Perfect, Elive will use this configuration from now when your desktop starts, if you want to stop loading it just delete the configurations from their directory:" )"
+                    #timeout 60 $guitool --info --text="$( eval_gettext "Perfect, Elive will use this configuration from now when your desktop starts, if you want to stop loading it just delete the configurations from their directory:" )"
 
                     #conf_multiscreens_last="$conf"
                     #el_config_save "conf_multiscreens_last"
@@ -604,12 +613,12 @@ main(){
 
             # inform
             if xrandr --query | grep -qs " disconnected" ; then
-                zenity --error --text="$( eval_gettext "Your screen appears disconnected, turn it ON first and try again." )"
+                $guitool --error --text="$( eval_gettext "Your screen appears disconnected, turn it ON first and try again." )"
             else
                 # report
                 el_error "no screens connected? \n$( xrandr --query )"
 
-                zenity --error --text="$( eval_gettext "You don't have any screens connected" )"
+                $guitool --error --text="$( eval_gettext "You don't have any screens connected" )"
             fi
             ;;
         1)

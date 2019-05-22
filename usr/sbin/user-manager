@@ -571,6 +571,9 @@ pass_change(){
 autologin_conf(){
     local uid user userlist line
 
+    local message_disable_autologin
+    message_disable_autologin="$( printf "$( eval_gettext "Disable autologin" )" "" )"
+
     while read -ru 3 line
     do
         uid="$( echo "$line" | awk -v FS=":" '{print $3}' )"
@@ -584,9 +587,10 @@ autologin_conf(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically login with." )" || echo cancel )"
+    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically login with." )" || echo cancel )"
 
-    if [[ "$username" = "cancel" ]] ; then
+    # note: instead of check for a translated "disable", just check if the user exists (which stills valid)
+    if [[ "$username" = "cancel" ]] || ! cat /etc/passwd | awk -v FS=":" '{print $1}' | grep -qs "^${username}$" ; then
         sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf"
         $guitool --info --text="$( eval_gettext "Autologin disabled" )" || true
     else

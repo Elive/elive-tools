@@ -642,9 +642,16 @@ get_filesystem_file(){
         *btrfs*|*BTRFS*)
             echo "btrfs"
             ;;
-        #*)
-            #echo "auto"
-            #;;
+        *)
+            if [[ -x "$(which fdisk)" ]] ; then
+                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
+                    echo "BIOS boot"
+                else
+                    el_debug "unknown FS for $1"
+                    #echo "auto"
+                fi
+            fi
+            ;;
     esac
 }
 

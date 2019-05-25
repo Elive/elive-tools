@@ -430,7 +430,14 @@ main(){
         if [[ -z "$item_human_label" ]] ; then
             item_human_label="(no name)"
         fi
-        if [[ -z "$item_filesystem" ]] ; then
+
+        if [[ -n "$item_filesystem" ]] ; then
+            if [[ "$item_filesystem" = "vfat" ]] ; then
+                if LC_ALL=C fdisk -l "${item%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
+                    item_human_label="EFI"
+                fi
+            fi
+        else
             item_filesystem="$(get_filesystem "$item" )"
             if [[ -n "$item_filesystem" ]] ; then
                 item_is_usable=1
@@ -599,13 +606,8 @@ get_filesystem_lsblk(){
     local fs
 
     fs="$( lsblk -d -rino FSTYPE "$1" )"
-
-    if [[ "$fs" = "vfat" ]] ; then
-        if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
-            echo "EFI"
-        else
-            echo "$fs"
-        fi
+    if [[ -n "$fs" ]] ; then
+        echo "$fs"
     fi
 }
 #get_filesystem_hal(){

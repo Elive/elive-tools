@@ -455,7 +455,7 @@ main(){
             unset item_filesystem
             item_type="disk"
 
-            if ((is_show_raw)) ; then
+            if ((is_show_raw)) || ((is_show_disks)) ; then
                 item_is_usable=1
             else
                 el_debug "marking ${item} as unusable because is shows like a disk"

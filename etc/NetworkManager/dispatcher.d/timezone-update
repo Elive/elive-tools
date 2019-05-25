@@ -28,7 +28,7 @@ update_conf_etc(){
     fi
 
     el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
-    log_progress_msg "Configuring machine timezone to ${timezone}, $_AREA, $_ZONE"
+    #log_progress_msg "Configuring machine timezone to ${timezone}, $_AREA, $_ZONE"
 
     # localtime file
     rm -f /etc/localtime
@@ -145,7 +145,7 @@ update_ntp_time_from_server(){
 
 
     el_explain 0 "Timezone is __${timezone}__, time is now __$(date)__"
-    log_progress_msg "Timezone is ${timezone}, time is now $(date)"
+    #log_progress_msg "Timezone is ${timezone}, time is now $(date)"
 }
 
 
@@ -395,11 +395,11 @@ main(){
 #
 #  MAIN
 #
-log_daemon_msg "Starting $(basename $0)"
+#log_daemon_msg "Starting $(basename $0)"
 
 main "$@"
 
-log_end_msg 0
+#log_end_msg 0
 
 
 # vim: set foldmethod=marker :

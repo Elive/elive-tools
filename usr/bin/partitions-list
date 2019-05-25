@@ -435,6 +435,9 @@ main(){
             if [[ -n "$item_filesystem" ]] ; then
                 item_is_usable=1
 
+                if [[ "${item_filesystem}" = "BIOS" ]] ; then
+                    item_human_label="(BIOS boot)"
+                fi
                 if [[ "${item_filesystem}" = "swap" ]] ; then
                     item_type="swap"
                     item_filesystem="swap"
@@ -645,7 +648,7 @@ get_filesystem_file(){
         *)
             if [[ -x "$(which fdisk)" ]] ; then
                 if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
-                    echo "BIOS boot"
+                    echo "BIOS"
                 else
                     el_debug "unknown FS for $1"
                     #echo "auto"

@@ -168,6 +168,11 @@ configure_multiscreens(){
         timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Click to save your configuration (important). Finally exit the application from the menus or using ctrl+q." )"
     fi
 
+    # e16
+    if [[ -n "$EROOT" ]] ; then
+        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens so well as newer versions of Enlightenment.  It is possible that some gadgets or windows moves to unexpected positions on the desktop." )"
+    fi
+
     # - explain }}}
     # configure {{{
     # gui for the user

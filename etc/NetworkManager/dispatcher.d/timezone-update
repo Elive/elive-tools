@@ -80,10 +80,10 @@ bios_mode_get(){
             # if we have a windows, the time should be set to localtime for compatibility
             if has_windows ; then
                 bios_mode="LOCAL"
-                el_info "Clock will be used as 'LOCALTIME', because you have a Windows system installed"
+                el_info "Clock will use 'LOCALTIME' mode, because you have a Windows system installed"
             else
                 bios_mode="UTC"
-                el_info "Clock will be used as 'UTC', so you don't have a Windows system installed"
+                el_info "Clock will use 'UTC' mode, so you don't have a Windows system installed"
             fi
         else
             if grep -qs "bios mode" "$conf" ; then

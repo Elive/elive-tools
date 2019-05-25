@@ -652,7 +652,7 @@ main(){
         # then set a default generic volume
         unset meter
         # double conf, just in case not works
-        main 84% 1>/dev/null
+        main 70% 1>/dev/null
         # this is needed in order to make the track working, by some strange reason
         main 2%+ 1>/dev/null
         true

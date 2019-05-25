@@ -438,6 +438,9 @@ main(){
                 if [[ "${item_filesystem}" = "BIOS" ]] ; then
                     item_human_label="(BIOS boot)"
                 fi
+                if [[ "${item_filesystem}" = "EFI" ]] ; then
+                    item_human_label="(EFI)"
+                fi
                 if [[ "${item_filesystem}" = "swap" ]] ; then
                     item_type="swap"
                     item_filesystem="swap"
@@ -647,11 +650,15 @@ get_filesystem_file(){
             ;;
         *)
             if [[ -x "$(which fdisk)" ]] ; then
-                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
-                    echo "BIOS"
+                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
+                    echo "EFI"
                 else
-                    el_debug "unknown FS for $1"
-                    #echo "auto"
+                    if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
+                        echo "BIOS"
+                    else
+                        el_debug "unknown FS for $1"
+                        #echo "auto"
+                    fi
                 fi
             fi
             ;;

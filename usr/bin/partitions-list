@@ -450,6 +450,19 @@ main(){
             item_human_label="(unformatted)"
         fi
 
+        # entire disks
+        if [[ "$item_filesystem" = "disk" ]] ; then
+            unset item_filesystem
+            item_type="disk"
+
+            if ((is_show_raw)) ; then
+                item_is_usable=1
+            else
+                el_debug "marking ${item} as unusable because is shows like a disk"
+                item_is_usable=0
+            fi
+        fi
+
         # extended partitions
         if [[ "$item_filesystem" = "extended" ]] ; then
             unset item_filesystem
@@ -595,6 +608,10 @@ get_filesystem_file(){
     case "$ret" in
         *HFS*|*hfs*)
             echo "hfsplus"
+            ;;
+        *"x86 boot sector"*"0xee"*|*"DOS/MBR boot sector"*"0xee"*)
+            # this is raw / entire disks
+            echo "disk"
             ;;
         *extended\ partition\ table*|*"ID=0x5"*)
             # Note: I have a result like this which looks to be wrong, it is not an extended partition, but in any case is not an usable one:  /dev/sdb: sticky x86 boot sector; partition 1: ID=0xee, starthead 0, startsector 1, 1953525167 sectors, extended partition table (last)\011, code offset 0x0

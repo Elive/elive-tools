@@ -596,7 +596,17 @@ get_filesystem(){
     return 1
 }
 get_filesystem_lsblk(){
-    lsblk -d -rino FSTYPE "$1"
+    local fs
+
+    fs="$( lsblk -d -rino FSTYPE "$1" )"
+
+    if [[ "$fs" = "vfat" ]] ; then
+        if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
+            echo "EFI"
+        else
+            echo "$fs"
+        fi
+    fi
 }
 #get_filesystem_hal(){
     #local udi
@@ -650,15 +660,11 @@ get_filesystem_file(){
             ;;
         *)
             if [[ -x "$(which fdisk)" ]] ; then
-                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
-                    echo "EFI"
+                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
+                    echo "BIOS"
                 else
-                    if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
-                        echo "BIOS"
-                    else
-                        el_debug "unknown FS for $1"
-                        #echo "auto"
-                    fi
+                    el_debug "unknown FS for $1"
+                    #echo "auto"
                 fi
             fi
             ;;

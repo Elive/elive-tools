@@ -2043,6 +2043,18 @@ el_array_member_add(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_array_print_per_line
+#   DESCRIPTION:  prints each element of the array, one entry per line
+#    PARAMETERS:  $1 = array to print
+#       RETURNS:  value
+#===============================================================================
+el_array_print_per_line(){
+    # note: echo "${arr[@]}" doesn't works, so this function
+    # has been made in order to avoid using it
+    printf "%s\n" "$@"
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_step_requires_fixme
 #   DESCRIPTION:  temporal "step" to put in experimental/development code, only
 #    PARAMETERS:  $1 = dir to login (optional)

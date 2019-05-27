@@ -60,18 +60,28 @@ main(){
     if test -s "$order_file" ; then
         while read -ru 3 line
         do
-            executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
-            if [[ -n "$executable" ]] ; then
+            case "$line" in
+                *.desktop|*.DESKTOP)
+                    executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
+                    if [[ -n "$executable" ]] ; then
 
-                if ((is_start)) ; then
-                    el_debug "running $executable"
-                    bash -c "$executable & disown"
-                fi
-                if ((is_stop)) ; then
-                    el_debug "killing $executable"
-                    killall "$executable"
-                fi
-            fi
+                        if ((is_start)) ; then
+                            el_debug "running $executable"
+                            bash -c "$executable & disown"
+                        fi
+                        if ((is_stop)) ; then
+                            el_debug "killing $executable"
+                            killall "$executable"
+                        fi
+                    fi
+                    ;;
+                *)
+                    cmd="$( echo "$line" | awk '{print $1}')"
+                    if [[ -x "$( which "$cmd" )" ]] ; then
+                        bash -c "$line & disown"
+                    fi
+                    ;;
+            esac
         done 3<<< "$( cat "$order_file")"
     fi
 

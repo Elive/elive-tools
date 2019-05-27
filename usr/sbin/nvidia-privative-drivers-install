@@ -374,12 +374,14 @@ interactive_ask_privative(){
 
                     # checks if we can install it {{{
                     if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" && lsmod | grep -qs '^nouveau' ; then
-                        local message_reboot_and_select_privative
-                        message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select the privative  option from the boot menu. Or you can boot in any option but you need to press the Tab key and append the boot parameter:" ) modprobe.blacklist=nouveau" "" )"
+                        local message_reboot_and_select_privative_1
+                        local message_reboot_and_select_privative_2
+                        message_reboot_and_select_privative_1="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select the privative option from the boot menu." )" "" )"
+                        message_reboot_and_select_privative_2="$( printf "$( eval_gettext "Or you can boot in any option but you need to press the Tab key and append the boot parameter:" ) modprobe.blacklist=nouveau" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                             --title "$( eval_gettext "Reboot needed using different option" )" \
-                            --msgbox "$message_reboot_and_select_privative" \
+                            --msgbox "${message_reboot_and_select_privative_1}\n\n${message_reboot_and_select_privative_2}" \
                             0 0
 
                         if ((is_mode_live)) ; then

@@ -345,7 +345,7 @@ EOF
 
 
         local message_1
-        message_1="$( printf "$( eval_gettext "Select the applications to automatically start on your desktop" )" "" )"
+        message_1="$( printf "$( eval_gettext "Select applications to automatically start on your desktop. To add or remove them later you must edit your file:" )" "" )"
         local message_2
         message_2="$( printf "$( eval_gettext "Enable" )" "" )"
         local message_3
@@ -353,7 +353,7 @@ EOF
 
 
         if [[ -n "${menu[@]}" ]] ; then
-            result="$( zenity --width="540" --list --checklist --text="$message_1" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+            result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n.e16/startup-applications.list" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
         fi
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then

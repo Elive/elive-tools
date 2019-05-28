@@ -163,13 +163,13 @@ sudoers_user_generic(){
     case "$mode" in
         add)
             # network privileges
-            echo -e "# User should always have access to rfkill and ifconfig, elive has an unblock wifi feature in desktop startup that requires it too\n${username}   ALL=(ALL) NOPASSWD: /sbin/ifconfig\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/rfkill\n" > "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
+            echo -e "# User should always have access to rfkill and ifconfig, elive has an unblock wifi feature in desktop startup that requires it too\n${username}   ALL=(ALL) NOPASSWD: /sbin/ifconfig\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/rfkill\n" >> "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
 
             # elive upgrader privileges
-            echo -e "# We don't want to ask for admin password in every security update needed of the system\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/elive-upgrader-root\n" > "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
+            echo -e "# We don't want to ask for admin password in every security update needed of the system\n${username}   ALL=(ALL) NOPASSWD: /usr/sbin/elive-upgrader-root\n" >> "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
 
             # brightness control
-            echo -e "# User should always be able to change the brightness of the screen\n${username}   ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl\n" > "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
+            echo -e "# User should always be able to change the brightness of the screen\n${username}   ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl\n" >> "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
 
 
             # permissions

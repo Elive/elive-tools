@@ -324,6 +324,51 @@ EOF
         done 3<<< "$( cat "${order_file}")"
     fi
 
+
+
+    # E16
+    # also select which features (apps) we want to have by default:
+    if [[ -n "$EROOT" ]] ; then
+        # conky
+        if [[ -x "$(which 'conky' )" ]] ; then
+            menu+=("TRUE")
+            menu+=("conky")
+            menu+=("conky: resources visualizer gadget for desktop")
+        fi
+
+        # cairo-dock
+        if [[ -x "$(which 'cairo-dock' )" ]] ; then
+            menu+=("TRUE")
+            menu+=("cairo-dock")
+            menu+=("cairo-dock: A powerful and featured dock for your desktop")
+        fi
+
+
+        local message_1
+        message_1="$( printf "$( eval_gettext "Select the applications to automatically start on your desktop" )" "" )"
+        local message_2
+        message_2="$( printf "$( eval_gettext "Enable" )" "" )"
+        local message_3
+        message_3="$( printf "$( eval_gettext "Application" )" "" )"
+
+
+        if [[ -n "${menu[@]}" ]] ; then
+            result="$( zenity --width="540" --list --checklist --text="$message_1" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+        fi
+
+        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
+            while read -ru 3 line
+            do
+                if [[ -x "$(which "$line" )" ]] ; then
+                    # add to known list
+                    echo "$line" >> "$HOME/.e16/startup-applications.list"
+                    # run it too
+                    ( $line & )
+                fi
+            done 3<<< "$( echo "$result" | tr '|' '\n' )"
+        fi
+    fi
+
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2

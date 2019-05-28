@@ -9,6 +9,7 @@ if [[ -n "$EROOT" ]] ; then
     rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
     cd "$HOME"
     elive-skel upgrade .e16
+    elive-skel upgrade .config/cairo-dock
 fi
 
 if [[ -n "$E_START" ]] ; then

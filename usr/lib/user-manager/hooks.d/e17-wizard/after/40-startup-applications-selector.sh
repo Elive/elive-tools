@@ -330,6 +330,7 @@ EOF
     # E16
     # also select which features (apps) we want to have by default:
     if [[ -n "$EROOT" ]] ; then
+        unset menu result line
         # conky
         if [[ -x "$(which 'conky' )" ]] ; then
             menu+=("TRUE")

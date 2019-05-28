@@ -291,6 +291,7 @@ user_add(){
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password" ):H" "$password" \
+        --field="$( eval_gettext "Password (confirm)" ):H" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
         --field="$( eval_gettext "Grant admin privileges (SUDO)" ):CHK" "$want_sudo" \
@@ -303,12 +304,12 @@ user_add(){
     username_real="$( echo "$result" | awk -v FS="|" '{print $4}' )"
     user_email="$( echo "$result" | awk -v FS="|" '{print $5}' )"
     userpass="$( echo "$result" | awk -v FS="|" '{print $6}' )"
-    #repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
-    repeatpass="$userpass"
-    autologin="$( echo "$result" | awk -v FS="|" '{print $7}' )"
-    activatesudoapt="$( echo "$result" | awk -v FS="|" '{print $8}' )"
-    activatesudo="$( echo "$result" | awk -v FS="|" '{print $9}' )"
-    activatesudonopass="$( echo "$result" | awk -v FS="|" '{print $10}' )"
+    repeatpass="$( echo "$result" | awk -v FS="|" '{print $7}' )"
+    #repeatpass="$userpass"
+    autologin="$( echo "$result" | awk -v FS="|" '{print $8}' )"
+    activatesudoapt="$( echo "$result" | awk -v FS="|" '{print $9}' )"
+    activatesudo="$( echo "$result" | awk -v FS="|" '{print $10}' )"
+    activatesudonopass="$( echo "$result" | awk -v FS="|" '{print $11}' )"
 
     # verifications {{{
     if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] ; then

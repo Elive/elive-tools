@@ -87,10 +87,10 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         # only show the error if we have a graphical system running by the user
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
             if [[ -z "${DISPLAY}" ]] ; then
-                el_explain 1 "Variable DISPLAY is not set, so we will not have access to the local graphical system"
+                el_explain 2 "Variable DISPLAY is not set, so we will not have access to the local graphical system"
             fi
             if [[ -z "${XAUTHORITY}" ]] ; then
-                el_explain 1 "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
+                el_explain 2 "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
             fi
             if [[ -z "${E_IPC_SOCKET}" ]] ; then
                 if [[ "$UID" != 0 ]] ; then
@@ -636,7 +636,7 @@ el_aptget_update(){
         fi
 
     else
-        el_explain 2 "Packages lists already updated at least 4 hours ago, skipping update"
+        el_explain 3 "Packages lists already updated at least 4 hours ago, skipping update"
     fi
 }
 #-------------------------------------------------------------------------------
@@ -1130,6 +1130,11 @@ el_explain(){
     if ! ((is_terminal)) ; then
         return
     fi
+    # show only if we are on this verbose level
+    if ! [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
+        return
+    fi
+
     local funclevel spaced verbose_level message trace_message trace_col
 
     verbose_level="$1"
@@ -1164,58 +1169,52 @@ el_explain(){
     # }}}
     # show {{{
     # this is a good example of levels of colors visualization for the user's eye
-
-    # show only if we are on this verbose level
-    if [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
-
-        # show normal message unless we are at a debugging level
-        if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-            case $funclevel in
-                1)
-                    echo -en " ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                2)
-                    echo -en " ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                3)
-                    echo -en " ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                4)
-                    echo -en " ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                5)
-                    echo -en " ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                6)
-                    echo -en " ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                7)
-                    echo -en " ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                8)
-                    echo -en " ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                9)
-                    echo -en " ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                10)
-                    echo -en " ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                11)
-                    echo -en " ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-                *)
-                    echo -en " ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
-                    ;;
-            esac
-        else
-            echo -en "${el_c_gr}  " 1>&2
-        fi
-
-        # continuation of the message
-        echo -e "${message}${el_c_n}" 1>&2
-
+    # show normal message unless we are at a debugging level
+    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        case $funclevel in
+            1)
+                echo -en " ${el_c_gr}[${el_c_b2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            2)
+                echo -en " ${el_c_gr}[${el_c_b}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            3)
+                echo -en " ${el_c_gr}[${el_c_c2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            4)
+                echo -en " ${el_c_gr}[${el_c_c}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            5)
+                echo -en " ${el_c_gr}[${el_c_g2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            6)
+                echo -en " ${el_c_gr}[${el_c_g}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            7)
+                echo -en " ${el_c_gr}[${el_c_y2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            8)
+                echo -en " ${el_c_gr}[${el_c_y}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            9)
+                echo -en " ${el_c_gr}[${el_c_r2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            10)
+                echo -en " ${el_c_gr}[${el_c_r}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            11)
+                echo -en " ${el_c_gr}[${el_c_m2}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+            *)
+                echo -en " ${el_c_gr}[${el_c_m}${verbose_level}${el_c_gr}] " 1>&2
+                ;;
+        esac
+    else
+        echo -en "${el_c_gr}  " 1>&2
     fi
+
+    # continuation of the message
+    echo -e "${message}${el_c_n}" 1>&2
 
     # }}}
 }
@@ -2274,7 +2273,7 @@ el_flag(){
     # }}}
     case $action in
         add|set|put)
-            el_explain 2 "added $name flag"
+            el_explain 4 "added $name flag"
             touch "${TMP_FLAGS_d}/$name"
             ;;
         del|remove|delete|rm)

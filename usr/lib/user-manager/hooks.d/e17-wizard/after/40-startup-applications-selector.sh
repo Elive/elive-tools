@@ -364,8 +364,16 @@ EOF
                 if [[ -x "$(which "$line" )" ]] ; then
                     # add to known list
                     echo "$line" >> "$HOME/.e16/startup-applications.list"
+
                     # run it too
+                    if [[ "$line" = "cairo-clock" ]] ; then
+                        # we must enable compositor for it first:
+                        eesh compmgr start
+                        sleep 2
+                    fi
+                    # run
                     ( $line & )
+
                 fi
             done 3<<< "$( echo "$result" | tr '|' '\n' )"
         fi

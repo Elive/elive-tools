@@ -291,7 +291,7 @@ user_add(){
         --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password" ):H" "$password" \
-        --field="$( eval_gettext "Password (confirm)" ):H" "$password" \
+        --field="$( eval_gettext "Password confirmation" ):H" "$password" \
         --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
         --field="$( eval_gettext "Grant admin privileges (SUDO)" ):CHK" "$want_sudo" \

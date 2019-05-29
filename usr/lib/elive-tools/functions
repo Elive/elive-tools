@@ -60,8 +60,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     if [[ -z "${DISPLAY}" ]] ; then
         display="$( ps -u $(id -u) -o pid= | \
             while read pid; do
-                cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep '^DISPLAY=:'
-            done | grep -o ':[0-9]*' | sort -u | tail -1 )"
+                cat /proc/$pid/environ 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep '^DISPLAY=:'
+            done | LC_ALL=C grep -o ':[0-9]*' | sort -u | tail -1 )"
 
         DISPLAY="${display}"
         export DISPLAY
@@ -296,7 +296,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
                 # if anything tell us that we are connected and we was before, we should still be
                 el_dependencies_check "route"
-                if /sbin/route -n | grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | grep -qs "default via" ; then
+                if /sbin/route -n | LC_ALL=C grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | LC_ALL=C grep -qs "default via" ; then
                     if [[ "${EL_DEBUG}" -gt "3" ]] ; then
                         el_debug "seems like we still online, using cache + small checks"
                     fi
@@ -334,7 +334,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     fi
 
     el_dependencies_check "curl"
-    if timeout 9 curl --connect-timeout 8 www.google.com 2>/dev/null | grep -qsi 'html' ; then
+    if timeout 9 curl --connect-timeout 8 www.google.com 2>/dev/null | LC_ALL=C grep -qsi 'html' ; then
         echo "$date_hour_now" > "$stamp_hour_prev"
         if [[ "${EL_DEBUG}" -gt "3" ]] ; then
             el_debug "connection to internet finally using curl"
@@ -425,7 +425,7 @@ el_resolution_get(){ # show our actual resolution
     el_dependencies_check xdpyinfo
     el_set_display_variables
 
-    xdpyinfo | grep dimension | awk '{print $2}' | grep x | tail -1
+    xdpyinfo | LC_ALL=C grep "dimensions:.*x" | awk '{print $2}' | tail -1
 
 }
 
@@ -648,10 +648,10 @@ el_package_newer_check(){
         return 2
     fi
 
-    installed="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    installed="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | LC_ALL=C grep -E "^[[:digit:]]*" )"
     read -r installed <<< "$installed"
 
-    candidate="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | grep -E "^[[:digit:]]*" )"
+    candidate="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | LC_ALL=C grep -E "^[[:digit:]]*" )"
     read -r candidate <<< "$candidate"
 
 
@@ -885,7 +885,7 @@ el_check_translations_required(){
         stat="/var/cache/elive-translations/statistics/${LANG%%_*}/${TEXTDOMAIN}.txt"
 
         if [[ -s "${stat}" ]] ; then
-            percentage_untranslated="$(cat "${stat}" | grep messages_untranslated_percentage | awk '{print $2}' | tail -1 )"
+            percentage_untranslated="$(cat "${stat}" | LC_ALL=C grep "messages_untranslated_percentage" | awk '{print $2}' | tail -1 )"
 
             if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 6 ]] ; then
                 is_translation_required=1
@@ -912,7 +912,7 @@ el_check_translations_required_notify(){
 #===============================================================================
 el_check_version_development(){
     if [[ -e "/etc/elive-version" ]] ; then
-        if [[ "$( grep "^stable-release" /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
+        if [[ "$( LC_ALL=C grep "^stable-release" /etc/elive-version | awk '{print $2}' )" = yes ]] ; then
             return 1
         else
             return 0
@@ -936,7 +936,7 @@ el_elive_version_get(){
     el_security_function_loop || return
 
     # }}}
-    version="$( grep "^elive-version: " "/etc/elive-version" )"
+    version="$( LC_ALL=C grep "^elive-version: " "/etc/elive-version" )"
     version="${version#elive-version: }"
 
     if [[ -z "$version" ]] ; then
@@ -968,7 +968,7 @@ el_check_version_is_days_recent(){
 
     # calculate date builded {{{
 
-    date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
+    date_builded="$( LC_ALL=C grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
     if [[ -z "$date_builded" ]] ; then
         date_builded="2018-05-00"
     fi
@@ -1035,7 +1035,7 @@ el_check_version_development_is_days_recent(){
 
     # calculate date builded {{{
 
-    date_builded="$( grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
+    date_builded="$( LC_ALL=C grep "^date-builded" /etc/elive-version | sed -e 's|date-builded: ||g' )"
     if [[ -z "$date_builded" ]] ; then
         date_builded="2018-05-00"
     fi
@@ -1632,7 +1632,7 @@ el_confirm(){
     local reply question flag_glob
 
     if [[ -n "$BASH_VERSION" ]] ; then
-        if shopt extglob | grep -q "extglob.*off" ; then
+        if shopt extglob | LC_ALL=C grep -q "extglob.*off" ; then
             flag_glob=1
         fi
 
@@ -1957,7 +1957,7 @@ el_report_to_elive(){
         return
     fi
     # same for specific versions of Elive
-    if grep -qs "^special-version:" "/etc/elive-version" ; then
+    if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
         return
     fi
 
@@ -1966,7 +1966,7 @@ el_report_to_elive(){
     if el_check_version_development 1>/dev/null 2>&1 ; then
         # ignore reports for more than X days old
         # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
             if ! el_check_version_development_is_days_recent 7 ; then
                 return
             fi
@@ -1977,7 +1977,7 @@ el_report_to_elive(){
         fi
     else
         # stable versions will need more time
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
             if ! el_check_version_is_days_recent 14 ; then
                 return
             fi
@@ -2031,7 +2031,7 @@ el_report_to_elive(){
     if [[ -z "$conf_send_debug_reports" ]] ; then
 
         # ask for reports
-        if ! grep -qs "boot=live" /proc/cmdline ; then
+        if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
             if [[ "${DISPLAY}" = ":0.0" ]] ; then
                 local message_ask_email
                 # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
@@ -2083,9 +2083,9 @@ el_report_to_elive(){
     # create an unique identifier to differentiate betweem same-reports
     #id="$( dd if=/dev/urandom bs=1k count=2 2>/dev/null | sha1sum | awk '{print $1}' )"
     if el_check_sudo_automated ; then
-        id="$( timeout 3 sudo blkid | grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"
+        id="$( timeout 3 sudo blkid | LC_ALL=C grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"
     else
-        id="$( ip a | grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
+        id="$( ip a | LC_ALL=C grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
     fi
 
     if [[ -z "$conf_send_debug_reports_email" ]] ; then
@@ -2426,7 +2426,7 @@ el_processes_using_mountpoint(){
 
     # }}}
 
-    for pid in $( fuser -m "$dir" 2>/dev/null | tr ' ' '\n' | grep -v "$dir" | grep -v "$$" )
+    for pid in $( fuser -m "$dir" 2>/dev/null | tr ' ' '\n' | LC_ALL=C grep -vE "($dir|$$)" )
     do
         pid="${pid//[^[:digit:]]}"
         commands="$( ps axo pid,comm 2>/dev/null | awk -v pid="$pid" '{if ($1 == pid) { $1="" ; print $0 }}' | sed 's| $||g' )"
@@ -2670,13 +2670,13 @@ el_ram_usage_show(){
     # all reports are in MB
       case "$arg" in
           free)
-              free -m | grep "^Mem: " | awk '{print $7}'
+              free -m | LC_ALL=C grep "^Mem: " | awk '{print $7}'
               ;;
           total)
-              free -m | grep "^Mem: " | awk '{print $2}'
+              free -m | LC_ALL=C grep "^Mem: " | awk '{print $2}'
               ;;
           used)
-              free -m | grep "^Mem: " | awk '{print $3}'
+              free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}'
               ;;
           *)
               free
@@ -2752,7 +2752,7 @@ el_get_machine_id(){
         machine_id="$( dmidecode -s bios-version )$machine_id"
         machine_id="$( dmidecode -s system-manufacturer )$machine_id"
         machine_id="$( dmidecode -s system-product-name )$machine_id"
-        machine_id="$( echo "$( echo "$machine_id" ; cat /proc/cpuinfo 2>/dev/null | grep -E "(model name|model|cpu family)" 2>/dev/null | sort -u 2>/dev/null | psort -- -p "^model.*:" | head -1 )" | md5sum 2>/dev/null | awk '{print $1}' 2>/dev/null )"
+        machine_id="$( echo "$( echo "$machine_id" ; cat /proc/cpuinfo 2>/dev/null | LC_ALL=C grep -E "(model name|model|cpu family)" 2>/dev/null | sort -u 2>/dev/null | psort -- -p "^model.*:" | head -1 )" | md5sum 2>/dev/null | awk '{print $1}' 2>/dev/null )"
         read -r machine_id <<< "$machine_id"
         machine_id="packed${machine_id}"
     fi
@@ -2783,7 +2783,7 @@ el_get_machine_id(){
 ###################################################################
 # Generic checks
 if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-    if [[ "$0" != *"bash" ]] && [[ "$0" != *"bin/zsh" ]] && [[ -e "$@" ]] && grep -q el_step_requires_fixme "$0" ; then
+    if [[ "$0" != *"bash" ]] && [[ "$0" != *"bin/zsh" ]] && [[ -e "$@" ]] ; then
         el_warning "Missing features, report this to Elive"
     fi
 fi
@@ -2930,7 +2930,7 @@ fi
 
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
-if grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
+if LC_ALL=C grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
     EL_LC_EN="en_US.UTF-8"
 else
     # warning: this can broke things by not being utf8

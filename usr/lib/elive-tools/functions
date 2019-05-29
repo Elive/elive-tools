@@ -16,6 +16,11 @@ fi
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
+    # if we are in console (out of X) we should always exit
+    if ((is_console)) ; then
+        return
+    fi
+
     # from enlightenment values {{{
     local display e_ipc_socket
 
@@ -25,11 +30,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     #if [[ -n "$XAUTHORITY" ]] && [[ "$XAUTHORITY" != "$HOME/"* ]] ; then
         #unset XAUTHORITY
     #fi
-
-    # if we are in console (out of X) we should always exit
-    if ((is_console)) ; then
-        return
-    fi
 
     if [[ -z "${DISPLAY}" ]] ; then
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
@@ -1225,18 +1225,14 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
+    # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
+    # check if we have the variable set, because we need to use it (so this may not work in ZSH)
+    if [[ -z "${BASH_SOURCE[@]}" ]] && ! el_check_is_shell ; then
+        return
+    fi
+
     local count counter funcnames sourcenames arg sourcename message
     message="$@"
-
-    # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
-    if el_check_is_shell ; then
-        true
-    else
-        # check if we have the variable set, because we need to use it (so this may not work in ZSH)
-        if [[ -z "${BASH_SOURCE[@]}" ]] ; then
-            return
-        fi
-    fi
 
     # }}}
     # get the list of function names array {{{

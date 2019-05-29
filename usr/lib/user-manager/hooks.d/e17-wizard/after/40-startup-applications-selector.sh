@@ -334,7 +334,7 @@ EOF
         # include composite feature
         menu+=("TRUE")
         menu+=("compositor")
-        menu+=("Compositor: Compositor: Enables transparencies and make dock look better")
+        menu+=("Compositor: Enables transparencies and make dock look better")
 
         # conky
         if [[ -x "$(which 'conky' )" ]] ; then

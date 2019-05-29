@@ -322,6 +322,12 @@ EOF
     # also select which features (apps) we want to have by default:
     if [[ -n "$EROOT" ]] ; then
         unset menu result line
+
+        # always enable notifications features (notify-send) by default:
+        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
+            echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
+        fi
+
         # include composite feature
         menu+=("TRUE")
         menu+=("compositor")
@@ -379,16 +385,12 @@ EOF
             done 3<<< "$( echo "$result" | tr '|' '\n' )"
         fi
 
-        # always enable notifications features (notify-send) by default:
-        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
-            echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
-        fi
     fi
 
 
     # run them all (and wait for next hooks!)
-    if [[ -x "$( which 'elive-startup-applications' )" ]] ; then
-        elive-startup-applications "start"
+    if [[ -x "$( which 'elive-autostart-applications' )" ]] ; then
+        elive-autostart-applications "start"
     else
         # deprecated
         el_warning "not using elive-startup-applications, falling back to old mode"
@@ -399,6 +401,9 @@ EOF
                 if [[ -n "$executable" ]] ; then
                     el_debug "running $executable"
                     bash -c "$executable & disown"
+                else
+                    # simple commands, not desktop files
+                    bash -c "$line & disown"
                 fi
             done 3<<< "$( cat "${order_file}" | sort -u )"
         fi

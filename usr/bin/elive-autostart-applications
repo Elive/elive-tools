@@ -60,6 +60,16 @@ main(){
     if test -s "$order_file" ; then
         while read -ru 3 line
         do
+            # skip already runs:
+            if el_array_member_check "$line" "${already_run[@]}" ; then
+                continue
+            fi
+
+            # skip comments
+            if [[ "$line" = "#"* ]] ; then
+                continue
+            fi
+
             case "$line" in
                 *.desktop|*.DESKTOP)
                     executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
@@ -68,6 +78,7 @@ main(){
                         if ((is_start)) ; then
                             el_debug "running $executable"
                             bash -c "$executable & disown"
+                            el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")
                         fi
                         if ((is_stop)) ; then
                             el_debug "killing $executable"
@@ -82,7 +93,7 @@ main(){
                     fi
                     ;;
             esac
-        done 3<<< "$( cat "$order_file")"
+        done 3<<< "$( cat "$order_file" )"
     fi
 
 

@@ -377,6 +377,11 @@ EOF
                 fi
             done 3<<< "$( echo "$result" | tr '|' '\n' )"
         fi
+
+        # always enable notifications features (notify-send) by default:
+        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
+            echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
+        fi
     fi
 
     # if we are debugging give it a little pause to see what is going on

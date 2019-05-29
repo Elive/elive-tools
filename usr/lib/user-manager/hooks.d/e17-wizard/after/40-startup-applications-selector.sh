@@ -331,27 +331,32 @@ EOF
     # also select which features (apps) we want to have by default:
     if [[ -n "$EROOT" ]] ; then
         unset menu result line
+        # include composite feature
+        menu+=("TRUE")
+        menu+=("compositor")
+        menu+=("Compositor: Compositor: Enables transparencies and make dock look better")
+
         # conky
         if [[ -x "$(which 'conky' )" ]] ; then
             menu+=("TRUE")
             menu+=("conky")
-            menu+=("conky: resources visualizer gadget for desktop")
+            menu+=("Conky: resources visualizer gadget for desktop")
         fi
 
         # cairo-dock
         if [[ -x "$(which 'cairo-dock' )" ]] ; then
             menu+=("TRUE")
             menu+=("cairo-dock")
-            menu+=("cairo-dock: A powerful and featured dock for your desktop")
+            menu+=("cairo-dock: A multiple feature dock for your desktop")
         fi
 
 
         local message_1
-        message_1="$( printf "$( eval_gettext "Select applications to automatically start on your desktop. To add or remove them later you must edit your file:" )" "" )"
+        message_1="$( printf "$( eval_gettext "Select features to automatically start on your desktop. To add or remove them later you must edit your file:" )" "" )"
         local message_2
         message_2="$( printf "$( eval_gettext "Enable" )" "" )"
         local message_3
-        message_3="$( printf "$( eval_gettext "Application" )" "" )"
+        message_3="$( printf "$( eval_gettext "Description" )" "" )"
 
 
         if [[ -n "${menu[@]}" ]] ; then
@@ -365,11 +370,13 @@ EOF
                     # add to known list
                     echo "$line" >> "$HOME/.e16/startup-applications.list"
 
-                    # run it too
-                    if [[ "$line" = "cairo-clock" ]] ; then
+                    # run composite
+                    if [[ "$line" = "compositor" ]] ; then
                         # we must enable compositor for it first:
                         eesh compmgr start
                         sleep 2
+                        # do not add to list, just continue
+                        continue
                     fi
                     # run
                     ( $line & )

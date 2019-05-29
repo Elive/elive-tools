@@ -106,7 +106,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 #   Send a notification to the user
 #-------------------------------------------------------------------------------
 el_notify_user(){ # notify the user (desktop || email). "title" "text"
-
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
@@ -125,7 +124,6 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 #   Send an important notification to the user
 #-------------------------------------------------------------------------------
 el_notify_user_important(){ # notify the user (desktop || email). "title" "text" (no timeout mode)
-
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
@@ -137,7 +135,6 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
     else
         el_warning "$@"
     fi
-
 }
 
 #-------------------------------------------------------------------------------
@@ -437,7 +434,7 @@ el_resolution_get(){ # show our actual resolution
 #-------------------------------------------------------------------------------
 el_check_dependencies(){
     # compatibility
-    el_warning "$FUNCNAME is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry)"
+    el_warning "$FUNCNAME is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
     el_dependencies_check "$@"
 }
 
@@ -445,13 +442,13 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     # example:  el_dependencies_check gmplayer,find,sed,etc
     local check found found_no dir
 
-    while read -ru 3 check
+    for check in ${@//,/ }
     do
         unset found
 
-        for dir in $(echo ${PATH}:/usr/local/sbin:/usr/sbin:/sbin | tr ':' ' ')
+        for dir in ${PATH//:/ } /usr/local/sbin /usr/sbin /sbin
         do
-            if test -x ${dir}/$check
+            if test -x "${dir}/$check"
             then
                 found=yes
                 break
@@ -463,8 +460,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
             NOREPORTS=1 el_error "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-
-    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    done
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -677,28 +673,26 @@ el_package_newer_check(){
 el_check_variables(){ # check if we have set these variables, if not, notify and exit
     # example $0 foo,bar,we
     # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
-    local found_no var
+    local found_no _var
 
-    while read -ru 3 var
+    for _var in ${@//,/ }
     do
         if [[ -n "$ZSH_VERSION" ]] ; then
-            if [[ ! -n "${(P)var}" ]] ; then
-                NOREPORTS=1 el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
+            if [[ ! -n "${(P)_var}" ]] ; then
+                NOREPORTS=1 el_error "Variable '$_var' is not set, func: ${FUNCNAME[1]}"
                 found_no="yes"
             fi
         else
-            if [[ ! -n "${!var}" ]] ; then
-                NOREPORTS=1 el_error "Variable '$var' is not set, func: ${FUNCNAME[1]}"
+            if [[ ! -n "${!_var}" ]] ; then
+                NOREPORTS=1 el_error "Variable '$_var' is not set, func: ${FUNCNAME[1]}"
                 found_no="yes"
             fi
         fi
-    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    done
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
 
@@ -710,7 +704,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 #-------------------------------------------------------------------------------
 el_check_files(){ # check if we have these files (and non-zero), if not, notify and exit
     # example $0 foo,bar,we
-    local var found_no
+    local _var found_no
 
     if [[ -z "$1" ]] ; then
         echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
@@ -718,14 +712,14 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
         return 1
     fi
 
-    while read -ru 3 var
+    for _var in ${@//,/ }
     do
-        if [[ ! -s "${var}" ]] ; then
-            #el_notify_user "E: File not exists" "E: the file '$var' not exists"
-            NOREPORTS=1 el_error "File '$var' not exist, func: ${FUNCNAME[1]}"
+        if [[ ! -s "${_var}" ]] ; then
+            #el_notify_user "E: File not exists" "E: the file '$_var' not exists"
+            NOREPORTS=1 el_error "File '$_var' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    done
 
     if [[ "$found_no" = "yes" ]] ; then
 
@@ -743,7 +737,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
 #-------------------------------------------------------------------------------
 el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify and exit
     # example $0 foo,bar,we
-    local var found_no
+    local _var found_no
 
     if [[ -z "$1" ]] ; then
         echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
@@ -751,23 +745,20 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
         return 1
     fi
 
-    while read -ru 3 var
+    for _var in ${@//,/ }
     do
-        if [[ ! -d "${var}" ]] ; then
-            #el_notify_user "E: Dir not exists" "E: the dir '$var' not exist"
-            NOREPORTS=1 el_error "Directory '$var' not exist, func: ${FUNCNAME[1]}"
+        if [[ ! -d "${_var}" ]] ; then
+            #el_notify_user "E: Dir not exists" "E: the dir '$_var' not exist"
+            NOREPORTS=1 el_error "Directory '$_var' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    done
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
-
 }
 
 
@@ -777,7 +768,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 el_check_dir_has_files(){
     local dir f files
 
-    while read -ru 3 dir
+    for dir in ${@//,/ }
     do
         if [[ -z "$1" ]] ; then
             echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
@@ -791,14 +782,14 @@ el_check_dir_has_files(){
 
             return 1
         else
-            files="$( command ls "${dir%/}/"* 2>/dev/null | wc -l )"
+            files="$( command ls -1 "${dir%/}/"* 2>/dev/null | wc -l )"
             if ! [[ "$files" -gt 0 ]] ; then
                 el_debug "Directory '$dir' doesn't contain any file, func: ${FUNCNAME[1]}"
 
                 return 1
             fi
         fi
-    done 3<<< "$( echo "$@" | tr ',' '\n' )"
+    done
 
 }
 
@@ -806,17 +797,13 @@ el_check_dir_has_files(){
 #   check if we have automatic sudo
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
-
     if ! sudo -H -n echo 2>/dev/null 1>/dev/null ; then
         #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
         el_debug "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it, func: ${FUNCNAME[1]}"
-
         return 1
     else
-
         return 0
     fi
-
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_sudo
@@ -1225,6 +1212,9 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
+    if ! [[ "${EL_DEBUG}" -ge 3 ]] || ! ((is_terminal)) ; then
+        return
+    fi
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
     # check if we have the variable set, because we need to use it (so this may not work in ZSH)
     if [[ -z "${BASH_SOURCE[@]}" ]] && ! el_check_is_shell ; then
@@ -1279,23 +1269,15 @@ el_debug(){
     # }}}
     # show debug {{{
 
-    if [[ "${EL_DEBUG}" -ge 3 ]] ; then
-        if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                if [[ -n "$message" ]] ; then
-                    echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
-                else
-                    echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
-                fi
-            else
-                if [[ -n "$message" ]] ; then
-                    echo -e "${el_c_c}D: ${el_c_c}$message${el_c_n}" 1>&2
-                fi
-            fi
-        #else
-            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                #timeout 40 $guitool --info --text="Debug: ${SOURCE}: $message" || true
-            #fi
+    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        if [[ -n "$message" ]] ; then
+            echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
+        else
+            echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
+        fi
+    else
+        if [[ -n "$message" ]] ; then
+            echo -e "${el_c_c}D: ${el_c_c}$message${el_c_n}" 1>&2
         fi
     fi
 
@@ -1309,6 +1291,10 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
+    if ! ((is_terminal)) ; then
+        return
+    fi
+
     local count counter funcnames sourcenames arg sourcename message
     message="$@"
 
@@ -1357,18 +1343,10 @@ el_info(){
     # }}}
     # show info {{{
 
-    if [[ "${EL_DEBUG}" -ge 2 ]] ; then
-        if ((is_terminal)) ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
-            else
-                echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
-            fi
-        #else
-            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                #timeout 40 $guitool --info --text="${SOURCE}: $message" || true
-            #fi
-        fi
+    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
+    else
+        echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
     fi
 
     # }}}
@@ -1426,17 +1404,13 @@ el_warning(){
     # }}}
     # show warning {{{
 
-    if [[ "${EL_DEBUG}" -ge 1 ]] ; then
-        if ((is_terminal)) ; then
+    if ((is_terminal)) ; then
+        if [[ "${EL_DEBUG}" -ge 1 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
             fi
-        #else
-            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
-                #timeout 90 $guitool --warning --text="${SOURCE}: $message"
-            #fi
         fi
     fi
 
@@ -1518,8 +1492,8 @@ el_error(){
     # show error {{{
 
 
-    if [[ "${EL_DEBUG}" -ge 0 ]] ; then
-        if ((is_terminal)) ; then
+    if ((is_terminal)) ; then
+        if [[ "${EL_DEBUG}" -ge 0 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
             else
@@ -1803,8 +1777,6 @@ el_security_function_loop(){
             fi
         fi
     fi
-
-
 }
 
 #===  FUNCTION  ================================================================
@@ -1871,7 +1843,6 @@ el_array_member_add(){
     _out=()
     local i item=$1 match
     shift
-
 
     for i in "$@"; do
         [[ -z "$i" ]] && continue
@@ -2165,6 +2136,11 @@ el_report_to_elive(){
 #===============================================================================
 el_mark_state(){
     # pre {{{
+    # exit if not wanted
+    if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
+        return
+    fi
+
     local id state category action
     if [[ -n "$2" ]] ; then
         category="$1"
@@ -2189,11 +2165,6 @@ el_mark_state(){
     fi
     if [[ -s "$HOME/.config/elive/settings" ]] ; then
         source "$HOME/.config/elive/settings"
-    fi
-
-    # exit if not wanted
-    if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
-        return
     fi
 
     # }}}
@@ -2938,7 +2909,8 @@ fi
     EL_DEBUG=${EL_DEBUG:-"2"}
 #fi
 
-    # temporal: are we calling this from another user?
+
+    # TODO FIXME XXX: temporal: are we calling this from another user?
     if [[ "$USER" = "root" ]] && [[ "$HOME" = "/home"* ]] ; then
         el_warning "calling elive-functions with user root and home set to '${HOME}', from SOURCE $SOURCE , \$0 $0 , BASH $BASH "
     fi
@@ -2955,11 +2927,6 @@ if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
         export HOME="$DHOME/$(id -un)"
     fi
 fi
-
-    # temporal: are we calling this from another user?
-    if [[ "$USER" = "root" ]] && [[ "$HOME" = "/home"* ]] ; then
-        el_warning "calling elive-functions with user root and home set to '${HOME}', from SOURCE $SOURCE , \$0 $0 , BASH $BASH "
-    fi
 
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":

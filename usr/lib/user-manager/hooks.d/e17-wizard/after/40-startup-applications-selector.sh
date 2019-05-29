@@ -366,18 +366,20 @@ EOF
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
             while read -ru 3 line
             do
+                # run composite
+                if [[ "$line" = "compositor" ]] ; then
+                    # we must enable compositor for it first:
+                    eesh compmgr start
+                    # wait that its started before to run other things:
+                    sleep 2
+                    # do not add to list, just continue
+                    continue
+                fi
+
                 if [[ -x "$(which "$line" )" ]] ; then
                     # add to known list
                     echo "$line" >> "$HOME/.e16/startup-applications.list"
 
-                    # run composite
-                    if [[ "$line" = "compositor" ]] ; then
-                        # we must enable compositor for it first:
-                        eesh compmgr start
-                        sleep 2
-                        # do not add to list, just continue
-                        continue
-                    fi
                     # run
                     ( $line & )
 

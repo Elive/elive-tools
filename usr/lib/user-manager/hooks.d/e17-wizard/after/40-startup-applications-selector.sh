@@ -314,16 +314,7 @@ EOF
     fi
 
     # RUN the already selected .desktops to launch at start, otherwise we will have problems like authentications in the first boot (gparted or mounting disks failing)
-    if test -s "${order_file}" ; then
-        while read -ru 3 line
-        do
-            executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
-            if [[ -n "$executable" ]] ; then
-                el_debug "running $executable"
-                bash -c "$executable & disown"
-            fi
-        done 3<<< "$( cat "${order_file}")"
-    fi
+    # update: deprecated, let's use 'elive-autostart-applications' intead
 
 
 
@@ -371,7 +362,7 @@ EOF
                     # we must enable compositor for it first:
                     eesh compmgr start
                     # wait that its started before to run other things:
-                    sleep 2
+                    sleep 1
                     # do not add to list, just continue
                     continue
                 fi
@@ -381,7 +372,8 @@ EOF
                     echo "$line" >> "$HOME/.e16/startup-applications.list"
 
                     # run
-                    ( $line & )
+                    # update: do not run: we will run them all later
+                    #( $line & )
 
                 fi
             done 3<<< "$( echo "$result" | tr '|' '\n' )"
@@ -390,6 +382,25 @@ EOF
         # always enable notifications features (notify-send) by default:
         if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
             echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
+        fi
+    fi
+
+
+    # run them all (and wait for next hooks!)
+    if [[ -x "$( which 'elive-startup-applications' )" ]] ; then
+        elive-startup-applications "start"
+    else
+        # deprecated
+        el_warning "not using elive-startup-applications, falling back to old mode"
+        if test -s "${order_file}" ; then
+            while read -ru 3 line
+            do
+                executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
+                if [[ -n "$executable" ]] ; then
+                    el_debug "running $executable"
+                    bash -c "$executable & disown"
+                fi
+            done 3<<< "$( cat "${order_file}" | sort -u )"
         fi
     fi
 

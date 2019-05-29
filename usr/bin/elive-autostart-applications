@@ -78,7 +78,6 @@ main(){
                         if ((is_start)) ; then
                             el_debug "running $executable"
                             bash -c "$executable & disown"
-                            el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")
                         fi
                         if ((is_stop)) ; then
                             el_debug "killing $executable"
@@ -93,6 +92,10 @@ main(){
                     fi
                     ;;
             esac
+
+            # append to the already run list:
+            el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")
+
         done 3<<< "$( cat "$order_file" )"
     fi
 

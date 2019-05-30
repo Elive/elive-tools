@@ -758,7 +758,13 @@ el_package_upgrade_fast(){
 
     # install all downloaded packages
     if ls *deb  1>/dev/null 2>&1 ; then
-        dpkg -i *deb 1>/dev/null
+        el_debug "going to install:\n$( ls -1 *deb )"
+
+        if [[ "$UID" = 0 ]] ; then
+            dpkg -i *deb 1>/dev/null
+        else
+            el_sudo dpkg -i *deb
+        fi
 
         if apt-get -f install -q=2 -y ; then
             success=1

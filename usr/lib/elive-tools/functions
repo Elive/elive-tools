@@ -667,6 +667,112 @@ el_package_newer_check(){
     fi
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_package_upgrade_fast
+#   DESCRIPTION:  update and install a package in a very fast and light way
+#                 soft means that only newer packages will be installed, force will allow downgrades
+#                 WARNING: this is not a reliable tool, use with caution
+#    PARAMETERS:  $1 = timeout for each package to download, $2 = force|soft, $@ = packages
+#       RETURNS:  -
+#===============================================================================
+el_package_upgrade_fast(){
+    # pre {{{
+    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev success
+
+    timeout="$1"
+    shift
+    mode="$1"
+    shift
+
+    tmpdir="/tmp/.$(basename $0)_${FUNCNAME}_${USER}"
+
+    # }}}
+    dirprev="$(pwd)"
+    mkdir -p "$tmpdir"
+    cd "$tmpdir"
+
+    # checks
+    if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
+        el_error "we don't have an ending *Packages file in our apt lists available"
+    fi
+
+    for package in "$@"
+    do
+        installed="$( LC_ALL=C apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' )"
+        read -r installed <<< "$installed"
+        if [[ -z "$installed" ]] ; then
+            el_error "unable to get the version of installed package ${package}: $installed"
+            continue
+        fi
+
+        url_subdir="$( grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
+        if [[ -z "$url_subdir" ]] ; then
+            el_error "unable to get the url_subdir for package ${package}: $url_subdir"
+            continue
+        fi
+
+        url="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | head -1 )"
+        if [[ -z "$url" ]] ; then
+            el_error "unable to get the url for package ${package}: $url"
+            continue
+        fi
+
+        distro="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | head -1 )"
+        if [[ -z "$distro" ]] ; then
+            el_error "unable to get the distro for package ${package}: $distro"
+            continue
+        fi
+
+        package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}" | sed -e 's|^.* http|http|g' | tail -1 )"
+        if [[ -z "$package_url" ]] ; then
+            el_error "unable to get the distro for package ${package}: $package_url"
+            continue
+        fi
+
+        candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
+        if [[ -z "$candidate" ]] ; then
+            el_error "unable to get the distro for package ${package}: $candidate"
+            continue
+        fi
+
+        # possibly new version
+        if [[ "$installed" != "$candidate" ]] ; then
+            # update: if force, we don't care now about the specific version, because we allow downgrades:
+            case "$mode" in
+                force)
+                    el_debug "downloading candidate for ${package}, installed '$installed' vs candidate '${candidate}' "
+                    timeout ${timeout} wget -qc "$package_url"
+                    ;;
+                soft)
+                    if dpkg --compare-versions "$installed" lt "$candidate" ; then
+                        el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}' "
+                        timeout ${timeout} wget -qc "$package_url"
+                    fi
+                    ;;
+                *)
+                    el_warning "unknown mode $mode for $FUNCNAME"
+                    ;;
+            esac
+        fi
+    done
+
+    # install all downloaded packages
+    if ls *deb  1>/dev/null 2>&1 ; then
+        dpkg -i *deb 1>/dev/null
+
+        if apt-get -f install -q=2 -y ; then
+            success=1
+        else
+            success=0
+        fi
+    fi
+
+    cd "$dirprev"
+    rm -rf "$tmpdir"
+
+    return "$success"
+}
+
 #-------------------------------------------------------------------------------
 #   Check if variable exists
 #-------------------------------------------------------------------------------

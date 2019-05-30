@@ -670,9 +670,9 @@ el_package_newer_check(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_package_upgrade_fast
 #   DESCRIPTION:  update and install a package in a very fast and light way
-#                 soft means that only newer packages will be installed, force will allow downgrades
 #                 WARNING: this is not a reliable tool, use with caution
-#    PARAMETERS:  $1 = timeout for each package to download, $2 = force|soft, $@ = packages
+#    PARAMETERS:  $1 = timeout for each package to download, $2 = force|normal, $@ = packages
+#                 normal means that only newer packages will be installed, force will allow downgrades
 #       RETURNS:  -
 #===============================================================================
 el_package_upgrade_fast(){
@@ -764,7 +764,7 @@ el_package_upgrade_fast(){
                     timeout ${timeout} wget -qc "$package_url"
                 fi
                 ;;
-            soft)
+            normal)
                 if dpkg --compare-versions "$installed" lt "$candidate" ; then
                     el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
                     timeout ${timeout} wget -qc "$package_url"

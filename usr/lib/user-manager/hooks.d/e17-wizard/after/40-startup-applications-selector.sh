@@ -368,7 +368,7 @@ EOF
                     # we must enable compositor for it first:
                     eesh compmgr start
                     # wait that its started before to run other things:
-                    sleep 1
+                    sleep 3
                     # do not add to list, just continue
                     continue
                 fi

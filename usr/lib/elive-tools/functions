@@ -706,7 +706,7 @@ el_package_upgrade_fast(){
             continue
         fi
 
-        arch="$( dpkg -l | grep -E "^(ii|hi)\s+${package}\s+${installed}" | awk '{print $4}' )"
+        arch="$( dpkg -l | grep -E "^(ii|hi)\s+${package}(:.*\s+)?\s+" | awk '{print $4}' )"
         case "$arch" in
             amd64|i386)
                 arch="_${arch}"

@@ -30,13 +30,16 @@ main(){
     # }}}
     for arg in "$@"
     do
-        if ! [[ -f "$arg" ]] ; then
+        if ! [[ -e "$arg" ]] ; then
             arg="$(which "$arg" | grep "^/" | head -1 )"
 
-            if ! [[ -f "$arg" ]] ; then
+            if ! [[ -e "$arg" ]] ; then
                 continue
             fi
         fi
+
+        # fetch the correct location of the executables if they are symlinked
+        arg="$( readlink -f "$arg" )"
 
         # Include binaries / parameters
         if [[ -e "$arg" ]] ; then

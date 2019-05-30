@@ -677,7 +677,7 @@ el_package_newer_check(){
 #===============================================================================
 el_package_upgrade_fast(){
     # pre {{{
-    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev success
+    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev success arch
 
     timeout="$1"
     shift
@@ -685,6 +685,7 @@ el_package_upgrade_fast(){
     shift
 
     tmpdir="/tmp/.$(basename $0)_${FUNCNAME}_${USER}"
+    success=0
 
     # }}}
     dirprev="$(pwd)"
@@ -705,7 +706,21 @@ el_package_upgrade_fast(){
             continue
         fi
 
-        url_subdir="$( grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
+        arch="$( dpkg -l | grep -E "^(ii|hi)\s+${package}\s+${installed}" | awk '{print $4}' )"
+        case "$arch" in
+            amd64|i386)
+                arch="_${arch}"
+                ;;
+            all)
+                arch=""
+                ;;
+            *)
+                el_error "unable to get the arch value for package ${package}: $arch"
+                continue
+                ;;
+        esac
+
+        url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
         if [[ -z "$url_subdir" ]] ; then
             el_error "unable to get the url_subdir for package ${package}: $url_subdir"
             continue
@@ -723,7 +738,7 @@ el_package_upgrade_fast(){
             continue
         fi
 
-        package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}" | sed -e 's|^.* http|http|g' | tail -1 )"
+        package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
         if [[ -z "$package_url" ]] ; then
             el_error "unable to get the distro for package ${package}: $package_url"
             continue
@@ -735,25 +750,30 @@ el_package_upgrade_fast(){
             continue
         fi
 
-        # possibly new version
-        if [[ "$installed" != "$candidate" ]] ; then
-            # update: if force, we don't care now about the specific version, because we allow downgrades:
-            case "$mode" in
-                force)
-                    el_debug "downloading candidate for ${package}, installed '$installed' vs candidate '${candidate}' "
-                    timeout ${timeout} wget -qc "$package_url"
-                    ;;
-                soft)
-                    if dpkg --compare-versions "$installed" lt "$candidate" ; then
-                        el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}' "
-                        timeout ${timeout} wget -qc "$package_url"
-                    fi
-                    ;;
-                *)
-                    el_warning "unknown mode $mode for $FUNCNAME"
-                    ;;
-            esac
+        # install dependencies if needed
+        if ! el_dependencies_check wget ; then
+            el_dependencies_install "wget"
         fi
+
+        # update: if force, we don't care now about the specific version, because we allow downgrades:
+        case "$mode" in
+            force)
+                # different version
+                if [[ "$installed" != "$candidate" ]] ; then
+                    el_debug "downloading candidate for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url} "
+                    timeout ${timeout} wget -qc "$package_url"
+                fi
+                ;;
+            soft)
+                if dpkg --compare-versions "$installed" lt "$candidate" ; then
+                    el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
+                    timeout ${timeout} wget -qc "$package_url"
+                fi
+                ;;
+            *)
+                el_warning "unknown mode $mode for $FUNCNAME"
+                ;;
+        esac
     done
 
     # install all downloaded packages

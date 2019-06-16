@@ -2938,6 +2938,8 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     alias _complete=_bash_comp
     #emulate -L sh
     #setopt kshglob noshglob braceexpand
+    # always split words or this would make things incompatible, like for i in ${PATH//:/ } (in other words, variables split by spaces instead of sentences, just like in bash
+    setopt shwordsplit
 
     # we cannot set parameters on this variable, so use it without icon:
     [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity"
@@ -2971,11 +2973,6 @@ else
     export TERM="linux"
 fi
 
-# always use this option for scripts
-if [[ -n "$ZSH_VERSION" ]] ; then
-    # always split words or this would make things incompatible
-    setopt shwordsplit
-fi
 
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then

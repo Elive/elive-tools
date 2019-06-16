@@ -1227,7 +1227,7 @@ el_check_is_shell(){
     fi
 
     # check when in zsh
-    if [[ -z "$ZSH_SCRIPT" ]] ; then
+    if [[ -n "$ZSH_VERSION" ]] && [[ -z "$ZSH_SCRIPT" ]] ; then
         return 0
     fi
 

@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# Note: if you use ZSH, you must set the SOURCE var name from the main script
-if [[ -z "$SOURCE" ]]; then
-    if [[ -n "$ZSH_VERSION" ]] ; then
-        # TODO: actually stills showing the name of this function file, not works
-        SOURCE="${(%):-%x}"
-    else
+if [[ -n "$ZSH_VERSION" ]] ; then
+    # Note: if you use ZSH, you must set the SOURCE var name from the main script
+    if [[ -n "$SOURCE" ]]; then
         SOURCE="$( readlink -f "$0" || true )"
+    else
+        SOURCE="$ZSH_SCRIPT"
     fi
 fi
 
@@ -1228,7 +1227,7 @@ el_check_is_shell(){
     fi
 
     # check when in zsh
-    if [[ -n "$ZSH_VERSION" ]] && [[ "$SOURCE" = "/usr/lib/elive-tools/functions" ]] ; then
+    if [[ -z "$ZSH_SCRIPT" ]] ; then
         return 0
     fi
 
@@ -2972,6 +2971,12 @@ else
     export TERM="linux"
 fi
 
+# always use this option for scripts
+if [[ -n "$ZSH_VERSION" ]] ; then
+    # always split words or this would make things incompatible
+    setopt shwordsplit
+fi
+
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
 if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
@@ -3040,12 +3045,6 @@ fi
 #else
     EL_DEBUG=${EL_DEBUG:-"2"}
 #fi
-
-
-    # TODO FIXME XXX: temporal: are we calling this from another user?
-    if [[ "$USER" = "root" ]] && [[ "$HOME" = "/home"* ]] ; then
-        el_warning "calling elive-functions with user root and home set to '${HOME}', from SOURCE $SOURCE , \$0 $0 , BASH $BASH "
-    fi
 
 
 # extra vars

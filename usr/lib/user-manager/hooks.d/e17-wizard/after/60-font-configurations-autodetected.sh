@@ -95,7 +95,7 @@ main(){
             gtk_font_size_change "8"
             # urxvt font size:
             #sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
-            sed -i -e 's|pixelsize=11$|pixelsize=9|g' "$HOME/.Xdefaults"
+            sed -i -e 's|pixelsize=.*$|pixelsize=9|g' "$HOME/.Xdefaults"
             xrdb "$HOME/.Xdefaults"
         else
             if [[ "$resolution" -lt 800 ]] ; then
@@ -103,7 +103,7 @@ main(){
                 ERM -font-set "application" "$font" 7
                 gtk_font_size_change "7"
                 # urxvt font size:
-                sed -i -e 's|pixelsize=11$|pixelsize=7|g' "$HOME/.Xdefaults"
+                sed -i -e 's|pixelsize=.*$|pixelsize=7|g' "$HOME/.Xdefaults"
                 xrdb "$HOME/.Xdefaults"
             fi
         fi

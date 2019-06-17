@@ -13,6 +13,22 @@ ERM(){
     el_warning "enlightenment_remote not available?"
 }
 
+gtk_font_size_change(){
+    local size is_xsettingsd_running
+    size="$1"
+
+    if pidof xsettingsd 1>/dev/null 2>&1 ; then
+        is_xsettingsd_running=1
+        killall xsettingsd
+    fi
+
+    sed -i -e "/FontName /s|Sans.*$|Sans $size\"|g" "$HOME/.xsettingsd"
+
+    if ((is_xsettingsd_running)) ; then
+        ( xsettingsd 1>/dev/null 2>&1 & )
+    fi
+}
+
 main(){
     # pre {{{
     local resolution font
@@ -57,6 +73,7 @@ main(){
     if [[ "$resolution" -gt 1024 ]] ; then
         # not needed: we have it already set more optimally
         #ERM -font-set "application" "$font" 9
+        #gtk_font_size_change "10"
         true
     else
         # disable google chrome bookmarks due to size limitations
@@ -69,15 +86,18 @@ main(){
         if [[ "$resolution" -ge 800 ]] ; then
             # resolutions between 800x* & 1024x*
             ERM -font-set "application" "$font" 8
+            gtk_font_size_change "8"
             # urxvt font size:
-            sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
+            #sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
+            sed -i -e 's|pixelsize=11$|pixelsize=9|g' "$HOME/.Xdefaults"
             xrdb "$HOME/.Xdefaults"
         else
             if [[ "$resolution" -lt 800 ]] ; then
                 # very extreme cases (very small screens)
                 ERM -font-set "application" "$font" 7
+                gtk_font_size_change "7"
                 # urxvt font size:
-                sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
+                sed -i -e 's|pixelsize=11$|pixelsize=7|g' "$HOME/.Xdefaults"
                 xrdb "$HOME/.Xdefaults"
             fi
         fi

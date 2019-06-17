@@ -22,7 +22,13 @@ gtk_font_size_change(){
         killall xsettingsd
     fi
 
+    # xsettingsd confs:
     sed -i -e "/FontName /s|Sans.*$|Sans $size\"|g" "$HOME/.xsettingsd"
+    # gtk-3
+    sed -i -e "/^gtk-font-name=/s|Sans.*$|Sans $size|g" "$HOME/.config/gtk-3.0/settings.ini"
+    # gtk-2
+    sed -i -e "/^gtk-font-name=/s|Sans.*$|Sans $size\"|g" "$HOME/.gtkrc-2.0"
+
 
     if ((is_xsettingsd_running)) ; then
         ( xsettingsd 1>/dev/null 2>&1 & )

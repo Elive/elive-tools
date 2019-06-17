@@ -61,7 +61,7 @@ main(){
         # un-needed / blacklisted ones {{{
         if [[ -n "$EROOT" ]] ; then
             # E16 requires different ones
-            if echo "$filename" | grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 #       e16 doesn't has a module or anything so keep it running from the trayer
@@ -75,7 +75,7 @@ main(){
 
         else
             # E17 / E22
-            if echo "$filename" | grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 # wicd-: deprecated and not needed for elive
@@ -88,7 +88,7 @@ main(){
         fi
         # e16 cases
         if [[ -n "$EROOT" ]] ; then
-            if echo "$filename" | grep -qsEi "^(pulseaudio)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(pulseaudio)" ; then
                 # pulseaudio*: starte16 already starts it, and its needed to start it before the desktop starts otherwise we could have an error in desktop
                 # update: not sure if this is needed anymore (and remove from starte16)
                 continue
@@ -98,7 +98,7 @@ main(){
         # default to enabled/disabled {{{
 
         if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 el_debug "state: TRUE"
@@ -107,7 +107,7 @@ main(){
                 el_debug "state: FALSE"
             fi
         else
-            if echo "$filename" | grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 el_debug "state: TRUE"
@@ -118,7 +118,7 @@ main(){
         fi
 
         # auto menu for live mode
-        if echo "$filename" | grep -qsEi "^(polkit|elive-|gnome-|pulseaudio)" ; then
+        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-|pulseaudio)" ; then
             menu_auto_live+=("$file")
         fi
         # - default to enabled/disabled }}}
@@ -128,17 +128,22 @@ main(){
         el_debug "file: $file"
 
         # include name {{{
-        name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+        if [[ "${LANG%%.*}" = "en_US" ]] ; then
+            name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+        fi
         if [[ -z "$name" ]] ; then
-            name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$name" ]] ; then
-                name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                 if [[ -z "$name" ]] ; then
-                    name="$( grep "^Name\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                    name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                     if [[ -z "$name" ]] ; then
-                        name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        name="$( grep "^Name\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                         if [[ -z "$name" ]] ; then
-                            name="$( basename "${file%.*}" )"
+                            name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                            if [[ -z "$name" ]] ; then
+                                name="$( basename "${file%.*}" )"
+                            fi
                         fi
                     fi
                 fi
@@ -157,15 +162,20 @@ main(){
 
         # }}}
         # include comment {{{
-        comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+        if [[ "${LANG%%.*}" = "en_US" ]] ; then
+            comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+        fi
         if [[ -z "$comment" ]] ; then
-            comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$comment" ]] ; then
-                comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                 if [[ -z "$comment" ]] ; then
-                    comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                    comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                     if [[ -z "$comment" ]] ; then
-                        comment="$( grep "^Comment\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        if [[ -z "$comment" ]] ; then
+                            comment="$( grep "^Comment\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        fi
                     fi
                 fi
             fi
@@ -221,7 +231,7 @@ main(){
 
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
-        if ! grep -qs "elxstrt.desktop" "${order_file}" ; then
+        if ! LC_ALL=C grep -qs "elxstrt.desktop" "${order_file}" ; then
             echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
         fi
     fi
@@ -241,7 +251,7 @@ main(){
                 is_gdu_notif_included=1
             fi
 
-            if ! grep -qs "^${file}$" "${order_file}" ; then
+            if ! LC_ALL=C grep -qs "^${file}$" "${order_file}" ; then
                 echo "$file" >> "${order_file}"
             fi
         fi
@@ -258,7 +268,7 @@ main(){
                     # re-enable it
                     file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
                     if [[ -s "$file" ]] ; then
-                        if ! grep -qs "$file" "${order_file}" ; then
+                        if ! LC_ALL=C grep -qs "$file" "${order_file}" ; then
                             echo "$file" >> "${order_file}"
                         fi
                     else
@@ -301,7 +311,7 @@ EOF
                 # re-enable it
                 file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
                 if [[ -s "$file" ]] ; then
-                    if ! grep -qs "$file" "${order_file}" ; then
+                    if ! LC_ALL=C grep -qs "$file" "${order_file}" ; then
                         echo "$file" >> "${order_file}"
                     fi
                 else

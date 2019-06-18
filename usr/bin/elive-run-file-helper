@@ -85,12 +85,10 @@ run_script(){
     fi
 
     # warn user
-    el_config_get "conf_is_user_warned"
-    if ! ((conf_is_user_warned)) ; then
-        zenity --warning --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source" )"
-        conf_is_user_warned=1
-        el_config_save "conf_is_user_warned"
+    if ! zenity --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source. Continue?" )" ; then
+        return
     fi
+
     #el_config_get "is_user_warned_root"
     #if ! ((is_user_warned_root)) ; then
         #zenity --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if is the case you need to right-click in the filemanager to enter in admin mode, then running the file from this new session." )"

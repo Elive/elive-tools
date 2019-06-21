@@ -2572,10 +2572,12 @@ el_processes_using_mountpoint(){
         # reverse loop of array
         for (( pid=${#pids_mountpoint[@]}-1 ; pid>=0 ; pid-- ))
         do
-            el_debug "Killing process: ${pids_mountpoint[pid]}"
-            kill "${pids_mountpoint[pid]}" 2>/dev/null
-            kill -9 "${pids_mountpoint[pid]}" 2>/dev/null
-            sleep 1
+            if ps "${pids_mountpoint[pid]}" 1>/dev/null 2>&1 ; then
+                el_debug "Killing process: \n$( ps "${pids_mountpoint[pid]}" )"
+                kill "${pids_mountpoint[pid]}" 2>/dev/null
+                kill -9 "${pids_mountpoint[pid]}" 2>/dev/null
+                LC_ALL=C sleep 0.2
+            fi
         done
     fi
 

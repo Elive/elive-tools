@@ -109,6 +109,7 @@ check_hardware(){
 
     # in mode check we dont want to install, just to check
     if ((is_mode_detect)) ; then
+        el_info "ATI card detected"
         exit 0
     fi
 

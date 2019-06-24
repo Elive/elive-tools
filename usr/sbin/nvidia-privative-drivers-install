@@ -97,6 +97,7 @@ load_driver(){
         return 0
     else
         el_error "unable to load nvidia module: \ndmesg:\n$(dmesg | tail -n 6)\nmodules found:\n$nvidia_modules"
+        sleep 5
         return 1
     fi
 }
@@ -1081,11 +1082,11 @@ uninstall_driver(){
 
 
     # reboot needed for nouveau
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" && ! lsmod | grep -qs '^nouveau' ; then
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" ; then
         local message_title
         message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
         local message_message_reboot_open
-        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the privative drivers because nouveau is disabled. Reboot now to select the normal options?" )" )"
+        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the privative drivers because nouveau is disabled. Reboot now to select the other option?" )" )"
 
         dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "$message_title" \

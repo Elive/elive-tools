@@ -885,7 +885,7 @@ install_driver(){
             if ! lsmod | grep -qs nvidia ; then
                 NOREPORTS=1 el_error "Unable to load NVIDIA module"
 
-                message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the NVIDIA driver will be require from an older kernel." )" "" )"
+                message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
             fi
 
 

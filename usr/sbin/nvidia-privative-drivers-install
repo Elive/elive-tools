@@ -77,7 +77,7 @@ load_driver(){
             do
                 _NVIDIA_MODULE="$(basename "$i" )"
                 _NVIDIA_MODULE="${_NVIDIA_MODULE%.ko}"
-                el_debug "modprobe $_NVIDIA_MODULE"
+                el_info "running: modprobe $_NVIDIA_MODULE"
 
                 if modprobe "$_NVIDIA_MODULE" ; then
                     break
@@ -653,6 +653,11 @@ interactive_ask_driver_version(){
             fi
             ;;
     esac
+
+    # add the modprobe package
+    if ! ((is_wheezy)) ; then
+        _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES nvidia-modprobe"
+    fi
 
     el_debug "Selected list of packages to install:\n$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )"
 

@@ -762,20 +762,28 @@ install_driver(){
                 while read -ru 3 package
                 do
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
-                        sleep 5
+                        # open a shell
                         if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
                             echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
-                            sleep 10
+                            sleep 5
                         else
                             if [[ "$_NVIDIA_VERSION" = "current" ]] ; then
                                 echo -e "\nE: Installing nvidia packages failed, please try to install them yourself" 1>&2
                                 echo -e "\nE: Boot Elive with the nox11autologin parameter to not start the graphical system" 1>&2
                                 echo -e "\nE: If you see that Elive has a missing configuration or package for the 'current'" 1>&2
                                 echo -e "\nE: version, please report what is needed to include to have the tool working for all" 1>&2
-                                sleep 25
+                                sleep 5
                             else
                                 echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
-                                sleep 10
+                                sleep 5
+                            fi
+                        fi
+
+                        # open an interactive shell
+                        if ! ((is_mode_auto)) ; then
+                            if el_confirm "$( eval_gettext ""The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now? )" ; then
+                                find /lib/modules -type f -iname '*'nvidia'*'
+                                el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, and finally run the graphical system with 'startx'"
                             fi
                         fi
                     fi

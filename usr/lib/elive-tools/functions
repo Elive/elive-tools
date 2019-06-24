@@ -2029,7 +2029,7 @@ el_step_requires_fixme(){
 
     if ((is_terminal)) ; then
         echo -e "\n"
-        el_warning "Experimental or uncomplete code:"
+        #el_warning "Experimental or uncomplete code:"
         echo -e "We have set a breakpoint here, report to Elive this message if needed:"
         echo -e "${FUNCNAME} for $0"
         echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"

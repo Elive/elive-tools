@@ -77,6 +77,8 @@ load_driver(){
             do
                 _NVIDIA_MODULE="$(basename "$i" )"
                 _NVIDIA_MODULE="${_NVIDIA_MODULE%.ko}"
+                el_debug "modprobe $_NVIDIA_MODULE"
+
                 if modprobe "$_NVIDIA_MODULE" ; then
                     break
                 fi
@@ -97,7 +99,7 @@ load_driver(){
         return 0
     else
         el_error "unable to load nvidia module: \ndmesg:\n$(dmesg | tail -n 6)\nmodules found:\n$nvidia_modules"
-        sleep 5
+        sleep 4
         return 1
     fi
 }
@@ -831,7 +833,10 @@ install_driver(){
                         if ! ((is_mode_auto)) || ((is_mode_live)) ; then
                             if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                                 find /lib/modules -type f -iname '*'nvidia'*'
-                                el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
+                                el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
+                                el_explain 0 "Type '__exit__' for continue..."
+                                $SHELL -l
+
                             fi
                         fi
                     fi

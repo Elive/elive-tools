@@ -98,8 +98,8 @@ load_driver(){
     if lsmod | grep -qs nvidia ; then
         return 0
     else
-        el_error "unable to load nvidia module: \ndmesg:\n$(dmesg | tail -n 6)\nmodules found:\n$nvidia_modules"
-        sleep 4
+        #el_error "unable to load nvidia module: \ndmesg:\n$(dmesg | tail -n 6)\nmodules found:\n$nvidia_modules"
+        #sleep 4
         return 1
     fi
 }

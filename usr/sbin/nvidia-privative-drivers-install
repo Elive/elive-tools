@@ -783,7 +783,7 @@ install_driver(){
                         if ! ((is_mode_auto)) ; then
                             if el_confirm "$( eval_gettext ""The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now? )" ; then
                                 find /lib/modules -type f -iname '*'nvidia'*'
-                                el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, and finally run the graphical system with 'startx'"
+                                el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                             fi
                         fi
                     fi

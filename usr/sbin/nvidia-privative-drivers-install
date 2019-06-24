@@ -49,11 +49,48 @@ check_driver(){
         return 1
     fi
     # but wee need also to make sure that is 'correctly' installed
-    if ! modprobe nvidia || ! nvidia-modprobe ; then
+    if ! load_driver ; then
         return 1
     fi
-    # just another test
-    if ! lsmod | grep -qs nvidia ; then
+}
+#===  FUNCTION  ================================================================
+#          NAME:  load_driver
+#   DESCRIPTION:  loads the nvidia module
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+load_driver(){
+    # pre {{{
+    el_debug
+    local i nvidia_modules
+
+    # }}}
+
+    # load driver
+    if which nvidia-modprobe 1>/dev/null 2>&1 ; then
+        nvidia-modprobe
+    else
+        nvidia_modules="$( find /lib/modules -type f -iname nvidia'*'ko )"
+
+        if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
+            for i in $nvidia_modules
+            do
+                nvidia_module="$(basename "$i" )"
+                nvidia_module="${nvidia_module%.ko}"
+                modprobe "$nvidia_module"
+            done
+        fi
+    fi
+
+    # check
+    if [[ "$( echo "$nvidia_modules" | wc -l )" -gt 1 ]] ; then
+        el_warning "more than one nvidia module found: \n$nvidia_modules"
+    fi
+
+    if lsmod | grep -qs nvidia ; then
+        return 0
+    else
+        el_error "unable to load nvidia module: \ndmesg:\n$(dmesg | tail -n 6)\nmodules found:\n$nvidia_modules"
         return 1
     fi
 }
@@ -347,7 +384,7 @@ interactive_ask_privative(){
             fi
 
             # don't ask if mode auto, assume yes
-            if ((is_mode_auto)) ; then
+            if ((is_mode_auto)) || ((is_mode_already_run)) ; then
                 ret=0
             else
                 local message_title
@@ -817,28 +854,20 @@ install_driver(){
     # reload devices just in case
     service nvidia-kernel restart 1>/dev/null 2>&1
 
-    # load driver
-    if which nvidia-modprobe 1>/dev/null 2>&1 ; then
-        nvidia-modprobe
-    else
-        # TODO: what about ohter verisons?
-        modprobe nvidia
-    fi
-
-    if ! modprobe nvidia ; then
-        sleep 4
+    if ! lsmod | grep -qs nvidia ; then
+        sleep 6
         local message_unable_to_load
 
         # default message for not working drivers
         if ! lsmod | grep -qs nvidia ; then
-            sleep 4
             NOREPORTS=1 el_error "Unable to load NVIDIA module"
+            sleep 2
 
             message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is old then an older version of the NVIDIA driver will be require from an older kernel." )" "" )"
         fi
 
 
-        if modprobe nvidia 2>&1 | grep -qs "No supported display adapters" ; then
+        if modprobe $nvidia_module 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
             message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free-drivers." )" "" )"
 
@@ -936,6 +965,7 @@ try_again(){
             exit
             ;;
         other)
+            export is_mode_already_run=1
             $0 $args
             exit
             ;;

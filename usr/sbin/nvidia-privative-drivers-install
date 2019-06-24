@@ -70,16 +70,22 @@ load_driver(){
     if which nvidia-modprobe 1>/dev/null 2>&1 ; then
         nvidia-modprobe
     else
-        nvidia_modules="$( find /lib/modules -type f -iname nvidia'*'ko )"
+        nvidia_modules="$( find /lib/modules -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm).ko" )"
 
         if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
             for i in $nvidia_modules
             do
-                nvidia_module="$(basename "$i" )"
-                nvidia_module="${nvidia_module%.ko}"
-                modprobe "$nvidia_module"
+                _NVIDIA_MODULE="$(basename "$i" )"
+                _NVIDIA_MODULE="${_NVIDIA_MODULE%.ko}"
+                if modprobe "$_NVIDIA_MODULE" ; then
+                    break
+                fi
             done
         fi
+    fi
+
+    if [[ -z "$_NVIDIA_MODULE" ]] ; then
+        _NVIDIA_MODULE="$( lsmod | grep "^nvidia" | awk '{print $1}' | tail -1 )"
     fi
 
     # check
@@ -390,7 +396,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers needs them, while other ones works better with the open drivers. You must try both modes to know which one  is more suitable for you." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each privative version to know which one  is more suitable for your computer." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
@@ -784,6 +790,8 @@ install_driver(){
 
     # just in case another one is used
     rmmod nvidia 2>/dev/null
+    rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+    rmmod ${_NVIDIA_MODULE} 2>/dev/null
 
     # - unload modules }}}
     # apt-get install {{{
@@ -819,7 +827,7 @@ install_driver(){
                         fi
 
                         # open an interactive shell
-                        if ! ((is_mode_auto)) ; then
+                        if ! ((is_mode_auto)) || ((is_mode_live)) ; then
                             if el_confirm "$( eval_gettext ""The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now? )" ; then
                                 find /lib/modules -type f -iname '*'nvidia'*'
                                 el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
@@ -854,6 +862,8 @@ install_driver(){
     # reload devices just in case
     service nvidia-kernel restart 1>/dev/null 2>&1
 
+    load_driver
+
     if ! lsmod | grep -qs nvidia ; then
         sleep 6
         local message_unable_to_load
@@ -867,7 +877,7 @@ install_driver(){
         fi
 
 
-        if modprobe $nvidia_module 2>&1 | grep -qs "No supported display adapters" ; then
+        if modprobe $_NVIDIA_MODULE 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
             message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free-drivers." )" "" )"
 
@@ -944,7 +954,7 @@ try_again(){
     # }}}
 
     { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; } \
-        | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+        | xargs dialog --timeout 380 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
 
     # user canceled? uninstall and exit
@@ -994,11 +1004,16 @@ uninstall_driver(){
     # unload module {{{
     # unload module first
     if lsmod | grep -qs nvidia ; then
-        rmmod nvidia
+        rmmod nvidia 2>/dev/null
+        rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+        rmmod ${_NVIDIA_MODULE} 2>/dev/null
 
         if lsmod | grep -qs nvidia ; then
             if ((is_mode_force)) ; then
-                rmmod -f nvidia
+                rmmod -f nvidia 2>/dev/null
+                rmmod -f nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+                rmmod -f ${_NVIDIA_MODULE} 2>/dev/null
+
             else
                 el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option"
                 exit 1

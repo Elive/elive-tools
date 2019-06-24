@@ -359,7 +359,7 @@ interactive_ask_privative(){
                     --title "$message_title" \
                     --yesno "$message_message" \
                     0 0
-                ret="$?"
+                                    ret="$?"
             fi
         else
             # we are running this command manually so we don't want to ask if we want to do what we want to do :P
@@ -394,7 +394,7 @@ interactive_ask_privative(){
 
                             case "$ret" in
                                 0|255|123) # yes, timeout, cancel
-                                    reboot
+                                    ( sleep 1 ; reboot & )
                                     exit
                                     ;;
                                 1) # no
@@ -529,6 +529,7 @@ interactive_ask_driver_version(){
         # user canceled? uninstall and exit
         if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
             uninstall_driver
+            try_again
             exit
         fi
 
@@ -542,6 +543,7 @@ interactive_ask_driver_version(){
         # if users's cancel, we have no results at all
         if [[ -z "$ret" ]] ; then
             uninstall_driver
+            try_again
             exit
         fi
 
@@ -862,9 +864,10 @@ install_driver(){
         # cleanups
         if ! ((is_mode_force)) || ((is_mode_live)) ; then
             uninstall_driver
-            NOREPORTS=1 el_warning "Switched to the default drivers option"
-            sleep 4
-            exit 1
+            try_again
+            #NOREPORTS=1 el_warning "Switched to the default drivers option"
+            #sleep 4
+            exit 0
         fi
     fi
 
@@ -886,6 +889,63 @@ install_driver(){
     # - load module }}}
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  try_again
+#   DESCRIPTION:  ask which next step to do if failed
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+try_again(){
+    # pre {{{
+    if ((is_mode_auto)) ; then
+        return
+    fi
+
+    el_debug
+
+    local message_option_1
+    message_option_1="$( printf "$( eval_gettext "Try to install a different version" )" "" )"
+
+    local message_option_2
+    message_option_2="$( printf "$( eval_gettext "Use the open drivers:" )" "" ) nouveau"
+
+    local message_option_3
+    message_option_3="$( printf "$( eval_gettext "Exit from this tool" )" "" )"
+
+    # }}}
+
+    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; } \
+        | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+
+
+    # user canceled? uninstall and exit
+    if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
+        ret="exit"
+    else
+        # get result
+        ret="$( cat "/tmp/.$(basename $0)-ret" | head -1 )"
+    fi
+    rm -f "/tmp/.$(basename $0)-ret"
+
+    # remove extra leading blank chars
+    read -r ret <<< "$ret"
+
+    case "$ret" in
+        open)
+            uninstall_driver
+            exit
+            ;;
+        other)
+            $0 $args
+            exit
+            ;;
+        exit)
+            exit
+            ;;
+    esac
+
+
+}
 #===  FUNCTION  ================================================================
 #          NAME:  uninstall_driver
 #   DESCRIPTION:  uninstalls any possible nvidia drivers and make the system work back on nouveau
@@ -974,6 +1034,31 @@ uninstall_driver(){
         el_info "Driver NVIDIA uninstalled successfully"
     fi
 
+
+    # reboot needed for nouveau
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" && ! lsmod | grep -qs '^nouveau' ; then
+        local message_title
+        message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+        local message_message_reboot_open
+        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the privative drivers because nouveau is disabled. Reboot now to select the normal options?" )" )"
+
+        dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            --title "$message_title" \
+            --yesno "$message_message_reboot_open" \
+            0 0
+            ret="$?"
+
+            case "$ret" in
+                0|255|123) # yes, timeout, cancel
+                    ( sleep 1 ; reboot & )
+                    exit
+                    ;;
+                1) # no
+                    true
+                    ;;
+            esac
+    fi
+
     # - end }}}
 }
 
@@ -994,6 +1079,8 @@ main(){
     if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
         is_wheezy=1
     fi
+
+    args="$@"
 
     # }}}
 

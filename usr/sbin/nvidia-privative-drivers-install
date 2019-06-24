@@ -451,7 +451,7 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer when running the graphical interface, try using the boot option with the free-drivers instead. If you need the privative drivers you can also try different versions of Elive which includes different versions of the drivers." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the free drivers. Using a different version of Elive may work better too. You can find better help in our forums." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "If the install fails..." \
@@ -829,7 +829,7 @@ install_driver(){
 
                         # open an interactive shell
                         if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-                            if el_confirm "$( eval_gettext ""The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now? )" ; then
+                            if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                                 find /lib/modules -type f -iname '*'nvidia'*'
                                 el_step_requires_fixme "/tmp" "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                             fi

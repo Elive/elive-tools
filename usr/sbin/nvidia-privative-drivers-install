@@ -434,7 +434,7 @@ interactive_ask_privative(){
                             0 0
 
                         if ((is_mode_live)) ; then
-                            dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+                            dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
                                 --title "Reboot now?" \
                                 --yesno "$( eval_gettext "Do you want to reboot now to select the privative option? If you select no, we will continue using the open driver." )" \
                                 0 0
@@ -1097,7 +1097,7 @@ uninstall_driver(){
         local message_message_reboot_open
         message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the privative drivers because nouveau is disabled. Reboot now to select the other option?" )" )"
 
-        dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+        dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "$message_title" \
             --yesno "$message_message_reboot_open" \
             0 0

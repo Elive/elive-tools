@@ -24,7 +24,7 @@ usage(){
     echo -e "Usage: $(basename $BASH_SOURCE) [options]"
     echo -e "  -a: auto install"
     echo -e "  -d: detect only (return true or false if we have nvidia or not)"
-    echo -e "  -l: live mode (don't pre-download packages, pre-ask if want to install, more interactive)"
+    echo -e "  -l: live mode (pre-ask if want to install, more interactive)"
     echo -e "  -f: force install (if no nvidia cards are found)"
     echo -e "  -q: quiet mode"
     echo -e "  -h: help usage"

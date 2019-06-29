@@ -126,6 +126,12 @@ pass_step(){
 groups_add(){
     local group
 
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
+
+
     # TODO: add this to the installer too
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
     do
@@ -140,6 +146,12 @@ groups_add(){
 ###########################################################################
 groups_del(){
     local group
+
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
+
 
     for group in $( debconf-get-selections | grep "^user-setup" | grep "passwd/user-default-groups" | sed 's|^.*passwd/user-default-groups[[:blank:]]*string||g' )
     do
@@ -156,6 +168,11 @@ sudoers_user_generic(){
     shift
     username="$1"
     shift
+
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
 
     # always delete first
     rm -f "/etc/sudoers.d/sudo_nopasswd_generic_${username}" 2>/dev/null || true
@@ -184,6 +201,11 @@ sudoers_user_apt(){
     username="$1"
     shift
 
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
+
     # always delete first
     rm -f "/etc/sudoers.d/sudo_nopasswd_packagers_${username}" 2>/dev/null || true
 
@@ -207,6 +229,11 @@ sudoers_user_nopass(){
     username="$1"
     shift
 
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
+
     # always delete first
     rm -f "/etc/sudoers.d/sudo_nopasswd_all_${username}" 2>/dev/null || true
 
@@ -226,6 +253,11 @@ sudoers_user(){
     shift
     username="$1"
     shift
+
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
 
     # info:
     # ALL1 = (ALL2:ALL3) ALL4 means 1) users matched for this rule 2)hostnames allowed to run the following commands 3)users allowed to run the following commands 4) the commands allowed

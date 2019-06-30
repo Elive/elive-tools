@@ -115,7 +115,7 @@ take_screenshot(){
         else
             # we need to wait a bit so the user is not pressing the keyboard
             LC_ALL=C sleep 0.33
-            notify-send -t 3600 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+            notify-send -t 3800 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
         fi
 
     fi
@@ -155,7 +155,7 @@ take_screenshot(){
     if el_check_is_shell || ((is_terminal)) ; then
         el_info "$message_result"
     else
-        notify-send -t 8000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"
+        notify-send -t 9000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"
     fi
 }
 

@@ -50,6 +50,9 @@ main(){
 
             #zenity --info --text="$( eval_gettext "Composite in E16 should give you a better experience,  but if you see any issue or a reason to not enable it by default in Elive in the future, please share your comments in our forums. You can disable it in any moment from the configurations." )"
         fi
+
+        # show a tip about resizing windows, needed for big-windows that appears out of hte borders:
+        notify-send -u low -t 40000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
     fi
 
     # }}}

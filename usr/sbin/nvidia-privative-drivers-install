@@ -97,6 +97,11 @@ load_driver(){
         el_warning "more than one nvidia module found: \n$nvidia_modules"
     fi
 
+    # simulate that it worked
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
+        return 0
+    fi
+
     if lsmod | grep -qs nvidia ; then
         return 0
     else
@@ -877,7 +882,8 @@ install_driver(){
 
     load_driver
 
-    if ! lsmod | grep -qs nvidia ; then
+    if ! lsmod | grep -qs nvidia && ! echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
+
         if ! ((is_mode_auto)) ; then
             local message_unable_to_load
 
@@ -890,7 +896,7 @@ install_driver(){
 
 
             if modprobe $_NVIDIA_MODULE 2>&1 | grep -aqsE "(No supported display adapters|No such device)" || dmesg 2>&1 | colors-remove | grep -aqsi "No NVIDIA graphics adapter found" ; then
-                message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't looks like to accept your model of graphic card, you could try to compile the other versions too and if no works, just try to use the Free-drivers." )" "" )"
+                message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't looks like to be compatible with this version of the drivers, try to use a different version, or try to use the Free-drivers instead." )" "" )"
 
             fi
 

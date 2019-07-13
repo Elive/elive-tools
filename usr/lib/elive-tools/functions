@@ -557,6 +557,32 @@ EOF
 }
 
 #-------------------------------------------------------------------------------
+#   apt-get wrapper with lock feature
+#-------------------------------------------------------------------------------
+el_aptget(){
+    local is_waiting i
+    i=0
+
+    tput sc
+    while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+        case $(($i % 4)) in
+            0 ) j="-" ;;
+            1 ) j="\\" ;;
+            2 ) j="|" ;;
+            3 ) j="/" ;;
+        esac
+        tput rc
+        echo -en "\r[$j] Waiting for other software managers to finish..."
+        is_waiting=1
+
+        sleep 0.5
+        ((i=i+1))
+    done
+
+    # run what we want
+    apt-get "$@"
+}
+#-------------------------------------------------------------------------------
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){
@@ -589,6 +615,9 @@ el_aptget_update(){
         if ! el_verify_internet 2>/dev/null 1>&2 ; then
             el_error "We need to update the packages lists but we don't have internet? continuing anyways..."
         fi
+
+        # wait for unlock
+        el_aptget check 1>/dev/null
 
         if [[ "$UID" = 0 ]] ; then
             if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]]  ; then
@@ -781,6 +810,9 @@ el_package_upgrade_fast(){
     # install all downloaded packages
     if ls *deb  1>/dev/null 2>&1 ; then
         el_debug "going to install:\n$( ls -1 *deb )"
+
+        # wait for unlock
+        el_aptget check 1>/dev/null
 
         if [[ "$UID" = 0 ]] ; then
             dpkg -i *deb 1>/dev/null

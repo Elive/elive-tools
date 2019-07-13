@@ -700,7 +700,7 @@ el_package_newer_check(){
 #   DESCRIPTION:  update and install a package in a very fast and light way
 #                 WARNING: this is not a reliable tool, use with caution
 #                 notes:
-#                   - packages should include DATESTAMP in their version, so then the "normal" mode will work without problems and not neededing the "force" one
+#                   - packages should include DATESTAMP in their version, so then the "normal" mode will work without problems and not neededing the "force" one (not needed to allow downgrades)
 #                   - packages should include DISTRO in the version, in order to not install a candidate from a different distro
 #    PARAMETERS:  $1 = timeout for each package to download, $2 = force|normal, $@ = packages
 #                 normal means that only newer packages will be installed, force will allow downgrades

@@ -332,7 +332,10 @@ chroot_layers_umount(){
             if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
                 umount "$dir/dev/pts"
             else
-                umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
+                #umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
+                if ! umount "$dir/dev/pts" ; then
+                    el_warning "unable to umount dev/pts, try with -f ?"
+                fi
             fi
         fi
     fi

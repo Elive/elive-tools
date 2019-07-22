@@ -9,7 +9,6 @@ fi
 
 
 
-
 #===  FUNCTION  ================================================================
 #          NAME:  restart_daemons
 #   DESCRIPTION:  Restarts udisks and polkit when we found an error trying to use the disk
@@ -133,7 +132,7 @@ chroot_layers_mount(){
         if ((is_wheezy)) ; then
             mount devpts-$id -t devpts "${dir}/dev/pts" || true
         else
-            mount devpts-$id -t devpts none -o newinstance,noexec,nosuid,gid=5,mode=620,ptxmode=0666 "${dir}/dev/pts" || true
+            mount devpts-$id -t devpts -o newinstance,noexec,nosuid,gid=5,mode=620 "${dir}/dev/pts" || true
         fi
     fi
 

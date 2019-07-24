@@ -351,7 +351,7 @@ main(){
                                     if echo "$file" | grep -qs "config/transmission/" ; then
                                         migrate_conf_file "$file"
                                     else
-                                        el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                        NOREPORTS=1 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                         migrate_conf_file "$file"
                                         echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
                                         is_migrate_files_done=1
@@ -359,7 +359,7 @@ main(){
 
                                     ;;
                                 *)
-                                    el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                    NOREPORTS=1 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                     migrate_conf_file "$file"
                                     # Only report if they are unknown filetypes, otherwise should be more than fine
                                     echo "Unknown filetype $(file -b "$file" ) for: $file" >> "$cachedir/logs-unknown-filetypes.txt"
@@ -383,7 +383,7 @@ main(){
                                 migrate_conf_file "$file"
                                 ;;
                             *)
-                                el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
+                                NOREPORTS=1 el_warning "Unkown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
                                 migrate_conf_file "$file"
                                 # Only report if they are unknown filetypes, otherwise should be more than fine
                                 is_migrate_files_done=1

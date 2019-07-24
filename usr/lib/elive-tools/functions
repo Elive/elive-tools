@@ -2214,15 +2214,13 @@ el_report_to_elive(){
                 fi
 
                 # save conf
-                #if [[ "$USER" != "root" ]] && [[ "$HOME" = "/home"* ]] ; then
-                    mkdir -p "$HOME/.config/elive"
+                mkdir -p "$HOME/.config/elive"
 
-                    sed -i -e "/conf_send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
-                    sed -i -e "/conf_send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
+                sed -i -e "/conf_send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
+                sed -i -e "/conf_send_debug_reports_email=/d" "$HOME/.config/elive/settings" 2>/dev/null
 
-                    echo -e "conf_send_debug_reports=\"$conf_send_debug_reports\"" >> "$HOME/.config/elive/settings"
-                    echo -e "conf_send_debug_reports_email=\"$conf_send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
-                #fi
+                echo -e "conf_send_debug_reports=\"$conf_send_debug_reports\"" >> "$HOME/.config/elive/settings"
+                echo -e "conf_send_debug_reports_email=\"$conf_send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
             fi
         else
             # don't ask the user for his contact if he's running on live mode

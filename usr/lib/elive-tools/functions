@@ -730,6 +730,8 @@ el_package_upgrade_fast(){
 
     for package in "$@"
     do
+        [[ -z "$package" ]] && continue
+
         installed="$( LC_ALL=C apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' )"
         read -r installed <<< "$installed"
         if [[ -z "$installed" ]] ; then
@@ -2212,7 +2214,7 @@ el_report_to_elive(){
                 fi
 
                 # save conf
-                if [[ "$USER" != "root" ]] && [[ "$HOME" = "/home"* ]] ; then
+                #if [[ "$USER" != "root" ]] && [[ "$HOME" = "/home"* ]] ; then
                     mkdir -p "$HOME/.config/elive"
 
                     sed -i -e "/conf_send_debug_reports=/d" "$HOME/.config/elive/settings" 2>/dev/null
@@ -2220,7 +2222,7 @@ el_report_to_elive(){
 
                     echo -e "conf_send_debug_reports=\"$conf_send_debug_reports\"" >> "$HOME/.config/elive/settings"
                     echo -e "conf_send_debug_reports_email=\"$conf_send_debug_reports_email\"" >> "$HOME/.config/elive/settings"
-                fi
+                #fi
             fi
         else
             # don't ask the user for his contact if he's running on live mode

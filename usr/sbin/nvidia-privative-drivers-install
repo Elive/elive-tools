@@ -45,8 +45,10 @@ usage(){
 #===============================================================================
 check_driver(){
     # we should have enough with only this file, if is not installed it should have been removed!
-    if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-        return 1
+    if ((is_wheezy)) ; then
+        if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+            return 1
+        fi
     fi
     # but wee need also to make sure that is 'correctly' installed
     if ! load_driver ; then
@@ -699,14 +701,16 @@ install_driver(){
 
     # conf {{{
     # create conf first
-    : > /etc/X11/xorg.conf.d/20-nvidia.conf
+    if ((is_wheezy)) ; then
+        : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
-    echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
-    echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
+        echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+    fi
 
     # - conf }}}
     # force brightness entry conf {{{
@@ -731,7 +735,9 @@ install_driver(){
                 ;;
             1) # no
                 true
-                sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                    sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                fi
                 ;;
         esac
     fi
@@ -754,7 +760,9 @@ install_driver(){
 
     case "$ret" in
         0|255|123) # yes, timeout, cancel
-            sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+            if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+            fi
             true
             ;;
         1) # no
@@ -1041,7 +1049,7 @@ uninstall_driver(){
     # - unload module }}}
     # confs {{{
     # remove any possible xorg conf (before uninstall packages)
-    rm -f /etc/X11/xorg.conf.d/20-nvidia.conf 2>/dev/null
+    rm -f /etc/X11/xorg.conf.d/20-nvidia.conf 2>/dev/null || true
 
 
     # - confs }}}

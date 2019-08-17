@@ -48,8 +48,10 @@ usage(){
 #===============================================================================
 check_driver(){
     # we should have enough with only this file, if is not installed it should have been removed!
-    if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-        return 1
+    if ((is_wheezy)) ; then
+        if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+            return 1
+        fi
     fi
     # but wee need also to make sure that is 'correctly' installed
     if ! modprobe fglrx ; then

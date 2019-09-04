@@ -836,7 +836,7 @@ install_driver(){
                     if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
                         # open a shell
                         if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
-                            echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
+                            echo -e "\n\n\nE: Installing nvidia packages failed, try yourself and suggest a fix to Elive\n" 1>&2
                             sleep 5
                         else
                             if [[ "$_NVIDIA_VERSION" = "current" ]] ; then

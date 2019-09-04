@@ -882,9 +882,6 @@ install_driver(){
         done
     fi
 
-    LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
-    rm -f /boot/*old-dkms 2>/dev/null
-
     # - apt-get install }}}
     # load module {{{
     # reload devices just in case
@@ -937,8 +934,15 @@ install_driver(){
     fi
 
 
+
     # reload devices just in case
     service nvidia-kernel restart 1>/dev/null 2>&1
+
+    # regenerate initramfs if we are not in live (and persistence)
+    if ! grep -qs "boot=live" /proc/cmdline && ! grep -qs "persistence" /proc/cmdline ; then
+        LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
+        rm -f /boot/*old-dkms 2>/dev/null
+    fi
 
     el_info "Install complete"
 

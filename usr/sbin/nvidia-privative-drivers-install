@@ -408,7 +408,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each privative version to know which one  is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each proprietary version to know which one  is more suitable for your computer." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
@@ -432,7 +432,7 @@ interactive_ask_privative(){
                     if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" && lsmod | grep -qs '^nouveau' ; then
                         local message_reboot_and_select_privative_1
                         local message_reboot_and_select_privative_2
-                        message_reboot_and_select_privative_1="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select the privative option from the boot menu." )" "" )"
+                        message_reboot_and_select_privative_1="$( printf "$( eval_gettext "To install the proprietary drivers you must reboot and select the proprietary option from the boot menu." )" "" )"
                         message_reboot_and_select_privative_2="$( printf "$( eval_gettext "Or you can boot in any option but you need to press the Tab key and append the boot parameter:" )\nmodprobe.blacklist=nouveau" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -443,7 +443,7 @@ interactive_ask_privative(){
                         if ((is_mode_live)) ; then
                             dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
                                 --title "Reboot now?" \
-                                --yesno "$( eval_gettext "Do you want to reboot now to select the privative option? If you select no, we will continue using the open driver." )" \
+                                --yesno "$( eval_gettext "Do you want to reboot now to select the proprietary option? If you select no, we will continue using the open driver." )" \
                                 0 0
                             ret="$?"
 
@@ -481,7 +481,7 @@ interactive_ask_privative(){
                         if ((is_wheezy)) ; then
                             message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
                         else
-                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the privative drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=nouveau" )"
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=nouveau" )"
                         fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1111,7 +1111,7 @@ uninstall_driver(){
         local message_title
         message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
         local message_message_reboot_open
-        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the privative drivers because nouveau is disabled. Reboot now to select the other option?" )" )"
+        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option?" )" )"
 
         dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "$message_title" \

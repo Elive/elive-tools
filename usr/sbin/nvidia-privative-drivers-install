@@ -545,10 +545,10 @@ interactive_ask_driver_version(){
                     _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
                     ;;
                 *legacy-340xx)
-                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older)" )" )"
                     ;;
                 *legacy-304xx)
-                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
+                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older older)" )" )"
                     ;;
                 *legacy-173xx)
                     _desc="$( printf "$( eval_gettext "Drivers for old cards" )" )"
@@ -975,7 +975,7 @@ try_again(){
     message_option_2="$( printf "$( eval_gettext "Use the open drivers:" )" "" ) nouveau"
 
     local message_option_3
-    message_option_3="$( printf "$( eval_gettext "Exit from this tool" )" "" )"
+    message_option_3="$( printf "$( eval_gettext "Exit from this tool and continue" )" "" )"
 
     # }}}
 
@@ -1111,7 +1111,7 @@ uninstall_driver(){
         local message_title
         message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
         local message_message_reboot_open
-        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option?" )" )"
+        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option? Or you can continue to select a different version." )" )"
 
         dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "$message_title" \

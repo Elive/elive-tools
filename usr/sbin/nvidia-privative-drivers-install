@@ -45,7 +45,7 @@ usage(){
 #===============================================================================
 check_driver(){
     # we should have enough with only this file, if is not installed it should have been removed!
-    if ((is_wheezy)) ; then
+    if ((is_xorg_template_wanted)) ; then
         if ! [[ -s "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
             return 1
         fi
@@ -694,14 +694,16 @@ install_driver(){
         exit 1
     fi
 
-    mkdir -p /etc/X11/xorg.conf.d
+    if ((is_xorg_template_wanted)) ; then
+        mkdir -p /etc/X11/xorg.conf.d
+    fi
 
 
     # }}}
 
     # conf {{{
     # create conf first
-    if ((is_wheezy)) ; then
+    if ((is_xorg_template_wanted)) ; then
         : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
         echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
@@ -710,65 +712,65 @@ install_driver(){
         echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
         echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
         echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-    fi
 
-    # - conf }}}
-    # force brightness entry conf {{{
-    if laptop-detect ; then
+        # - conf }}}
+        # force brightness entry conf {{{
+        if laptop-detect ; then
 
-        local message_brightness_force
-        message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"
+            local message_brightness_force
+            message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"
+
+            if ((is_mode_auto)) ; then
+                ret=0
+            else
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+                    --title "Brightness of the Screen" \
+                    --yesno "$message_brightness_force" \
+                    0 0
+                ret="$?"
+            fi
+
+            case "$ret" in
+                0|255|123) # yes, timeout, cancel
+                    true
+                    ;;
+                1) # no
+                    true
+                    if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                        sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                    fi
+                    ;;
+            esac
+        fi
+
+        # - force brightness entry conf }}}
+        # force dpi size to 96 {{{
+
+        local message_dpi_force
+        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96  DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
 
         if ((is_mode_auto)) ; then
             ret=0
         else
-            dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
-                --title "Brightness of the Screen" \
-                --yesno "$message_brightness_force" \
+            dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+                --title "Force DPI defaults?" \
+                --yesno "$message_dpi_force" \
                 0 0
             ret="$?"
         fi
 
         case "$ret" in
             0|255|123) # yes, timeout, cancel
+                if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                    sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                fi
                 true
                 ;;
             1) # no
                 true
-                if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-                    sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
-                fi
                 ;;
         esac
     fi
-
-    # - force brightness entry conf }}}
-    # force dpi size to 96 {{{
-
-    local message_dpi_force
-    message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96  DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
-
-    if ((is_mode_auto)) ; then
-        ret=0
-    else
-        dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
-            --title "Force DPI defaults?" \
-            --yesno "$message_dpi_force" \
-            0 0
-        ret="$?"
-    fi
-
-    case "$ret" in
-        0|255|123) # yes, timeout, cancel
-            if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-                sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
-            fi
-            true
-            ;;
-        1) # no
-            true
-            ;;
-    esac
 
     # - }}}
     # Optimus inform to user {{{
@@ -1147,6 +1149,7 @@ main(){
 
     if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
         is_wheezy=1
+        is_xorg_template_wanted=1
     fi
 
     args="$@"

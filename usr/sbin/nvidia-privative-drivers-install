@@ -340,7 +340,7 @@ detect_driver_version(){
 
         if ! ((is_mode_auto)) ; then
             local message_version_suggest
-            message_version_suggest="$( printf "$( eval_gettext "The version of the driver that you need for your Nvidia card has not been detected. This can happen when your card is not supported by available drivers. We suggest you in any case to try each version one to one." )" )"
+            message_version_suggest="$( printf "$( eval_gettext "The version of the driver that you need for your Nvidia card has not been detected. This can happen when your card is not supported by the available drivers. We suggest you in any case to try each version one to one." )" )"
 
             dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Unable to detect driver version needed" \

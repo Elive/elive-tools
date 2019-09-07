@@ -5,6 +5,11 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+# if we are in e16, our updated (reconfigured) language must be updated, that's not needed in e17 since the ENV var is set
+if [[ -n "$E_ROOT" ]] ; then
+    source /etc/default/locale 2>/dev/null || true
+fi
+
 
 main(){
     # pre {{{

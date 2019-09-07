@@ -4,6 +4,11 @@ source /usr/lib/elive-tools/functions
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+# if we are in e16, our updated (reconfigured) language must be updated, that's not needed in e17 since the ENV var is set
+if [[ -n "$E_ROOT" ]] ; then
+    source /etc/default/locale 2>/dev/null || true
+fi
+
 eliveversion="$( awk '$1 ~ /elive-version/ {($1="");print $0}' /etc/elive-version | sed 's/^\ //g' )"
 cachedir="$HOME/.cache/elive-migration-to-${eliveversion}"
 

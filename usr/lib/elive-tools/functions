@@ -580,7 +580,22 @@ el_aptget(){
     done
 
     # run what we want
-    apt-get "$@"
+    if [[ "$UID" = 0 ]] ; then
+        apt-get "$@"
+    else
+        if el_check_sudo_automated ; then
+            sudo apt-get "$@"
+        else
+            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+                if ! el_dependencies_check gksu ; then
+                    el_dependencies_install "gksu"
+                fi
+                gksu apt-get "$@"
+            else
+                su -c "echo 'Updating Package Lists' ; apt-get update || apt-get update" root
+            fi
+        fi
+    fi
 }
 #-------------------------------------------------------------------------------
 #   Run apt-get update

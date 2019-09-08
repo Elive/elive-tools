@@ -592,7 +592,7 @@ el_aptget(){
                 fi
                 gksu apt-get "$@"
             else
-                su -c "echo 'Updating Package Lists' ; apt-get update || apt-get update" root
+                su -c "apt-get $@" root
             fi
         fi
     fi

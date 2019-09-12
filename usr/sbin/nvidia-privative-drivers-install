@@ -915,14 +915,14 @@ install_driver(){
     # reload devices just in case
     if ((is_mode_simulate)) ; then
         if find /lib/modules/ -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
-            message_unable_to_load="NVIDIA driver correctly COMPILED (simulation mode). You can shutdown the computer since this verification worked"
+            message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked"
         else
-            message_unable_to_load="NVIDIA driver failed to COMPILE? \n$( find /lib/modules/ -type f -name '*'nvidia'*' )"
+            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find /lib/modules/ -type f -name '*'nvidia'*' )"
         fi
             # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                --title "Unable to load module" \
+                --title "Simulation mode" \
                 --msgbox "$message_unable_to_load" \
                 0 0
         fi

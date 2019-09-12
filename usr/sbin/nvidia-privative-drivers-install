@@ -100,7 +100,7 @@ load_driver(){
     fi
 
     # simulate that it worked
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
+    if ((is_mode_simulate)) ; then
         return 0
     fi
 
@@ -138,7 +138,7 @@ check_hardware(){
         is_nvidia_card_found=1
     fi
 
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
+    if ((is_mode_simulate)) ; then
         is_nvidia_card_found=1
         # we also want/need to force the install because there's no real hardware here
         is_mode_force=1
@@ -913,51 +913,66 @@ install_driver(){
     # - apt-get install }}}
     # load module {{{
     # reload devices just in case
-    service nvidia-kernel restart 1>/dev/null 2>&1
-
-    load_driver
-
-    if ! lsmod | grep -qs "^nvidia" && ! echo "${_CMDLINE}" | LC_ALL=C grep -qsiE "simulate=nvidia" ; then
-
-        if ! ((is_mode_auto)) ; then
-            local message_unable_to_load
-
-            # default message for not working drivers
-            if ! lsmod | grep -qs "^nvidia" ; then
-                NOREPORTS=1 el_error "Unable to load NVIDIA module"
-
-                message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
-            fi
-
-
-            if modprobe $_NVIDIA_MODULE 2>&1 | grep -aqsE "(No supported display adapters|No such device)" || dmesg 2>&1 | colors-remove | grep -aqsi "No NVIDIA graphics adapter found" ; then
-                message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't looks like to be compatible with this version of the drivers, try to use a different version, or try to use the Free-drivers instead." )" "" )"
-
-            fi
-
-            # module simply was not compiled
-            if ! find "/lib/modules/$(uname -r)" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
-                message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
-            fi
-
-
-            # show the message if we have any
-            if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
-                dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                    --title "Unable to load module" \
-                    --msgbox "$message_unable_to_load" \
-                    0 0
-            fi
+    if ((is_mode_simulate)) ; then
+        if find /lib/modules/ -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+            message_unable_to_load="NVIDIA driver correctly COMPILED (simulation mode). You can shutdown the computer since this verification worked"
+        else
+            message_unable_to_load="NVIDIA driver failed to COMPILE? \n$( find /lib/modules/ -type f -name '*'nvidia'*' )"
         fi
+            # show the message if we have any
+        if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
+            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Unable to load module" \
+                --msgbox "$message_unable_to_load" \
+                0 0
+        fi
+    else
+        service nvidia-kernel restart 1>/dev/null 2>&1
+
+        load_driver
+
+        if ! lsmod | grep -qs "^nvidia" && ! ((is_mode_simulate)) ; then
+
+            if ! ((is_mode_auto)) ; then
+                local message_unable_to_load
+
+                # default message for not working drivers
+                if ! lsmod | grep -qs "^nvidia" ; then
+                    NOREPORTS=1 el_error "Unable to load NVIDIA module"
+
+                    message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
+                fi
 
 
-        # cleanups
-        if ! ((is_mode_force)) || ((is_mode_live)) ; then
-            uninstall_driver
-            try_again
-            #NOREPORTS=1 el_warning "Switched to the default drivers option"
-            #sleep 4
-            #exit 0
+                if modprobe $_NVIDIA_MODULE 2>&1 | grep -aqsE "(No supported display adapters|No such device)" || dmesg 2>&1 | colors-remove | grep -aqsi "No NVIDIA graphics adapter found" ; then
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't looks like to be compatible with this version of the drivers, try to use a different version, or try to use the Free-drivers instead." )" "" )"
+
+                fi
+
+                # module simply was not compiled
+                if ! find "/lib/modules/$(uname -r)" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
+                fi
+
+
+                # show the message if we have any
+                if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
+                    dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                        --title "Unable to load module" \
+                        --msgbox "$message_unable_to_load" \
+                        0 0
+                fi
+            fi
+
+
+            # cleanups
+            if ! ((is_mode_force)) || ((is_mode_live)) ; then
+                uninstall_driver
+                try_again
+                #NOREPORTS=1 el_warning "Switched to the default drivers option"
+                #sleep 4
+                #exit 0
+            fi
         fi
     fi
 
@@ -1245,8 +1260,9 @@ main(){
         esac
     done
 
-    if grep -qs "simulate=nvidia" /proc/cmdline ; then
+    if LC_ALL=C grep -qs "simulate=nvidia" /proc/cmdline ; then
         is_mode_force=1
+        is_mode_simulate=1
     fi
 
 

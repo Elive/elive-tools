@@ -833,14 +833,18 @@ el_package_upgrade_fast(){
 
         if [[ "$UID" = 0 ]] ; then
             dpkg -i *deb 1>/dev/null
+            if apt-get -f install -q=2 -y ; then
+                success=1
+            else
+                success=0
+            fi
         else
             el_sudo dpkg -i *deb
-        fi
-
-        if apt-get -f install -q=2 -y ; then
-            success=1
-        else
-            success=0
+            if el_sudo apt-get -f install -q=2 -y ; then
+                success=1
+            else
+                success=0
+            fi
         fi
     fi
 

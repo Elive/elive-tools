@@ -13,7 +13,7 @@ fi
 
 main(){
     # pre {{{
-    local file menu menu_auto menu_auto_live message_gui
+    local file menu menu_auto menu_auto_live message_gui buf
 
     RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
@@ -400,8 +400,11 @@ EOF
                 fi
             done 3<<< "$( echo "$result" | tr '|' '\n' )"
         fi
-
     fi
+
+    # sort the resulting list to satisfy dependencies (like notification-daemon should be run first
+    buf="$( cat "$HOME/.e16/startup-applications.list" )"
+    echo "$buf" | psort -- -p "notification-daemon" > "$HOME/.e16/startup-applications.list"
 
 
     # run them all (and wait for next hooks!)

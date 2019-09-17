@@ -782,19 +782,19 @@ el_package_upgrade_fast(){
 
         distro="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | head -1 )"
         if [[ -z "$distro" ]] ; then
-            el_error "unable to get the distro for package ${package}: $distro"
+            el_error "unable to get the 'distro' for package ${package}: $distro"
             continue
         fi
 
         package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
         if [[ -z "$package_url" ]] ; then
-            el_error "unable to get the distro for package ${package}: $package_url"
+            el_error "unable to get the 'package_url' for package ${package}: $package_url"
             continue
         fi
 
         candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
         if [[ -z "$candidate" ]] ; then
-            el_error "unable to get the distro for package ${package}: $candidate"
+            el_error "unable to get the 'candidate' for package ${package}: $candidate"
             continue
         fi
 

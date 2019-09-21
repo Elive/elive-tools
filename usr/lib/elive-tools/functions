@@ -1304,16 +1304,17 @@ el_explain(){
     if ! ((is_terminal)) ; then
         return
     fi
-    # show only if we are on this verbose level
-    if ! [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
-        return
-    fi
 
     local funclevel spaced verbose_level message trace_message trace_col
 
     verbose_level="$1"
     shift
     message="$@"
+
+    # show only if we are on this verbose level
+    if ! [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
+        return
+    fi
 
     #spaced="$verbose_level"
     funclevel="$(( ${#FUNCNAME[*]} - 2 ))"

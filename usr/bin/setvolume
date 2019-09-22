@@ -586,13 +586,13 @@ main(){
         amixer -q set Capture 100% 2>/dev/null
         amixer -q set Capture 100% 2>/dev/null
         amixer -q set "Front Mic" unmute 2>/dev/null
-        amixer -q set "Front Mic" 100% 2>/dev/null
+        amixer -q set "Front Mic" 60% 2>/dev/null
         amixer -q set "Rear Mic" unmute 2>/dev/null
-        amixer -q set "Rear Mic" 100% 2>/dev/null
+        amixer -q set "Rear Mic" 60% 2>/dev/null
         amixer -q set "Internal Mic" unmute 2>/dev/null
-        amixer -q set "Internal Mic" 100% 2>/dev/null
+        amixer -q set "Internal Mic" 60% 2>/dev/null
         amixer -q set "Mic" unmute 2>/dev/null
-        amixer -q set "Mic" 100% 2>/dev/null
+        amixer -q set "Mic" 60% 2>/dev/null
         # mute playback of mic, very annoying (before to raise their volumes) - note: after previous mic configurations since they resets this settings
         amixer -q sset "Front Mic" Playback mute 2>/dev/null
         amixer -q sset "Rear Mic" Playback mute 2>/dev/null

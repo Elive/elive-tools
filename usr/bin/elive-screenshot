@@ -134,6 +134,23 @@ take_screenshot(){
         exit
     fi
 
+    # crop 1 pixel when selecting a region to avoid black borders
+    if ((is_mode_range)) ; then
+        size_orig_w="$( identify -format '%w' "$tmpimage" )"
+        size_orig_h="$( identify -format '%h' "$tmpimage" )"
+
+        if [[ -n "$size_orig_w" ]] && [[ -n "$size_orig_h" ]] ; then
+            size_orig_w="$(( $size_orig_w - 2 ))"
+            size_orig_h="$(( $size_orig_h - 2 ))"
+
+            # crop 1 pixel borders
+            convert "$tmpimage" -gravity Center -crop "${size_orig_w}x${size_orig_h}+0+0" +repage "${tmpimage%.*}_b.png"
+            mv -f "${tmpimage%.*}_b.png" "${tmpimage}"
+        fi
+    fi
+
+
+
     # copy to clipboard
     xclip -selection clipboard -t "image/png" < "$tmpimage"
 

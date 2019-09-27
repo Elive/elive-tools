@@ -27,9 +27,9 @@ main(){
     user="$USER"
     #urldefault="http://paste2.org"
     # openstack don't accept syntax parameter? at least not for C (edc) files
-    #urldefault="http://paste.openstack.org"
+    urldefault="http://paste.openstack.org"
     # we should use debian, it supports syntax, download, selection, username, etc
-    urldefault="http://paste.debian.net"
+    #urldefault="http://paste.debian.net"
     command="$@"
 
     conf="${HOME}/.config/elive/elivepaste/config.sh"
@@ -160,7 +160,7 @@ main(){
     if ! ((direct_paste)) ; then
 
         # paste it
-        url="$( echo "${buffer}" | pastebinit -b "$urldefault" -a "$user" -f "${syntax}" | head -1 )"
+        url="$( echo "${buffer}" | pastebinit -b "$urldefault" -a "$user" -f "${syntax}" 2>/dev/null | head -1 )"
 
         # checks
         if ! echo "${url}" | grep -q "http://" || [[ "${url}" = "$urldefault" ]] ; then

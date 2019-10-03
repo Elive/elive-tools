@@ -361,6 +361,18 @@ EOF
             menu+=("TRUE")
             menu+=("cairo-dock")
             menu+=("cairo-dock: A multiple feature dock for your desktop")
+
+            # add the installer icon in live mode
+            if grep -qs "boot=live" /proc/cmdline ; then
+                cp -f "$HOME/.config/cairo-dock/current_theme/launchers/01launcher.desktop" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^Exec=.*$|Exec=eliveinstaller-wrapper|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^Order=.*$|Order=101.25|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^StartupWMClass=.*$|StartupWMClass=|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^prevent inhibate=.*$|prevent inhibate=true|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^Name=.*$|Name=Elive Installer|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^Icon=.*$|Icon=document-save|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+            fi
+
         fi
 
 

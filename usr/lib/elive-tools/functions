@@ -723,7 +723,7 @@ el_package_newer_check(){
 #===============================================================================
 el_package_upgrade_fast(){
     # pre {{{
-    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev success arch
+    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev failed arch
 
     timeout="$1"
     shift
@@ -731,7 +731,7 @@ el_package_upgrade_fast(){
     shift
 
     tmpdir="/tmp/.$(basename $0)_${FUNCNAME}_${USER}"
-    success=0
+    failed=0
 
     # }}}
     dirprev="$(pwd)"
@@ -834,16 +834,16 @@ el_package_upgrade_fast(){
         if [[ "$UID" = 0 ]] ; then
             dpkg -i *deb 1>/dev/null
             if apt-get -f install -q=2 -y ; then
-                success=1
+                failed=0
             else
-                success=0
+                failed=1
             fi
         else
             el_sudo dpkg -i *deb
             if el_sudo apt-get -f install -q=2 -y ; then
-                success=1
+                failed=0
             else
-                success=0
+                failed=1
             fi
         fi
     fi
@@ -852,10 +852,10 @@ el_package_upgrade_fast(){
     rm -rf "$tmpdir"
 
     # exit with the validated status
-    if ((success)) ; then
-        return
-    else
+    if ((failed)) ; then
         return 1
+    else
+        return
     fi
 }
 

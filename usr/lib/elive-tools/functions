@@ -851,7 +851,12 @@ el_package_upgrade_fast(){
     cd "$dirprev"
     rm -rf "$tmpdir"
 
-    return "$success"
+    # exit with the validated status
+    if ((success)) ; then
+        return
+    else
+        return 1
+    fi
 }
 
 #-------------------------------------------------------------------------------

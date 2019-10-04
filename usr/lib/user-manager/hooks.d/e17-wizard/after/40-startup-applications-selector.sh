@@ -66,7 +66,7 @@ main(){
         # un-needed / blacklisted ones {{{
         if [[ -n "$EROOT" ]] ; then
             # E16 requires different ones
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 #       e16 doesn't has a module or anything so keep it running from the trayer
@@ -80,7 +80,7 @@ main(){
 
         else
             # E17 / E22
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 # wicd-: deprecated and not needed for elive

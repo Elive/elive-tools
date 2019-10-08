@@ -106,7 +106,7 @@ run_script(){
         if zenity --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
             chmod +x "$file"
         else
-            zenity --error --text="$( eval_gettext"If the file has no executable permissions we cannot run it. Exiting..." )"
+            zenity --error --text="$( eval_gettext "If the file has no executable permissions we cannot run it. Exiting..." )"
             return 1
         fi
     fi

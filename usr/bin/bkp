@@ -212,10 +212,8 @@ el_check_variables(){
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
 
@@ -245,10 +243,8 @@ el_check_dirs(){
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
 
@@ -283,10 +279,8 @@ el_dependencies_check(){
     done 3<<< "$( echo "$@" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
     # }}}
@@ -303,7 +297,6 @@ el_check_sudo_automated(){
 
         return 1
     else
-
         return 0
     fi
 

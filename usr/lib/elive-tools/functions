@@ -464,10 +464,8 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
     else
-
         return 0
     fi
-
 }
 
 
@@ -855,7 +853,7 @@ el_package_upgrade_fast(){
     if ((failed)) ; then
         return 1
     else
-        return
+        return 0
     fi
 }
 
@@ -887,7 +885,6 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
     else
         return 0
     fi
-
 }
 
 
@@ -914,10 +911,8 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
     done
 
     if [[ "$found_no" = "yes" ]] ; then
-
         return 1
     else
-
         return 0
     fi
 

@@ -433,7 +433,7 @@ main(){
 
         if [[ -n "$item_filesystem" ]] ; then
             if [[ "$item_filesystem" = "vfat" ]] ; then
-                if LC_ALL=C fdisk -l "${item%%[0-9]*}" | grep -qs "^${1}.*EFI " ; then
+                if LC_ALL=C fdisk -l "${item%%[0-9]*}" 2>/dev/null | grep -qs "^${1}.*EFI " ; then
                     item_human_label="EFI"
                 fi
             fi
@@ -662,7 +662,7 @@ get_filesystem_file(){
             ;;
         *)
             if [[ -x "$(which fdisk)" ]] ; then
-                if LC_ALL=C fdisk -l "${1%%[0-9]*}" | grep -qs "^${1}.*BIOS boot" ; then
+                if LC_ALL=C fdisk -l "${1%%[0-9]*}" 2>/dev/null | grep -qs "^${1}.*BIOS boot" ; then
                     echo "BIOS"
                 else
                     el_debug "unknown FS for $1"

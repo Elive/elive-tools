@@ -1149,7 +1149,7 @@ uninstall_driver(){
         echo -e ""
         el_error "We still having some nvidia packages not uninstalled: $( COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2 )"
     else
-        el_info "Driver NVIDIA uninstalled successfully"
+        el_debug "Driver NVIDIA uninstalled successfully"
     fi
 
 

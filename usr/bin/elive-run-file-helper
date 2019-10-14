@@ -35,10 +35,10 @@ run_edje(){
     # only wallpaper
     if ((is_e_wallpaper)) && ! ((is_e_theme)) ; then
         # show a preview
-        edje_player "$file"
+        $precmd edje_player "$file"
 
         if zenity --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
-            enlightenment_remote -desktop-bg-add-set "$file"
+            $precmd enlightenment_remote -desktop-bg-add-set "$file"
         fi
 
         return
@@ -47,7 +47,7 @@ run_edje(){
     # full E theme
     if ((is_e_theme)) ; then
         if zenity --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
-            cp -f "$file" "$HOME/.e/e17/themes/"
+            $precmd cp -f "$file" "$HOME/.e/e17/themes/"
             # update: seems like it doesn't works?
             #enlightenment_remote -theme-set
             zenity --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may be not always fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
@@ -74,7 +74,7 @@ run_script(){
     if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
         if zenity --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the nvidia drivers, do you want to run it instead of the official nvidia installer?" )" ; then
             if [[ -x "$( which urxvt )" ]] ; then
-                gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
+                $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
             else
                 el_error "no urxvt found"
             fi
@@ -104,7 +104,7 @@ run_script(){
 
     if ! test -x "$file" ; then
         if zenity --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
-            chmod +x "$file"
+            $precmd chmod +x "$file"
         else
             zenity --error --text="$( eval_gettext "If the file has no executable permissions we cannot run it. Exiting..." )"
             return 1
@@ -113,42 +113,42 @@ run_script(){
 
     if [[ "$UID" = 0 ]] ; then
         if [[ -x "$( which urxvt )" ]] ; then
-            urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
+            $precmd urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
         else
             if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
-                terminology -hold -e "${file} ; apt-get -f install ; echo ; echo ; echo ${message_done}"
+                $precmd terminology -hold -e "${file} ; apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         fi
     else
         if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
             if [[ -x "$( which urxvt )" ]] ; then
                 if ((is_root_wanted)) ; then
-                    urxvt -hold -e bash -c "gksu $file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "gksu $file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                 else
-                    urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                 fi
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
                     if ((is_root_wanted)) ; then
-                        terminology -hold -e "gksu ${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "gksu ${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                     else
-                        terminology -hold -e "${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                     fi
                 fi
             fi
         else
             if [[ -x "$( which urxvt )" ]] ; then
                 if ((is_root_wanted)) ; then
-                    urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"
                 else
-                    urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
                 fi
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
                     if ((is_root_wanted)) ; then
-                        terminology -hold -e "gksu ${file} ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "gksu ${file} ; echo ; echo ; echo ${message_done}"
                     else
-                        terminology -hold -e "${file} ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "${file} ; echo ; echo ; echo ${message_done}"
                     fi
                 fi
             fi
@@ -160,6 +160,13 @@ run_script(){
 main(){
     # pre {{{
     local file
+
+    # include simulate mode
+    if [[ "$1" = "-s" ]] || [[ "$1" = "--simulate" ]] ; then
+        is_simulate=1
+        precmd="echo"
+        shift
+    fi
 
     # }}}
 
@@ -204,7 +211,7 @@ main(){
 
         # parse and run
         case "$mime" in
-            "text/x-shellscript")
+            "text/x-shellscript"|"application/x-executable")
                 run_script "user" "$file"
                 ;;
             "text/x-ruby")
@@ -224,7 +231,7 @@ main(){
                 cd "$dirname"
 
                 if [[ -x "$( which urxvt )" ]] ; then
-                    urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
+                    $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
                 fi
                 ;;
             "edj/edje"|"application/x-extension-edj"|"application/edje")
@@ -237,7 +244,7 @@ main(){
                 fi
                 # run a default launcher!
                 if [[ -x "/usr/bin/thunar" ]] ; then
-                    thunar "$file"
+                    $precmd thunar "$file"
                 fi
                 ;;
         esac

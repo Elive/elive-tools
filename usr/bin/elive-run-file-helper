@@ -209,6 +209,7 @@ main(){
                 ;;
         esac
 
+        # do not run empty mimes
         if ! [[ -n "$mime" ]] ; then
             zenity --info --text="$( eval_gettext "This file doesn't have a mimetype assigned, we cannot run or open something that we don't know how it should be run. This file probably belongs to other purposes." )"
             exit

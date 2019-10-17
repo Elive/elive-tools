@@ -209,6 +209,12 @@ main(){
                 ;;
         esac
 
+        if ! [[ -n "$mime" ]] ; then
+            zenity --info --text="$( eval_gettext "This file doesn't have a mimetype assigned, we cannot run or open something that we don't know how it should be run. This file probably belongs to other purposes." )"
+            exit
+        fi
+
+
         # parse and run
         case "$mime" in
             "text/x-shellscript"|"application/x-executable")

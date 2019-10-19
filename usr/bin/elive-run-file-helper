@@ -246,7 +246,7 @@ main(){
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/
-                if ! echo "$mime" | grep -qsE "/(x-debian-package)$" ; then
+                if ! echo "$mime" | grep -qsE "/(debian.*package)$" ; then
                     not_supported "$mime" "$file"
                 fi
                 # run a default launcher!

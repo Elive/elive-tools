@@ -199,7 +199,13 @@ main(){
     if [[ -z "$state" ]] ; then
         state="up"
     fi
-    if [[ ! -e "$conf" ]] ; then
+    if [[ -e "$conf" ]] ; then
+        # fix any possible xml tag (bug) in the conf file
+        if grep -qs '<.*>' "$conf" ; then
+            sed -i -e 's/<[^>]*>//g' "$conf"
+        fi
+
+    else
         if [[ "${conf}" = */* ]] ; then
             mkdir -p "${conf%/*}"
         fi

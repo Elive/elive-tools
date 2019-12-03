@@ -376,7 +376,7 @@ main(){
 
 
     # validate and parse
-    timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' | grep -E "[[:alpha:]]" )"
+    timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|<timezoneId>||g' -e 's|</timezoneId>||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' | grep -E "[[:alpha:]]" )"
 
     if [[ -n "$timezone" ]] ; then
         # translate to a useful value

@@ -371,12 +371,16 @@ main(){
 
         if ! echo "$result" | grep -qsi "Timezoneid" ; then
             el_warning "Unknown timezone location, using a smart method..."
+            result="$( cat /etc/elive-tools/geolocation/timezones.conf | grep "^last:::" | sed -e 's|^last:::||g' )"
+            if [[ -n "$result" ]] ; then
+                result="<timezoneId>$result</timezoneId>"
+            fi
         fi
     fi
 
 
     # validate and parse
-    timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|<timezoneId>||g' -e 's|</timezoneId>||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' | grep -E "[[:alpha:]]" )"
+    timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|<timezoneId>||g' -e 's|</timezoneId>||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' -e '/^$/d' | grep -E "[[:alpha:]]" )"
 
     if [[ -n "$timezone" ]] ; then
         # translate to a useful value

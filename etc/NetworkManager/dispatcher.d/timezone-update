@@ -313,9 +313,18 @@ main(){
     fi
 
     # always update the conf if we changed the place
-    if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" != "$timezone_connected" ]] ; then
-        needs_update_conf=1
+    if [[ -n "$timezone_last" ]] ; then
+        if [[ "${timezone_last}" != "$timezone_connected" ]] ; then
+            needs_update_conf=1
+        fi
+        if [[ "${timezone_last}" != "$timezone" ]] ; then
+            needs_update_conf=1
+        fi
+        if [[ "${timezone}" != "$(cat /etc/timezone)" ]] ; then
+            needs_update_conf=1
+        fi
     fi
+
     # }}}
 
 
@@ -350,11 +359,6 @@ main(){
     # always update it if we are in live
     if ((is_force)) ; then
         needs_update_conf=1
-    else
-        # update configurations in etc if we need to
-        if [[ -n "$timezone" ]] && ! [[ "${timezone}" = "${timezone_last}" ]] ; then
-            needs_update_conf=1
-        fi
     fi
 
 

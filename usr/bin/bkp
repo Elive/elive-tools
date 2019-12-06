@@ -641,16 +641,16 @@ do_diff(){
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
+    diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
 
     #if [[ -n "$( which lsdiff )" ]] ; then
-        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${1}.differ/" "${2}/" | lsdiff | wc -l )"
-        #diff -Naur "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | lsdiff | wc -l )"
+        #diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files"
-        diff -Naur "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+        diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
     #fi
 
     do_sudo rm -rf "${1}.differ"
@@ -681,16 +681,16 @@ do_diff_reverse(){
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur "${2}/" "${1}.differ/" | strings | sed -e "s|+++ ${1}.differ|+++ a|g" -e "s|--- ${2}|--- b|g" | colordiff
+    diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | strings | sed -e "s|+++ ${1}.differ|+++ a|g" -e "s|--- ${2}|--- b|g" | colordiff
 
     #if [[ -n "$( which lsdiff )" ]] ; then
-        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${2}/" "${1}.differ/" | lsdiff | wc -l )"
-        #diff -Naur "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | lsdiff | wc -l )"
+        #diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files"
-        diff -Naur "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+        diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
     #fi
 
     do_sudo rm -rf "${1}.differ"

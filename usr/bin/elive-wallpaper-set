@@ -1,0 +1,66 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file
+
+
+    # }}}
+    # e16
+    if [[ -n "$EROOT" ]] ; then
+        backgrounds_dir="$HOME/.e16/backgrounds"
+    fi
+    # E newer
+    if [[ -n "$E_START" ]] ; then
+        backgrounds_dir="$HOME/.e/e/backgrounds"
+
+        E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+        case "$E_VERSION" in
+            0.17.*)
+                backgrounds_dir="$HOME/.e/e17/backgrounds"
+                ;;
+            *)
+                zenity --warning --text="Wallpapers configurator for newer version of Enlightenment is not yet implemented, try to do it manually from its configurations"
+                backgrounds_dir="$HOME/.e/e/backgrounds"
+                ;;
+        esac
+    fi
+
+    mkdir -p "$backgrounds_dir"
+
+
+    # add wallappers
+    for file in "$@"
+    do
+        if ! [[ -s "$file" ]] ; then
+            el_warning "No wallpaper file set: $file"
+            continue
+        fi
+
+        # e16
+        if [[ -n "$EROOT" ]] ; then
+            cp -a "$file" "$backgrounds_dir"
+        fi
+
+        # e17
+        if [[ -n "$E_START" ]] ; then
+            enlightenment_remote -desktop-bg-add-set "$file"
+        fi
+
+    done
+
+    #set wallpaper
+    if [[ -n "$EROOT" ]] ; then
+        eesh cfg
+    fi
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

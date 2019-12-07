@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Language and keyboard configurations
+GenericName=Reconfigure your system's language and keyboard
+Icon=config-language
+Exec=elive-reconfigure-language-keyboard
+Terminal=false
+Categories=System;Settings;

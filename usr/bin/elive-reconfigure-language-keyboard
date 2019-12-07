@@ -1,0 +1,34 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN=""
+export TEXTDOMAIN
+
+
+main(){
+    # pre {{{
+    local var
+
+    # }}}
+
+    # mode basic or advanced {{{
+    #if zenity --question --text="Do you want to use the basic and easier interface instead of the advanced and complete one?" ; then
+    if zenity --question --text="$( eval_gettext "Do you want to use the basic and easier interface instead of the advanced and complete one?" )" ; then
+        is_basic_mode=1
+    fi
+
+    # }}}
+    # ask for preselected language to use
+    language="$LANG"
+    language="${language%% *}"
+    language="${language%%.*}"
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

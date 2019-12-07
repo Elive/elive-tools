@@ -175,6 +175,8 @@ EOF
     # configure xserver-xorg values, preseeds.d is run from the install with a dpkg-reconfigure for filename
     cat > "$script" -- <<EOF
 #!/bin/bash
+source /usr/lib/elive-tools/functions
+
 echo -e "xserver-xorg\txserver-xorg/config/inputdevice/keyboard/layout\tselect\t${k_layout%%,*}" | debconf-set-selections
 
 # configure keyboard
@@ -194,6 +196,12 @@ EOF
     rm -f "$script"
 
     # }}}
+
+    # warn user that extra configurations are needed
+    if [[ -n "$E_START" ]] ; then
+        zenity --info --text="$( eval_gettext "You have configured your system to use the selected language and keyboard. But to enable them, you need to select them on your desktop configurations." )"
+    fi
+
 }
 
 #

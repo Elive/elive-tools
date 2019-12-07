@@ -52,6 +52,7 @@ main(){
 
     #set wallpaper
     if [[ -n "$EROOT" ]] ; then
+        zenity --info --text="Select your new wallpaper in the configuration menu."
         eesh cfg
     fi
 

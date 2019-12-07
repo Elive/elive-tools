@@ -33,7 +33,7 @@ main(){
         # e16
         order_file="$HOME/.e16/startup-applications.list"
     else
-        if [[ "$(which enlightenment)" ]] ; then
+        if [[ -x "$(which enlightenment)" ]] ; then
             E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
             case "$E_VERSION" in
                 0.17.*)

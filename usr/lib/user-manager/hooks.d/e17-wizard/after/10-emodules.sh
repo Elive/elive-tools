@@ -5,7 +5,7 @@ main(){
         true
     else
         # e17
-        if [ -n "$E_START" ] && [ "$( which enlightenment_remote )" ] ; then
+        if [ -n "$E_START" ] && [ -n "$( which enlightenment_remote )" ] ; then
 
             # disable battery emodule if the battery is broken
             # tested in: wheezy, buster

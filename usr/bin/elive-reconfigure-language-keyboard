@@ -9,7 +9,9 @@ export TEXTDOMAIN
 
 main(){
     # pre {{{
-    local var
+    script="$( mktemp )"
+
+    on_exit rm -f "$script"
 
     # }}}
 
@@ -20,10 +22,178 @@ main(){
     fi
 
     # }}}
+    # language conf {{{
     # ask for preselected language to use
     language="$LANG"
     language="${language%% *}"
     language="${language%%.*}"
+
+    if ((is_basic_mode)) ; then
+        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
+
+        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+            result="${result}.UTF-8"
+            export LANG="$result"
+
+            # configure language
+            if [[ "$LANG" = *UTF* ]] ; then
+                el_explain 0 "Configuring system language to $LANG..."
+
+                cat > "$script" -- <<EOF
+#!/bin/bash
+echo "LANG=$LANG" > /etc/default/locale
+if ! grep -qs "^${LANG} ${LANG#*.}$" /etc/locale.gen ; then
+    sed -i -e "s|# ${LANG} ${LANG#*.}|${LANG} ${LANG#*.}|" /etc/locale.gen
+    locale-gen --keep-existing > /dev/null 2>&1
+    update-locale
+fi
+echo -e "locales\tlocales/default_environment_locale\tselect\t${LANG}" | debconf-set-selections
+echo -e "locales\tlocales/default_environment_locale\tselect\t${LANG}" | debconf-set-selections
+
+# reconfigure console locale
+dpkg-reconfigure -f noninteractive -p critical console-setup
+
+# force reload configurations on console
+setupcon --force
+
+EOF
+
+                chmod +x "$script"
+                gksu "$script"
+                rm -f "$script"
+
+            else
+                el_warning "Is your language not in UTF-8? ignoring language configuration..."
+            fi
+
+        fi
+    fi
+
+    # fallback / reconfigure
+    if ! ((is_basic_mode)) || [[ "${result}" = "Other" ]] || [[ -z "$LANG" ]] ; then
+        urxvt -e bash -c "gksu dpkg-reconfigure locales"
+        urxvt -e bash -c "gksu dpkg-reconfigure -f noninteractive -p critical console-setup"
+    fi
+
+    # get conf
+    source /etc/default/locale
+
+    # e17
+    if [[ -n "$E_START" ]] ; then
+        LANG="$( enlightenment_remote -lang-get )"
+        # remove extra leading blank chars
+        read -r LANG <<< "$LANG"
+        LANG="${LANG/.utf8/.UTF-8}"
+    fi
+
+    # }}}
+
+    # keyboard conf {{{
+    # if our lang is like es_ES, set the keyboard simply to it
+    if [[ "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($1)}' )" = "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($2)}' )" ]] ; then
+        kbmap="$( echo "${LANG%.*}" | awk -v FS="_" '{print $1}' )"
+    else
+        kbmap="$( setxkbmap -print -verbose 10 | grep "layout:" | awk '{print $2}' )"
+    fi
+
+
+    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" || echo "$kbmap" )"
+    # always set the keyboard to default detected when when we "validate" without selection:
+    if [[ -z "$result" ]] ; then
+        result="$kbmap"
+    fi
+
+    if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+        result="$( echo "$result" | awk '{print $1}' )"
+    fi
+
+    #if [[ "$result" = "cancel" ]] ; then
+        #is_keyboard_canceled=1
+    #fi
+
+    # set the keyboard
+    if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+        setxkbmap "$result"
+    fi
+
+    # fallback / reconfigure
+    if [[ "${result}" = "Other" ]] ; then
+        urxvt -e bash -c "gksu dpkg-reconfigure keyboard-configuration"
+        source /etc/default/keyboard
+        setxkbmap -option '' -model "$XKBMODEL" "$XKBLAYOUT" "$XKBVARIANT" "$XKBOPTIONS"
+    fi
+
+    # }}}
+    # Get xkb values set {{{
+    while read -ru 3 line
+    do
+        # layout
+        if [[ "$line" = layout:* ]] ; then
+            k_layout="${line#*:}"
+            # do we have something useful?
+            if echo "$k_layout" | sed -e 's|,||g' | grep -qs "[[:alpha:]]" ; then
+                # remove last comma
+                k_layout="${k_layout%,}"
+                # remove extra leading blank chars
+                read -r k_layout <<< "$k_layout"
+            else
+                unset k_layout
+            fi
+        fi
+
+        # variant
+        if [[ "$line" = variant:* ]] ; then
+            k_variant="${line#*:}"
+            # do we have something useful?
+            if echo "$k_variant" | sed -e 's|,||g' | grep -qs "[[:alpha:]]" ; then
+                # remove last comma
+                k_variant="${k_variant%,}"
+                # remove extra leading blank chars
+                read -r k_variant <<< "$k_variant"
+            else
+                unset k_variant
+            fi
+        fi
+
+        # options
+        if [[ "$line" = options:* ]] ; then
+            k_options="${line#*:}"
+            # do we have something useful?
+            if echo "$k_options" | sed -e 's|,||g' | grep -qs "[[:alpha:]]" ; then
+                # remove extra leading blank chars
+                read -r k_options <<< "$k_options"
+            else
+                unset k_options
+            fi
+        fi
+
+    done 3<<< "$( setxkbmap -print -verbose 10 )"
+
+    # - Get xkb values set }}}
+    # keyboard set configurations {{{
+
+    # configure xserver-xorg values, preseeds.d is run from the install with a dpkg-reconfigure for filename
+    cat > "$script" -- <<EOF
+#!/bin/bash
+echo -e "xserver-xorg\txserver-xorg/config/inputdevice/keyboard/layout\tselect\t${k_layout%%,*}" | debconf-set-selections
+
+# configure keyboard
+el_explain 0 "Configuring keyboard, layout  __${k_layout%%,*}__"
+el_explain 0 "Configuring keyboard, variant __${k_variant%%,*}__"
+el_explain 0 "Configuring keyboard, options __${k_options%%,*}__"
+
+sed -i "s|^XKBLAYOUT.*$|XKBLAYOUT=\"${k_layout%%,*}\"|g" /etc/default/keyboard
+sed -i "s|^XKBVARIANT.*$|XKBVARIANT=\"${k_variant%%,*}\"|g" /etc/default/keyboard
+sed -i "s|^XKBOPTIONS.*$|XKBOPTIONS=\"${k_options}\"|g" /etc/default/keyboard
+
+dpkg-reconfigure -f noninteractive -p critical keyboard-configuration
+dpkg-reconfigure -f noninteractive -p critical xserver-xorg
+EOF
+    chmod +x "$script"
+    gksu "$script"
+    rm -f "$script"
+
+    # }}}
 }
 
 #

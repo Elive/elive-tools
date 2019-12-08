@@ -170,16 +170,19 @@ main(){
 
     # add a lock
     LOCKFILE="/tmp/.${USER}-$(basename $0).lock"
-    [[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
+    # wait for process to finish first, if already running
+    if [[ -r $LOCKFILE ]] ; then
+        PROCESS=$(cat $LOCKFILE)
 
-    if (ps -p $PROCESS) >/dev/null 2>&1
-    then
-        echo "$(basename $0) process is already running"
-        exit 1
-    else
-        rm -f $LOCKFILE
-        echo $$ > $LOCKFILE
+        while ps -p $PROCESS >/dev/null 2>&1
+        do
+            #echo "$(basename $0) process is already running"
+            sleep 1
+        done
     fi
+
+    rm -f $LOCKFILE
+    echo $$ > $LOCKFILE
 
     _CMDLINE="$(cat /proc/cmdline)"
 
@@ -187,18 +190,9 @@ main(){
         is_live=1
         is_force=1
     fi
-
-    iface="$1"
-    shift
-    state="$1"
-    shift
     conf="/etc/elive-tools/geolocation/timezones.conf"
 
-    # checks
-    # set some variables for compatibility specially if we run it from commandline
-    if [[ -z "$state" ]] ; then
-        state="up"
-    fi
+
     if [[ -e "$conf" ]] ; then
         # fix any possible xml tag (bug) in the conf file
         if grep -qs '<.*>' "$conf" ; then
@@ -216,7 +210,16 @@ main(){
     #el_check_variables "iface,state"
 
 
+    # some values like no iface given should be directly exited
+    if [[ -z "$1" ]] ; then
+        exit
+    fi
+
     case "$1" in
+        connectivity-change|none)
+            # whitelisted ignorings
+            exit
+            ;;
         -f|--force)
             is_force=1
             needs_update_conf=1
@@ -230,19 +233,41 @@ main(){
         wlan*|ath*|ra*|w*)
             is_wifi=1
             ;;
-        #eth*|e*)
-            #is_lan=1
-            #;;
+        eth*|enp*|e*)
+            is_lan=1
+            ;;
+        *)
+            el_warning "unknown parameters (iface?) for $0: $@"
+            ;;
     esac
 
+    iface="$1"
+    shift
+    state="$1"
+    shift
+
+    read -r iface <<< "$iface"
+    read -r state <<< "$state"
+
+    # debug parameters:
+    #echo "D: $@ ($iface - $state) "
+
+
+    # checks
+    # set some variables for compatibility specially if we run it from commandline
+    #if [[ -z "$state" ]] ; then
+        #state="up"
+    #fi
 
     case "$state" in
-        down)
-            # nothing useful to do when we disconnect
-            exit
-            ;;
-        up|*)
+        up)
             true
+            ;;
+        down|*)
+            # nothing useful to do when we disconnect
+            #echo -e "Nothing to do..."
+            el_warning "unknown state for $0: $state"
+            exit
             ;;
     esac
 

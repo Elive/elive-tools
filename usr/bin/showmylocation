@@ -84,21 +84,21 @@ main(){
     # try with freegeoip (good but slow, reliable, which is more important)
     # UPDATE: freegeoip changed the API for a different service (stills free apparently), but it is not implemented here, so let's disable it for now:
     #if ! ((is_data_valid)) ; then
-        #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+        #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
 
         ## verify
         #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
             #is_data_valid=1
             #el_debug "using freegeoip"
         #else
-            #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+            #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
 
             #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
                 #is_data_valid=1
                 #el_debug "using freegeoip"
             #else
                 #sleep 1
-                #data="$( curl -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+                #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
                 #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
                     #is_data_valid=1
                     #el_debug "using freegeoip"
@@ -109,7 +109,7 @@ main(){
 
     # try with geoplugin (fast)
     if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        data="$( curl -L -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
@@ -121,7 +121,7 @@ main(){
     # try with ipaddresslabs:
     # note: actually it says demo license expired, place this test at the end
     if ! ((is_data_valid)) ; then
-        data="$( curl -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
+        data="$( curl -L -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then

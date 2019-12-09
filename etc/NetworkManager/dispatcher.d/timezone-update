@@ -255,15 +255,19 @@ main(){
 
     # checks
     # set some variables for compatibility specially if we run it from commandline
-    #if [[ -z "$state" ]] ; then
+    if [[ -z "$state" ]] ; then
         #state="up"
-    #fi
+        exit
+    fi
 
     case "$state" in
         up)
             true
             ;;
-        down|*)
+        down)
+            exit
+            ;;
+        *)
             # nothing useful to do when we disconnect
             #echo -e "Nothing to do..."
             el_warning "unknown state for $0: $state"

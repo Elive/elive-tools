@@ -102,25 +102,42 @@ main(){
         # - un-needed ones }}}
         # default to enabled/disabled {{{
 
-        if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
-                menu+=("TRUE")
-                menu_auto+=("$file")
-                el_debug "state: TRUE"
-            else
-                menu+=("FALSE")
-                el_debug "state: FALSE"
-            fi
-        else
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
-                menu+=("TRUE")
-                menu_auto+=("$file")
-                el_debug "state: TRUE"
-            else
-                menu+=("FALSE")
-                el_debug "state: FALSE"
-            fi
-        fi
+        case "$filename" in
+            # do we need a touch-screen keyboard?
+            onboard-autostart.desktop)
+                if grep -qs "keyboard: not found" /etc/elive-version ; then
+                    menu+=("TRUE")
+                    menu_auto+=("$file")
+                    menu_auto_live+=("$file")
+                    el_debug "state: TRUE"
+                else
+                    menu+=("FALSE")
+                    el_debug "state: FALSE"
+                fi
+                ;;
+            *)
+                if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
+                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
+                        menu+=("TRUE")
+                        menu_auto+=("$file")
+                        el_debug "state: TRUE"
+                    else
+                        menu+=("FALSE")
+                        el_debug "state: FALSE"
+                    fi
+                else
+                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
+                        menu+=("TRUE")
+                        menu_auto+=("$file")
+                        el_debug "state: TRUE"
+                    else
+                        menu+=("FALSE")
+                        el_debug "state: FALSE"
+                    fi
+                fi
+                ;;
+        esac
+
 
         # auto menu for live mode
         if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-|pulseaudio)" ; then

@@ -37,16 +37,17 @@ gtk_font_size_change(){
 
 main(){
     # pre {{{
-    local resolution font
+    local resolution resolution_v resolution_h font
 
     # }}}
 
 
     # e16
     if [[ -n "$EROOT" ]] ; then
-        true
-        resolution="$( LC_ALL=C xrandr -q | grep "^Screen 0" | tr ',' '\n' | grep "current .*x" | sed -e 's|^.*current ||g' -e 's| ||g' -e 's|x.*$||g' | head -1 )"
+        resolution="$( LC_ALL=C xrandr -q | grep "^Screen 0" | tr ',' '\n' | grep "current .*x" | sed -e 's|^.*current ||g' -e 's| ||g' | head -1 )"
         read -r resolution <<< "$resolution"
+        resolution_h="${resolution%%x*}"
+        resolution_v="${resolution##*x}"
         # defaults
         font="DejaVu Sans"
     fi
@@ -69,14 +70,16 @@ main(){
         # automatically set the Font for applications in an optimal size based in the DPI:
         enlightenment_remote -font-set-auto "application" "$font"
 
-        resolution="$( enlightenment_remote -resolution-get | sed -e 's|x.*$||g' )"
+        resolution="$( enlightenment_remote -resolution-get )"
         read -r resolution <<< "$resolution"
+        resolution_h="${resolution%%x*}"
+        resolution_v="${resolution##*x}"
     fi
 
 
 
     # set more specific font sizes for extreme cases
-    if [[ "$resolution" -gt 1024 ]] ; then
+    if [[ "$resolution_h" -gt 1024 ]] ; then
         # not needed: we have it already set more optimally
         #ERM -font-set "application" "$font" 9
         #gtk_font_size_change "10"
@@ -89,7 +92,7 @@ main(){
             sed -i -e "s|\"show_on_all_tabs\" : true|\"show_on_all_tabs\" : false|g" "$i"
         done
 
-        if [[ "$resolution" -ge 800 ]] ; then
+        if [[ "$resolution_h" -ge 800 ]] ; then
             # resolutions between 800x* & 1024x*
             ERM -font-set "application" "$font" 8
             gtk_font_size_change "8"
@@ -98,7 +101,7 @@ main(){
             sed -i -e 's|pixelsize=.*$|pixelsize=9|g' "$HOME/.Xdefaults"
             xrdb "$HOME/.Xdefaults"
         else
-            if [[ "$resolution" -lt 800 ]] ; then
+            if [[ "$resolution_h" -lt 800 ]] ; then
                 # very extreme cases (very small screens)
                 ERM -font-set "application" "$font" 7
                 gtk_font_size_change "7"
@@ -107,6 +110,10 @@ main(){
                 xrdb "$HOME/.Xdefaults"
             fi
         fi
+    fi
+
+    if [[ "$resolution_v" -le 800 ]] ; then
+        sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
     fi
 
     # TODO: add terminology support (12 default, 10 for medium-small, since buster)

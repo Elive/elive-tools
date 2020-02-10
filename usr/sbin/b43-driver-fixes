@@ -33,7 +33,7 @@ try_and_configure(){
 
     # note: wl must be the first one
     #modules_list="wl b43 b43legacy brcm80211"
-    modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac ssb rndis_wlan tg3"
+    modules_list="wl b43 b43legacy brcm80211 b44 bcma brcmsmac brcmfmac ssb rndis_wlan tg3"
 
     # remove every b43 module
     for j in $( seq 5 )

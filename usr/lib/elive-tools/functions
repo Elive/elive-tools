@@ -488,10 +488,10 @@ el_dependencies_install(){
 echo -e "Installing Dependencies"
 
 if [[ -x "\$( which urxvt )" ]] ; then
-    urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; export DEBIAN_FRONTEND=noninteractive ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+    urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
 else
     if [[ -n "\$TERM" ]] ; then
-        su -c "source /usr/lib/elive-tools/functions ; export DEBIAN_FRONTEND=noninteractive ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
+        su -c "source /usr/lib/elive-tools/functions ; export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
     else
         el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
         sleep 6
@@ -515,14 +515,14 @@ EOF
     else
         if ! el_dependencies_check gksu ; then
             if [[ -x "$( which urxvt )" ]] ; then
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'DEBIAN_FRONTEND=noninteractive apt-get update' root"
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'DEBIAN_FRONTEND=noninteractive apt-get install -y gksu' root"
+                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update' root"
+                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root"
             else
                 if [[ -n "$TERM" ]] ; then
                     # if we are in this condition maybe we are in a non-desktop install, so we don't want these things
                     true
                 else
-                    su -c 'apt-get update ; DEBIAN_FRONTEND=noninteractive apt-get install -y gksu' root
+                    su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root
                 fi
             fi
         fi

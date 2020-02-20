@@ -852,16 +852,16 @@ install_driver(){
     echo -e "\n\n\n\n\nInstalling... Please be patient...\n\n"
     sleep 2
 
-    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
         el_aptget_update
 
-        if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+        if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
             el_aptget_update force
 
-            if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_NVIDIA_PACKAGES ; then
+            if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
                 while read -ru 3 package
                 do
-                    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
+                    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $package ; then
                         # open a shell
                         if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
                             echo -e "\n\n\nE: Installing nvidia packages failed, try yourself and suggest a fix to Elive\n" 1>&2
@@ -1127,10 +1127,10 @@ uninstall_driver(){
 
         #if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_NVIDIA_PACKAGES
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge -y $_NVIDIA_PACKAGES
         #else
             #el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
-            #DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_NVIDIA_PACKAGES
+            #TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge $_NVIDIA_PACKAGES
         #fi
     else
         el_info "Nvidia packages already removed"
@@ -1139,7 +1139,7 @@ uninstall_driver(){
 
     # just in case, reinstall the nouveau driver
     if ! COLUMNS=1000 dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
-        DEBIAN_FRONTEND="noninteractive" apt-get install -y xserver-xorg-video-nouveau
+        TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y xserver-xorg-video-nouveau
     fi
 
     # - packages }}}

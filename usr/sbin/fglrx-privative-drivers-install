@@ -482,16 +482,16 @@ install_driver(){
     echo -e "\n\n\n\n\nInstalling... Please be patient...\n\n"
     sleep 2
 
-    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
+    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_FGLRX_PACKAGES ; then
         el_aptget_update
 
-        if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
+        if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_FGLRX_PACKAGES ; then
             el_aptget_update force
 
-            if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $_FGLRX_PACKAGES ; then
+            if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_FGLRX_PACKAGES ; then
                 while read -ru 3 package
                 do
-                    if ! DEBIAN_FRONTEND="noninteractive" apt-get install -y $package ; then
+                    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $package ; then
                         sleep 5
                         echo -e "\nE: Installing fglrx packages failed, report the previous error messages to Elive" 1>&2
                         sleep 10
@@ -659,10 +659,10 @@ uninstall_driver(){
 
         if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_FGLRX_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge -y $_FGLRX_PACKAGES
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge -y $_FGLRX_PACKAGES
         else
             el_debug "apt-get remove --purge $_FGLRX_PACKAGES"
-            DEBIAN_FRONTEND="noninteractive" apt-get remove --purge $_FGLRX_PACKAGES
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge $_FGLRX_PACKAGES
         fi
     else
         el_info "FGLRX packages already removed"

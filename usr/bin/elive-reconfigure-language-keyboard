@@ -3,7 +3,7 @@ SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
 . gettext.sh
-TEXTDOMAIN=""
+TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 

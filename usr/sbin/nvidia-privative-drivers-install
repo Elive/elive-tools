@@ -74,7 +74,7 @@ load_driver(){
     fi
 
     if ! lsmod | grep -qs "^nvidia" ; then
-        nvidia_modules="$( find /lib/modules -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm).ko" )"
+        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm).ko" )"
 
         if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
             for i in $nvidia_modules
@@ -641,6 +641,20 @@ interactive_ask_driver_version(){
             if apt-cache show "nvidia-settings" 1>/dev/null 2>&1 ; then
                 _NVIDIA_PACKAGES="nvidia-settings $_NVIDIA_PACKAGES"
             fi
+
+            # i386 no longer supports this version, it fallsback to the version 390
+            if apt-cache show nvidia-driver | grep -qs "^Depends: .*nvidia-legacy-" ; then
+                clear ; echo
+                NOREPORTS=1 el_error "Version 'current' no longer supported for this architecture"
+                sleep 4
+
+                message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, we recommend using the 64bit version of Elive instead. The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
+
+                dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                    --title "WARNING" \
+                    --msgbox "$message_warning_no_longer_supported" \
+                    0 0
+            fi
             ;;
         legacy-71xx)
 
@@ -853,48 +867,75 @@ install_driver(){
     sleep 2
 
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-        el_aptget_update
+        el_aptget_update force
 
         if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-            el_aptget_update force
+            true
 
-            if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-                while read -ru 3 package
-                do
-                    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $package ; then
-                        # open a shell
-                        if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
-                            echo -e "\n\n\nE: Installing nvidia packages failed, try yourself and suggest a fix to Elive\n" 1>&2
-                            sleep 5
-                        else
-                            if [[ "$_NVIDIA_VERSION" = "current" ]] ; then
-                                echo -e "\nE: Installing nvidia packages failed, please try to install them yourself" 1>&2
-                                echo -e "\nE: Boot Elive with the nox11autologin parameter to not start the graphical system" 1>&2
-                                echo -e "\nE: If you see that Elive has a missing configuration or package for the 'current'" 1>&2
-                                echo -e "\nE: version, please report what is needed to include to have the tool working for all" 1>&2
-                                sleep 5
-                            else
-                                echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
-                                sleep 5
-                            fi
-                        fi
+            #while read -ru 3 package
+            #do
+                #if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $package ; then
+                    ## open a shell
+                    #if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
+                        #echo -e "\n\n\nE: Installing nvidia packages failed, try yourself and suggest a fix to Elive\n" 1>&2
+                        #sleep 5
+                    #else
+                        #if [[ "$_NVIDIA_VERSION" = "current" ]] ; then
+                            #echo -e "\nE: Installing nvidia packages failed, please try to install them yourself" 1>&2
+                            #echo -e "\nE: Boot Elive with the nox11autologin parameter to not start the graphical system" 1>&2
+                            #echo -e "\nE: If you see that Elive has a missing configuration or package for the 'current'" 1>&2
+                            #echo -e "\nE: version, please report what is needed to include to have the tool working for all" 1>&2
+                            #sleep 5
+                        #else
+                            #echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
+                            #sleep 5
+                        #fi
+                    #fi
 
-                        # open an interactive shell
-                        if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-                            if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
-                                find /lib/modules -type f -iname '*'nvidia'*'
-                                el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
-                                el_explain 0 "Type '__exit__' for continue..."
-                                $SHELL -l
+                    ## open an interactive shell
+                    #if ! ((is_mode_auto)) || ((is_mode_live)) ; then
+                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                            #find "/lib/modules/$(uname -r)/updates -type f -iname '*'nvidia'*'
+                            #el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
+                            #el_explain 0 "Type '__exit__' for continue..."
+                            #$SHELL -l
 
-                            fi
-                        fi
-                    fi
-                done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
-            fi
+                        #fi
+                    #fi
+                #fi
+            #done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
         fi
     fi
 
+    # verify if the installation succeeded
+    if ! find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+
+        clear ; echo
+        NOREPORTS=1 el_error "Driver compilation seems to have failed"
+        sleep 4
+
+        local message_warning_install_failed
+        message_warning_install_failed="$( printf "$( eval_gettext "The compilation of the driver seems to have failed. We suggest to reboot and try with a different kernel version on which it may compile, since its a common problem with the versions. Or check our forums for more help." )" "" )"
+
+        dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            --title "WARNING" \
+            --msgbox "$message_warning_install_failed" \
+            0 0
+
+
+
+        if ! ((is_mode_auto)) || ((is_mode_live)) ; then
+            echo -e "\n\n"
+
+            if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*'
+                el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
+                el_explain 0 "Type '__exit__' for continue..."
+                $SHELL -l
+
+            fi
+        fi
+    fi
 
     # add the packages to the installed system later too
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
@@ -914,10 +955,10 @@ install_driver(){
     # load module {{{
     # reload devices just in case
     if ((is_mode_simulate)) ; then
-        if find /lib/modules/ -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
-            message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find /lib/modules/ -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
+        if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+            message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
         else
-            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find /lib/modules/ -type f -name '*'nvidia'*' )"
+            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' )"
         fi
             # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
@@ -950,7 +991,7 @@ install_driver(){
                 fi
 
                 # module simply was not compiled
-                if ! find "/lib/modules/$(uname -r)" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
+                if ! find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
                     message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
                 fi
 

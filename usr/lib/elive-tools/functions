@@ -2851,7 +2851,7 @@ el_config_restart(){
 #===============================================================================
 el_ram_usage_show(){
     # pre {{{
-    local arg
+    local arg used total free
 
     arg="$1"
 
@@ -2867,6 +2867,11 @@ el_ram_usage_show(){
               ;;
           used)
               free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}'
+              ;;
+          used_percent)
+              used="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}' )"
+              total="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $2}' )"
+              echo "( $used / $total ) * 100" | bc -l | sed -e 's|\..*$||g'
               ;;
           *)
               free

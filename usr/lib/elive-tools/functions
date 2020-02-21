@@ -626,7 +626,8 @@ el_aptget_update(){
         message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
 
         if ! el_verify_internet 2>/dev/null 1>&2 ; then
-            el_error "We need to update the packages lists but we don't have internet? continuing anyways..."
+            el_error "We need to update the packages lists but we don't have internet? ignoring update..."
+            return 1
         fi
 
         # wait for unlock

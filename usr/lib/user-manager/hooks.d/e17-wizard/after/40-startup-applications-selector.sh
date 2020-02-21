@@ -394,7 +394,7 @@ EOF
 
 
         local message_1
-        message_1="$( printf "$( eval_gettext "Select the desired features for your desktop. You can add later more applications to startup on your desktop by editing the file:" )" "" )"
+        message_1="$( printf "$( eval_gettext "Select the desired features for your desktop. You can later add more applications to startup on your desktop by editing the file:" )" "" )"
         local message_2
         message_2="$( printf "$( eval_gettext "Enable" )" "" )"
         local message_3

@@ -915,7 +915,7 @@ install_driver(){
     # reload devices just in case
     if ((is_mode_simulate)) ; then
         if find /lib/modules/ -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
-            message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked"
+            message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find /lib/modules/ -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
         else
             message_unable_to_load="NVIDIA failed to COMPILE? \n$( find /lib/modules/ -type f -name '*'nvidia'*' )"
         fi

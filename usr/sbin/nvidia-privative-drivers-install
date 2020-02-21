@@ -589,7 +589,7 @@ interactive_ask_driver_version(){
             fi
 
         done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
-            | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+            | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
         # user canceled? uninstall and exit
         if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then

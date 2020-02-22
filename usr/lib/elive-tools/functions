@@ -2897,8 +2897,12 @@ el_architecture(){
     arg="$1"
     shift
 
-    file="$1"
-    shift
+    if [[ -n "$1" ]] ; then
+        file="$1"
+        shift
+    fi
+
+    # defaults
     if [[ -z "$file" ]] ; then
         file="/bin/ls"
     fi

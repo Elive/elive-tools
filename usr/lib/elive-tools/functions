@@ -2924,7 +2924,7 @@ el_architecture(){
     if [[ -n "$arch" ]] ; then
         echo "$arch"
     else
-        el_error "unable to get architecture for this machine, uname -m '$(uname -m)', file -b /bin/ls '$(file -b /bin/ls)'"
+        el_error "unable to know the architecture for this machine, uname -m '$(uname -m)', file -b /bin/ls '$(file -b /bin/ls)'"
         return 1
     fi
 

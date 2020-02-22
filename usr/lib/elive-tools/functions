@@ -2887,13 +2887,21 @@ el_ram_usage_show(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_architecture
 #   DESCRIPTION:  returns the architecture
-#    PARAMETERS:  $1 = host | kernel
+#    PARAMETERS:  $1 = host | kernel, $2 = file to use to know arch (host mode only)
 #       RETURNS:  string
 #===============================================================================
 el_architecture(){
     # pre {{{
-    local arg arch
+    local arg arch file
+
     arg="$1"
+    shift
+
+    file="$1"
+    shift
+    if [[ -z "$file" ]] ; then
+        file="/bin/ls"
+    fi
 
     # }}}
     # fetch data
@@ -2902,7 +2910,7 @@ el_architecture(){
             arch="$( uname -m )"
             ;;
         host)
-            arch="$( file -b /bin/ls | sed -e 's|, version .*$||g' -e 's|^.*, ||g' )"
+            arch="$( file -b "$file" | sed -e 's|, version .*$||g' -e 's|^.*, ||g' )"
             ;;
         *)
             el_error "argument missing, select one: host, kernel"

@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local file mode cmd
+    local file mode cmd pid
 
     # }}}
 
@@ -60,7 +60,7 @@ main(){
     if test -s "$order_file" ; then
         while read -ru 3 line
         do
-            unset executable cmd
+            unset executable cmd pid
 
             # skip already runs:
             if el_array_member_check "$line" "${already_run[@]}" ; then
@@ -86,7 +86,7 @@ main(){
             esac
 
             # check
-            if ! [[ -x "$( which "$executable" )" ]] ; then
+            if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
                 el_warning "unable to run executable '$executable' with command '$cmd'"
                 continue
             fi
@@ -96,15 +96,28 @@ main(){
 
                 if ((is_start)) ; then
                     # close other instances, just in case
-                    killall "$executable"  2>/dev/null || true
+                    killall "$(basename "$executable" )"  2>/dev/null || true
 
                     el_debug "running: $cmd"
                     bash -c "$cmd  & disown"
                 fi
 
                 if ((is_stop)) ; then
-                    el_debug "killing: $cmd"
-                    killall "$executable"  2>/dev/null || killall -9 "$executable"  2>/dev/null || true
+                    el_debug "killing: $(basename "$executable" )"
+                    #el_debug "ex: $executable , cmd $cmd"
+                    if ! killall "$( basename "$executable" )"  2>/dev/null ; then
+                        if ! killall -9 "$( basename "$executable" )"  2>/dev/null ; then
+                            pid="$( ps kstart_time ux | grep -v "grep .*$cmd" | grep "$cmd" | awk '{print $2}' | tail -1 )"
+                            if [[ -n "$pid" ]] ; then
+                                kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null
+
+                                if ps -p "$pid" 1>/dev/null 2>&1 ; then
+                                    kill -9 "$pid" 2>/dev/null
+                                fi
+                            fi
+
+                        fi
+                    fi
                 fi
             fi
 

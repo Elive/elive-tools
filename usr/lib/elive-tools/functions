@@ -739,7 +739,11 @@ el_package_upgrade_fast(){
 
     # checks
     if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
-        el_error "we don't have an ending *Packages file in our apt lists available"
+        el_aptget_update force
+
+        if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
+            el_error "we don't have an ending *Packages file in our apt lists available"
+        fi
     fi
 
     for package in "$@"

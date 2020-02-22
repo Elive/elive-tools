@@ -2293,7 +2293,7 @@ el_report_to_elive(){
         # get stack to senD
         execution_stack="$( pstree -A -l -n -s $$ )"
         execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
-        architecture="$( dpkg-architecture -qDEB_HOST_ARCH | tail -1 )"
+        architecture="$( el_architecture "host" )"
 
         # send
         if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::${architecture}::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
@@ -2881,6 +2881,52 @@ el_ram_usage_show(){
               free
               ;;
       esac
+
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_architecture
+#   DESCRIPTION:  returns the architecture
+#    PARAMETERS:  $1 = host | kernel
+#       RETURNS:  string
+#===============================================================================
+el_architecture(){
+    # pre {{{
+    local arg arch
+    arg="$1"
+
+    # }}}
+    # fetch data
+    case "$arg" in
+        kernel)
+            arch="$( uname -m )"
+            ;;
+        host)
+            arch="$( file -b /bin/ls | sed -e 's|, version .*$||g' -e 's|^.*, ||g' )"
+            ;;
+        *)
+            el_error "argument missing, select one: host, kernel"
+            return 1
+            ;;
+    esac
+
+    # convert
+    case "$arch" in
+        x86-64|x86_64|amd64|64bit)
+            arch="amd64"
+            ;;
+        *80386|i386)
+            arch="i386"
+            ;;
+    esac
+
+    # result
+    if [[ -n "$arch" ]] ; then
+        echo "$arch"
+    else
+        el_error "unable to get architecture for this machine, uname -m '$(uname -m)', file -b /bin/ls '$(file -b /bin/ls)'"
+        return 1
+    fi
 
 }
 

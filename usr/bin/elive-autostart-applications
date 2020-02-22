@@ -4,7 +4,7 @@ source /usr/lib/elive-tools/functions
 
 main(){
     # pre {{{
-    local file mode
+    local file mode cmd
 
     # }}}
 
@@ -60,6 +60,8 @@ main(){
     if test -s "$order_file" ; then
         while read -ru 3 line
         do
+            unset executable cmd
+
             # skip already runs:
             if el_array_member_check "$line" "${already_run[@]}" ; then
                 continue
@@ -70,31 +72,41 @@ main(){
                 continue
             fi
 
+            # parse and get info
             case "$line" in
                 *.desktop|*.DESKTOP)
-                    executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
-                    if [[ -n "$executable" ]] ; then
+                    cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | sed -e 's|%.*$||g' | tail -1 )"
+                    executable="$( echo "$cmd" | awk '{print $1}' )"
 
-                        if ((is_start)) ; then
-                            # close other instances, just in case
-                            killall $executable 2>/dev/null || true
-
-                            el_debug "running $executable"
-                            bash -c "$executable & disown"
-                        fi
-                        if ((is_stop)) ; then
-                            el_debug "killing $executable"
-                            killall "$executable"
-                        fi
-                    fi
                     ;;
                 *)
-                    cmd="$( echo "$line" | awk '{print $1}')"
-                    if [[ -x "$( which "$cmd" )" ]] ; then
-                        bash -c "$line & disown"
-                    fi
+                    cmd="$line"
+                    executable="$( echo "$line" | awk '{print $1}')"
                     ;;
             esac
+
+            # check
+            if ! [[ -x "$( which "$executable" )" ]] ; then
+                el_warning "unable to run executable '$executable' with command '$cmd'"
+                continue
+            fi
+
+            # start or stop them
+            if [[ -n "$cmd" ]] && [[ -n "$executable" ]] ; then
+
+                if ((is_start)) ; then
+                    # close other instances, just in case
+                    killall "$executable"  2>/dev/null || true
+
+                    el_debug "running: $cmd"
+                    bash -c "$cmd  & disown"
+                fi
+
+                if ((is_stop)) ; then
+                    el_debug "killing: $cmd"
+                    killall "$executable"  2>/dev/null || killall -9 "$executable"  2>/dev/null || true
+                fi
+            fi
 
             # append to the already run list:
             el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")

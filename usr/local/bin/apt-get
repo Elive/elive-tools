@@ -17,14 +17,14 @@ waiter(){
         echo -en "\r[$j] Waiting for other software managers to finish..."
         is_waiting=1
 
-        sleep 0.5
+        LC_ALL=C  sleep 0.5
         ((i=i+1))
     done
 
     # make sure that dpkg/apt still not running
     if ((is_waiting)) ; then
         unset is_waiting
-        sleep 4
+        LC_ALL=C  sleep 4
         # recursively call it again
         $FUNCNAME
     fi

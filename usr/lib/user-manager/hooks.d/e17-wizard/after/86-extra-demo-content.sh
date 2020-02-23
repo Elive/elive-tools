@@ -35,6 +35,15 @@ main(){
         fi
     fi
 
+
+    # show the hokeys pdf at every new desktop creation
+    if [[ -x "/usr/bin/elive-help" ]] ; then
+        if ! grep -qs "thanatests" /proc/cmdline ; then
+            elive-help --hotkeys --fs --iconify &
+        fi
+    fi
+
+
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2

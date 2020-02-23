@@ -354,10 +354,14 @@ user_add(){
     username_bak="$username"
     # cleanup to valid username
     username="${username// /_}"
-    username="${username//[![:alnum:]]/-}"
+    # do not enable this, is buggy, also, lots of users may want to have an username with their non-ascii characters from other languages
+    #username="${username//[![:alnum:]]/-}"
+
+    # remove starting-slash from username, to avoid bugs!
+    username="${username#-}"
 
     # remove non-ascii characters
-    username="$( echo "$username" | perl -p -e 's|[^[:ascii:]]||g' )"
+    #username="$( echo "$username" | perl -p -e 's|[^[:ascii:]]||g' )"
     username="${username##+(-)}"
     username="${username%%+(-)}"
 
@@ -373,6 +377,9 @@ user_add(){
             $guitool --info --text="$message_loginname"
         fi
     fi
+
+    # fix chars for name of user too:
+    username_real="${username_real#-}"
 
     if ! [[ -n "$username" ]] ; then
         $guitool --error --text="$( eval_gettext "Invalid username" )"
@@ -414,6 +421,8 @@ user_add(){
     #$ADDUSER --force-badname --disabled-password --gecos "$username_real" --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
     #$ADDUSER --force-badname --disabled-password --gecos "$username_real" --shell /bin/zsh "$username" 2>/tmp/.errormessage || exit 1
     # update: adduser doesn't accepts names like Владимир
+    el_debug "useradd -c \"$username_real\" -m \"$username\""
+
     if [[ -x "$(which zsh)" ]]; then
         useradd -c "$username_real" -m -s "/bin/zsh" "$username"
     else

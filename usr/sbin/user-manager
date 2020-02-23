@@ -351,6 +351,12 @@ user_add(){
         return
     fi
 
+    # clean outside spaces
+    read -r username <<< "$username"
+    read -r username_real <<< "$username_real"
+    read -r userpass <<< "$userpass"
+    read -r user_email <<< "$user_email"
+
     username_bak="$username"
     # cleanup to valid username
     username="${username// /_}"

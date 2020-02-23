@@ -290,7 +290,7 @@ sudoers_user(){
 
 ###########################################################################
 user_add(){
-    local result want_autologin want_sudo want_sudo_apt
+    local result want_autologin want_sudo want_sudo_apt user_shell
 
     #username="$( $guitool --entry --text="$( eval_gettext "Enter the name of the new user" )" || echo cancel )"
     #[[ "$username" = "cancel" ]] && exit 1
@@ -424,10 +424,16 @@ user_add(){
     el_debug "useradd -c \"$username_real\" -m \"$username\""
 
     if [[ -x "$(which zsh)" ]]; then
-        useradd -c "$username_real" -m -s "/bin/zsh" "$username"
+        user_shell="/bin/zsh"
     else
-        useradd -c "$username_real" -m -s "/bin/bash" "$username"
+        user_shell="/bin/bash"
     fi
+
+    if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" ; then
+        $guitool --error --text="$( eval_gettext "Unable to create your user. Please try using english characters only" )"
+        return 1
+    fi
+
     # create / fix the files too
     elive-skel newuser "$username"
 

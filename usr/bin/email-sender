@@ -528,6 +528,9 @@ usage(){
 -v  verbose mode
 -q  quiet mode
 
+[environmental variables]
+REPLYTO
+
 [modes]
 - You can use this tool with -m 'message' or concatenating from the standard input
 "

@@ -423,10 +423,13 @@ interactive_ask_privative(){
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
                 message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each proprietary version to know which one is more suitable for your computer." )" )"
+                local message_extra
+                message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the opensource driver instead." )" "" )"
+
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
-                    --yesno "$message_message" \
+                    --yesno "$message_message\n\n${message_extra}" \
                     0 0
                                     ret="$?"
             fi

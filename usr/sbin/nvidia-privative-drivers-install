@@ -334,6 +334,10 @@ detect_driver_version(){
                     0 0
             fi
         fi
+
+        # preselect to not ask later
+        nvidia_version_live_preselected="$_NVIDIA_VERSION"
+
     else
         NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
         sleep 1
@@ -530,86 +534,92 @@ interactive_ask_driver_version(){
     message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphical card needs." )" "" )"
 
 
-
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
-        while read -ru 3 line
-        do
-            if [[ "${line}" = "xserver-xorg-video-nvidia" ]] ; then
-                continue
-            fi
 
-            _id="${line#xserver-xorg-video-nvidia}"
-            _id="${_id#-}"
+        if [[ -n "$nvidia_version_live_preselected" ]] ; then
+           ret="$nvidia_version_live_preselected"
+           unset nvidia_version_live_preselected
 
-            if [[ -z "$_id" ]] ; then
-                _id="unknown"
-            fi
+        else
+            while read -ru 3 line
+            do
+                if [[ "${line}" = "xserver-xorg-video-nvidia" ]] ; then
+                    continue
+                fi
 
-            case $_id in
-                *nvidia|current)
-                    _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
-                    # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
-                    _desc="$_desc ($( LC_ALL=C apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
-                    ;;
-                *legacy-390xx)
-                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
-                    ;;
-                *legacy-340xx)
-                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older)" )" )"
-                    ;;
-                *legacy-304xx)
-                    _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older older)" )" )"
-                    ;;
-                *legacy-173xx)
-                    _desc="$( printf "$( eval_gettext "Drivers for old cards" )" )"
-                    ;;
-                *legacy-96xx)
-                    _desc="$( printf "$( eval_gettext "Drivers for oldest cards" )" )"
-                    ;;
-                *legacy-71xx)
-                    _desc="$( printf "$( eval_gettext "Drivers for dinosaur devices" )" )"
-                    ;;
-                *legacy*)
-                    _desc="$( printf "$( eval_gettext "Old drivers" )" )"
-                    ;;
-                *)
-                    _desc="$( printf "$( eval_gettext "Unknown version" )" )"
-                    ;;
-            esac
+                _id="${line#xserver-xorg-video-nvidia}"
+                _id="${_id#-}"
 
-            if [[ "${_NVIDIA_VERSION}" = "$_id" ]] ; then
-                if ((_is_preselection_set)) ; then
-                    echo -e "'$_id' '$_desc'"
-                    _is_preselection_set=1
+                if [[ -z "$_id" ]] ; then
+                    _id="unknown"
+                fi
+
+                case $_id in
+                    *nvidia|current)
+                        _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
+                        # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
+                        _desc="$_desc ($( LC_ALL=C apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
+                        ;;
+                    *legacy-390xx)
+                        _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
+                        ;;
+                    *legacy-340xx)
+                        _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older)" )" )"
+                        ;;
+                    *legacy-304xx)
+                        _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older older)" )" )"
+                        ;;
+                    *legacy-173xx)
+                        _desc="$( printf "$( eval_gettext "Drivers for old cards" )" )"
+                        ;;
+                    *legacy-96xx)
+                        _desc="$( printf "$( eval_gettext "Drivers for oldest cards" )" )"
+                        ;;
+                    *legacy-71xx)
+                        _desc="$( printf "$( eval_gettext "Drivers for dinosaur devices" )" )"
+                        ;;
+                    *legacy*)
+                        _desc="$( printf "$( eval_gettext "Old drivers" )" )"
+                        ;;
+                    *)
+                        _desc="$( printf "$( eval_gettext "Unknown version" )" )"
+                        ;;
+                esac
+
+                if [[ "${_NVIDIA_VERSION}" = "$_id" ]] ; then
+                    if ((_is_preselection_set)) ; then
+                        echo -e "'$_id' '$_desc'"
+                        _is_preselection_set=1
+                    else
+                        echo -e "'$_id' '$_desc'"
+                    fi
                 else
                     echo -e "'$_id' '$_desc'"
                 fi
-            else
-                echo -e "'$_id' '$_desc'"
+
+            done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
+                | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+
+            # user canceled? uninstall and exit
+            if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
+                uninstall_driver
+                try_again
+                exit
             fi
 
-        done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
-            | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+            # get result
+            ret="$( cat "/tmp/.$(basename $0)-ret" | head -1 )"
+            rm -f "/tmp/.$(basename $0)-ret"
 
-        # user canceled? uninstall and exit
-        if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
-            uninstall_driver
-            try_again
-            exit
-        fi
+            # remove extra leading blank chars
+            read -r ret <<< "$ret"
 
-        # get result
-        ret="$( cat "/tmp/.$(basename $0)-ret" | head -1 )"
-        rm -f "/tmp/.$(basename $0)-ret"
-
-        # remove extra leading blank chars
-        read -r ret <<< "$ret"
-
-        # if users's cancel, we have no results at all
-        if [[ -z "$ret" ]] ; then
-            uninstall_driver
-            try_again
-            exit
+            # if users's cancel, we have no results at all
+            if [[ -z "$ret" ]] ; then
+                uninstall_driver
+                try_again
+                exit
+            fi
         fi
 
         log_progress_msg "Using the '$ret' nvidia drivers version"
@@ -623,7 +633,6 @@ interactive_ask_driver_version(){
         if [[ -n "$ret" ]] ; then
             _NVIDIA_VERSION="$ret"
         fi
-
     fi
 
 

@@ -532,7 +532,7 @@ get_mountpoint(){
     else
         mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
         # dev state test
-        if [[ "$( echo "$mountpoint" | tr ' ' '\n' | sed -e 's|^\s*||g' | wc -l )" -gt 1 ]] ; then
+        if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
             el_warning "multiple mountpoints found? from $(basename $0) (udisksctl info -b "$dev" | grep MountPoints: ):  $mountpoint"
         fi
     fi

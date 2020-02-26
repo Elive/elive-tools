@@ -418,7 +418,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each proprietary version to know which one  is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each proprietary version to know which one is more suitable for your computer." )" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
@@ -771,7 +771,7 @@ install_driver(){
         # force dpi size to 96 {{{
 
         local message_dpi_force
-        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96  DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
+        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96 DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
 
         if ((is_mode_auto)) ; then
             ret=0
@@ -1063,11 +1063,14 @@ try_again(){
     message_option_2="$( printf "$( eval_gettext "Use the open drivers:" )" "" ) nouveau"
 
     local message_option_3
-    message_option_3="$( printf "$( eval_gettext "Exit from this tool and continue" )" "" )"
+    message_option_3="$( printf "$( eval_gettext "Exit from this tool and continue (unknown state)" )" "" )"
+
+    local message_option_4
+    message_option_4="$( printf "$( eval_gettext "Reboot your computer to select another kernel or options" )" "" )"
 
     # }}}
 
-    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; } \
+    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; echo "'reboot' '$message_option_4'" ; } \
         | xargs dialog --timeout 380 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
 
@@ -1091,6 +1094,10 @@ try_again(){
         other)
             export is_mode_already_run=1
             $0 $args
+            exit
+            ;;
+        reboot)
+            ( sleep 1 ; reboot & )
             exit
             ;;
         exit)
@@ -1194,29 +1201,30 @@ uninstall_driver(){
     fi
 
 
+    # deprecated, not needed because next menu asks the same question
     # reboot needed for nouveau
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" ; then
-        local message_title
-        message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
-        local message_message_reboot_open
-        message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option? Or you can continue to select a different version." )" )"
+    #if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" ; then
+        #local message_title
+        #message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+        #local message_message_reboot_open
+        #message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option? Or you can continue to select a different version." )" )"
 
-        dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-            --title "$message_title" \
-            --yesno "$message_message_reboot_open" \
-            0 0
-            ret="$?"
+        #dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            #--title "$message_title" \
+            #--yesno "$message_message_reboot_open" \
+            #0 0
+            #ret="$?"
 
-            case "$ret" in
-                0|255|123) # yes, timeout, cancel
-                    ( sleep 1 ; reboot & )
-                    exit
-                    ;;
-                1) # no
-                    true
-                    ;;
-            esac
-    fi
+            #case "$ret" in
+                #0|255|123) # yes, timeout, cancel
+                    #( sleep 1 ; reboot & )
+                    #exit
+                    #;;
+                #1) # no
+                    #true
+                    #;;
+            #esac
+    #fi
 
     # - end }}}
 }

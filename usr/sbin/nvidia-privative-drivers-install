@@ -659,7 +659,7 @@ interactive_ask_driver_version(){
 
                 message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, we recommend using the 64bit version of Elive instead. The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
 
-                dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "WARNING" \
                     --msgbox "$message_warning_no_longer_supported" \
                     0 0
@@ -926,7 +926,7 @@ install_driver(){
         local message_warning_install_failed
         message_warning_install_failed="$( printf "$( eval_gettext "The compilation of the driver seems to have failed. We suggest to reboot and try with a different kernel version on which it may compile, since its a common problem with the versions. Or check our forums for more help." )" "" )"
 
-        dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+        dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "WARNING" \
             --msgbox "$message_warning_install_failed" \
             0 0

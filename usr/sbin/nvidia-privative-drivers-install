@@ -336,7 +336,9 @@ detect_driver_version(){
         fi
 
         # preselect to not ask later
-        nvidia_version_live_preselected="$_NVIDIA_VERSION"
+        if ! ((is_mode_simulate)) ; then
+            nvidia_version_live_preselected="$_NVIDIA_VERSION"
+        fi
 
     else
         NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"

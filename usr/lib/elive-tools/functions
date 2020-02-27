@@ -2278,6 +2278,9 @@ el_report_to_elive(){
     else
         id="$( ip a | LC_ALL=C grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
     fi
+    if [[ -z "$id" ]] ; then
+        id="$( dd if=/dev/urandom bs=1k count=2 2>/dev/null | sha1sum | awk '{print $1}' )"
+    fi
 
     if [[ -z "$conf_send_debug_reports_email" ]] ; then
         conf_send_debug_reports_email="anonymous:${id}"

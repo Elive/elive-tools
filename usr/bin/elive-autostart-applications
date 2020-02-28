@@ -61,6 +61,7 @@ main(){
         while read -ru 3 line
         do
             unset executable cmd pid
+            read -r line <<< "$line"
 
             # skip already runs:
             if el_array_member_check "$line" "${already_run[@]}" ; then
@@ -68,7 +69,7 @@ main(){
             fi
 
             # skip comments
-            if [[ "$line" = "#"* ]] ; then
+            if [[ "$line" = "#"* ]] || [[ -z "$line" ]] ; then
                 continue
             fi
 
@@ -87,7 +88,7 @@ main(){
 
             # check
             if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
-                el_warning "unable to run executable '$executable' with command '$cmd'"
+                el_warning "unable to run executable '$executable' with command '$cmd': $line"
                 continue
             fi
 

@@ -31,7 +31,7 @@ usage(){
     echo -e "  -c: check only (tell which version of the drivers we need)"
     echo -e "  -t: test driver only (if the driver is correctly installed and working)"
     echo -e "  -m: model (version of drivers) to use"
-    echo -e "      - like:  current, legacy-304xx, legacy-173xx, legacy-96xx"
+    echo -e "      - like:  current, tesla-418, legacy-390xx legacy-340xx, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
     echo -e "  -u: uninstall drivers"
     echo -e "  -v: verbose mode"
@@ -218,7 +218,8 @@ detect_driver_version(){
     # try to search for ID's {{{
     #
     # first on your system installed id's
-    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
+    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls /usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
+
     do
         if [ -e "${_NVIDIA_IDS}" ]
         then
@@ -274,7 +275,8 @@ detect_driver_version(){
         done
 
         # get the version
-        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy-*/nvidia.ids 2>/dev/null | sort -V -r)
+        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
+
         do
             if [ -e "${_NVIDIA_IDS}" ]
             then
@@ -560,6 +562,9 @@ interactive_ask_driver_version(){
                 fi
 
                 case $_id in
+                    *tesla-418xx|tesla)
+                        _desc="$( printf "$( eval_gettext "Tesla Nvidia drivers (very new)" )" )"
+                        ;;
                     *nvidia|current)
                         _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
                         # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
@@ -872,6 +877,7 @@ install_driver(){
     # just in case another one is used
     rmmod nvidia 2>/dev/null
     rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+    rmmod nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
     rmmod ${_NVIDIA_MODULE} 2>/dev/null
 
     # - unload modules }}}
@@ -1141,12 +1147,14 @@ uninstall_driver(){
     if lsmod | grep -qs "^nvidia" ; then
         rmmod nvidia 2>/dev/null
         rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+        rmmod nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
         rmmod ${_NVIDIA_MODULE} 2>/dev/null
 
         if lsmod | grep -qs "^nvidia" ; then
             if ((is_mode_force)) ; then
                 rmmod -f nvidia 2>/dev/null
                 rmmod -f nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
+                rmmod -f nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
                 rmmod -f ${_NVIDIA_MODULE} 2>/dev/null
 
             else

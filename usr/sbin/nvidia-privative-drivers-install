@@ -272,6 +272,12 @@ detect_driver_version(){
         do
             # Unpack packages to get the ID's !
             dpkg -x "$file" ./tmp-nvidia/
+            # optimize space, remove unneeded files:
+            find tmp-nvidia -type f -iname '*_nvidia\.so*' -delete
+            find tmp-nvidia -type f -iname '*nvidia_drv\.so*' -delete
+            find tmp-nvidia -type f -iname '*libglx\.so*' -delete
+            find tmp-nvidia -type f -iname '*\.so' -delete
+            rm -rf tmp-nvidia/usr/share
         done
 
         # get the version

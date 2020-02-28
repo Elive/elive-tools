@@ -11,7 +11,7 @@ not_supported(){
     mime="$1"
     file="$2"
 
-    el_warning "mimetype '$mime' not implemented for '$(basename "$file")' "
+    el_warning "mimetype '$mime' not implemented for '$file'\nls -la: $(ls -la "$file" )\nfile --mime-type: $(file --mime-type "$file")"
 }
 
 run_edje(){

@@ -1,6 +1,12 @@
 #!/bin/bash
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 main(){
     # pre {{{
@@ -86,9 +92,26 @@ main(){
                     ;;
             esac
 
-            # check
+            # check and report to user
             if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
-                el_warning "unable to run executable '$executable' with command '$cmd': $line"
+                #el_warning "unable to run executable '$executable' with command '$cmd': $line"
+                unable_executable="$executable"
+                if [[ -z "$unable_executable" ]] ; then
+                    unable_executable="$cmd"
+                else
+                    if [[ -z "$unable_executable" ]] ; then
+                        unable_executable="$line"
+                    fi
+                fi
+
+                local message_unable_title
+                message_unable_title="$( printf "$( eval_gettext "Unable to run %s" )" "$unable_executable" )"
+                local message_unable_description
+                message_unable_description="$( printf "$( eval_gettext "You have an autostart application unable to be run. You must install this application or remove it from your list:" )" "" )"
+
+                notify-send -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list"
+
+                # next!
                 continue
             fi
 

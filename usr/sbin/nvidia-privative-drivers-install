@@ -568,7 +568,7 @@ interactive_ask_driver_version(){
                 fi
 
                 case $_id in
-                    *tesla-418xx|tesla)
+                    *tesla-418*|tesla)
                         _desc="$( printf "$( eval_gettext "Tesla Nvidia drivers (very new)" )" )"
                         ;;
                     *nvidia|current)

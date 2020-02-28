@@ -1190,6 +1190,8 @@ uninstall_driver(){
         #if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
             TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge -y $_NVIDIA_PACKAGES
+            # uninstall also extra packages that we may have installed, otherwise it can fail installing new ones:
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get autoremove -y --purge
         #else
             #el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
             #TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge $_NVIDIA_PACKAGES

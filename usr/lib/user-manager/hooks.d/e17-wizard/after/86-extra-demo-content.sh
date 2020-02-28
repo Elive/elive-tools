@@ -2,9 +2,9 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
-#. gettext.sh
-#TEXTDOMAIN="elive-tools"
-#export TEXTDOMAIN
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
 
 
 
@@ -40,8 +40,10 @@ main(){
     if [[ -x "/usr/bin/elive-help" ]] ; then
         if ! grep -qs "thanatests" /proc/cmdline ; then
             elive-help --hotkeys --fs --iconify &
+            sleep 5
         fi
     fi
+
 
 
     # if we are debugging give it a little pause to see what is going on

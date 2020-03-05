@@ -20,15 +20,15 @@ One of the most AMAZING tools ever made, extremely handy. It saves "states" of y
 A small tool for using pastebin and sending the link to the elive channels
 
 * waitfor  
-It waits on the shell for a process that terminates and exits, its pretty useful for do things like:  
+It waits on the shell for a process that terminates and exits, its pretty useful for doing things like:  
 `$ waitfor rebuild-packages && rebuild-iso`
 
-(it waits for the process rebuilding packages finishes before running the process to rebuild the iso)
+In this case, it waits for the process rebuilding packages to finish before running the process to rebuild the iso.
 
 * user-manager  
 The tool to create users in Elive, it is meant to include all the user-creation features
 
 * make-cookies-with-chocolate  
-A tool for make delicious cookies  
+A tool for making delicious cookies  
 Well, I'm joking, of course, but you can add it :)
 

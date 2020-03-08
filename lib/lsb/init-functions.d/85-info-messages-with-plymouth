@@ -1,0 +1,45 @@
+
+log_progress_msg () {
+    if [ -z "${1:-}" ]; then
+        return 1
+    fi
+
+    # show progress in plymouth if available or to console if not
+    if [ -x /bin/plymouth ] && plymouth --ping ; then
+        if [ -n "$log_daemon_msg_last_v" ] ; then
+            plymouth message --text="${log_daemon_msg_last_v}: $@"
+        else
+            plymouth message --text="$@"
+        fi
+    else
+        /bin/echo -n " $@" || true
+    fi
+}
+
+
+log_daemon_msg () {
+    if [ -z "${1:-}" ]; then
+        return 1
+    fi
+    log_daemon_msg_pre "$@"
+
+    if [ -z "${2:-}" ]; then
+        if [ -x /bin/plymouth ] && plymouth --ping ; then
+            plymouth message --text="$1:"
+            log_daemon_msg_last_v="$1 "
+        else
+            /bin/echo -n "$1:" || true
+        fi
+        return
+    fi
+
+    if [ -x /bin/plymouth ] && plymouth --ping ; then
+        plymouth message --text="$1: $2"
+        log_daemon_msg_last_v="$1 $2"
+    else
+        /bin/echo -n "$1: $2" || true
+    fi
+
+    log_daemon_msg_post "$@"
+}
+

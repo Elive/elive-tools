@@ -732,6 +732,10 @@ el_package_upgrade_fast(){
     tmpdir="/tmp/.$(basename $0)_${FUNCNAME}_${USER}"
     failed=0
 
+    if [[ -z "$@" ]] ; then
+        NOREPORTS=1 el_error "Wrong parameters given, should be: tool timeout mode packages"
+    fi
+
     # }}}
     dirprev="$(pwd)"
     mkdir -p "$tmpdir"
@@ -757,7 +761,7 @@ el_package_upgrade_fast(){
             continue
         fi
 
-        arch="$( dpkg -l | grep -E "^(ii|hi)\s+${package}(:.*\s+)?\s+" | awk '{print $4}' )"
+        arch="$( LC_ALL=C dpkg -l | grep -E "^(ii|hi)\s+${package}(:.*\s+)?\s+" | awk '{print $4}' )"
         case "$arch" in
             amd64|i386)
                 arch="_${arch}"
@@ -779,25 +783,25 @@ el_package_upgrade_fast(){
 
         url="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | head -1 )"
         if [[ -z "$url" ]] ; then
-            el_error "unable to get the url for package ${package}: $url"
+            el_error "unable to get the 'url' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
             continue
         fi
 
         distro="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | head -1 )"
         if [[ -z "$distro" ]] ; then
-            el_error "unable to get the 'distro' for package ${package}: $distro"
+            el_error "unable to get the 'distro' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
             continue
         fi
 
         package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
         if [[ -z "$package_url" ]] ; then
-            el_error "unable to get the 'package_url' for package ${package}: $package_url"
+            el_error "unable to get the 'package_url' for package ${package}: $( lynx -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
             continue
         fi
 
         candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
         if [[ -z "$candidate" ]] ; then
-            el_error "unable to get the 'candidate' for package ${package}: $candidate"
+            el_error "unable to get the 'candidate' for package ${package}: $(echo "$package_url" )"
             continue
         fi
 

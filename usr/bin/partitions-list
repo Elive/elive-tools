@@ -292,7 +292,7 @@ main(){
             fi
             if [[ "${line}" = *"DEVTYPE=disk" ]] ; then
                 item_filesystem="disk"
-                item_human_label="(entire disk)"
+                item_human_label="(disk)"
                 if ((is_show_disks)) ; then
                     item_is_usable=1
                 fi
@@ -482,7 +482,7 @@ main(){
         if [[ "$item_filesystem" = "extended" ]] ; then
             unset item_filesystem
             item_type="extended"
-            item_human_label="(extended partition layer)"
+            item_human_label="(extended)"
 
             if ((is_show_raw)) ; then
                 item_is_usable=1

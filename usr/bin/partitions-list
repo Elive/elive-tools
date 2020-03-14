@@ -291,6 +291,8 @@ main(){
                 item_is_usable=1
             fi
             if [[ "${line}" = *"DEVTYPE=disk" ]] ; then
+                item_filesystem="disk"
+                item_human_label="(entire disk)"
                 if ((is_show_disks)) ; then
                     item_is_usable=1
                 fi
@@ -468,7 +470,7 @@ main(){
             unset item_filesystem
             item_type="disk"
 
-            if ((is_show_raw)) || ((is_show_disks)) ; then
+            if ((is_show_disks)) ; then
                 item_is_usable=1
             else
                 el_debug "marking ${item} as unusable because is shows like a disk"
@@ -480,6 +482,7 @@ main(){
         if [[ "$item_filesystem" = "extended" ]] ; then
             unset item_filesystem
             item_type="extended"
+            item_human_label="(extended partition layer)"
 
             if ((is_show_raw)) ; then
                 item_is_usable=1
@@ -665,7 +668,11 @@ get_filesystem_file(){
                 if LC_ALL=C fdisk -l "${1%%[0-9]*}" 2>/dev/null | grep -qs "^${1}.*BIOS boot" ; then
                     echo "BIOS"
                 else
-                    el_debug "unknown FS for $1"
+                    if LC_ALL=C fdisk -l "${1%%[0-9]*}" 2>/dev/null | grep -qsE "^${1}\s+.*Extended$" ; then
+                        echo "extended"
+                    else
+                        el_debug "unknown FS for $1"
+                    fi
                     #echo "auto"
                 fi
             fi

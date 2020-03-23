@@ -25,7 +25,7 @@ main(){
     fi
 
     # check if we are at night | actually disabled: we need a better way to configure this (from desktop)
-    hour="$(date +%H)"
+    hour="$(date +%k)"
 
     if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
         if ! ((is_force)) ; then

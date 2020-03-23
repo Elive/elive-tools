@@ -8,8 +8,11 @@ export TEXTDOMAIN
 
 not_supported(){
     local mime file
+
     mime="$1"
-    file="$2"
+    shift
+    file="$1"
+    shift
 
     el_warning "mimetype '$mime' not implemented for '$file'\nls -la: $(ls -la "$file" )\nfile --mime-type: $(file --mime-type "$file")"
 }
@@ -17,6 +20,7 @@ not_supported(){
 run_edje(){
     local file
     file="$1"
+    shift
 
     while read -ru 3 line
     do
@@ -63,8 +67,11 @@ run_edje(){
 
 run_script(){
     local file mode
+
     mode="$1"
-    file="$2"
+    shift
+    file="$1"
+    shift
 
     local message_done
     message_done="$( printf "$( eval_gettext "All operations done, you can close the terminal" )" "" )"
@@ -246,10 +253,10 @@ main(){
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/
-                if ! echo "$mime" | grep -qsE "/(debian.*package)$" ; then
+                if ! echo "$mime" | grep -qsE "(/debian.*package$|inode/directory)" ; then
                     not_supported "$mime" "$file"
                 fi
-                # run a default launcher!
+                # run a default launcher in any of the cases!
                 if [[ -x "/usr/bin/thunar" ]] ; then
                     $precmd thunar "$file"
                 fi

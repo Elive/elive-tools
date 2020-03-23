@@ -1,5 +1,12 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 # include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
 if [[ "$PATH" != *"/usr/sbin"* ]] ; then
@@ -135,6 +142,7 @@ try_and_configure(){
 main(){
     # pre {{{
     #local  driver_good modules_list wifi_dev
+    el_config_get
     # }}}
 
     # detect if we have a Broadcom 43* type wifi
@@ -202,6 +210,15 @@ main(){
 
             if ! ((is_wifi_working)) ; then
                 el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )"
+
+                if [[ -n "$DISPLAY" ]] ; then
+                    if ! ((is_user_reported_install_failed)) ; then
+                        zenity --error --text="$( eval_gettext "Elive was unable to install the B43 drivers for your wifi card. These are difficult drivers, please try to make it work and report to Elive which exact module we need to include in order to make it work by default in Elive and everybody can be benefited. Your wireless card mode is:" ) $(lspci -nn -d "14e4:" | sed -e 's|^.*BCM|BCM|g' | awk '{print $1}' )"
+                        is_user_reported_install_failed=1
+                        el_config_save "is_user_reported_install_failed"
+                    fi
+
+                fi
             fi
         fi
     else

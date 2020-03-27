@@ -1158,10 +1158,10 @@ el_mount(){
         fi
 
         if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
-            echo "$dev mounted in: $(get_mountpoint "$dev" )"
+            echo "$dev mounted in: $( get_mountpoint "$dev" )"
             return 0
         else
-            el_error "Unable to mount $dev"
+            el_error "Unable to mount ${dev}:\n$(file -s ${dev} ; lsblk ${dev} ; )"
             return 1
         fi
     else

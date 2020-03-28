@@ -298,6 +298,28 @@ do_validate_sending(){
     echo "This is a verification email send by your own computer, seems like it works so just delete or ignore me" | mutt -F "$conf_mutt" -s "testing elive email ($random)" "$email_account"
     #sleep 2
 
+
+    case "$email_account_type" in
+        Dreamhost)
+            $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue after you verified it." )"
+            if $guitool --question --text="$( eval_gettext "Does the email sending correctly worked?" )" ; then
+                # save our conf because we know that it works now
+                rm -f "$conf" 2>/dev/null
+                echo "email_account=\"$email_account\"" >> "$conf"
+                echo "email_password=\"$email_password\"" >> "$conf"
+                echo "# References that needs to be updated: $HOME/.mutt/accounts/elive-sender" >> "$conf"
+
+                chmod og-rwx "${conf}"
+
+                $guitool --info --text="$( eval_gettext "Ready! You can start using now the tool" )"
+                return 0
+            else
+                $guitool --error --text="$( eval_gettext "Unable to configure your email, try with a different provider?" )"
+                return 1
+            fi
+            ;;
+    esac
+
     for i in 1 2 3 4 5 6 7
     do
         result="$( curl -u "${email_account}:${email_password}" --silent "https://mail.google.com/mail/feed/atom" | sed -e 's|<entry>|\n\n<entry>|g' | grep "<entry>" | sed -e 's|^.*<title>||g' -e 's|</title>.*$||g' | head -3 )"
@@ -365,6 +387,9 @@ do_validate_sending(){
     message_try_again="$( printf "$( eval_gettext "Do you want to change the email or password that you have previously inserted?" )" )"
     local message_try_or_exit
     message_try_or_exit="$( printf "$( eval_gettext "Try again?" )" )"
+    local message_error_configuring_email
+    message_error_configuring_email="$( printf "$( eval_gettext "We are unable to configure mutt to use this account, try to run it manually with the command:" )" "  cd ~/.mutt/accounts ; mutt -F elive-sender" )"
+
 
 
     # change user and pass?
@@ -375,6 +400,8 @@ do_validate_sending(){
         if $guitool --question --text="$message_try_or_exit" ; then
             return 0
         else
+
+            $guitool --error --text="$message_error_configuring_email"
             exit 1
         fi
     fi
@@ -422,23 +449,46 @@ do_configure(){
             fi
         fi
 
+        local message_email_service
+        message_email_service="$( printf "$( eval_gettext "Which email service provider you want to use?" )" "" )"
+
+        email_account_type="$( echo -e "Gmail\nDreamhost\nother" | $guitool --list --column="Provider" --text="$message_email_service" || echo cancel )"
+
+        case "$email_account_type" in
+            cancel)
+                $guitool --error
+                exit 1
+                ;;
+            other)
+                $guitool --info --text="$( eval_gettext "This tool actually only supports the listed services avaialble, if you want to use a different one please improve the tool to include the needed conf for your service. Exiting..." )"
+                exit
+                ;;
+            *)
+                true
+                ;;
+        esac
+
+
         local message_login
-        message_login="$( printf "$( eval_gettext "Insert your Gmail account, for example: %s" )" "john.smith@gmail.com" )"
+        message_login="$( printf "$( eval_gettext "Insert your email, for example: %s" )" "john.smith@gmail.com" )"
 
         # request username
         email_account="$( $guitool --entry --text="$message_login" || echo cancel )"
 
 
         local message_invalid
-        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', try again." )" "john.smith@gmail.com" )"
+        #message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', try again." )" "john.smith@gmail.com" )"
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use an account of the listed services, for example '%s', try again." )" "john.smith@gmail.com" )"
 
         # verify username inserted
-        if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+        #if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+        if [[ "${email_account}" = "cancel" ]] ; then
             $guitool --error --text="$message_invalid"
 
             email_account="$( $guitool --entry --text="$message_invalid" || echo cancel )"
 
-            if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+            #if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
+            if [[ "${email_account}" = "cancel" ]] ; then
                 exit 1
             fi
         fi
@@ -469,17 +519,48 @@ do_configure(){
 
 
     # configure client
-    case $email_account in
-        *@gmail*)
+    case "$email_account_type" in
+        *@gmail*|Gmail)
             echo "# stmp, sending of emails:" >> "${conf_mutt}"
             echo "set smtp_url = \"smtp://${email_account%%@*}@smtp.gmail.com:587/\"" >> "${conf_mutt}"
             echo "set smtp_pass = \"${email_password}\"" >> "${conf_mutt}"
+            echo "set imap_user = \"${email_account%%@*}\"" >> "${conf_mutt}"
+            echo "set imap_pass = \"${email_password}\"" >> "${conf_mutt}"
+            echo "#set imap_passive = no" >> "${conf_mutt}"
+            echo "set from = \"${email_account%%@*}\"" >> "${conf_mutt}"
+            echo "set spoolfile = \"imaps://imap.gmail.com:993/INBOX\"" >> "${conf_mutt}"
+            echo "set folder = \"imaps://imap.gmail.com:993\"" >> "${conf_mutt}"
+            echo "#set record = \"+[Gmail]/Sent Mail\"" >> "${conf_mutt}"
+            echo "#set postponed = \"+[Gmail]/Drafts\"" >> "${conf_mutt}"
             echo "set realname = \"${USER} from $(hostname) - Elive\"" >> "${conf_mutt}"
             echo "set copy = no" >> "${conf_mutt}"
-            echo "set timeout = 60" >> "${conf_mutt}"
+            echo "set move = no" >> "${conf_mutt}"
+            echo "set timeout = 120" >> "${conf_mutt}"
 
             chmod og-rwx "${conf_mutt}"
 
+            ;;
+        Dreamhost)
+            cat > "${conf_mutt}" << EOF
+# stmp, sending of emails:
+set smtp_url = "smtp://${email_account}@smtp.dreamhost.com:587/"
+set smtp_pass = "${email_password}"
+set realname = "${USER} from $(hostname) - Elive"
+set copy = no
+set timeout = 120
+
+set imap_user="${email_account}"
+set imap_pass="${email_password}"
+set from="${email_account}"
+set spoolfile=imaps://mail.${email_account##*@}/
+set folder=imaps://mail.${email_account##*@}/INBOX/
+set record="=Sent"
+set postponed ="=Drafts"
+set mail_check=60 # So mutt doesn’t keep checking your IMAP folders like a chihuahua with ADHD
+set imap_keepalive = 10 # You may find a small number (like 10) is required to avoid TLS socket packet
+
+set ssl_force_tls=yes
+EOF
             ;;
         #*@yahoo*)
             # Well, we don't know how to verify if the sending works from a yahoo one so let's disable it for now

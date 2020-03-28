@@ -463,6 +463,9 @@ do_configure(){
                 $guitool --info --text="$( eval_gettext "This tool actually only supports the listed services avaialble, if you want to use a different one please improve the tool to include the needed conf for your service. Exiting..." )"
                 exit
                 ;;
+            Gmail)
+                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with the detailed instructions. By other side you are welcome to improve this tool to support other services too, which is very easy by simply including the needed confs for that" )"
+                ;;
             *)
                 true
                 ;;

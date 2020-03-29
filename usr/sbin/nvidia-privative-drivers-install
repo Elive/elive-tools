@@ -618,7 +618,7 @@ interactive_ask_driver_version(){
 
             # user canceled? uninstall and exit
             if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
-                uninstall_driver
+                #uninstall_driver
                 try_again
                 exit
             fi
@@ -632,7 +632,7 @@ interactive_ask_driver_version(){
 
             # if users's cancel, we have no results at all
             if [[ -z "$ret" ]] ; then
-                uninstall_driver
+                #uninstall_driver
                 try_again
                 exit
             fi

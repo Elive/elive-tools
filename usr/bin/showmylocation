@@ -109,7 +109,7 @@ main(){
 
     # try with geoplugin (fast)
     if ! ((is_data_valid)) ; then
-        data="$( curl -L -s --max-time 8 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        data="$( curl -L -s --max-time 12 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
@@ -121,7 +121,7 @@ main(){
     # try with ipaddresslabs:
     # note: actually it says demo license expired, place this test at the end
     if ! ((is_data_valid)) ; then
-        data="$( curl -L -s --max-time 8 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
+        data="$( curl -L -s --max-time 12 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
 
         # verify
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then

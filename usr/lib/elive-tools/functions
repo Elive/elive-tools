@@ -2134,7 +2134,7 @@ el_report_to_elive(){
     local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf
     el_security_function_loop || return
     # max 5 reports per tool
-    limit_reports_amount=5
+    limit_reports_amount=6
     # min 4 hours passed if limit is reached to send more reports
     limit_reports_seconds=14400
 
@@ -2158,6 +2158,11 @@ el_report_to_elive(){
 
     if ! [[ -x "$(which nc 2>/dev/null)" ]] ; then
         return
+    fi
+
+    if [[ -z "$REPORTS" ]] ; then
+        el_warning "tool '$SOURCE' has not REPORTS variable set, yet, you should set it"
+        REPORTS="1" # do not trigger the check again
     fi
 
 

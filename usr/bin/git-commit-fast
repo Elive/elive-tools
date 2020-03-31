@@ -1,5 +1,10 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+REPORTS="0"
+#el_make_environment
+
+
 main(){
     # pre {{{
     local message result arg

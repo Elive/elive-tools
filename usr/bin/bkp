@@ -22,10 +22,8 @@ el_c_italic="\033[3m" # Italic 'color' effect
 el_c_bold="\033[1m" # Bold 'color' effect
 
 : ${EL_DEBUG:="0"} # debug default level
-NOREPORTS=1
 
 
-# TODO FIXME: if you remove these blocks, add NOREPORTS=1
 #===  FUNCTION  ================================================================
 #          NAME:  el_confirm
 #   DESCRIPTION:  ask (console) for confirmation

@@ -1,5 +1,8 @@
 #!/bin/bash
-source /usr/lib/elive-tools/functions
+#source /usr/lib/elive-tools/functions
+el_c_n="\033[0;39m" # Normal color  (orig: normal)
+el_c_gr="\033[1;30m" # Gray color
+
 
 # small tool to debug the amount of time spent in every line of a command / script.
 # Use it like:  command-to-debug 2>&1 | this-tool

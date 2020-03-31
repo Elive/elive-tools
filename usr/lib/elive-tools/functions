@@ -2131,12 +2131,14 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
-    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf
+    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra
     el_security_function_loop || return
     # max 5 reports per tool
     limit_reports_amount=6
     # min 4 hours passed if limit is reached to send more reports
     limit_reports_seconds=14400
+
+    messages_extra=""
 
     # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
     # TODO: or we can instead just call this function in parts of  the code where we want to report things (but will not have fancy colors unless we pass another parameter for 'importancy', so the generator of E: W: etc.. will deal it and put colors)
@@ -2161,9 +2163,17 @@ el_report_to_elive(){
     fi
 
     if [[ -z "$REPORTS" ]] ; then
-        el_warning "tool '$SOURCE' has not REPORTS variable set, yet, you should set it"
-        REPORTS="1" # do not trigger the check again
+        messages_extra=" ||| tool '$SOURCE' has not REPORTS variable set, yet, you should set it ${messages_extra}"
     fi
+
+    if ((is_terminal)) || ((is_console)) ; then
+        messages_extra=" ||| terminal '$is_terminal' console '${is_console}', blacklist all terminal and console reports because we only need them from tools? (temporal warning to verify the correct detection) ${messages_extra}"
+    fi
+
+    # TODO: enable in the future:
+    #if ! ((REPORTS)) ; then
+        #return
+    #fi
 
 
     # at least one month old, we can parse the results from the server to show only recent ones too
@@ -2310,19 +2320,19 @@ el_report_to_elive(){
         architecture="$( el_architecture "host" )"
 
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::${architecture}::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::${architecture}::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "     stack: $execution_stack" ; } | timeout 4 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL="$EL_LC_EN" sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "      stack: $execution_stack" ; } | timeout 8 nc www.elivecd.org 60008 -w 2 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL="$EL_LC_EN" sleep 1
-                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                     #true
 
                     #LC_ALL="$EL_LC_EN" sleep 1
-                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "$message" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
+                    #if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; } | timeout 8 nc www.elivecd.org 60008 -w 1 1>/dev/null 2>&1 ; then
                         #true
                     #fi
                 #fi

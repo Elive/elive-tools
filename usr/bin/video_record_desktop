@@ -59,7 +59,7 @@ main(){
         -s $resolution -i $DISPLAY \
         -sameq -r 30000/1001 \
         -vcodec libx264 -crf 22 -preset ultrafast -pix_fmt yuvj420p -tune grain \
-        -threads 2 "$tempfile"
+        "$tempfile"
 
     # use crf 0 for better quality, more info:
     #    https://trac.ffmpeg.org/wiki/x264EncodingGuide

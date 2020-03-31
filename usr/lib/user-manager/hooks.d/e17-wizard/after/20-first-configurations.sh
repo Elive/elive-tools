@@ -1,5 +1,8 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+REPORTS="1"
+#el_make_environment
 # gettext not works here because we are on first page
 # set user home, so there's a bug
 [[ -z $HOME ]] && export HOME="/home/$(id -un)"

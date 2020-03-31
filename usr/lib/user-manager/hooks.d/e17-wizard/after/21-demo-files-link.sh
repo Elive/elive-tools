@@ -1,5 +1,7 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+REPORTS="1"
 
 demo_file_add_home(){
     local from target file subdir mode

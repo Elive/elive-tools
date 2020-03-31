@@ -5,16 +5,18 @@ source /usr/lib/elive-tools/functions
 
 
 if [[ -n "$EROOT" ]] ; then
-    killall -9 e16 2>/dev/null
-    rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
-    cd "$HOME"
-    elive-skel upgrade .e16
-    elive-skel upgrade .config/cairo-dock
+    #killall -9 e16 2>/dev/null
+    #rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
+    #cd "$HOME"
+    #elive-skel upgrade .e16
+    #elive-skel upgrade .config/cairo-dock
+    tmux-attach-jobs background erestart "killall -9 e16 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock"
 fi
 
 if [[ -n "$E_START" ]] ; then
-    killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-    rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+    #killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+    #rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+    tmux-attach-jobs background erestart "killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\""
 fi
 
 

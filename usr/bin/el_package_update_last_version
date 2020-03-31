@@ -1,10 +1,13 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
-el_set_display_variables
-
-# translations
+REPORTS="1"
+el_make_environment
 . gettext.sh
-export TEXTDOMAIN="elive-tools"
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 usage(){
     echo -e "Usage: $(basename $BASH_SOURCE) packagename [--force]"

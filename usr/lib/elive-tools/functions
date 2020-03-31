@@ -2162,6 +2162,7 @@ el_report_to_elive(){
         return
     fi
 
+    # TODO: remove in the future when the implementation is ready, so everything that has not REPORTS=1 should be ignored
     if [[ -z "$REPORTS" ]] ; then
         messages_extra=" ||| tool '$SOURCE' has not REPORTS variable set, yet, you should set it ${messages_extra}"
     fi

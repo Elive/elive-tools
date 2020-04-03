@@ -722,7 +722,7 @@ el_package_newer_check(){
 #===============================================================================
 el_package_upgrade_fast(){
     # pre {{{
-    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev failed arch
+    local tmpdir timeout package installed url_subdir url distro package_url candidate mode dirprev failed arch is_download
 
     timeout="$1"
     shift
@@ -752,8 +752,10 @@ el_package_upgrade_fast(){
 
     for package in "$@"
     do
+        unset is_download installed arch url_subdir url distro candidate package_url failed
         [[ -z "$package" ]] && continue
 
+        # example:  3.8.9+0.0.1+git3118fc936-6buster11
         installed="$( LC_ALL=C apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' )"
         read -r installed <<< "$installed"
         if [[ -z "$installed" ]] ; then
@@ -761,6 +763,7 @@ el_package_upgrade_fast(){
             continue
         fi
 
+        # example:  all
         arch="$( LC_ALL=C dpkg -l | grep -E "^(ii|hi)\s+${package}(:.*\s+)?\s+" | awk '{print $4}' )"
         case "$arch" in
             amd64|i386)
@@ -775,30 +778,52 @@ el_package_upgrade_fast(){
                 ;;
         esac
 
+        # example:  pool/main/e/elive-tools/
         url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
         if [[ -z "$url_subdir" ]] ; then
             el_error "unable to get the url_subdir for package ${package}: $url_subdir"
             continue
         fi
 
-        url="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | head -1 )"
-        if [[ -z "$url" ]] ; then
-            el_error "unable to get the 'url' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
+        # example:  file:///home/thana/packages/mirror-elive/elive/
+        # example:  http://repo.buster.elive.elivecd.org/
+        url="$( grep -hE "^deb (http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | tail -1 )"
+        if [[ -n "$url" ]] ; then
+            #make sure we end on slash
+            url="${url%/}/"
+        else
+            el_error "unable to get the 'url' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )\nthis feature only works for now with packages from the Elive repository"
             continue
         fi
 
-        distro="$( grep -h "^deb http.*elivecd.org" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | head -1 )"
+        # example:  buster
+        distro="$( grep -hE "^deb (http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | tail -1 )"
         if [[ -z "$distro" ]] ; then
             el_error "unable to get the 'distro' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
             continue
         fi
 
-        package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
-        if [[ -z "$package_url" ]] ; then
-            el_error "unable to get the 'package_url' for package ${package}: $( lynx -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
-            continue
-        fi
+        # example:  http://repo.buster.elive.elivecd.org/pool/main/e/elive-tools/elive-tools_3.8.9+0.0.1+git3118fc936-6buster11_all.deb
+        # example:  /home/thana/packages/mirror-elive/elive/pool/main/e/elive-tools/elive-tools_3.8.9+0.0.1+git3118fc936-6buster11_all.deb
+        case "$url" in
+            "file:///"*)
+                package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package_}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
+                if ! [[ -s "$package_url" ]] ; then
+                    el_error "unable to get the 'package_url' for package ${package} in file:/// mode: $( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
+                    continue
+                fi
+                ;;
+            "http"*)
+                package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
+                if [[ -z "$package_url" ]] ; then
+                    el_error "unable to get the 'package_url' for package ${package}: $( lynx -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
+                    continue
+                fi
 
+                ;;
+        esac
+
+        # example:  3.8.9+0.0.1+git3118fc936-6buster11
         candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
         if [[ -z "$candidate" ]] ; then
             el_error "unable to get the 'candidate' for package ${package}: $(echo "$package_url" )"
@@ -816,19 +841,26 @@ el_package_upgrade_fast(){
                 # different version
                 if [[ "$installed" != "$candidate" ]] ; then
                     el_debug "downloading candidate for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url} "
-                    timeout ${timeout} wget -qc "$package_url"
+                    is_download=1
                 fi
                 ;;
             normal)
                 if dpkg --compare-versions "$installed" lt "$candidate" ; then
                     el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
-                    timeout ${timeout} wget -qc "$package_url"
+                    is_download=1
                 fi
                 ;;
             *)
                 el_warning "unknown mode $mode for $FUNCNAME"
                 ;;
         esac
+
+        if ((is_download)) ; then
+            case "$package_url" in
+                "/"*)     cp -f "$package_url" .  ; ;;
+                "http"*)  timeout ${timeout} wget -qc "$package_url"  ; ;;
+            esac
+        fi
     done
 
     # install all downloaded packages

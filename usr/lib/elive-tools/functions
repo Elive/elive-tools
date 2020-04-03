@@ -109,6 +109,14 @@ el_notify_user(){ # notify the user (desktop || email). "title" "text"
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
         if el_dependencies_check notify-send ; then
+            # run notification daemon if not running already
+            if ! [[ -n "$E_START" ]] ; then
+                if ! ps ux | grep -v grep | grep -qs "notification-daemon" ; then
+                    ( /usr/lib/notification-daemon/notification-daemon & )
+                    sleep 2
+                fi
+            fi
+
             command notify-send -t 30000 "$@"
         else
             el_warning "notify-send not installed"
@@ -127,6 +135,14 @@ el_notify_user_important(){ # notify the user (desktop || email). "title" "text"
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
         if el_dependencies_check notify-send ; then
+            # run notification daemon if not running already
+            if ! [[ -n "$E_START" ]] ; then
+                if ! ps ux | grep -v grep | grep -qs "notification-daemon" ; then
+                    ( /usr/lib/notification-daemon/notification-daemon & )
+                    sleep 2
+                fi
+            fi
+
             command notify-send -t 240000 "$@"
         else
             el_warning "notify-send not installed"

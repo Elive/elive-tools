@@ -176,7 +176,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     # live boot time (geolocation)
     if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 60 ]] ; then
         # we just booted the system, wait for real 5 secons
-        for i in $( seq 5 )
+        for i in $( seq 7 )
         do
             sleep 1
             #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then

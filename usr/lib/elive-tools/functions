@@ -172,53 +172,6 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     fi
 
     # - pre }}}
-    # do we have booted the computer recently? (and so no internet yet)
-    # live boot time (geolocation)
-    # update: this code should be useless and not the correct place to put it, also, it seems like to not be very reliable
-    #if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 500 ]] ; then
-        ## we just booted the system, wait for real 40 secons
-        #for i in $( seq 40 )
-        #do
-            #sleep 1
-            ##if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
-            #if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-                #return 0
-            #fi
-        #done
-    #fi
-    #if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 300 ]] ; then
-    ##if true ; then
-        ## wait up to 11-30 seconds (lag vs without lag
-        ## note: the sleeps are needed because the ping will inmediately fail, and we need to wait some seconds on this case
-        ## note: and we need this ugly structure because it can lead to a much higher limit time
-        #if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-            #return 0
-        #fi
-        #LC_ALL=C sleep 1
-        ##if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
-        #if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-            #return 0
-        #fi
-        #LC_ALL=C sleep 2
-        ##if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
-        #if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-            #return 0
-        #fi
-        ## exit if we need a fast test
-        #if [[ "$mode" = "fast" ]] ; then
-            #return 1
-        #fi
-        #LC_ALL=C sleep 3
-        ##if timeout 3 sleep 100000 2>/dev/null 1>&2 ; then
-        #if timeout 3 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-            #return 0
-        #fi
-        #LC_ALL=C sleep 4
-        ##if timeout 4 sleep 100000 2>/dev/null 1>&2 ; then
-        #if timeout 4 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-            #return 0
-        #fi
-    #fi
 
     # do we are using servcies that slows down our dns resolving? just make sure and test it..
     #if ps aux | grep -v grep | grep -qsiE "(transmission|torrent|deluge|amule|nicotine)" ; then
@@ -306,6 +259,19 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # cache online (10 min)
     if [[ -n "$OnLine" ]] ; then
+        # do we have booted the computer recently? (and so no internet yet), needed for things like geolocation in live
+        if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 500 ]] ; then
+            # we just booted the system, wait for real 40 secons
+            for i in $( seq 40 )
+            do
+                sleep 1
+                #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
+                if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+                    return 0
+                fi
+            done
+        fi
+
         if [[ -s "$stamp_hour_prev" ]] ; then
             buf="$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" 2>/dev/null | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
             if [[ -n "$buf" ]] && [[ "$buf" -lt 600 ]] ; then

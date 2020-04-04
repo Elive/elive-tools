@@ -749,7 +749,8 @@ el_package_upgrade_fast(){
     failed=0
 
     if [[ -z "$@" ]] ; then
-        NOREPORTS=1 el_error "Wrong parameters given, should be: tool timeout mode packages"
+        NOREPORTS=1 el_error "Wrong parameters given, should be: $FUNCNAME timeout mode packages"
+        return 1
     fi
 
     # }}}

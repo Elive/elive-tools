@@ -189,7 +189,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
         #fi
     #fi
 
-    # normal ping mode, we don't need to use the previous code with 8.8.8.8 so we use it by default
+    # normal ping mode, we don't need to use the previous code so we use it by default
     # we only need to know if we can ping to outside, not dns resolving
     if timeout $timeout ping -c 1 "$target"  2>/dev/null 1>&2 ; then
         return 0
@@ -199,10 +199,10 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     # wanna debug more?
     if [[ "${EL_DEBUG}" -gt "3" ]] ; then
         el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 "$target" 2>&1 )"
-        if timeout 1 ping -c 1 8.8.8.8 2>/dev/null 1>&2 ; then
+        if timeout 1 ping -c 1 "$target" 2>/dev/null 1>&2 ; then
             el_debug "by other side we can ping directly to an ip, check your /etc/resolv.conf"
         else
-            el_debug "we cannot even ping to the google dns (8.8.8.8)"
+            el_debug "we cannot even ping to the google dns ($target)"
         fi
     fi
 
@@ -214,7 +214,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet_connection"
     mkdir -p "$( dirname "${stamp_hour_prev}" )"
@@ -232,6 +232,8 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     else
         timeout=16
     fi
+
+    target="8.8.8.8"
 
     # }}}
 
@@ -259,19 +261,6 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # cache online (10 min)
     if [[ -n "$OnLine" ]] ; then
-        # do we have booted the computer recently? (and so no internet yet), needed for things like geolocation in live
-        if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 500 ]] ; then
-            # we just booted the system, wait for real 40 secons
-            for i in $( seq 40 )
-            do
-                sleep 1
-                #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
-                if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-                    return 0
-                fi
-            done
-        fi
-
         if [[ -s "$stamp_hour_prev" ]] ; then
             buf="$( echo "$(date +%s) - $( stat -c %Y "${stamp_hour_prev}" )" 2>/dev/null | LC_ALL="$EL_LC_EN" bc -l | sed -e 's|\..*$||g' )"
             if [[ -n "$buf" ]] && [[ "$buf" -lt 600 ]] ; then
@@ -291,6 +280,19 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
     # we have not finished from the caches, so remove them so we will avoid the next check loops
     rm -f "$stamp_hour_prev"
+
+    # do we have booted the computer recently? (and so no internet yet), needed for things like geolocation in live
+    if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 400 ]] ; then
+        # we just booted the system, wait for real 40 secons
+        for i in $( seq 40 )
+        do
+            sleep 1
+            #if timeout 2 sleep 100000 2>/dev/null 1>&2 ; then
+            if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+                return 0
+            fi
+        done
+    fi
 
 
     # do a ping check

@@ -114,6 +114,7 @@ main(){
 
     if [[ "$resolution_v" -le 800 ]] ; then
         sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
+        sed -i -e '/^$/d' "$HOME/.conkyrc"
     fi
 
     # TODO: add terminology support (12 default, 10 for medium-small, since buster)

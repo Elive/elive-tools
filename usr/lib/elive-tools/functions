@@ -953,7 +953,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
 #-------------------------------------------------------------------------------
 el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify and exit
     # example $0 foo,bar,we
-    local _var found_no
+    local found_no line
 
     if [[ -z "$1" ]] ; then
         echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
@@ -961,14 +961,13 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
         return 1
     fi
 
-    for _var in ${@//,/ }
+    while read -ru 3 line
     do
-        if [[ ! -d "${_var}" ]] ; then
-            #el_notify_user "E: Dir not exists" "E: the dir '$_var' not exist"
-            NOREPORTS=1 el_error "Directory '$_var' not exist, func: ${FUNCNAME[1]}"
+        if [[ ! -d "${line}" ]] ; then
+            NOREPORTS=1 el_error "Directory '$line' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1

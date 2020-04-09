@@ -23,8 +23,6 @@ main(){
         if echo "$1" | grep -qs "^[[:digit:]]*" ; then
             ip="$1"
         fi
-    else
-        ip="$( showmyip )"
     fi
 
 
@@ -85,58 +83,59 @@ main(){
 
 
     # try with freegeoip (good but slow, reliable, which is more important)
-    # UPDATE: freegeoip changed the API for a different service (stills free apparently), but it is not implemented here, so let's disable it for now:
-    #if ! ((is_data_valid)) ; then
-        #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+    # note: ip can be empty, this will make things faster by not fetching it first
+    if ! ((is_data_valid)) ; then
+        data="$( curl -L -s --max-time 12 -A "Mozilla" "https://freegeoip.app/xml/$ip" )"
+
 
         ## verify
-        #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-            #is_data_valid=1
-            #el_debug "using freegeoip"
-        #else
-            #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
+        if echo "$data" | grep -qs "atitude>[[:digit:]]</" ; then
+            is_data_valid=1
+            el_debug "using freegeoip"
+        fi
+    fi
 
-            #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-                #is_data_valid=1
-                #el_debug "using freegeoip"
-            #else
-                #sleep 1
-                #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://freegeoip.net/xml/$ip" )"
-                #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-                    #is_data_valid=1
-                    #el_debug "using freegeoip"
-                #fi
-            #fi
-        #fi
-    #fi
 
     # try with geoplugin (fast)
     if ! ((is_data_valid)) ; then
-        data="$( curl -L -s --max-time 12 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        if [[ -n "$ip" ]] ; then
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        fi
 
         # verify
+
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
             is_data_valid=1
             el_debug "using geoplugin"
         fi
     fi
 
-    # try with ipaddresslabs:
-    # note: actually it says demo license expired, place this test at the end
-    if ! ((is_data_valid)) ; then
-        data="$( curl -L -s --max-time 12 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
 
-        # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
-            is_data_valid=1
-        fi
-    fi
+
+    # since this point, we need to have an ip for fetch data
+    #if ! ((is_data_valid)) && [[ -z "$ip" ]] ; then
+        #ip="$( showmyip )"
+    #fi
+
+    ## try with ipaddresslabs:
+    ## note: actually it says demo license expired, place this test at the end
+    ## note: it probably works without ip too, but the demo license has been removed
+    #if ! ((is_data_valid)) ; then
+        #data="$( curl -L -s --max-time 12 -A "Mozilla" "http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=demo&ip=${ip}&format=XML" )"
+
+        ## verify
+        #if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            #is_data_valid=1
+        #fi
+    #fi
 
 
 
     if ((is_data_valid)) ; then
         # show the ip, always good to have
-        echo "ip::$ip"
+        if [[ -n "$ip" ]] ; then
+            echo "ip::$ip"
+        fi
 
         while read -ru 3 line
         do

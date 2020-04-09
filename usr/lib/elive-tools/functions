@@ -795,14 +795,14 @@ el_package_upgrade_fast(){
             "file:///"*)
                 package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package_}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
                 if ! [[ -s "$package_url" ]] ; then
-                    el_error "unable to get the 'package_url' for package ${package} in file:/// mode: $( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
+                    el_error "unable to get the 'package_url' for package ${package} in file:/// mode:\n$( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
                     continue
                 fi
                 ;;
             "http"*)
                 package_url="$( lynx -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
                 if [[ -z "$package_url" ]] ; then
-                    el_error "unable to get the 'package_url' for package ${package}: $( lynx -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
+                    el_error "unable to get the 'package_url' for package '${package}' distro '${distro}' arch '${arch}' :\n$( lynx -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
                     continue
                 fi
 

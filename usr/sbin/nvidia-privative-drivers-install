@@ -204,7 +204,7 @@ detect_driver_version(){
                 driver_version="current"
             fi
         else
-            el_error "You have no Nvidia graphic cards, use -f if you want to force the install, lspci -mn:\n$(lspci -mn)"
+            el_error "You have no Nvidia graphic cards, use -f if you want to force the install, lspci -mn:\n$(lspci -mn)\n$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" )"
         fi
     fi
 

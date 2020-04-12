@@ -216,7 +216,7 @@ main(){
 
 
             if ! ((is_wifi_working)) ; then
-                el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )\n$(dmesg | grep -iE "(b43|firmware)" | tail -n 10)"
+                el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )\n$(dmesg | grep -iE "(broadcom|b43|firmware)" | tail -n 10)"
 
                 if [[ -n "$DISPLAY" ]] ; then
                     if ! ((conf_is_user_reported_install_failed)) ; then

@@ -498,9 +498,12 @@ user_add(){
         chown "${username}:${username}" "$DHOME/${username}/.config/elive"
         gravatar_id="$( echo -n "$user_email" | md5sum | awk '{print $1}' )"
 
-        wget -q "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
-        chown "${username}:${username}" "$DHOME/${username}/.config/elive/user-logo.png"
-        echo -e "[User]\nIcon=${DHOME}/${username}/.config/elive/user-logo.png" > "/var/lib/AccountsService/users/$username"
+        # this can be slow so we don't want / need to wait
+        (
+            wget -q "https://www.gravatar.com/avatar/${user_email}.png?s=256&d=https%3A%2F%2Fwww.elivecd.org%2Fwp-content%2Fuploads%2Flogo-elive.png" -O "$DHOME/${username}/.config/elive/user-logo.png"
+            chown "${username}:${username}" "$DHOME/${username}/.config/elive/user-logo.png"
+            echo -e "[User]\nIcon=${DHOME}/${username}/.config/elive/user-logo.png" > "/var/lib/AccountsService/users/$username"
+        ) &
 
     else
         # normal logo for user

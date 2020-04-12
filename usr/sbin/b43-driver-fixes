@@ -191,7 +191,7 @@ main(){
                 mv /lib/firmware/b43legacy /tmp/ 2>/dev/null || true
                 mkdir -p /lib/firmware/b43
 
-                for i in /var/cache/firmwares/b43/*o
+                for i in /var/cache/firmwares/b43/*
                 do
                     [[ -s "$i" ]] || continue
                     b43-fwcutter -w /lib/firmware "$i" || true
@@ -216,7 +216,7 @@ main(){
 
 
             if ! ((is_wifi_working)) ; then
-                el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )"
+                el_error "B43 device not installed correctly: $( lspci -nn -d "14e4:" )\n$(dmesg | grep -iE "(b43|firmware)" | tail -n 10)"
 
                 if [[ -n "$DISPLAY" ]] ; then
                     if ! ((conf_is_user_reported_install_failed)) ; then

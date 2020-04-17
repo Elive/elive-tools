@@ -2311,14 +2311,15 @@ el_report_to_elive(){
     esac
 
     # create an unique identifier to differentiate betweem same-reports
-    #id="$( dd if=/dev/urandom bs=1k count=2 2>/dev/null | sha1sum | awk '{print $1}' )"
-    if el_check_sudo_automated ; then
-        id="$( timeout 3 sudo blkid | LC_ALL=C grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"
-    else
-        id="$( ip a | LC_ALL=C grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
+    if [[ -z "$id" ]] ; then
+        id="$( timeout 4 /sbin/blkid | LC_ALL=C grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"
     fi
     if [[ -z "$id" ]] ; then
-        id="$( dd if=/dev/urandom bs=1k count=2 2>/dev/null | sha1sum | awk '{print $1}' )"
+        id="$( ip a | LC_ALL=C grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
+    fi
+    # alternative (dynamic, it will change)
+    if [[ -z "$id" ]] ; then
+        id="$( dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1sum | awk '{print $1}' )"
     fi
 
     if [[ -z "$conf_send_debug_reports_email" ]] ; then

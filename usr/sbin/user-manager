@@ -140,7 +140,7 @@ groups_add(){
         # remove extra leading blank chars
         read -r group <<< "$group"
 
-        "$ADDUSER" -q "$username" "${group}" 1>/dev/null || true
+        "$ADDUSER" -q "$username" "${group}" 1>/dev/null 2>&1 || true
     done
 
 }
@@ -160,7 +160,7 @@ groups_del(){
         # remove extra leading blank chars
         read -r group <<< "$group"
 
-        $DELUSER "$username" "${group}" || true
+        $DELUSER "$username" "${group}" 1>/dev/null 2>&1 || true
     done
 }
 
@@ -437,9 +437,17 @@ user_add(){
         user_shell="/bin/bash"
     fi
 
-    if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" ; then
-        $guitool --error --text="$( eval_gettext "Unable to create your user. Please try using english characters only" )"
+    # cleanup
+    rm -f "${temp_error}"
+
+    if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" 2>"$temp_error"  ; then
+        $guitool --error --text="$( eval_gettext "Unable to create your user. Please try using english characters only" ). $(cat "$temp_error" | sed -e 's|useradd: ||g' )"
         return 1
+    fi
+
+    if [[ -s "$temp_error" ]] ; then
+        el_error "$(cat "$temp_error" )"
+        rm -f "${temp_error}"
     fi
 
     # create / fix the files too

@@ -761,7 +761,7 @@ el_package_upgrade_fast(){
                 arch="_${arch}"
                 ;;
             all)
-                arch=""
+                arch="_all"
                 ;;
             *)
                 el_error "unable to get the arch value for package ${package}: $arch"

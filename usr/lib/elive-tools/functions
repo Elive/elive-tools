@@ -727,6 +727,11 @@ el_package_upgrade_fast(){
     mkdir -p "$tmpdir"
     cd "$tmpdir"
 
+    if ! el_verify_internet 2>/dev/null 1>&2 ; then
+        el_debug "no internet found, ignoring"
+        return 1
+    fi
+
     # checks
     if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
         el_aptget_update force

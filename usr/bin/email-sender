@@ -69,7 +69,7 @@ do_email_send(){
 
     if [[ -z "$subject" ]] ; then
         local message_subject
-        message_subject="$( printf "$( eval_gettext "A message from %s on %s's computer" )" "$username" "$(hostname | sed 's/[^ _-]*/\u&/g' )" )"
+        message_subject="$( printf "$( eval_gettext "A message from %s on %s's supercomputer" )" "$username" "$(hostname | sed 's/[^ _-]*/\u&/g' )" )"
 
         subject="$message_subject"
     fi
@@ -461,6 +461,7 @@ do_configure(){
                 exit 1
                 ;;
             other)
+                # TODO: implement a questions asking about the stmp / imap / ports addresses, all of them needed, it should simply work
                 $guitool --info --text="$( eval_gettext "This tool actually only supports the listed services avaialble, if you want to use a different one please improve the tool to include the needed conf for your service. Exiting..." )"
                 exit
                 ;;

@@ -3,12 +3,35 @@
 
 main(){
     # pre {{{
-    local filesystem mountpoint partition label
+    local filesystem mountpoint partition label arg
 
     label="$1"
     partition="$2"
     mountpoint="$3"
     filesystem="$4"
+
+    # temporal code in case thunar is not returning correctly the values (they shoudl be fixed in thunar and not from here)
+    #for arg in "$@"
+    #do
+        #case "$arg" in
+            #"/dev/"*)
+                #partition="$arg"
+                #shift
+                #;;
+            #"/media/"*|"/mnt/"*)
+                #mountpoint="$arg"
+                #shift
+                #;;
+            #fuse|ext*|reiser*|*fat*|btrfs|xfs|tmpfs|sysfs|proc|devtmpfs|debugfs|ramfs|devpts|autofs|fuseblk|fusectl|bfs|crypto|ecryptfs|efivarfs|f2fs|fat|hfs|hfsplus|isofs|jbd2|jffs2|jfs|nfs|romfs|squashfs|udf|ufs)
+                #filesystem="$arg"
+                #shift
+                #;;
+            #*)
+                #label="$arg"
+                #shift
+                #;;
+        #esac
+    #done
 
     # }}}
 

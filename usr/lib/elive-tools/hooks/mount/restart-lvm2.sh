@@ -17,3 +17,5 @@ if [[ -x "/etc/init.d/lvm2" ]] ; then
     fi
 fi
 
+exit 0
+

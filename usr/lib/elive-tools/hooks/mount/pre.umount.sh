@@ -33,6 +33,7 @@ main(){
         sync
     fi
 
+    exit 0
 }
 
 #

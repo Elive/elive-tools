@@ -65,6 +65,7 @@ main(){
     fi
 
 
+    exit 0
 }
 
 #

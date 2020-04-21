@@ -564,18 +564,19 @@ el_aptget(){
 
     # run what we want
     if [[ "$UID" = 0 ]] ; then
-        apt-get "$@"
+        TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
     else
         if el_check_sudo_automated ; then
-            sudo apt-get "$@"
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo apt-get "$@"
         else
             if [[ "${DISPLAY}" = ":0.0" ]] ; then
                 if ! el_dependencies_check gksu ; then
                     el_dependencies_install "gksu"
                 fi
-                gksu apt-get "$@"
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get "$@"
             else
-                su -c "apt-get $@" root
+                #su -c "TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get $@" root
+                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $@' root"
             fi
         fi
     fi
@@ -862,9 +863,10 @@ el_package_upgrade_fast(){
         el_aptget check 1>/dev/null
 
         if [[ "$UID" = 0 ]] ; then
-            dpkg -i *deb 1>/dev/null
-            dpkg --configure -a
-            if apt-get -f install -q=2 -y ; then
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i *deb 1>/dev/null
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
+
+            if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get -f install -q=2 -y ; then
                 failed=0
             else
                 failed=1
@@ -872,6 +874,7 @@ el_package_upgrade_fast(){
         else
             el_sudo dpkg -i *deb
             el_sudo dpkg --configure -a
+
             if el_sudo apt-get -f install -q=2 -y ; then
                 failed=0
             else

@@ -10,6 +10,14 @@ main(){
     mountpoint="$3"
     filesystem="$4"
 
+    case "$( cat /etc/debian_version )" in
+        10.*|"buster"*)
+            is_buster=1
+            ;;
+        7.*|"wheezy"*)
+            is_wheezy=1
+            ;;
+    esac
     # }}}
 
     # kill sucky process that doesn't allow us to umount devices
@@ -20,7 +28,10 @@ main(){
 
     # make sure that previous commands has perfectly finished, and:
     # make sure that all the syncs are finished before to try to umount, to avoid errors umounting
-    sync
+    # seems like this is not needed anymore in buster
+    if ((is_wheezy)) ; then
+        sync
+    fi
 
 }
 

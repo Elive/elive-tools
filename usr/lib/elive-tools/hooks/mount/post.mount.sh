@@ -34,7 +34,19 @@ main(){
     #done
 
     # }}}
+    if [[ -b "/dev/disk/by-uuid/$partition" ]] ; then
+        dev="/dev/disk/by-uuid/$partition"
+    else
+        if [[ -b "/dev/disk/by-label/$partition" ]] ; then
+            dev="/dev/disk/by-label/$partition"
+        fi
+    fi
 
+    if [[ "$filesystem" = "fuse" ]] && [[ -n "$dev" ]] && [[ -b "$dev" ]] ; then
+        if partitions-list --show-only="$dev" | grep -qsi "::ntfs" ; then
+            is_ntfs=1
+        fi
+    fi
 
     if [[ "$filesystem" = ntfs* ]] || [[ "${filesystem}" = NTFS* ]] ; then
         is_ntfs=1

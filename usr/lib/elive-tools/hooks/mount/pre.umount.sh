@@ -27,11 +27,8 @@ main(){
     #fi
 
     # make sure that previous commands has perfectly finished, and:
-    # make sure that all the syncs are finished before to try to umount, to avoid errors umounting
-    # seems like this is not needed anymore in buster
-    if ((is_wheezy)) ; then
-        sync
-    fi
+    # make sure that all the syncs are finished before to try to umount, to avoid errors umounting (in buster too)
+    sync
 
     exit 0
 }

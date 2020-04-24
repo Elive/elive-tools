@@ -101,56 +101,85 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # END xauthority }}}
 }
-#-------------------------------------------------------------------------------
-#   Send a notification to the user
-#-------------------------------------------------------------------------------
-el_notify_user(){ # notify the user (desktop || email). "title" "text"
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_notify
+#   DESCRIPTION:  send a notification to the user in a nice way
+#    PARAMETERS:  $1 = mode (normal|important|critical), $2 = title, $3 = message, $4 = icon
+#       RETURNS:  -
+#===============================================================================
+el_notify(){
+    # pre {{{
+    local time title message icon words mode extra_args
+
+    if [[ -z "$4" ]] ; then
+        el_error "Function usage: $FUNCNAME (nor|imp|crit) 'title' 'message' 'iconname'  - (icon example: logo-elive)"
+        return 1
+    fi
+
+    mode="$1"
+    shift
+    title="$1"
+    shift
+    message="$1"
+    shift
+    icon="$1"
+    shift
+
+    # }}}
+    # defaults {{{
+    if [[ -z "$icon" ]] ; then
+        icon="logo-elive"
+    fi
+
+    # count amount of seconds
+    words="$( echo "$title $message" | wc -w )"
+    time="$(( $words / 3 ))"
+    time="$(( $time + 4 ))"
+
+    case "$mode" in
+        nor*)
+            time="$(( $time + 1 ))"
+            extra_args="$extra_args -u normal"
+            ;;
+        imp*)
+            # 1 minute
+            time="$(( $time + 60 ))"
+            extra_args="$extra_args -u critical"
+            ;;
+        crit*)
+            # 15 minutes
+            time="$(( $time + 900 ))"
+            extra_args="$extra_args -u critical"
+            ;;
+    esac
+
+    # convert time to milliseconds
+    time="$(( $time * 1000 ))"
+
+    # }}}
+
     el_set_display_variables
 
     if [[ "${DISPLAY}" = ":0.0" ]] ; then
-        if el_dependencies_check notify-send ; then
-            # run notification daemon if not running already
-            if ! [[ -n "$E_START" ]] ; then
-                if ! ps ux | grep -v grep | grep -qs "notification-daemon" ; then
-                    ( /usr/lib/notification-daemon/notification-daemon & )
-                    sleep 2
-                fi
-            fi
-
-            command notify-send -t 30000 "$@"
-        else
-            el_warning "notify-send not installed"
+        if ! el_dependencies_check notify-send ; then
+            el_dependencies_install "libnotify-bin"
         fi
-    fi
 
-    if ((is_terminal)) ; then
-        el_info "$@"
-    fi
-}
-#-------------------------------------------------------------------------------
-#   Send an important notification to the user
-#-------------------------------------------------------------------------------
-el_notify_user_important(){ # notify the user (desktop || email). "title" "text" (no timeout mode)
-    el_set_display_variables
-
-    if [[ "${DISPLAY}" = ":0.0" ]] ; then
-        if el_dependencies_check notify-send ; then
-            # run notification daemon if not running already
-            if ! [[ -n "$E_START" ]] ; then
-                if ! ps ux | grep -v grep | grep -qs "notification-daemon" ; then
-                    ( /usr/lib/notification-daemon/notification-daemon & )
-                    sleep 2
-                fi
+        # run notification daemon if not running already
+        if ! [[ -n "$E_START" ]] ; then
+            if ! pidof "notification-daemon" 1>/dev/null 2>&1 ; then
+                ( /usr/lib/notification-daemon/notification-daemon & )
+                sleep 2
             fi
-
-            command notify-send -t 240000 "$@"
-        else
-            el_warning "notify-send not installed"
         fi
+
+        notify-send -t "$time" -i "$icon" "$title" "$message"
     else
-        el_warning "$@"
+        el_info "${title}: ${message}"
     fi
 }
+
 
 #-------------------------------------------------------------------------------
 #   Verify if we have internet connection with a fast ping check
@@ -416,12 +445,6 @@ el_resolution_get(){ # show our actual resolution
 #-------------------------------------------------------------------------------
 #   Dependencies Check
 #-------------------------------------------------------------------------------
-el_check_dependencies(){
-    # compatibility
-    el_warning "$FUNCNAME is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
-    el_dependencies_check "$@"
-}
-
 el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
     # example:  el_dependencies_check gmplayer,find,sed,etc
     local check found found_no dir
@@ -623,7 +646,7 @@ el_aptget_update(){
             if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]]  ; then
                 { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
-                apt-get update || apt-get update
+                el_aptget update || el_aptget update
             fi
         else
             if el_check_sudo_automated ; then
@@ -1122,9 +1145,6 @@ el_check_translations_required(){
         return 1
     fi
 
-}
-el_check_translations_required_notify(){
-    el_warning "deprecated function $FUNCNAME from elive-tools functions, use el_check_translations_required instead"
 }
 
 #===  FUNCTION  ================================================================
@@ -3084,6 +3104,25 @@ el_get_machine_id(){
     fi
 }
 
+###################################################################
+# DEPRECATED FUNCTIONS TO FALLBACK:
+###################################################################
+el_notify_user(){
+    el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
+    el_notify "normal" "$1" "$2" "logo-elive"
+}
+el_notify_user_important(){
+    el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
+    el_notify "critical" "$1" "$2" "logo-elive"
+}
+el_check_translations_required_notify(){
+    el_error "deprecated function $FUNCNAME from elive-tools functions from $SOURCE $0, use el_check_translations_required instead"
+}
+el_check_dependencies(){
+    # compatibility
+    el_warning "$FUNCNAME is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
+    el_dependencies_check "$@"
+}
 
 
 ###################################################################

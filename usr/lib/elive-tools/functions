@@ -113,24 +113,24 @@ el_notify(){
     local time title message icon words mode extra_args
 
     if [[ -z "$4" ]] ; then
-        el_error "Function usage: $FUNCNAME (nor|imp|crit) 'title' 'message' 'iconname'  - (icon example: logo-elive)"
+        el_error "Function usage: $FUNCNAME (nor|imp|crit) 'icon' 'title' 'message'  - (icon example: 'logo-elive')"
         return 1
     fi
 
     mode="$1"
     shift
+    icon="$1"
+    shift
     title="$1"
     shift
     message="$1"
     shift
-    icon="$1"
-    shift
 
     # }}}
     # defaults {{{
-    if [[ -z "$icon" ]] ; then
-        icon="logo-elive"
-    fi
+    #if [[ -z "$icon" ]] ; then
+        #icon="logo-elive"
+    #fi
 
     # count amount of seconds
     words="$( echo "$title $message" | wc -w )"
@@ -3109,11 +3109,11 @@ el_get_machine_id(){
 ###################################################################
 el_notify_user(){
     el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
-    el_notify "normal" "$1" "$2" "logo-elive"
+    el_notify "normal" "logo-elive" "$1" "$2"
 }
 el_notify_user_important(){
     el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
-    el_notify "critical" "$1" "$2" "logo-elive"
+    el_notify "critical" "logo-elive" "$1" "$2"
 }
 el_check_translations_required_notify(){
     el_error "deprecated function $FUNCNAME from elive-tools functions from $SOURCE $0, use el_check_translations_required instead"

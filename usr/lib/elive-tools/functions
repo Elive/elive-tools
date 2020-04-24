@@ -463,7 +463,6 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
         done
 
         if [[ "$found" != "yes" ]] ; then
-            #el_notify_user "Command Not Found" "Error: command '$check' for $(basename $0) not found"
             NOREPORTS=1 el_error "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
@@ -964,7 +963,6 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
     for _var in ${@//,/ }
     do
         if [[ ! -s "${_var}" ]] ; then
-            #el_notify_user "E: File not exists" "E: the file '$_var' not exists"
             NOREPORTS=1 el_error "File '$_var' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
@@ -1023,7 +1021,6 @@ el_check_dir_has_files(){
         fi
 
         if [[ ! -d "$dir" ]] && [[ ! -L "$dir" ]] ; then
-            #el_notify_user "Dir not exist" "$dir"
             el_debug "Directory '$dir' not exist, func: ${FUNCNAME[1]}"
 
             return 1
@@ -1044,7 +1041,6 @@ el_check_dir_has_files(){
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
     if ! sudo -H -n echo 2>/dev/null 1>/dev/null ; then
-        #el_notify_user "Automated sudo is required" "Your sudo requires a password, we need it to be configured for not request it"
         el_debug "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it, func: ${FUNCNAME[1]}"
         return 1
     else
@@ -1858,7 +1854,7 @@ el_group_add(){
 
         # inform that a reboot is needed
         if el_group_check "$group" ; then
-            el_notify_user "Your user is now added to the new group ${group}, reboot your computer for use it correctly"
+            el_notify normal logo-elive "Your user is now added to the new group ${group}, reboot your computer for use it correctly"
         fi
     fi
 

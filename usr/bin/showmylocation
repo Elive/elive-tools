@@ -81,17 +81,23 @@ main(){
 
     # - DEMO outputs }}}
 
+    # OTHER services (json only):
+    #curl https://ipinfo.io/json
+    #curl https://api.ipdata.co?api-key=test
+    #curl ipgeolocation.com
 
-    # try with freegeoip (good but slow, reliable, which is more important)
-    # note: ip can be empty, this will make things faster by not fetching it first
+    # try with ipapi (fast)
     if ! ((is_data_valid)) ; then
-        data="$( curl -L -s --max-time 12 -A "Mozilla" "https://freegeoip.app/xml/$ip" )"
+        if [[ -n "$ip" ]] ; then
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ip-api.com/xml/$ip" )"
+        else
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ip-api.com/xml/" )"
+        fi
 
-
-        ## verify
-        if echo "$data" | grep -qs "atitude>[[:digit:]]</" ; then
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
             is_data_valid=1
-            el_debug "using freegeoip"
+            el_debug "using ipapi"
         fi
     fi
 
@@ -100,13 +106,46 @@ main(){
     if ! ((is_data_valid)) ; then
         if [[ -n "$ip" ]] ; then
             data="$( curl -L -s --max-time 12 -A "Mozilla" "http://www.geoplugin.net/xml.gp?ip=$ip" )"
+        else
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "http://www.geoplugin.net/xml.gp" )"
         fi
 
         # verify
-
         if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
             is_data_valid=1
             el_debug "using geoplugin"
+        fi
+    fi
+
+    # try with ipapi (fast)
+    if ! ((is_data_valid)) ; then
+        if [[ -n "$ip" ]] ; then
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ipapi.co/$ip/xml/" )"
+        else
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ipapi.co/xml/" )"
+        fi
+
+        # verify
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+            is_data_valid=1
+            el_debug "using ipapi"
+        fi
+    fi
+
+    # try with freegeoip (good but slow, reliable, which is more important)
+    # note: ip can be empty, this will make things faster by not fetching it first
+    if ! ((is_data_valid)) ; then
+        if [[ -n "$ip" ]] ; then
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://freegeoip.app/xml/$ip" )"
+        else
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://freegeoip.app/xml/" )"
+        fi
+
+
+        ## verify
+        if echo "$data" | grep -qs "atitude>[[:digit:]]</" ; then
+            is_data_valid=1
+            el_debug "using freegeoip"
         fi
     fi
 
@@ -271,7 +310,7 @@ main(){
                     echo "isp_provider_name::$line"
                 ;;
             esac
-        done 3<<< "$( echo "$data")" | sort -u
+        done 3<<< "$( echo "$data" | sed -e 's|><|>\n<|g' )" | sort -u
     fi
 
 }

@@ -17,7 +17,12 @@ conf_volume_set(){
         return
     fi
 
-    volume_actual="$( get_volume )"
+    if [[ -n "$1" ]] ; then
+        volume_actual="$1"
+    else
+        volume_actual="$( get_volume )"
+    fi
+
     if [[ -n "$volume_actual" ]] && [[ "$volume_actual" != 0 ]] ; then
         sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
         echo -e "volume: $volume_actual" >> "$conf"
@@ -745,8 +750,18 @@ main(){
             amixer -q set DAC $action 2>/dev/null
         fi
 
+        volume_actual="$( get_volume )"
+
+        # increase Master if we are already at maximum of the other volumes
+        if [[ "${action}" = *"+" ]] ; then
+            if [[ "${volume_actual}" = "100" ]] ; then
+                amixer -q set Master $action 2>/dev/null
+            fi
+        fi
+
         # alsa special elive controls
-        conf_volume_set
+        conf_volume_set "$volume_actual"
+
     fi
 
 

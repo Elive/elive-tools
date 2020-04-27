@@ -14,6 +14,10 @@ main(){
 
     on_exit rm -f "$script"
 
+    if ! el_dependencies_check gksu ; then
+        el_dependencies_install gksu
+    fi
+
     # }}}
 
     # mode basic or advanced {{{

@@ -449,7 +449,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     # example:  el_dependencies_check gmplayer,find,sed,etc
     local check found found_no dir
 
-    for check in ${@//,/ }
+    while read -ru 3 check
     do
         unset found
 
@@ -466,7 +466,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
             NOREPORTS=1 el_error "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -924,7 +924,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
     # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
     local found_no _var
 
-    for _var in ${@//,/ }
+    while read -ru 3 _var
     do
         if [[ -n "$ZSH_VERSION" ]] ; then
             if [[ ! -n "${(P)_var}" ]] ; then
@@ -937,7 +937,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
                 found_no="yes"
             fi
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -960,13 +960,13 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
         return 1
     fi
 
-    for _var in ${@//,/ }
+    while read -ru 3 _var
     do
         if [[ ! -s "${_var}" ]] ; then
             NOREPORTS=1 el_error "File '$_var' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr ',' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -1012,14 +1012,14 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 el_check_dir_has_files(){
     local dir f files
 
-    for dir in ${@//,/ }
+    if [[ -z "$1" ]] ; then
+        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
+        return 1
+    fi
+
+    # FIXME: sometimes dirs includes , like for music directories, this function bugs when a , is found, needs improvement (move to | instead?)
+    while read -ru 3 dir
     do
-        if [[ -z "$1" ]] ; then
-            echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
-
-            return 1
-        fi
-
         if [[ ! -d "$dir" ]] && [[ ! -L "$dir" ]] ; then
             el_debug "Directory '$dir' not exist, func: ${FUNCNAME[1]}"
 
@@ -1032,8 +1032,7 @@ el_check_dir_has_files(){
                 return 1
             fi
         fi
-    done
-
+    done 3<<< "$( echo "${@}" | tr ',' '\n' )"
 }
 
 #-------------------------------------------------------------------------------

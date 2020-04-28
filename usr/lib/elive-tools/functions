@@ -3081,9 +3081,7 @@ el_get_machine_id(){
     fi
 
     # cleanups and backup
-    if [[ -n "$machine_id" ]] ; then
-        machine_id="#machine-id:${machine_id}"
-    else
+    if [[ -z "$machine_id" ]] ; then
         # re-use a backup if we cannot fetch machine-id in shutdown step
         if [[ -e "/tmp/.machine-id" ]] ; then
             machine_id="$( cat /tmp/.machine-id 2>/dev/null )"

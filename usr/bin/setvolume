@@ -188,7 +188,7 @@ get_meter(){
 
         if ((is_already_configured)) ; then
             el_error "No meters found to configure volumes, is your audio card working?:\n$(amixer scontrols)\n|$(cat /proc/asound/cards)\n|$(cat "$HOME/.asoundrc" )|###"
-            el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There is a problem with your audio card. To reconfigure it, run:" ) audio-configurator"
+            el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "Your default configured audio card doesn't contain a playback track. Please reconfigure it, run:" ) audio-configurator"
 
         else
             if grep -qs "boot=live" /proc/cmdline ; then

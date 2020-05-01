@@ -207,7 +207,7 @@ main(){
                 fi
 
             else
-                if ((is_terminal)) ; then
+                if ((is_interactive)) ; then
                     if ((is_mode_force)) ; then
                         echo -e "The package $packagename needs to be updated.\nInsert root/admin password:"
                         su -c "TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install $packagename" root

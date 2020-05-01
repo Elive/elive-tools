@@ -84,16 +84,16 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if ((is_terminal)) && [[ "$UID" != 0 ]] ; then
         # only show the error if we have a graphical system running by the user
-        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
             if [[ -z "${DISPLAY}" ]] ; then
-                el_explain 2 "Variable DISPLAY is not set, so we will not have access to the local graphical system"
+                el_warning "Variable DISPLAY is not set, so we will not have access to the local graphical system"
             fi
             if [[ -z "${XAUTHORITY}" ]] ; then
-                el_explain 2 "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
+                el_warning "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
             fi
             if [[ -z "${E_IPC_SOCKET}" ]] ; then
                 if [[ "$UID" != 0 ]] ; then
-                    el_explain 3 "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
+                    el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
                 fi
             fi
         fi
@@ -1352,7 +1352,7 @@ el_check_is_shell(){
 #===============================================================================
 el_explain(){
     # pre {{{
-    if ! ((is_terminal)) ; then
+    if ! ((is_interactive)) ; then
         return
     fi
 
@@ -1451,7 +1451,7 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
-    if ! [[ "${EL_DEBUG}" -ge 3 ]] || ! ((is_terminal)) ; then
+    if ! [[ "${EL_DEBUG}" -ge 3 ]] || ! ((is_interactive)) ; then
         return
     fi
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
@@ -1530,7 +1530,7 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    if ! ((is_terminal)) ; then
+    if ! ((is_interactive)) ; then
         return
     fi
 
@@ -1643,7 +1643,7 @@ el_warning(){
     # }}}
     # show warning {{{
 
-    if ((is_terminal)) ; then
+    if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 1 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
@@ -1731,7 +1731,7 @@ el_error(){
     # show error {{{
 
 
-    if ((is_terminal)) ; then
+    if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 0 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
                 echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
@@ -1884,7 +1884,7 @@ el_confirm(){
 
     # }}}
     # return answer {{{
-    if ((is_terminal)) ; then
+    if ((is_interactive)) ; then
         echo -en "$question [y/n]: "
         if [[ -n $ZSH_VERSION ]] ; then
             read reply
@@ -2135,7 +2135,7 @@ el_step_requires_fixme(){
     el_check_dirs "${dir}"
     cd "$dir"
 
-    if ((is_terminal)) ; then
+    if ((is_interactive)) ; then
         echo -e "\n"
         #el_warning "Experimental or uncomplete code:"
         echo -e "We have set a breakpoint here, report to Elive this message if needed:"
@@ -2207,8 +2207,8 @@ el_report_to_elive(){
         messages_extra=" ||| tool '$SOURCE' has not REPORTS variable set, yet, you should set it ${messages_extra}"
     fi
 
-    if ((is_terminal)) || ((is_console)) ; then
-        messages_extra=" ||| terminal '$is_terminal' console '${is_console}', blacklist all terminal and console reports because we only need them from tools? (temporal warning to verify the correct detection) ${messages_extra}"
+    if ((is_interactive)) ; then
+        messages_extra=" ||| terminal '$is_terminal' console '${is_console}', blacklist all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
     fi
 
     # TODO: enable in the future:
@@ -3165,13 +3165,13 @@ if [[ -n "$TERM" ]] ; then
     # note: TTY variable not shows in bash login aparently
     if [[ "$TERM" = "linux" ]] ; then
         # note: if you want to enable colors in an application run from E (.desktop file), you must set the TERM variable, and LS_COLORS too
-        if [[ -n "$E_START" ]] ; then
+        if [[ -n "$E_START" ]] || [[ -n "$EROOT" ]] ; then
             # launched from e17 itself
             is_terminal=0
             is_console=0
         else
-            # note: do not disable is_terminal, pure console is meant to be a terminal too and all the code depends monstly of the is_terminal one
-            is_terminal=1
+            # note: in the past we had is_terminal=1 forced in order to get features from other things, this is not needed anymore since the use of is_interactive
+            is_terminal=0
             is_console=1
         fi
     fi
@@ -3179,13 +3179,17 @@ else
     is_terminal=0
     is_console=0
     # if we don't have TERM we need this value to not trigger 'tput' errors like when running apt commands
-    export TERM="linux"
+    # update: apt should have the variable set itself
+    #export TERM="linux"
+fi
+
+if ((is_terminal)) || ((is_console)) ; then
+    is_interactive=1
 fi
 
 
-
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
-if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
+if [[ -n "$NOCOLOR" ]] || ! ((is_interactive)) ; then
     el_c_n=""
     el_c_r=""
     el_c_r2=""

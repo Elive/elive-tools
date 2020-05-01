@@ -111,7 +111,7 @@ take_screenshot(){
 
     # some info for the user
     if ((is_mode_range)) ; then
-        if el_check_is_shell || ((is_terminal)) ; then
+        if ((is_interactive)) ; then
             el_info "$message_drag_range"
         else
             # we need to wait a bit so the user is not pressing the keyboard

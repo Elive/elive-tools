@@ -91,9 +91,12 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             if [[ -z "${XAUTHORITY}" ]] ; then
                 el_warning "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
             fi
-            if [[ -z "${E_IPC_SOCKET}" ]] ; then
-                if [[ "$UID" != 0 ]] ; then
-                    el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
+            # only e17+
+            if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+                if [[ -z "${E_IPC_SOCKET}" ]] ; then
+                    if [[ "$UID" != 0 ]] ; then
+                        el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
+                    fi
                 fi
             fi
         fi

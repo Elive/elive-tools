@@ -133,12 +133,8 @@ check_hardware(){
     # }}}
     # detect if we have the hardware with nvidia {{{
     # pci-id with nvidia on first graphic card
-    _DEVICE="$( lspci -mn | awk '/03(00|80|02)/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-
-    if [[ -z "$_DEVICE" ]] ; then
-        _DEVICE="$( lspci -mn | awk '/ "03/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-        el_warning "detecting Nvidia hardware using 03 wildcard: $_DEVICE"
-    fi
+    #_DEVICE="$( lspci -mn | awk '/03(00|80|02)/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
+    _DEVICE="$( lspci -mn | awk '/ "03/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
 
     if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
         el_debug "nvidia card found on pci-id"
@@ -199,12 +195,8 @@ detect_driver_version(){
 
     if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
         # pci-id with nvidia on first graphic card
-        _DEVICE="$( lspci -mn | awk '/03(00|80|02)/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-
-        if [[ -z "$_DEVICE" ]] ; then
-            _DEVICE="$( lspci -mn | awk '/ "03/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
-            el_warning "detecting Nvidia hardware using 03 wildcard: $_DEVICE"
-        fi
+        #_DEVICE="$( lspci -mn | awk '/03(00|80|02)/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
+        _DEVICE="$( lspci -mn | awk '/ "03/ { print $3$4 }' | sed -e 's|"||g' | tr [a-z] [A-Z] | grep -E '^(10DE|12D2)' | head -n1)"
     fi
 
     if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then

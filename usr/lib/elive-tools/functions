@@ -3124,13 +3124,6 @@ el_check_dependencies(){
 ###################################################################
 #  Always run:
 ###################################################################
-# Generic checks
-if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-    if [[ "$0" != *"bash" ]] && [[ "$0" != *"bin/zsh" ]] && [[ -e "$@" ]] ; then
-        el_warning "Missing features, report this to Elive"
-    fi
-fi
-
 
 # gettext functions
 if [[ -x "/usr/bin/gettext.sh" ]] ; then

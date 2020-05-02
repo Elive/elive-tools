@@ -48,7 +48,7 @@ main(){
             el_explain 0 "converting $(basename "$file" )"
 
             # v4 for a much more quality (flac converter)
-            precache "$file"
+            precache "$file" 1>/dev/null
 
             if lame --quiet --vbr-new -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" ; then
                 mv "$dest/__$( basename "$file" )" "$dest/$( basename "$file" )"

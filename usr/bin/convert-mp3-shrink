@@ -9,24 +9,30 @@ main(){
     # pre {{{
     local file from to rate
 
-    from="${1%/}"
-    to="${2%/}"
-
     # Usage
     if [[ -z "${2}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) from-dir to-dir"
         exit 1
     fi
 
+
+    from="${1%/}"
+    shift
+    to="${1%/}"
+    shift
+
     if ! el_dependencies_check "lame" ; then
         el_dependencies_install lame
     fi
+
+    mkdir -p "$to"
 
     # }}}
 
     while read -ru 3 file
     do
         dest="${to}/$( dirname "$file" )"
+
         if [[ -s "$dest/$( basename "$file" )" ]] ; then
             el_explain 0 "skipping $(basename "$file" )"
             continue
@@ -42,8 +48,9 @@ main(){
             el_explain 0 "converting $(basename "$file" )"
 
             # v4 for a much more quality (flac converter)
-            cat "$file" > /dev/null
-            if lame --quiet -vbr-new -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" ; then
+            precache "$file"
+
+            if lame --quiet --vbr-new -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" ; then
                 mv "$dest/__$( basename "$file" )" "$dest/$( basename "$file" )"
             else
                 rm -f "$dest/__$( basename "$file" )" 2>/dev/null

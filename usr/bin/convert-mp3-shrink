@@ -7,7 +7,7 @@ REPORTS="1"
 
 main(){
     # pre {{{
-    local file from to rate logs
+    local file from to rate logs returned
 
     # Usage
     if [[ -z "${2}" ]] ; then
@@ -53,17 +53,19 @@ main(){
             # v4 for a much more quality (flac converter)
             precache "$file" 2>/dev/null
 
-            lame --vbr-new -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" 1>"$logs" 2>&1
+            lame --vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"  1>"$logs" 2>&1
+            returned="$?"
+
             if grep -qsE "(Aborting layer . decode|illegal bit allocation value)" "$logs" ; then
-                el_explain 0 "converting (MPEG-3 mode forced) $(basename "$file" )"
-                lame --vbr-new --mp3input -V 3 -q 0 "$file" -o "$dest/__$( basename "$file" )" 1>"$logs" 2>&1
+                el_explain 0 "  MPEG-3 mode force: $(basename "$file" )"
+                lame --vbr-new --mp3input -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"  1>"$logs" 2>&1
+                returned="$?"
             fi
 
-            #if [[ "${PIPESTATUS[0]}" = 0 ]] && [[ "$( du -s "${dest}/$( basename "$file" )" )" -gt 500 ]] ; then
-            if [[ "${PIPESTATUS[0]}" = 0 ]] ; then
-                mv "$dest/__$( basename "$file" )" "$dest/$( basename "$file" )"
-            else
-                rm -f "$dest/__$( basename "$file" )" 2>/dev/null
+            if [[ "$returned" != 0 ]] ; then
+                NOREPORTS=1 el_warning "error converting, using back original file..."
+                cp -f "$file" "$dest"
+                continue
             fi
 
             # file is bigger than original AND file is bigger than 800 kb (which should be broken in conversion) --> copy back the original one
@@ -71,19 +73,19 @@ main(){
                 && [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                 # add a visual mark (ls) to see that we have converted it
                 #chmod +x "$dest/$( basename "$file" )"
-                true
+                continue
             else
                 if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                     el_explain 0 "Oops, resulting file was bigger, using copy instead"
                 else
                     NOREPORTS=1 el_error "Less than 800 kb, maybe broken file, copying back the original one"
                 fi
-                cp "$file" "$dest"
+                cp -f "$file" "$dest"
             fi
 
         else
-            el_explain 0 "copied $(basename "$file" )"
-            cp "$file" "$dest"
+            el_explain 0 "Using original file: copied:  $(basename "$file" )"
+            cp -f "$file" "$dest"
         fi
     done 3<<< "$( find "$from" -type f -iname '*'.mp3 | sed -e 's|^\./||g' )"
 

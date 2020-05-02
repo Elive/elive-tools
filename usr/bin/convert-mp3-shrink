@@ -25,6 +25,11 @@ main(){
         el_dependencies_install lame
     fi
 
+    if ! el_dependencies_check "eyeD3" ; then
+        el_dependencies_install eyed3
+    fi
+
+
     mkdir -p "$to"
 
     logs="/tmp/.$(basename $0)-${USER}-logs.txt"
@@ -43,7 +48,7 @@ main(){
         mkdir -p "$dest"
         rm -f "$logs"
 
-        rate="$( eyeD3 "$file" 2>/dev/null | strings | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
+        rate="$( eyeD3 --no-color "$file" 2>/dev/null | strings | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
 
 
         if { [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; }  || [[ -z "$rate" ]] ; then

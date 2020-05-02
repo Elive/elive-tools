@@ -40,7 +40,7 @@ main(){
 
         mkdir -p "$dest"
 
-        rate="$( eyeD3 "$file" | strings | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
+        rate="$( eyeD3 "$file" 2>/dev/null | strings | grep "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
 
 
         if { [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; }  || [[ -z "$rate" ]] ; then

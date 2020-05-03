@@ -1333,8 +1333,13 @@ el_check_version_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
+    #el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
+
+    # retrun false if we have any error calculating it
+    if [[ -z "$days_difference" ]] || [[ -z "$days_required" ]] ; then
+        return 1
+    fi
 
     if [[ "$days_difference" -le "$days_required" ]] ; then
         return 0
@@ -1400,8 +1405,14 @@ el_check_version_development_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
+    #el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
+
+    # retrun false if we have any error calculating it
+    if [[ -z "$days_difference" ]] || [[ -z "$days_required" ]] ; then
+        return 1
+    fi
+
 
     if [[ "$days_difference" -le "$days_required" ]] ; then
         return 0

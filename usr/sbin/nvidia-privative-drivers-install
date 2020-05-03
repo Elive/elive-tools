@@ -1275,7 +1275,7 @@ main(){
 
     _CMDLINE="$(cat /proc/cmdline)"
 
-    el_dependencies_check "dialog,apt-cache"
+    el_dependencies_check "dialog|apt-cache"
 
     if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
         is_wheezy=1

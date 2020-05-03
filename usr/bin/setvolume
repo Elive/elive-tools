@@ -217,7 +217,7 @@ get_volume(){
     fi
 
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        el_check_variables "meter,list"
+        el_check_variables "meter|list"
     fi
 
     # }}}
@@ -247,7 +247,7 @@ set_volume(){
 
     action="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        el_check_variables "action,list,meter"
+        el_check_variables "action|list|meter"
     fi
 
     # }}}
@@ -534,7 +534,7 @@ main(){
             el_dependencies_install "pulsemixer"
         fi
     else
-        if ! el_dependencies_check "amixer,aplay" ; then
+        if ! el_dependencies_check "amixer|aplay" ; then
             el_dependencies_install "alsa-utils"
         fi
     fi

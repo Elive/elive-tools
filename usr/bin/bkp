@@ -382,13 +382,13 @@ main(){
 
 
 
-    if ! el_dependencies_check "rsync,rdiff-backup,diff,colordiff" ; then
-        if ! el_dependencies_install "rsync,rdiff-backup,diffutils,colordiff" ; then
+    if ! el_dependencies_check "rsync|rdiff-backup|diff|colordiff" ; then
+        if ! el_dependencies_install "rsync|rdiff-backup|diffutils|colordiff" ; then
             el_error "Install required dependencies"
         fi
     fi
 
-    el_check_variables "tool,namedir,bkpdir_id,target"
+    el_check_variables "tool|namedir|bkpdir_id|target"
     el_check_dirs      "${target}"
 
 

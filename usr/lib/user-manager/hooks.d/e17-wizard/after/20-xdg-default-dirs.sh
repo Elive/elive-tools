@@ -109,7 +109,7 @@ main(){
     # pre {{{
     local var
 
-    if ! el_dependencies_check "xdg-user-dirs-update,xdg-user-dirs-gtk-update" ; then
+    if ! el_dependencies_check "xdg-user-dirs-update|xdg-user-dirs-gtk-update" ; then
         exit 1
     fi
     # }}}

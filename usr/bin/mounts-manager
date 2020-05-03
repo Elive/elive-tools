@@ -103,7 +103,7 @@ chroot_layers_mount(){
     dirid="${dir//\//%}"
     id="$2"
     mode="$3"
-    if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
+    if ! el_check_variables "dir|id" || ! el_check_dirs "$dir" ; then
         exit 1
     fi
 
@@ -301,7 +301,7 @@ chroot_layers_umount(){
     id="$2"
     mode="$3"
 
-    if ! el_check_variables "dir,id" || ! el_check_dirs "$dir" ; then
+    if ! el_check_variables "dir|id" || ! el_check_dirs "$dir" ; then
         exit 1
     fi
 

@@ -93,7 +93,7 @@ main(){
         exit 1
     fi
 
-    if ! el_dependencies_check "apt-get,apt-cache,zenity,dpkg" ; then
+    if ! el_dependencies_check "apt-get|apt-cache|zenity|dpkg" ; then
         exit 1
     fi
 

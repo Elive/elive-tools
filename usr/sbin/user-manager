@@ -33,7 +33,7 @@ fi
 guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 temp_error="/tmp/$(basename $0)-${USER}-$$"
 
-el_dependencies_check "zenity,yad,chpasswd,debconf-get-selections,grep,groupadd,elive-skel,chown,su,${USERADD},${ADDUSER},useradd,${USERDEL}"
+el_dependencies_check "zenity|yad|chpasswd|debconf-get-selections|grep|groupadd|elive-skel|chown|su|${USERADD}|${ADDUSER}|useradd|${USERDEL}"
 
 
 ###########################################################################

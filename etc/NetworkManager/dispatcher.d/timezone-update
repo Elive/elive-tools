@@ -206,8 +206,8 @@ main(){
         touch "$conf"
     fi
 
-    el_dependencies_check "ip,arp,showmytimezone,ping"
-    #el_check_variables "iface,state"
+    el_dependencies_check "ip|arp|showmytimezone|ping"
+    #el_check_variables "iface|state"
 
 
     # some values like no iface given should be directly exited

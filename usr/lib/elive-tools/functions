@@ -449,7 +449,7 @@ el_resolution_get(){ # show our actual resolution
 #   Dependencies Check
 #-------------------------------------------------------------------------------
 el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
-    # example:  el_dependencies_check gmplayer,find,sed,etc
+    # example:  el_dependencies_check gmplayer|find|sed|etc
     local check found found_no dir
 
     # TODO: delete this deprecated code in the future and only keep the new one (after we verified that we are not using them anymore)

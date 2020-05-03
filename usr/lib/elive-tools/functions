@@ -1333,7 +1333,7 @@ el_check_version_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    #el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
+    #el_check_variables "date_builded|date_today|date_builded_total_days|date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
 
     # retrun false if we have any error calculating it
@@ -1405,7 +1405,7 @@ el_check_version_development_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    #el_check_variables "date_builded,date_today,date_builded_total_days,date_today_total_days"
+    #el_check_variables "date_builded|date_today|date_builded_total_days|date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
 
     # retrun false if we have any error calculating it
@@ -1473,7 +1473,7 @@ el_explain(){
     #spaced="$verbose_level"
     funclevel="$(( ${#FUNCNAME[*]} - 2 ))"
 
-    el_check_variables "verbose_level,message"
+    el_check_variables "verbose_level|message"
     # }}}
     # tabulate output {{{
     #while [[ $spaced -gt 0 ]] ; do
@@ -2598,7 +2598,7 @@ el_flag(){
     # always create dir, flush FS's problems
     mkdir -p "$TMP_FLAGS_d"
 
-    el_check_variables "action,name"
+    el_check_variables "action|name"
 
     # }}}
     case $action in

@@ -508,7 +508,13 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
 #-------------------------------------------------------------------------------
 el_dependencies_install(){
     local depends temp
-    depends="$( echo "$@" | tr ',' ' ' )"
+    # TODO deleteme this deprecated code and all other comma substitution occurencies when the code is updated
+        # originall made before 3.8.12
+    if echo "$@" | grep -qs "," ; then
+        depends="$( echo "$@" | tr ',' ' ' )"
+    else
+        depends="$( echo "$@" | tr '|' ' ' )"
+    fi
     el_set_display_variables
 
     # TODO: move to terminology when compatibility will be implemented

@@ -10,13 +10,13 @@ if [[ -n "$EROOT" ]] ; then
     #cd "$HOME"
     #elive-skel upgrade .e16
     #elive-skel upgrade .config/cairo-dock
-    tmux-attach-jobs background erestart "killall -9 e16 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock"
+    tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
 fi
 
 if [[ -n "$E_START" ]] ; then
     #killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
     #rm -fr "$HOME/.e" "$HOME/.xsession-errors"
-    tmux-attach-jobs background erestart "killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\""
+    tmux-attach-jobs background erestart "sync ; killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\" ; sync ; killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null"
 fi
 
 

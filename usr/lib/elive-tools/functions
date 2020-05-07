@@ -2313,7 +2313,7 @@ el_report_to_elive(){
     if ((is_interactive)) ; then
         messages_extra=" ||| terminal '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', blacklist all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
     else
-        messages_extra=" ||| terminal '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', ${el_c_g} wohooo, example of only-tools (no-interactive) report"
+        messages_extra=" ||| is_interactive '${is_interactive}', (example of only-tools (no-interactive) report)"
     fi
 
     # TODO: enable in the future:

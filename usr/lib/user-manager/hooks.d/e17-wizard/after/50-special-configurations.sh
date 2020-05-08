@@ -20,7 +20,7 @@ main(){
     # }}}
 
     # disable XV rendering if we cannot use it
-    if [ "$(which xvinfo)" ] ; then
+    if [[ -x "$(which xvinfo)" ]] ; then
         if xvinfo | grep -qs "screen #" && xvinfo | grep -qs "no adaptors present" ; then
             touch "$HOME/.mplayer/gui.conf" "$HOME/.mplayer/config"
 
@@ -42,8 +42,22 @@ main(){
             else
                 echo "zoom=yes" >> "$HOME/.mplayer/config"
             fi
+
+            sed -i -e 's|^driver\\vo.*|driver\\vo=x11|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
+        fi
+    else
+        el_warning "no XV info found (xvinfo command)"
+    fi
+
+    # vaapi opitmized rendering?
+    if [[ -x "$(which vainfo )" ]] ; then
+        if LC_ALL=C vainfo | grep -qs "vainfo: Driver version: " ; then
+            sed -i -e 's|^driver\\vo.*|driver\\vo=vaapi|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
+            # depends on mpv
+            sed -i -e 's|^mplayer_bin=.*|mplayer_bin=mpv|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
         fi
     fi
+
 
     # change conky network configuration
     if [[ -e "$HOME/.conkyrc" ]] ; then

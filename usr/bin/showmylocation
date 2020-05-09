@@ -95,9 +95,13 @@ main(){
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
+        if [[ -n "$data" ]] && \
+            { [[ "$data" = *atitude* ]] || [[ "$data" = *"<lat>"* ]] ; } && \
+            { [[ "$data" = *"ountryCode"* ]] || [[ "$data" = *"ountrycode"* ]] ; } ; then
             is_data_valid=1
-            el_debug "using ip-api"
+            el_debug "using ip-api:\n$data"
+        else
+            el_debug "FAILED using ip-api"
         fi
     fi
 
@@ -111,9 +115,13 @@ main(){
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
+        if [[ -n "$data" ]] && \
+            { [[ "$data" = *atitude* ]] || [[ "$data" = *"<lat>"* ]] ; } && \
+            { [[ "$data" = *"ountryCode"* ]] || [[ "$data" = *"ountrycode"* ]] ; } ; then
             is_data_valid=1
-            el_debug "using geoplugin"
+            el_debug "using geoplugin:\n$data"
+        else
+            el_debug "FAILED using geoplugin"
         fi
     fi
 
@@ -126,9 +134,13 @@ main(){
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
+        if [[ -n "$data" ]] && \
+            { [[ "$data" = *atitude* ]] || [[ "$data" = *"<lat>"* ]] ; } && \
+            { [[ "$data" = *"ountryCode"* ]] || [[ "$data" = *"ountrycode"* ]] ; } ; then
             is_data_valid=1
-            el_debug "using ipapi"
+            el_debug "using ipapi.co:\n$data"
+        else
+            el_debug "FAILED using ipapi.co"
         fi
     fi
 
@@ -143,9 +155,13 @@ main(){
 
 
         ## verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
+        if [[ -n "$data" ]] && \
+            { [[ "$data" = *atitude* ]] || [[ "$data" = *"<lat>"* ]] ; } && \
+            { [[ "$data" = *"ountryCode"* ]] || [[ "$data" = *"ountrycode"* ]] ; } ; then
             is_data_valid=1
-            el_debug "using freegeoip"
+            el_debug "using freegeoip.app:\n$data"
+        else
+            el_debug "FAILED using freegeoip.app"
         fi
     fi
 
@@ -169,148 +185,123 @@ main(){
     #fi
 
 
-
     if ((is_data_valid)) ; then
         # show the ip, always good to have
         if [[ -n "$ip" ]] ; then
             echo "ip::$ip"
         fi
 
+        # disable case sensitive matchings:
+        shopt -s nocasematch
+
         while read -ru 3 line
         do
             # filter/remove some useless stuff
             line="${line//geoplugin_/}"
 
+            el_debug "parsing $line"
+
             case "$line" in
-                \<latitude\>*)
-                    line="${line#<latitude>}"
-                    line="${line%</latitude>}"
+                \<latitude\>*|\<lat\>*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "latitude::$line"
-                ;;
-                \<Latitude\>*)
-                    line="${line#<Latitude>}"
-                    line="${line%</Latitude>}"
-
-                    echo "latitude::$line"
-                ;;
-                \<longitude\>*)
-                    line="${line#<longitude>}"
-                    line="${line%</longitude>}"
+                    ;;
+                \<longitude\>*|\<lon\>*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "longitude::$line"
-                ;;
-                \<Longitude\>*)
-                    line="${line#<Longitude>}"
-                    line="${line%</Longitude>}"
-
-                    echo "longitude::$line"
-                ;;
-                \<continent_code\>*)
-                    line="${line#<continent_code>}"
-                    line="${line%</continent_code>}"
+                    ;;
+                \<continentcode*|\<continent_code*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "continent_code::$line"
-                ;;
-                \<continent_name\>*)
-                    line="${line#<continent_name>}"
-                    line="${line%</continent_name>}"
+                    ;;
+                \<continentname*|\<continent_name*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "continent_name::$line"
-                ;;
-                \<countryCode\>*)
-                    line="${line#<countryCode>}"
-                    line="${line%</countryCode>}"
+                    ;;
+                \<countrycode*|\<country_code*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "country_code::$line"
-                ;;
-                \<CountryCode\>*)
-                    line="${line#<CountryCode>}"
-                    line="${line%</CountryCode>}"
-
-                    echo "country_code::$line"
-                ;;
-                \<country_code_iso3166alpha2\>*)
-                    line="${line#<country_code_iso3166alpha2>}"
-                    line="${line%</country_code_iso3166alpha2>}"
-
-                    echo "country_code::$line"
-                ;;
-                \<countryName\>*)
-                    line="${line#<countryName>}"
-                    line="${line%</countryName>}"
+                    ;;
+                \<countryname*|\<country_name*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "country_name::$line"
-                ;;
-                \<CountryName\>*)
-                    line="${line#<CountryName>}"
-                    line="${line%</CountryName>}"
-
-                    echo "country_name::$line"
-                ;;
-                \<country_name\>*)
-                    line="${line#<country_name>}"
-                    line="${line%</country_name>}"
-
-                    echo "country_name::$line"
-                ;;
-                \<region_name\>*)
-                    line="${line#<region_name>}"
-                    line="${line%</region_name>}"
+                    is_get_countryname=1
+                    ;;
+                \<regionname*|\<region_name*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "region_name::$line"
-                ;;
-                \<regionName\>*)
-                    line="${line#<regionName>}"
-                    line="${line%</regionName>}"
+                    ;;
+                \<regioncode*|\<region_code*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "region_name::$line"
-                ;;
-                \<RegionName\>*)
-                    line="${line#<RegionName>}"
-                    line="${line%</RegionName>}"
-
-                    echo "region_name::$line"
-                ;;
-                \<region_code\>*)
-                    line="${line#<region_code>}"
-                    line="${line%</region_code>}"
-                    line="$( echo "$line" | tr -cd '[[:digit:]]' )"
-
-                    echo "region_code::$line"
-                ;;
-                \<regionCode\>*)
-                    line="${line#<regionCode>}"
-                    line="${line%</regionCode>}"
-
-                    echo "region_code::$line"
-                ;;
-                \<RegionCode\>*)
-                    line="${line#<RegionCode>}"
-                    line="${line%</RegionCode>}"
-
-                    echo "region_code::$line"
-                ;;
+                    ;;
                 \<city\>*)
-                    line="${line#<city>}"
-                    line="${line%</city>}"
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "city_name::$line"
-                ;;
-                \<City\>*)
-                    line="${line#<City>}"
-                    line="${line%</City>}"
-
-                    echo "city_name::$line"
-                ;;
+                    ;;
                 \<isp\>*)
-                    line="${line#<isp>}"
-                    line="${line%</isp>}"
+                    line="${line%</*>}"
+                    line="${line#<*>}"
 
                     echo "isp_provider_name::$line"
-                ;;
+                    ;;
+                \<zip\>*|\<zipcode\>*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
+
+                    echo "zip_code::$line"
+                    ;;
+                \<timezone\>*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
+
+                    echo "timezone::$line"
+                    ;;
+                \<ip\>*)
+                    line="${line%</*>}"
+                    line="${line#<*>}"
+
+                    echo "ip::$line"
+                    ;;
+                \<Country\>*)
+                    # special cases:
+                    if ! ((is_get_countryname)) ; then
+                        line="${line%</*>}"
+                        line="${line#<*>}"
+
+                        echo "country_name::$line"
+                    fi
+                    ;;
+                *"xml version"*|\<org\>*|\<*query\>*|\<status\>*|\<region\>*|\<as\>*|\<*geoPlugin\>*|\<request\>*|\<credit\>*|\<delay\>*|\<*areaCode\>*|\<*dmaCode\>*|\<inEU\>*|\<*VATrate\>*|\<locationaccuracyradius\>*|\<currency*|\<*response\>*|\<metrocode\>*)
+                    # ignore these values
+                    continue
+                    ;;
+                *)
+                    #simple reports:
+                    if [[ "$EL_DEBUG" -gt 2 ]] ; then
+                        NOREPORTS=1 el_warning "unknown value: $line"
+                    fi
+                    ;;
             esac
-        done 3<<< "$( echo "$data" | sed -e 's|><|>\n<|g' )" | sort -u
+        done 3<<< "$( echo "$data" | sed -e 's|></|> </|g' -e 's|><|>\n<|g' )" | sort -u
     fi
 
 }

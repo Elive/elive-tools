@@ -89,15 +89,15 @@ main(){
     # try with ipapi (fast)
     if ! ((is_data_valid)) ; then
         if [[ -n "$ip" ]] ; then
-            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ip-api.com/xml/$ip" )"
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "http://ip-api.com/xml/$ip" )"
         else
-            data="$( curl -L -s --max-time 12 -A "Mozilla" "https://ip-api.com/xml/" )"
+            data="$( curl -L -s --max-time 12 -A "Mozilla" "http://ip-api.com/xml/" )"
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
             is_data_valid=1
-            el_debug "using ipapi"
+            el_debug "using ip-api"
         fi
     fi
 
@@ -111,7 +111,7 @@ main(){
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
             is_data_valid=1
             el_debug "using geoplugin"
         fi
@@ -126,7 +126,7 @@ main(){
         fi
 
         # verify
-        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] ; then
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
             is_data_valid=1
             el_debug "using ipapi"
         fi
@@ -143,7 +143,7 @@ main(){
 
 
         ## verify
-        if echo "$data" | grep -qs "atitude>[[:digit:]]</" ; then
+        if [[ -n "$data" ]] && [[ "$data" = *atitude* ]] && { [[ "$data" = "ountryCode" ]] || [[ "$data" = "ountrycode" ]] ; } ; then
             is_data_valid=1
             el_debug "using freegeoip"
         fi

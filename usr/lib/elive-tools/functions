@@ -82,7 +82,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export XAUTHORITY
     fi
 
-    if ((is_terminal)) && [[ "$UID" != 0 ]] ; then
+    if ((is_terminal)) && [[ "$UID" != 0 ]] && [[ -z "$SSH_CONNECTION" ]] ; then
         # only show the error if we have a graphical system running by the user
         if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
             if [[ -z "${DISPLAY}" ]] ; then

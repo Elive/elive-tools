@@ -1301,6 +1301,8 @@ do_cherry_pick_menu(){
 
             ;;
         c)
+            # TODO: improve this option, is not easy to find (far on the list, we need an option for "accepted merge" or similar, more intuitive)
+            # TODO: check the options, we don't want to write a message probably, do we also want to use the option -x ?
             if command git cherry-pick --continue ; then
                 # store actual position for future calls of this tool
                 echo "$commit_id" > "$conf_commit_last_f"
@@ -1320,6 +1322,8 @@ do_cherry_pick_menu(){
             fi
             ;;
         m)
+            # FIXME: my confs has been updated for BUSTER, this code needs to be updated and we need to add a detector of conf, that we will also add an auto conf creator for it (and so ignoring the 'h)' option)
+            # TODO: add an explanation of what is for each tab, you can found this info in my .gitconfig file
             if grep -qs "mergetool.*meld-auto" "$HOME/.gitconfig" ; then
                 command git mergetool -t meld-auto
                 # mergetool can success or not, so ask again what to do
@@ -1374,6 +1378,11 @@ cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE 
 #cmd = meld $LOCAL $BASE $REMOTE -o $MERGED --diff $BASE $LOCAL --diff $BASE $REMOTE
 EOF
 
+            echo -e "\nPress Enter to continue..." 1>&2
+            read nothing
+
+            # return to menu
+            $FUNCNAME
 
             ;;
         l)

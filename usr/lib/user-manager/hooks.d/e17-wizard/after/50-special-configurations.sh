@@ -19,6 +19,10 @@ main(){
 
     # }}}
 
+    RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
+    RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
+    RAM_TOTAL_SIZE_mb="${RAM_TOTAL_SIZE_mb%.*}"
+
     # disable XV rendering if we cannot use it
     if [[ -x "$(which xvinfo)" ]] ; then
         if xvinfo | grep -qs "screen #" && xvinfo | grep -qs "no adaptors present" ; then
@@ -79,6 +83,12 @@ main(){
                 #fi
                 sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
             fi
+        fi
+
+        # change interval if computer is slow
+        if [[ "$RAM_TOTAL_SIZE_mb" -lt 2300 ]] ; then
+            # reduce time interval
+            sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
         fi
     fi
 

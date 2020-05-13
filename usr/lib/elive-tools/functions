@@ -3065,8 +3065,10 @@ el_architecture(){
     # pre {{{
     local arg arch file
 
-    arg="$1"
-    shift
+    if [[ -n "$1" ]] ; then
+        arg="$1"
+        shift
+    fi
 
     if [[ -n "$1" ]] ; then
         file="$1"
@@ -3098,7 +3100,7 @@ el_architecture(){
         x86-64|x86_64|amd64|64bit)
             arch="amd64"
             ;;
-        *80386|i386)
+        *80386|i386|i486|i586|i686)
             arch="i386"
             ;;
     esac

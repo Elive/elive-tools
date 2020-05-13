@@ -71,6 +71,11 @@ main(){
                 is_mode_temp_profile=1
                 shift
                 ;;
+            --delay=*)
+                delayed_seconds="${arg#--delay=}"
+                is_delayed=1
+                el_debug "delayed ${delayed_seconds} seconds"
+                ;;
             --*)
                 el_warning "ignoring unrecognized option $arg"
                 shift
@@ -239,6 +244,10 @@ main(){
     # run the webs
     for url in "${urls[@]}"
     do
+        if ((is_delayed)) ; then
+            LC_ALL=C sleep $delayed_seconds
+        fi
+
         ${browser} ${browser_options[@]} ${preurl}"${url}" &
 
         # don't bottleneck opening tabs

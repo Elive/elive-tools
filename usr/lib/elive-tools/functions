@@ -3369,6 +3369,10 @@ if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
     fi
 fi
 
+if [[ -z "$USER" ]] ; then
+    export USER="$(id -un)"
+fi
+
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
 if LC_ALL=C grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then

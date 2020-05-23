@@ -61,6 +61,10 @@ get_meter(){
         el_check_variables "list"
     fi
 
+    if [[ -z "$list" ]] ; then
+        list="$( amixer scontrols )"
+    fi
+
     if [[ -z "$meter" ]] ; then
         if [[ "$list" = *"'PCM'"* ]] ; then
             meter=PCM

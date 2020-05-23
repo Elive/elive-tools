@@ -18,6 +18,24 @@ not_supported(){
     el_warning "mimetype '$mime' not implemented for '$file'\nls -la: $(ls -la "$file" )\nfile --mime-type: $(file --mime-type "$file")"
 }
 
+run_dmg(){
+    local message_dmg
+    message_dmg="$( printf "$( eval_gettext "DMG files belongs to MacOS systems. You cannot use them in Linux, but we can open them in Elive so you can get its contents. Do you want to extract them now?" )" "" )"
+
+    if $guitool --question --text="$message_dmg" ; then
+        filename="$( basename "$file" )"
+
+        if ! el_dependencies_check "7z" ; then
+            el_dependencies_install "p7zip-full"
+        fi
+
+        mkdir "$(basename $file).EXTRACTED"
+        cd "$(basename $file).EXTRACTED"
+
+        7z x "../${file}"
+    fi
+}
+
 run_edje(){
     local file
     file="$1"
@@ -33,7 +51,7 @@ run_edje(){
 
     # uncompatible edje file
     if ((is_e_invalid)) ; then
-        zenity --error --text="$( eval_gettext "This Edje file doesn't looks to be compatible or having a known usage. Make sure that you are using a version compatible for Enlightenment 17" )"
+        $guitool --error --text="$( eval_gettext "This Edje file doesn't looks to be compatible or having a known usage. Make sure that you are using a version compatible for Enlightenment 17" )"
         return
     fi
 
@@ -42,7 +60,7 @@ run_edje(){
         # show a preview
         $precmd edje_player "$file"
 
-        if zenity --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
             $precmd enlightenment_remote -desktop-bg-add-set "$file"
         fi
 
@@ -51,11 +69,11 @@ run_edje(){
 
     # full E theme
     if ((is_e_theme)) ; then
-        if zenity --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
+        if $guitools --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
             $precmd cp -f "$file" "$HOME/.e/e17/themes/"
             # update: seems like it doesn't works?
             #enlightenment_remote -theme-set
-            zenity --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may be not always fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
+            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may be not always fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
 
         fi
 
@@ -63,7 +81,7 @@ run_edje(){
     fi
 
     # still here? implement it
-    zenity --warning --text="$( eval_gettext "Seems like you are trying to run an edje file but we don't know how to use it. report this to the Elive BTS" )"
+    $guitool --warning --text="$( eval_gettext "Seems like you are trying to run an edje file but we don't know how to use it. report this to the Elive BTS" )"
 }
 
 run_script(){
@@ -80,7 +98,7 @@ run_script(){
 
     # nvidia installer?
     if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
-        if zenity --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the nvidia drivers, do you want to run it instead of the official nvidia installer?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the nvidia drivers, do you want to run it instead of the official nvidia installer?" )" ; then
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
             else
@@ -93,28 +111,28 @@ run_script(){
     fi
 
     # warn user
-    if ! zenity --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source. Continue?" )" ; then
+    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source. Continue?" )" ; then
         return
     fi
 
     #el_config_get "is_user_warned_root"
     #if ! ((is_user_warned_root)) ; then
-        #zenity --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if is the case you need to right-click in the filemanager to enter in admin mode, then running the file from this new session." )"
+        #$guitool --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if is the case you need to right-click in the filemanager to enter in admin mode, then running the file from this new session." )"
         #is_user_warned_root=1
         #el_config_save "conf_is_user_warned_root"
     #fi
 
     if ! [[ "$UID" = 0 ]] ; then
-        if zenity --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver in your system. We suggest to first try to run the file without the administrator privileges." )" ; then
+        if $guitool --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver in your system. We suggest to first try to run the file without the administrator privileges." )" ; then
             is_root_wanted=1
         fi
     fi
 
     if ! test -x "$file" ; then
-        if zenity --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
             $precmd chmod +x "$file"
         else
-            zenity --error --text="$( eval_gettext "If the file has no executable permissions we cannot run it. Exiting..." )"
+            $guitool --error --text="$( eval_gettext "If the file has no executable permissions we cannot run it. Exiting..." )"
             return 1
         fi
     fi
@@ -219,31 +237,27 @@ main(){
 
         # do not run empty mimes
         if ! [[ -n "$mime" ]] ; then
-            zenity --info --text="$( eval_gettext "This file doesn't have a mimetype assigned, we cannot run or open something that we don't know how it should be run. This file probably belongs to other purposes." )"
+            $guitool --info --text="$( eval_gettext "This file doesn't have a mimetype assigned, we cannot run or open something that we don't know how it should be run. This file probably belongs to other purposes." )"
             exit
         fi
 
+        # always do things from the dir itself
+        cd "$dirname"
 
         # parse and run
         case "$mime" in
             "text/x-shellscript"|"application/x-executable")
                 run_script "user" "$file"
                 ;;
-            "text/x-ruby")
+            "text/x-ruby"|"text/x-perl"|"text/x-awk"|"text/x-python")
                 run_script "user" "$file"
                 ;;
-            "text/x-perl")
-                run_script "user" "$file"
-                ;;
-            "text/x-awk")
-                #not_supported "$mime"
-                run_script "user" "$file"
-                ;;
-            "text/x-python")
-                run_script "user" "$file"
+            "application/zlib")
+                if echo "$filename" | grep -qsi "\.dmg$" ; then
+                    run_dmg "user" "$file"
+                fi
                 ;;
             "text/x-makefile")
-                cd "$dirname"
 
                 if [[ -x "$( which urxvt )" ]] ; then
                     $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""

@@ -213,10 +213,16 @@ get_meter(){
 #===============================================================================
 get_volume(){
     # pre {{{
+    local volume
     #el_debug
     #el_security_function_loop || return
     if ((is_pulseaudio)) ; then
-        pulsemixer --get-volume | awk '{print $1}'
+        volume="$( pulsemixer --get-volume | awk '{print $1}' )"
+        if [[ -n "$volume" ]] ; then
+            echo "$volume"
+        else
+            el_warning "unable to get actual volume with pulseaudio: $( pulsemixer --get-volume 2>&1 )"
+        fi
         return
     fi
 
@@ -230,12 +236,17 @@ get_volume(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1
+        volume="$( LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
     else
         # mono
-        LC_ALL="$EL_LC_EN" amixer get "${meter}" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1
+        volume="$( LC_ALL="$EL_LC_EN" amixer get "${meter}" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
     fi
 
+    if [[ -n "$volume" ]] ; then
+        echo "$volume"
+    else
+        el_warning "unable to get actual volume with alsa: $( amixer get "$meter" 2>&1 )"
+    fi
 }
 #===  FUNCTION  ================================================================
 #          NAME:  set_volume
@@ -293,7 +304,7 @@ mute_modes_force(){
     # get actual volume
     volume_actual="$( get_volume )"
     if [[ -z "$volume_actual" ]] ; then
-        el_warning "unable to get actual volume"
+        #el_warning "unable to get actual volume"
         exit
     fi
 

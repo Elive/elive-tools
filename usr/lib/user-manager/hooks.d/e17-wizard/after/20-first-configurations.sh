@@ -2,6 +2,12 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+source /etc/default/locale
+
 #el_make_environment
 # gettext not works here because we are on first page
 # set user home, so there's a bug
@@ -48,6 +54,11 @@ main(){
     fi
 
     # }}}
+
+    # tell the user that many popups are coming...
+    if ! grep -qs "boot=live" /proc/cmdline ; then
+        $guitool --info --text="$( eval_gettext "Before you start using your new desktop, we need to configure a few things to improve your final user experience..." )"
+    fi
 
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then

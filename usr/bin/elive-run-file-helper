@@ -32,7 +32,9 @@ run_dmg(){
         mkdir "$(basename $file).EXTRACTED"
         cd "$(basename $file).EXTRACTED"
 
-        7z x "../${file}"
+        7z x "../$( basename "${file}" )"
+        # open thunar/fm in actual director
+        xdg-open "$(pwd)"
     fi
 }
 
@@ -253,7 +255,7 @@ main(){
                 run_script "user" "$file"
                 ;;
             "application/zlib")
-                if echo "$filename" | grep -qsi "\.dmg$" ; then
+                if echo "$file" | grep -qsi "\.dmg$" ; then
                     run_dmg "user" "$file"
                 fi
                 ;;

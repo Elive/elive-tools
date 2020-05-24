@@ -332,7 +332,16 @@ user_add(){
         --field="$( eval_gettext "Grant admin, and never request password (not recommended)" ):CHK" "FALSE" \
         || echo cancel )"
 
-    [[ "$result" = "cancel" ]] && exit 1
+    if [[ "$result" = "cancel" ]] ; then
+        if ((is_force_request)) ; then
+            $guitool --warning --text="$( eval_gettext "You need to create a new user in order to continue." )"
+            # recursive
+            $FUNCNAME "$@"
+            return
+        else
+            exit 1
+        fi
+    fi
 
     username="$( echo "$result" | awk -v FS="|" '{print $3}' )"
     username_real="$( echo "$result" | awk -v FS="|" '{print $4}' )"
@@ -725,6 +734,10 @@ main(){
                 ;;
             --email=*)
                 user_email="${arg#--email=}"
+                shift
+                ;;
+            --force-request)
+                is_force_request=1
                 shift
                 ;;
         esac

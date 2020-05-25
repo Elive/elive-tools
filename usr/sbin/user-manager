@@ -470,6 +470,7 @@ user_add(){
 
     if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" 2>"$temp_error"  ; then
         $guitool --error --text="$( eval_gettext "Unable to create your user. Please try using english characters only" ). $(cat "$temp_error" | sed -e 's|useradd: ||g' )"
+        el_warning "Unable to create user: $(cat "$temp_error" )"
         return 1
     fi
 

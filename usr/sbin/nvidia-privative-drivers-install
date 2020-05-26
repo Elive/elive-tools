@@ -941,28 +941,33 @@ install_driver(){
     if ! find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
 
         clear ; echo
-        NOREPORTS=1 el_error "Driver compilation seems to have failed"
+        NOREPORTS=1 el_error "Driver compilation seems to have failed:\n$(find /lib/modules/ -type f -iname '*'nvidia'*'ko )"
         sleep 4
 
         local message_warning_install_failed
         message_warning_install_failed="$( printf "$( eval_gettext "The compilation of the driver seems to have failed. We suggest to reboot and try with a different kernel version on which it may compile, since its a common problem with the versions. Or check our forums for more help." )" "" )"
 
-        dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-            --title "WARNING" \
-            --msgbox "$message_warning_install_failed" \
-            0 0
+        if ! ((is_mode_auto)) ; then
+            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "WARNING" \
+                --msgbox "$message_warning_install_failed" \
+                0 0
+        fi
 
 
 
         if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-            echo -e "\n\n"
+            # if we are not in chroot:
+            if [ "$(stat -c %d/%i /)" != "$(stat -Lc %d/%i /proc/1/root 2>/dev/null)" ]; then
+                echo -e "\n\n"
 
-            if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
-                find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*'
-                el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
-                el_explain 0 "Type '__exit__' for continue..."
-                $SHELL -l
+                if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                    find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*'
+                    el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
+                    el_explain 0 "Type '__exit__' for continue..."
+                    $SHELL -l
 
+                fi
             fi
         fi
     fi

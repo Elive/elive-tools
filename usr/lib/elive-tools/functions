@@ -528,10 +528,39 @@ el_dependencies_install(){
 echo -e "Installing Dependencies"
 
 if [[ -x "\$( which urxvt )" ]] ; then
-    urxvt -T 'Installing Packages' -e bash -c "source /usr/lib/elive-tools/functions ; export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2 "
+    urxvt -T 'Installing Packages' -e bash -c "
+source /usr/lib/elive-tools/functions
+export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
+if ! apt-get install -y $depends ; then
+    el_aptget_update ; apt-get -f install ; echo ; echo
+fi
+if ! apt-get install -y $depends ; then
+    el_aptget_update force
+    if ! apt-get install -y $depends ; then
+        apt-get -f install ; el_aptget_update force ; apt-get install $depends
+    fi
+fi
+echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+"
+
+
 else
     if [[ -n "\$TERM" ]] ; then
-        su -c "source /usr/lib/elive-tools/functions ; export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; el_aptget_update ; apt-get -f install ; echo ; echo ; if ! apt-get install -y $depends ; then el_aptget_update force ; if ! apt-get install -y $depends ; then apt-get -f install ; el_aptget_update force ; apt-get install $depends ; fi ; fi ; echo ; echo ; echo ; echo ; echo 'All Done' " root
+        su -c "
+source /usr/lib/elive-tools/functions
+export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
+if ! apt-get install -y $depends ; then
+    el_aptget_update ; apt-get -f install ; echo ; echo
+fi
+if ! apt-get install -y $depends ; then
+    el_aptget_update force
+    if ! apt-get install -y $depends ; then
+        apt-get -f install ; el_aptget_update force ; apt-get install $depends
+    fi
+fi
+echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+" root
+
     else
         el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
         sleep 6

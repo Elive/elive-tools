@@ -563,6 +563,7 @@ main(){
 
     for item in "${partitions[@]}"
     do
+        [[ -z "${item}" ]] && continue || true
         echo -e "$item"
         ##echo -en "\t" ; file -Ls "$item"
     done

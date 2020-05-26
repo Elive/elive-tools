@@ -16,6 +16,9 @@ main(){
 
     if ! el_dependencies_check gksu ; then
         el_dependencies_install gksu
+        if ! el_dependencies_check gksu ; then
+            el_error "we depend on gksu but we cannot install gksu because requires gksu? hum..."
+        fi
     fi
 
     # }}}

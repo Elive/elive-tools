@@ -541,6 +541,7 @@ fi
 EOF
 
     chmod +x "${temp}"
+
     if [[ "$UID" = 0 ]] ; then
         bash "$temp"
     else
@@ -552,17 +553,15 @@ EOF
                     break
                 fi
             done
-    else
-        if ! el_dependencies_check gksu ; then
-            if [[ -x "$( which urxvt )" ]] ; then
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update' root"
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root"
-            else
-                if [[ -n "$TERM" ]] ; then
-                    # if we are in this condition maybe we are in a non-desktop install, so we don't want these things
-                    true
+        else
+            if ! el_dependencies_check gksu ; then
+                if [[ -x "$( which urxvt )" ]] ; then
+                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update' root"
+                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root"
                 else
-                    su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root
+                    if ((is_interactive)) ; then
+                        su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root
+                    fi
                 fi
             fi
         fi
@@ -571,12 +570,12 @@ EOF
         for i in 1 2 3
         do
             if [[ -x "$( which gksu )" ]] ; then
-            if gksu "$temp" ; then
-                is_password_ok=1
-                break
-            fi
+                if gksu "$temp" ; then
+                    is_password_ok=1
+                    break
+                fi
             else
-                if [[ -n "$TERM" ]] ; then
+                if ((is_interactive)) ; then
                     el_info "Installing Dependencies"
                     su -c "$temp" root
                 else
@@ -584,12 +583,12 @@ EOF
                 fi
             fi
         done
-        fi
-
-        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
-            timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
-        fi
     fi
+
+    #if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+        #timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
+    #fi
+
     rm -f "${temp}"
 
 }

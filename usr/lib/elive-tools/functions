@@ -2313,7 +2313,10 @@ el_report_to_elive(){
     # pre {{{
     # NOREPORTS means that we don't want reports in a forced way, so exit
     if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
-        return
+        # only if we dont want to report specifically something (like: main tool don't send reports, which calls a subcommand with reports, so the first one has the variable exported and we don't want it to affect to us)
+        if ! ((REPORTS)) && ! ((FORCE_REPORTS)) ; then
+            return
+        fi
     fi
 
     local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra
@@ -2325,35 +2328,38 @@ el_report_to_elive(){
 
     messages_extra=""
 
-    if ((REPORTS)) || ((FORCE_REPORTS)) ; then
-        # always send reports when REPORTS is set, its deprecated so:
-        # or if we want forced reports to a subcommand or similar
-        true
-        # XXX temporal code to cleanup old code:
-        messages_extra=" ||| tool '$SOURCE' still uses REPORTS which is DEPRECATED, so we force it, ${messages_extra}"
-    else
-        if ((EL_REPORTS)) ; then
-            # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
-            if ! [[ -s "/etc/elive-version" ]] ; then
-                return
-            fi
-            # make sure its not a modified version of Elive, so we don't want to receive reports from other things
-            if grep -qs "machine-id: " /etc/elive-version ; then
-                if grep -qs "fingerprint: " /etc/elive-version ; then
-                    fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
-                    if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
-                        return
-                    fi
-                else
+    if ((EL_REPORTS)) ; then
+        # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
+        if ! [[ -s "/etc/elive-version" ]] ; then
+            return
+        fi
+        # make sure its not a modified version of Elive, so we don't want to receive reports from other things
+        if grep -qs "machine-id: " /etc/elive-version ; then
+            if grep -qs "fingerprint: " /etc/elive-version ; then
+                fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
+                if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
                     return
                 fi
             else
                 return
             fi
-            # same for specific versions of Elive
-            if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
-                return
-            fi
+        else
+            return
+        fi
+        # same for specific versions of Elive
+        if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
+            return
+        fi
+    else
+        # old code or forced mode:
+        if ((REPORTS)) || ((FORCE_REPORTS)) ; then
+            # always send reports when REPORTS is set
+            # useful for calling subcommands with REPORTS set from a main tool without reports
+            true
+        else
+            # this case means: EL_REPORTS is not set (we dont want reports), and we are not using the old code OR forcing it, so exit because we simply don't want reports...
+            # TODO: after 3.8.13 or more, move this REPORTS part to the fingerprint check
+            return
         fi
     fi
 
@@ -2362,7 +2368,7 @@ el_report_to_elive(){
     fi
 
     if [[ -n "$REPORTS" ]] && [[ -z "$EL_REPORTS" ]] ; then
-        messages_extra=" ||| tool '$SOURCE' still uses the REPORTS DEPRECATED code, update it ${messages_extra}"
+        messages_extra=" ||| tool '$SOURCE' still uses the REPORTS DEPRECATED CODE, UPDATE IT ${messages_extra}"
     fi
 
     if ((is_interactive)) ; then

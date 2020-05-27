@@ -2320,31 +2320,51 @@ el_report_to_elive(){
 
     messages_extra=""
 
-    # TODO: in the future, move to a variable EL_REPORTS instead, if is set, send reports (so we can set it to only our specific things that we want to debug, instead of everything... otherwise this can be a problem for normal users or even myself trying to use el_error for my own things
-    # TODO: or we can instead just call this function in parts of  the code where we want to report things (but will not have fancy colors unless we pass another parameter for 'importancy', so the generator of E: W: etc.. will deal it and put colors)
-    #if ! [[ "$EL_REPORTS" = "yes" ]] ; then
-        #return
-    #fi
-    if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
-        return
-    fi
+    if ((REPORTS)) || ((FORCE_REPORTS)) ; then
+        # always send reports when REPORTS is set, its deprecated so:
+        messages_extra=" ||| tool '$SOURCE' still uses REPORTS which is DEPRECATED, so we force it, ${messages_extra}"
+    else
+        if [[ "$EL_REPORTS" = "yes" ]] ; then
+            # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
+            if ! [[ -s "/etc/elive-version" ]] ; then
+                return
+            fi
+            # make sure its not a modified version of Elive, so we don't want to receive reports from other things
+            if grep -qs "machine-id: " /etc/elive-version ; then
+                if grep -qs "fingerprint: " /etc/elive-version ; then
+                    fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
+                    if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
+                        return
+                    fi
+                else
+                    return
+                fi
+            else
+                return
+            fi
+            # same for specific versions of Elive
+            if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
+                return
+            fi
 
-    # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
-    if ! [[ -s "/etc/elive-version" ]] ; then
-        return
-    fi
-    # same for specific versions of Elive
-    if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
-        return
+        else
+            # this is also deprecated code, so don't use it:
+            if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
+                return
+                messages_extra=" ||| tool '$SOURCE' still uses NOREPORTS or NOREPORT or NO_ELIVETOOLS_REPORTS which is DEPRECATED and in fact useless, remove it ${messages_extra}"
+            else
+                # if EL_REPORTS is not set to yes, always exit
+                return
+            fi
+        fi
     fi
 
     if ! [[ -x "$(which nc 2>/dev/null)" ]] ; then
         return
     fi
 
-    # TODO: remove in the future when the implementation is ready, so everything that has not REPORTS=1 should be ignored
-    if [[ -z "$REPORTS" ]] ; then
-        messages_extra=" ||| tool '$SOURCE' has not REPORTS variable set, yet, you should set it ${messages_extra}"
+    if [[ -n "$REPORTS" ]] && [[ -z "$EL_REPORTS" ]] ; then
+        messages_extra=" ||| tool '$SOURCE' still uses the REPORTS DEPRECATED code, update it ${messages_extra}"
     fi
 
     if ((is_interactive)) ; then
@@ -2353,38 +2373,44 @@ el_report_to_elive(){
         messages_extra=" ||| is_interactive '${is_interactive}', (example of only-tools (no-interactive) report)"
     fi
 
-    # TODO: enable in the future:
-    #if ! ((REPORTS)) ; then
-        #return
-    #fi
-
 
     # at least one month old, we can parse the results from the server to show only recent ones too
-    if el_check_version_development 1>/dev/null 2>&1 ; then
-        # ignore reports for more than X days old
-        # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
-        if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
-            if ! el_check_version_development_is_days_recent 7 ; then
+    if ((FORCE_REPORTS)) ; then
+        if el_check_version_development 1>/dev/null 2>&1 ; then
+            if ! el_check_version_development_is_days_recent 60 ; then
                 return
             fi
         else
-            if ! el_check_version_development_is_days_recent 14 ; then
+            if ! el_check_version_is_days_recent 60 ; then
                 return
             fi
         fi
     else
-        # stable versions will need more time
-        if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
-            if ! el_check_version_is_days_recent 14 ; then
-                return
+        if el_check_version_development 1>/dev/null 2>&1 ; then
+            # ignore reports for more than X days old
+            # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
+            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+                if ! el_check_version_development_is_days_recent 7 ; then
+                    return
+                fi
+            else
+                if ! el_check_version_development_is_days_recent 14 ; then
+                    return
+                fi
             fi
         else
-            if ! el_check_version_is_days_recent 31 ; then
-                return
+            # stable versions will need more time
+            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+                if ! el_check_version_is_days_recent 14 ; then
+                    return
+                fi
+            else
+                if ! el_check_version_is_days_recent 31 ; then
+                    return
+                fi
             fi
         fi
     fi
-
 
     # accept a max number of reports to send {{{
     conf_counter_reports_sent=0
@@ -2460,7 +2486,9 @@ el_report_to_elive(){
 
     # user don't wants to report, so ignore it
     if [[ "$conf_send_debug_reports" = "no" ]] || [[ -z "$conf_send_debug_reports" ]] ; then
-        return
+        if ! ((FORCE_REPORTS)) ; then
+            return
+        fi
     fi
 
     # protocol 1.0 values (in order):

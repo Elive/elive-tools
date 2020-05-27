@@ -2311,6 +2311,11 @@ el_step_requires_fixme(){
 #===============================================================================
 el_report_to_elive(){
     # pre {{{
+    # NOREPORTS means that we don't want reports in a forced way, so exit
+    if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
+        return
+    fi
+
     local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra
     el_security_function_loop || return
     # max 5 reports per tool
@@ -2322,9 +2327,12 @@ el_report_to_elive(){
 
     if ((REPORTS)) || ((FORCE_REPORTS)) ; then
         # always send reports when REPORTS is set, its deprecated so:
+        # or if we want forced reports to a subcommand or similar
+        true
+        # XXX temporal code to cleanup old code:
         messages_extra=" ||| tool '$SOURCE' still uses REPORTS which is DEPRECATED, so we force it, ${messages_extra}"
     else
-        if [[ "$EL_REPORTS" = "yes" ]] ; then
+        if ((EL_REPORTS)) ; then
             # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
             if ! [[ -s "/etc/elive-version" ]] ; then
                 return
@@ -2344,16 +2352,6 @@ el_report_to_elive(){
             fi
             # same for specific versions of Elive
             if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
-                return
-            fi
-
-        else
-            # this is also deprecated code, so don't use it:
-            if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
-                return
-                messages_extra=" ||| tool '$SOURCE' still uses NOREPORTS or NOREPORT or NO_ELIVETOOLS_REPORTS which is DEPRECATED and in fact useless, remove it ${messages_extra}"
-            else
-                # if EL_REPORTS is not set to yes, always exit
                 return
             fi
         fi

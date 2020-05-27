@@ -1,7 +1,7 @@
 #!/bin/bash
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
-REPORTS="1"
+EL_REPORTS="1"
 
 # include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
 if [[ "$PATH" != *"/usr/sbin"* ]] ; then

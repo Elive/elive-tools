@@ -113,6 +113,11 @@ main(){
         exit 0
     fi
 
+    if [[ "$( du -s "/etc/NetworkManager/system-connections" | awk '{print $1}' )" -gt 10240 ]] ; then
+        el_debug "network configurations are more than 10MB, ignoring them for backuping..."
+        exit 0
+    fi
+
     mkdir -p /boot/etc/NetworkManager/system-connections
     if [[ -x "$( which rsync )" ]] ; then
         rsync -av --delete /etc/NetworkManager/system-connections/ /boot/etc/NetworkManager/system-connections/

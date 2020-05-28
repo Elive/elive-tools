@@ -518,6 +518,12 @@ user_add(){
         sudoers_user_apt "del" "$username"
     fi
 
+    # import gnupg keys
+    if [[ -d "/usr/share/elive-security" ]] ; then
+        su -c "gpg --import /usr/share/elive-security/*.asc" "$username"
+    fi
+
+
     # fingerprint support
     if grep -qsi "fingerprint" /proc/bus/input/devices || lsusb | grep -qsi "Upek" ; then
         $guitool --info --text="$( eval_gettext "Your computer has a fingerprint reader, check the Elive howtos to know how to enable the login using your fingerprint." )" || true

@@ -521,6 +521,8 @@ user_add(){
     # import gnupg keys
     if [[ -d "/usr/share/elive-security" ]] ; then
         su -c "gpg --import /usr/share/elive-security/*.asc" "$username"
+        su -c "gpg --import-ownertrust /usr/share/elive-security/otrust.txt" "$username"
+        su -c "gpg --update-trustdb" "$username"
     fi
 
 

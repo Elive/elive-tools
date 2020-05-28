@@ -57,7 +57,7 @@ main(){
 
     # tell the user that many popups are coming...
     if ! grep -qs "boot=live" /proc/cmdline ; then
-        $guitool --info --text="$( eval_gettext "Before you start using your new desktop, we need to configure a few things to improve your final user experience..." )"
+        $guitool --info --text="$( eval_gettext "Before you start using your new desktop, we need to configure a few things to improve your user experience..." )"
     fi
 
     # if we are debugging give it a little pause to see what is going on

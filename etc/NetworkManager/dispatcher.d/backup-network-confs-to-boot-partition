@@ -1,0 +1,134 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+[[ -z $HOME ]] && export HOME="/home/$(id -un)"
+[[ -z $USER ]] && export USER="$(id -un)"
+
+. /lib/lsb/init-functions
+
+# include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
+if [[ "$PATH" != *"/usr/sbin"* ]] ; then
+    # needed for: arp
+    export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
+fi
+
+
+# This tool is called as:   command eth1 up
+
+main(){
+    # pre {{{
+
+    # add a lock
+    LOCKFILE="/tmp/.${USER}-$(basename $0).lock"
+    # wait for process to finish first, if already running
+    if [[ -r $LOCKFILE ]] ; then
+        PROCESS=$(cat $LOCKFILE)
+
+        while ps -p $PROCESS >/dev/null 2>&1
+        do
+            #echo "$(basename $0) process is already running"
+            sleep 1
+        done
+    fi
+
+    rm -f $LOCKFILE
+    echo $$ > $LOCKFILE
+
+    _CMDLINE="$(cat /proc/cmdline)"
+
+    if LC_ALL=C echo "$_CMDLINE" | grep -qs "boot=live" ; then
+        exit 0
+    fi
+
+    # some values like no iface given should be directly exited
+    if [[ -z "$1" ]] ; then
+        exit
+    fi
+
+    case "$1" in
+        connectivity-change|none)
+            # whitelisted ignorings
+            exit
+            ;;
+        -f|--force)
+            is_force=1
+            needs_update_conf=1
+            # this is an ugly hack, iface is the first paramter but if we call the tool from cli it is "-f" instead
+            #unset iface
+            ;;
+        -c|--clean)
+            mode_clean=1
+            unset iface
+            ;;
+        wlan*|ath*|ra*|w*)
+            is_wifi=1
+            ;;
+        eth*|enp*|e*)
+            is_lan=1
+            ;;
+        *)
+            el_warning "unknown parameters (iface?) for $0: $@"
+            ;;
+    esac
+
+    iface="$1"
+    shift
+    state="$1"
+    shift
+
+    read -r iface <<< "$iface"
+    read -r state <<< "$state"
+
+    # debug parameters:
+    #echo "D: $@ ($iface - $state) "
+
+
+    # checks
+    # set some variables for compatibility specially if we run it from commandline
+    if [[ -z "$state" ]] ; then
+        #state="up"
+        exit
+    fi
+
+    case "$state" in
+        up)
+            true
+            ;;
+        down)
+            exit
+            ;;
+        *)
+            # nothing useful to do when we disconnect
+            #echo -e "Nothing to do..."
+            el_warning "unknown state for $0: $state"
+            exit
+            ;;
+    esac
+
+
+
+    # }}}
+
+    if ! grep -qs "/boot" /etc/fstab || ! grep -qs "/boot" /proc/mounts ; then
+        el_debug "ignoring backup of network confs in /boot since its not an extra partition"
+        exit 0
+    fi
+
+    mkdir -p /boot/etc/NetworkManager/system-connections
+    if [[ -x "$( which rsync )" ]] ; then
+        rsync -av --delete /etc/NetworkManager/system-connections/ /boot/etc/NetworkManager/system-connections/
+    else
+        rm -rf /boot/etc/NetworkManager/system-connections
+        cp -a /etc/NetworkManager/system-connections/ /boot/etc/NetworkManager/
+    fi
+
+
+}
+
+#
+#  MAIN
+#
+
+main "$@"
+
+
+# vim: set foldmethod=marker :

@@ -73,11 +73,11 @@ check_driver(){
 check_hardware(){
     # pre {{{
     el_debug
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
 
     # we don't need to check if we have the hardware if we want to uninstall the driver
     if ((is_mode_uninstall)) ; then
-        return
+        return 0
     fi
 
     # }}}
@@ -138,7 +138,7 @@ detect_driver_version(){
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
         el_debug "Selected ${driver_version} version of drivers to use"
         _FGLRX_VERSION="$driver_version"
-        return
+        return 0
     fi
 
 

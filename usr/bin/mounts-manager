@@ -21,7 +21,7 @@ fi
 restart_daemons(){
     # pre {{{
     el_debug
-    el_security_function_loop 20 || return
+    el_security_function_loop 20 || return 0
 
     # }}}
     # restart daemons {{{
@@ -74,7 +74,7 @@ refresh_partition_table(){
     # pre {{{
     local dev
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     dev="$1"
     el_check_variables "dev"
@@ -97,7 +97,7 @@ chroot_layers_mount(){
     # pre {{{
     local dir id dirid mode is_mode_bind
     el_debug
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     dir="${1%%/}"
     dirid="${dir//\//%}"
@@ -120,7 +120,7 @@ chroot_layers_mount(){
 
     if el_flag check "chroot_layer_prepared_$dirid" ; then
         el_explain 3 "chroot layers already mounted"
-        return
+        return 0
     fi
 
     # create some needed dirs if they don't exist yet:
@@ -294,7 +294,7 @@ chroot_layers_umount(){
     # pre {{{
     local dir id dirid mode is_mode_bind
     el_debug
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     dir="${1%%/}"
     dirid="${dir//\//%}"
@@ -318,7 +318,7 @@ chroot_layers_umount(){
 
     if ! el_flag check "chroot_layer_prepared_$dirid" ; then
         el_explain 3 "chroot layers already umounted"
-        return
+        return 0
     fi
 
     # devpts
@@ -493,7 +493,7 @@ get_mountpoint(){
     # pre {{{
     local dev is_mounted mountpoint is_temporally_mounted filesystem
     el_debug
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     dev="$1"
     el_check_variables "dev"
@@ -628,7 +628,7 @@ get_mountpoint(){
 check_is_mounted(){
     # pre {{{
     local arg device mountpoint is_device is_mountpoint
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     arg="$1"
     el_check_variables "arg"
@@ -734,7 +734,7 @@ check_is_mounted(){
 el_umount(){
     # pre {{{
     local arg device mountpoint is_device is_mountpoint is_umounted
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     # }}}
     for arg in "$@"
@@ -989,7 +989,7 @@ el_umount(){
 el_mount(){
     # pre {{{
     local dev uuid filesystem devtype
-    el_security_function_loop 10 || return
+    el_security_function_loop 10 || return 0
 
     dev="$1"
     shift

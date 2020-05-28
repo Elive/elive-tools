@@ -14,7 +14,7 @@ main(){
     # e16
     if [[ -n "$EROOT" ]] ; then
         # nothing to do
-        return
+        return 0
     fi
 
     # e17

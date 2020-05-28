@@ -74,7 +74,7 @@ module_ecomorph_unload(){
     local module address
 
     if [[ -n "$EROOT" ]] ; then
-        return
+        return 0
     fi
 
     #module="$1"
@@ -92,7 +92,7 @@ module_ecomorph_unload(){
 
     # only bugs using more than one screen, so do not not unload if not needed
     if [[ "$screens_connected_number" -eq 1 ]] ; then
-        return
+        return 0
     fi
 
     if ! ((is_mode_previous_desktop)) ; then
@@ -210,7 +210,7 @@ configure_multiscreens(){
         el_config_save "conf_multiscreens_last"
         el_config_save "conf_multiscreens_last_autoload_wanted"
 
-        return
+        return 0
     fi
 
     # - configure }}}
@@ -373,7 +373,7 @@ load_multiscreens_configuration(){
                     fi
                     )
                     # nothing more to do
-                    return
+                    return 0
                 fi
             else
                 true

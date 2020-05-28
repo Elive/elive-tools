@@ -30,7 +30,7 @@ log_daemon_msg () {
         else
             /bin/echo -n "$1:" || true
         fi
-        return
+        return 0
     fi
 
     if [ -x /bin/plymouth ] && plymouth --ping ; then

@@ -356,7 +356,7 @@ user_add(){
             $guitool --warning --text="$( eval_gettext "You need to create a new user in order to continue." )"
             # recursive
             $FUNCNAME "$@"
-            return
+            return 0
         else
             exit 1
         fi
@@ -378,7 +378,7 @@ user_add(){
         $guitool --error --text="$( eval_gettext "Please fill all the needed information" )"
         # recursive
         $FUNCNAME "$@"
-        return
+        return 0
     fi
 
     # clean outside spaces
@@ -427,7 +427,7 @@ user_add(){
         $guitool --error --text="$( eval_gettext "Passwords should match, use the same one in both entries." )"
         # recursive
         $FUNCNAME "$@"
-        return
+        return 0
     fi
 
 

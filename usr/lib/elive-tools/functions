@@ -338,7 +338,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
 
 
-    # still in fast check ? return
+    # still in fast check ? return 0
     if [[ "${mode}" = "fast" ]] ; then
         return 1
     fi

@@ -123,11 +123,11 @@ load_driver(){
 check_hardware(){
     # pre {{{
     el_debug
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
 
     # we don't need to check if we have the hardware if we want to uninstall the driver
     if ((is_mode_uninstall)) ; then
-        return
+        return 0
     fi
 
     # }}}
@@ -190,7 +190,7 @@ detect_driver_version(){
         el_debug "Selected ${driver_version} version of drivers to use"
         _NVIDIA_VERSION="$driver_version"
         #_NVIDIA_MODULE="nvidia" # should be always this one in all the versions, or maybe not?
-        return
+        return 0
     fi
 
     if ! el_check_variables "_DEVICE" 1>/dev/null 2>&1 ; then
@@ -1086,7 +1086,7 @@ install_driver(){
 try_again(){
     # pre {{{
     if ((is_mode_auto)) ; then
-        return
+        return 0
     fi
 
     el_debug

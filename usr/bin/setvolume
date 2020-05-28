@@ -14,7 +14,7 @@ conf_volume_set(){
     local volume_actual
 
     if ((is_pulseaudio)) ; then
-        return
+        return 0
     fi
 
     if [[ -n "$1" ]] ; then
@@ -31,7 +31,7 @@ conf_volume_set(){
 }
 conf_volume_get(){
     if ((is_pulseaudio)) ; then
-        return
+        return 0
     fi
 
     # get volume from conf
@@ -54,7 +54,7 @@ conf_volume_get(){
 get_meter(){
     if ((is_pulseaudio)) ; then
         meter="PulseAudio"
-        return
+        return 0
     fi
 
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -215,7 +215,7 @@ get_volume(){
     # pre {{{
     local volume
     #el_debug
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
     if ((is_pulseaudio)) ; then
         volume="$( pulsemixer --get-volume | awk '{print $1}' )"
         if [[ -n "$volume" ]] ; then
@@ -223,7 +223,7 @@ get_volume(){
         else
             el_warning "unable to get actual volume with pulseaudio: $( pulsemixer --get-volume 2>&1 )"
         fi
-        return
+        return 0
     fi
 
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -258,7 +258,7 @@ set_volume(){
     # pre {{{
     local action
     #el_debug
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
 
     action="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -287,7 +287,7 @@ mute_modes_force(){
     # pre {{{
     local mode volume_before volume_actual
     #el_debug
-    #el_security_function_loop 8 || return
+    #el_security_function_loop 8 || return 0
 
     mode="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -392,7 +392,7 @@ get_mute_state(){
         echo $state_before
     fi
 
-    return
+    return 0
 }
 #===  FUNCTION  ================================================================
 #          NAME:  mute_modes
@@ -404,7 +404,7 @@ mute_modes(){
     # pre {{{
     local state_before state_after mode
     #el_debug
-    #el_security_function_loop 8 || return
+    #el_security_function_loop 8 || return 0
 
     mode="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
@@ -429,12 +429,12 @@ mute_modes(){
                     else
                         # failed to set, force
                         mute_modes_force unmute
-                        return
+                        return 0
                     fi
                 else
                     # we dont know about mute values for this channel/card, force
                     mute_modes_force unmute
-                    return
+                    return 0
                 fi
                 # force detect {{{
                 state_after="$( get_mute_state 2>/dev/null )"
@@ -443,7 +443,7 @@ mute_modes(){
                 if [[ "$state_after" = "off" ]] ; then
                     el_debug "mute has not changed, forcing it"
                     mute_modes_force unmute
-                    return
+                    return 0
                 fi
 
                 # - force detect }}}
@@ -462,12 +462,12 @@ mute_modes(){
                     else
                         # failed to set, force
                         mute_modes_force muteset
-                        return
+                        return 0
                     fi
                 else
                     # we dont know about mute values for this channel/card, force
                     mute_modes_force muteset
-                    return
+                    return 0
                 fi
                 # force detect {{{
                 state_after="$( get_mute_state 2>/dev/null )"
@@ -476,7 +476,7 @@ mute_modes(){
                 if [[ "$state_after" = "on" ]] ; then
                     el_debug "mute has not changed, forcing it"
                     mute_modes_force mute
-                    return
+                    return 0
                 fi
 
                 # - force detect }}}
@@ -497,7 +497,7 @@ mute_modes(){
                         else
                             # failed to set, force
                             mute_modes_force unmute
-                            return
+                            return 0
                         fi
                     fi
 
@@ -507,13 +507,13 @@ mute_modes(){
                         else
                             # failed to set, force
                             mute_modes_force muteset
-                            return
+                            return 0
                         fi
                     fi
                 else
                     # we dont know about mute values for this channel/card, force
                     mute_modes_force toggle
-                    return
+                    return 0
                 fi
                 # force detect {{{
                 state_after="$( get_mute_state 2>/dev/null )"
@@ -522,7 +522,7 @@ mute_modes(){
                 if [[ "$state_before" = "$state_after" ]] ; then
                     el_debug "mute has not changed, forcing it"
                     mute_modes_force toggle
-                    return
+                    return 0
                 fi
 
                 # - force detect }}}

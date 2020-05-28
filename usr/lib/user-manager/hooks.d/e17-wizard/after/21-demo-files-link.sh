@@ -11,7 +11,7 @@ demo_file_add_home(){
 
     # make sure that we have a correct input
     if [[ -z "$file" ]] || [[ -z "$target" ]] || [[ "$file" != */* ]] ; then
-        return
+        return 0
     fi
 
     # get some specific data
@@ -26,7 +26,7 @@ demo_file_add_home(){
     # if we are a dir, just create it
     if [[ -d "$from" ]] ; then
         mkdir -p "$target/$subdir"
-        return
+        return 0
     fi
 
 
@@ -36,7 +36,7 @@ demo_file_add_home(){
     fi
     if [[ ! -s "$from" ]] ; then
         el_warning "skipping $file, it seems to be empty or broken link"
-        return
+        return 0
     fi
 
 

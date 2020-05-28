@@ -13,7 +13,7 @@ export TEXTDOMAIN
 suggest_emodule_flag_keyboard(){
     # do not annoy with suggestions in live mode
     if grep -qs "boot=live" /proc/cmdline ; then
-        return
+        return 0
     fi
 
     local message_suggestion_flag
@@ -35,7 +35,7 @@ main(){
 
     # e16: skip
     if [[ "$EROOT" ]] ; then
-        return
+        return 0
     fi
 
     source /etc/default/locale

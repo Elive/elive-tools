@@ -22,7 +22,7 @@ main(){
 
     # already shown, ignore
     if el_flag check "composite-details" ; then
-        return
+        return 0
     fi
 
     # }}}

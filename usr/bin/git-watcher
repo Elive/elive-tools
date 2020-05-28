@@ -233,7 +233,7 @@ shared_messages_create(){
             read _entity
 
             if ! [[ -d "${shared_d}/$_entity" ]] ; then
-                return
+                return 0
             fi
         fi
 
@@ -330,11 +330,11 @@ Or without the -g option you can just read your capsules in any moment
 EOF
             ;;
         q|Q)
-            return
+            return 0
             ;;
         *)
             el_error "Unknown message type option, canceling"
-            return
+            return 0
             ;;
     esac
 
@@ -382,7 +382,7 @@ scan_travels(){
     el_debug
     if ! ((is_shared)) ; then
         el_explain 0 "Skipping scan for capsules, this watcher is not shared"
-        return
+        return 0
     fi
 
 
@@ -519,7 +519,7 @@ scan_marked_states(){
 
     # }}}
     if ! el_check_dir_has_files "${conf_repo_d}/ttc" 2>/dev/null ; then
-        return
+        return 0
     fi
 
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -788,7 +788,7 @@ go_to_commit(){
             commit_id="$_commit_id"
             unset is_traveling
 
-            return
+            return 0
         fi
     fi
 
@@ -895,7 +895,7 @@ travel_restore(){
 
     # we should not be here
     if ! ((is_traveling)) ; then
-        return
+        return 0
     fi
 
     if ! [[ -n "$_commit_id" ]] ; then
@@ -1151,7 +1151,7 @@ clear_screen(){
     #if [[ "$counter" -gt "$counter_total" ]] || [[ "$counter" -le 0 ]] ; then
         #el_debug "not clearing the screen"
         #echo -e "\n\n"
-        #return
+        #return 0
     #fi
 
     # }}}
@@ -1509,7 +1509,7 @@ options_main_interact(){
     local _counter_show
 
     if ((is_recount_position_needed)) ; then
-        return
+        return 0
     fi
     # }}}
     if [[ "${counter}" = "0" ]] ; then
@@ -1603,7 +1603,7 @@ options_main_interact(){
 
         n)  # Next commit
             #el_explain 0 "Saving last commit watched"
-            return
+            return 0
 
             ;;
         p)  # Prev commit
@@ -1614,7 +1614,7 @@ options_main_interact(){
 
             if ((is_traveling)) ; then
                 # so we return from who called it, which is go_to_commit
-                return
+                return 0
             fi
 
             # get the previous commit id
@@ -1638,7 +1638,7 @@ options_main_interact(){
 
             # go back to positioning loop
             is_recount_position_needed=1
-            return
+            return 0
 
 
             ;;
@@ -1664,7 +1664,7 @@ options_main_interact(){
 
                 # count to the actual jump
                 counter="$_n"
-                # always remove one, because we return
+                # always remove one, because we return 0
                 counter="$(( $counter + -1 ))"
 
                 # exit loop if no remaining commits
@@ -1678,7 +1678,7 @@ options_main_interact(){
 
                 # go back to positioning loop
                 is_recount_position_needed=1
-                return
+                return 0
             else
                 el_error "You need to insert a numeric value in the range of the watching commits"
                 sleep 2
@@ -1841,7 +1841,7 @@ options_main_interact(){
             echo -e "\n\n"
 
             # go to next commit
-            return
+            return 0
             ;;
 
         I)  # cherry-pick

@@ -723,7 +723,7 @@ get_filesystem_id(){
 
     #   if [ "$?" != "0" ]; then
     #      echo "auto"
-    #         return
+    #         return 0
     #      fi
 
     case "$ret" in

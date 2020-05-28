@@ -20,7 +20,7 @@ main(){
 
     text="$@"
     if [[ -z "$text" ]] ; then
-        return
+        return 0
     fi
     if ((NOVOICE)) || ((SILENT)) ; then
         #el_explain 2 "ignoring reproduction of voice because of an environment variable"

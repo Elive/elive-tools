@@ -17,7 +17,7 @@ fi
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # if we are in console (out of X) we should always exit
     if ((is_console)) ; then
-        return
+        return 0
     fi
 
     # from enlightenment values {{{
@@ -1184,7 +1184,7 @@ el_check_sudo_automated(){
 el_sudo(){
     # pre {{{
     local args
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     args="$@"
     el_check_variables "args"
@@ -1300,7 +1300,7 @@ el_elive_version_get(){
     # pre {{{
     local version
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     # }}}
     version="$( LC_ALL=C grep "^elive-version: " "/etc/elive-version" )"
@@ -1327,7 +1327,7 @@ el_check_version_is_days_recent(){
     # pre {{{
     local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     days_required="$1"
 
@@ -1394,7 +1394,7 @@ el_check_version_development_is_days_recent(){
     # pre {{{
     local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     days_required="$1"
 
@@ -1465,7 +1465,7 @@ el_check_version_development_is_days_recent(){
 #===============================================================================
 el_check_is_shell(){
     # pre {{{
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
 
     # }}}
     # check when in bash
@@ -1493,7 +1493,7 @@ el_check_is_shell(){
 el_explain(){
     # pre {{{
     if ! ((is_interactive)) ; then
-        return
+        return 0
     fi
 
     local funclevel spaced verbose_level message trace_message trace_col
@@ -1504,7 +1504,7 @@ el_explain(){
 
     # show only if we are on this verbose level
     if ! [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
-        return
+        return 0
     fi
 
     #spaced="$verbose_level"
@@ -1592,12 +1592,12 @@ el_explain(){
 el_debug(){
     # pre {{{
     if ! [[ "${EL_DEBUG}" -ge 3 ]] || ! ((is_interactive)) ; then
-        return
+        return 0
     fi
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
     # check if we have the variable set, because we need to use it (so this may not work in ZSH)
     if [[ -z "${BASH_SOURCE[@]}" ]] && ! el_check_is_shell ; then
-        return
+        return 0
     fi
 
     local count counter funcnames sourcenames arg sourcename message
@@ -1671,7 +1671,7 @@ el_debug(){
 el_info(){
     # pre {{{
     if ! ((is_interactive)) ; then
-        return
+        return 0
     fi
 
     local count counter funcnames sourcenames arg sourcename message
@@ -2071,7 +2071,7 @@ el_confirm(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_security_function_loop
 #   DESCRIPTION:  check for a possible infinite-loops, needs to be called as:
-#                 el_security_function_loop || return
+#                 el_security_function_loop || return 0
 #                 from every function of your scripts
 #    PARAMETERS:  $1 = number of recursivity's allowed
 #       RETURNS:  1 if found a loop, 0 if not
@@ -2315,12 +2315,12 @@ el_report_to_elive(){
     if [[ -n "$NOREPORTS" ]] || [[ -n "$NOREPORT" ]] || [[ -n "$NO_ELIVETOOLS_REPORTS" ]] ; then
         # only if we dont want to report specifically something (like: main tool don't send reports, which calls a subcommand with reports, so the first one has the variable exported and we don't want it to affect to us)
         if ! ((REPORTS)) && ! ((FORCE_REPORTS)) ; then
-            return
+            return 0
         fi
     fi
 
     local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra
-    el_security_function_loop || return
+    el_security_function_loop || return 0
     # max 5 reports per tool
     limit_reports_amount=6
     # min 4 hours passed if limit is reached to send more reports
@@ -2331,24 +2331,24 @@ el_report_to_elive(){
     if ((EL_REPORTS)) ; then
         # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
         if ! [[ -s "/etc/elive-version" ]] ; then
-            return
+            return 0
         fi
         # make sure its not a modified version of Elive, so we don't want to receive reports from other things
         if grep -qs "machine-id: " /etc/elive-version ; then
             if grep -qs "fingerprint: " /etc/elive-version ; then
                 fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
                 if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
-                    return
+                    return 0
                 fi
             else
-                return
+                return 0
             fi
         else
-            return
+            return 0
         fi
         # same for specific versions of Elive
         if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then
-            return
+            return 0
         fi
     else
         # old code or forced mode:
@@ -2359,12 +2359,12 @@ el_report_to_elive(){
         else
             # this case means: EL_REPORTS is not set (we dont want reports), and we are not using the old code OR forcing it, so exit because we simply don't want reports...
             # TODO: after 3.8.13 or more, move this REPORTS part to the fingerprint check
-            return
+            return 0
         fi
     fi
 
     if ! [[ -x "$(which nc 2>/dev/null)" ]] ; then
-        return
+        return 0
     fi
 
     if [[ -n "$REPORTS" ]] && [[ -z "$EL_REPORTS" ]] ; then
@@ -2382,11 +2382,11 @@ el_report_to_elive(){
     if ((FORCE_REPORTS)) ; then
         if el_check_version_development 1>/dev/null 2>&1 ; then
             if ! el_check_version_development_is_days_recent 60 ; then
-                return
+                return 0
             fi
         else
             if ! el_check_version_is_days_recent 60 ; then
-                return
+                return 0
             fi
         fi
     else
@@ -2395,22 +2395,22 @@ el_report_to_elive(){
             # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
             if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
                 if ! el_check_version_development_is_days_recent 7 ; then
-                    return
+                    return 0
                 fi
             else
                 if ! el_check_version_development_is_days_recent 14 ; then
-                    return
+                    return 0
                 fi
             fi
         else
             # stable versions will need more time
             if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
                 if ! el_check_version_is_days_recent 14 ; then
-                    return
+                    return 0
                 fi
             else
                 if ! el_check_version_is_days_recent 31 ; then
-                    return
+                    return 0
                 fi
             fi
         fi
@@ -2431,7 +2431,7 @@ el_report_to_elive(){
         fi
 
         if [[ "$conf_counter_reports_sent" -ge "$limit_reports_amount" ]] ; then
-            return
+            return 0
         fi
     fi
 
@@ -2444,7 +2444,7 @@ el_report_to_elive(){
     message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
 
     if [[ -z "$message" ]] || [[ -z "$message_stripped" ]] ; then
-        return
+        return 0
     fi
 
     if [[ -s "/etc/elive/settings" ]] ; then
@@ -2491,7 +2491,7 @@ el_report_to_elive(){
     # user don't wants to report, so ignore it
     if [[ "$conf_send_debug_reports" = "no" ]] || [[ -z "$conf_send_debug_reports" ]] ; then
         if ! ((FORCE_REPORTS)) ; then
-            return
+            return 0
         fi
     fi
 
@@ -2570,7 +2570,7 @@ el_mark_state(){
     # pre {{{
     # exit if not wanted
     if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
-        return
+        return 0
     fi
 
     local id state category action
@@ -2655,7 +2655,7 @@ el_mark_state(){
 el_flag(){
     # pre {{{
     local action name
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     action="${1}"
     name="${2}"
@@ -2707,7 +2707,7 @@ el_flag(){
 #===============================================================================
 el_add_on_exit(){
     if [[ -z "$1" ]] ; then
-        return
+        return 0
     fi
     local n=${#on_exit_items[*]}
     on_exit_items[$n]="$*"
@@ -2743,7 +2743,7 @@ el_request_report_bug(){
     # pre {{{
     local message url
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     message="$@"
     el_check_variables "message"
@@ -2776,7 +2776,7 @@ el_request_report_bug(){
 
     # - use el_report_to_elive }}}
     # we don't need anything more since the new tool # TODO: remove old code
-    return
+    return 0
 
     # task list sorted by created time
     #url='http://bugs.elivecd.org/index.php?do=index&project=2&project=2&do=index&order=dateopened&sort=desc'
@@ -2830,7 +2830,7 @@ el_processes_using_mountpoint(){
     # pre {{{
     local dir mode pid commands pids_mountpoint
     el_debug
-    el_security_function_loop || return
+    el_security_function_loop || return 0
 
     dir="$1"
     mode="$2"
@@ -2922,7 +2922,7 @@ el_request_donation(){
     local arg
 
     if ! [[ "${DISPLAY}" = ":0.0" ]] ; then
-        return
+        return 0
     fi
 
     # }}}
@@ -2967,12 +2967,12 @@ el_config_get(){
     # checks {{{
     if el_check_is_shell ; then
         el_debug "ignoring el_config_* because we are from a shell"
-        return
+        return 0
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
         el_debug "\$0 (source tool) should be set to access to its conf ID"
-        return
+        return 0
     fi
 
     # }}}
@@ -2998,12 +2998,12 @@ el_config_save(){
     # checks {{{
     if el_check_is_shell ; then
         el_debug "ignoring el_config_* because we are from a shell"
-        return
+        return 0
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
         el_debug "\$0 (source tool) should be set to access to its conf ID"
-        return
+        return 0
     fi
 
     # }}}
@@ -3014,12 +3014,12 @@ el_config_save(){
 
     if [[ -z "$@" ]] ; then
         el_warning "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
-        return
+        return 0
     fi
 
     if ! declare -p "$@" 1>/dev/null 2>&1 ; then
         el_warning "$FUNCNAME called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
-        return
+        return 0
     fi
 
     # create conf file
@@ -3073,12 +3073,12 @@ el_config_restart(){
     # checks {{{
     if el_check_is_shell ; then
         el_debug "ignoring el_config_* because we are from a shell"
-        return
+        return 0
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
         el_error "\$0 is not set"
-        return
+        return 0
     fi
 
     # }}}
@@ -3194,7 +3194,7 @@ el_get_machine_id(){
     # pre {{{
     local machine_id
     #el_debug
-    #el_security_function_loop || return
+    #el_security_function_loop || return 0
 
     if ! [[ "$UID" = 0 ]] ; then
         el_error "$FUNCNAME must be run with privileges"

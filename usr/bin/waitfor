@@ -38,8 +38,9 @@ main(){
 
     # watcher of the command, with space after the command, of course
     #while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "([[:digit:]] ${watcher} |[[:digit:]] ${watcher}$|[[:digit:]] .*bin/${watcher} |[[:digit:]] .*bin/${watcher}$)"
-    #while ps axk comm o comm,args | grep -qs "^${watcher}.*${watcher} "
-    while pidof -cxq "$watcher"
+    # warning: pidof doesn't shows process of everything, like "fstrim", no idea why it doesn't displays with pidof, hum!
+    #while pidof -cxq "$watcher"
+    while ps axk comm o comm,args | grep -qs "^${watcher}.*${watcher} "
     do
         if [[ "${counter}" -gt "60" ]] ; then
             minutes="$(( $counter / 60 ))"

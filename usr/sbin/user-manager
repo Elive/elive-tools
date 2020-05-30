@@ -523,6 +523,8 @@ user_add(){
         su -c "gpg --import /usr/share/elive-security/*.asc 1>/dev/null 2>&1 || true" "$username"
         su -c "gpg --import-ownertrust /usr/share/elive-security/otrust.txt 1>/dev/null 2>&1 || true" "$username"
         su -c "gpg --update-trustdb 1>/dev/null 2>&1 || true" "$username"
+        sync
+        su -c "killall gpg-agent 1>/dev/null 2>&1 || true" "$username"
     fi
 
 

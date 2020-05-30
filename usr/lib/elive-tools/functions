@@ -889,18 +889,18 @@ el_package_upgrade_fast(){
                 fi
                 ;;
             "http"*)
-                package_url="$( lynx -timeout 20 -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
+                package_url="$( lynx -read_timeout 20 -connect_timeout 20 -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
                 # try again, sometimes fails
                 if [[ -z "$package_url" ]] ; then
                     for i in $(seq 5)
                     do
                         sleep 5
-                        package_url="$( COLUMNS=800 LC_ALL=$EL_LC_EN  lynx -timeout 25 -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
+                        package_url="$( COLUMNS=800 LC_ALL=$EL_LC_EN  lynx -read_timeout 40 -connect_timeout 40 -dump "${url}${url_subdir}" | grep "http.*/${package}_.*${distro}.*${arch}\.deb" | sed -e 's|^.* http|http|g' | tail -1 )"
                         [[ -n "$package_url" ]] && break
                     done
                 fi
                 if [[ -z "$package_url" ]] ; then
-                    el_error "unable to get the 'package_url' for package '${package}' distro '${distro}' arch '${arch}' :\n$( lynx -timeout 30 -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
+                    el_error "unable to get the 'package_url' for package '${package}' distro '${distro}' arch '${arch}' :\n$( lynx -read_timeout 20 -connect_timeout 20 -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
                     continue
                 fi
 

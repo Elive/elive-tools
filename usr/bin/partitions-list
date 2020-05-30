@@ -564,7 +564,11 @@ main(){
     for item in "${partitions[@]}"
     do
         [[ -z "${item}" ]] && continue || true
-        echo -e "$item"
+        #echo -e "$item"
+
+        if ! printf "%s\n" "$item" ; then
+            el_warning "problem echoing with printf item: $item"
+        fi
         ##echo -en "\t" ; file -Ls "$item"
     done
 

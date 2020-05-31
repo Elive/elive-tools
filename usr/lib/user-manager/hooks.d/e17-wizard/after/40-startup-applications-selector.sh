@@ -435,7 +435,7 @@ EOF
 
     # sort the resulting list to satisfy dependencies (like notification-daemon should be run first
     buf="$( cat "$HOME/.e16/startup-applications.list" )"
-    echo "$buf" | sort | psort -- -p "/" | psort -- -p "notification-daemon" -p "elive-startup-sound" > "$HOME/.e16/startup-applications.list"
+    echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" > "$HOME/.e16/startup-applications.list"
 
 
     # run them all (and wait for next hooks!)

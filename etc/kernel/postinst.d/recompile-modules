@@ -6,6 +6,20 @@ set +E
 # Some modules like r8168 doest recompile at new kernel installs, so this hook does a kind of dpkg-reconfigure for all the dkms modules, just in case
 #
 
+# distro version
+case "$( cat /etc/debian_version )" in
+    10.*|"buster"*)
+        is_buster=1
+        ;;
+    7.*|"wheezy"*)
+        is_wheezy=1
+        ;;
+esac
+# temporally disabled: probably we don't need this hack anymore
+if ! ((is_wheezy)) ; then
+    exit
+fi
+
 # don't run anything on live mode
 if grep -qs "boot=live" /proc/cmdline ; then
     exit 0

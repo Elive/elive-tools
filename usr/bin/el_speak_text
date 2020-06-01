@@ -64,7 +64,7 @@ main(){
     fi
     # if we have the voice, play it, with effects
     if [[ -s "$HOME/.cache/el_speak/${text}.wav" ]] ; then
-        play -q -t wav "$HOME/.cache/el_speak/${text}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm -2  2>/dev/null
+        play -q -t wav "$HOME/.cache/el_speak/${text}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 2  2>/dev/null
     fi
 
     # cleanup space

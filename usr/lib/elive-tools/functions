@@ -2507,6 +2507,9 @@ el_report_to_elive(){
         "D: "*)  return_status=4  ; ;;
     esac
 
+    if [[ -z "$id" ]] ; then
+        id="$( cat /etc/elive-version | grep "^machine-id: " | awk '{print $2}' )"
+    fi
     # create an unique identifier to differentiate betweem same-reports
     if [[ -z "$id" ]] ; then
         id="$( timeout 4 /sbin/blkid | LC_ALL=C grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}' )"

@@ -53,6 +53,13 @@ main(){
             #zenity --info --text="$( eval_gettext "Composite in E16 should give you a better experience,  but if you see any issue or a reason to not enable it by default in Elive in the future, please share your comments in our forums. You can disable it in any moment from the configurations." )"
         fi
 
+        # ask for specific resolution in virtual machines
+        if [[ "$MACHINE_VIRTUAL" = "yes" ]] && ! grep -qs "boot=live" /proc/cmdline && ! [[ "$( find -type f "$HOME/.screenlayout/" 2>/dev/null | wc -l )" -gt 0 ]] ; then
+            if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to set a specific resolution?" )"  ; then
+                elive-multiscreens -c
+            fi
+        fi
+
     fi
 
     # }}}

@@ -288,7 +288,9 @@ configure_multiscreens(){
         fi
         )
 
-        timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+        if [[ -n "$E_START" ]] ; then
+            timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+        fi
 
         sleep 1
 

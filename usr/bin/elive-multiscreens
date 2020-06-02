@@ -178,6 +178,10 @@ configure_multiscreens(){
     # configure {{{
     # gui for the user
     el_debug "running gui configurator"
+
+    # tell the user to save the conf
+    $guitool --info --text="$( eval_gettext "Important: if you want to use your custom resolution in every desktop startup, you need to save it in the 'Save As' option. Otherwise your options will be not remember and they will be not loaded on startup." )"
+
     arandr
 
     if [[ -d "$HOME/.screenlayout" ]] ; then

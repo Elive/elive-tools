@@ -945,11 +945,11 @@ install_driver(){
         sleep 4
 
         local message_warning_install_failed
-        message_warning_install_failed="$( printf "$( eval_gettext "The compilation of the driver seems to have failed. We suggest to reboot and try with a different kernel version on which it may compile, since its a common problem with the versions. Or check our forums for more help." )" "" )"
+        message_warning_install_failed="$( printf "$( eval_gettext "Failed to compile this Nvidia driver. Reboot and select a different kernel version to see if compiles with it, this is a common issue between the Kernel versions. Or check our forums for more help." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                --title "WARNING" \
+                --title "Compilation Failed" \
                 --msgbox "$message_warning_install_failed" \
                 0 0
         fi

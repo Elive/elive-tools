@@ -40,7 +40,7 @@ do_email_send(){
         exit 1
     fi
 
-    if el_check_files "$message" 1>/dev/null 2>/dev/null ; then
+    if test -s "$message" 1>/dev/null 2>/dev/null ; then
         is_message_file=1
     fi
 

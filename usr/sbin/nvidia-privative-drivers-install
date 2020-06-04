@@ -683,6 +683,9 @@ interactive_ask_driver_version(){
                 if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
                 fi
+                if apt-cache show "nvidia-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-opencl-icd $_NVIDIA_PACKAGES"
+                fi
                 if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
                 fi
@@ -756,11 +759,17 @@ interactive_ask_driver_version(){
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
                 fi
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                fi
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
                 fi
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
                 # arch based packages:
                 if [[ "$( el_architecture host )" = "i386" ]] ; then

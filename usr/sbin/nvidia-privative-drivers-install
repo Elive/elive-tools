@@ -851,6 +851,10 @@ install_driver(){
     fi
     # - Optimus inform to user }}}
 
+    # uninstall previous drivers {{{
+    uninstall_driver
+
+    # - uninstall previous drivers }}}
     # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
     if lsmod | grep -qsE "^nouveau\s+" ; then

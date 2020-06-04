@@ -189,6 +189,7 @@ detect_driver_version(){
     if el_check_variables "driver_version" 1>/dev/null 2>&1 ; then
         el_debug "Selected ${driver_version} version of drivers to use"
         _NVIDIA_VERSION="$driver_version"
+        echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
         #_NVIDIA_MODULE="nvidia" # should be always this one in all the versions, or maybe not?
         return 0
     fi
@@ -213,6 +214,7 @@ detect_driver_version(){
     # mark it
     if [[ -n "$driver_version" ]] ; then
         _NVIDIA_VERSION="$driver_version"
+        echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
     fi
 
     # }}}
@@ -230,6 +232,7 @@ detect_driver_version(){
             if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
             then
                 _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
                 _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
 
                 break
@@ -293,6 +296,7 @@ detect_driver_version(){
                 if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
                 then
                     _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                    echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
                     _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
 
                     break
@@ -370,6 +374,7 @@ detect_driver_version(){
     if [[ -z "$_NVIDIA_VERSION" ]] ; then
         NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
         _NVIDIA_VERSION="current"
+        echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
     fi
 
     # examples of results:
@@ -646,12 +651,13 @@ interactive_ask_driver_version(){
 
         # add a pause in case we selected a different than the expected one
         if [[ "${ret}" != "$_NVIDIA_VERSION" ]] ; then
-            sleep 3
+            sleep 2
         fi
 
         # update / force the version to use
         if [[ -n "$ret" ]] ; then
             _NVIDIA_VERSION="$ret"
+            echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
         fi
     fi
 

@@ -35,6 +35,7 @@ usage(){
     echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, tesla-418, tesla-440, legacy-390xx legacy-340xx, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
+    echo -e "  -x: extra packages wanted (cuda, opencl, encoder, optix, etc)"
     echo -e "  -u: uninstall drivers"
     echo -e "  -v: verbose mode"
 }
@@ -677,6 +678,33 @@ interactive_ask_driver_version(){
                 _NVIDIA_PACKAGES="nvidia-settings $_NVIDIA_PACKAGES"
             fi
 
+            # extra packages
+            if ((is_extra_packages_wanted)) ; then
+                if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvoptix1 $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvidia-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-encode1 $_NVIDIA_PACKAGES"
+                fi
+                # arch based packages:
+                if [[ "$( el_architecture host )" = "i386" ]] ; then
+                    if apt-cache show "libcuda1-i386" 1>/dev/null 2>&1 ; then
+                        _NVIDIA_PACKAGES="libcuda1-i386 $_NVIDIA_PACKAGES"
+                    fi
+                else
+                    if apt-cache show "libcuda1" 1>/dev/null 2>&1 ; then
+                        _NVIDIA_PACKAGES="libcuda1 $_NVIDIA_PACKAGES"
+                    fi
+                fi
+            fi
+
+
             # i386 no longer supports this version, it fallsback to the version 390
             if apt-cache show nvidia-driver | grep -qs "^Depends: .*nvidia-legacy-" ; then
                 clear ; echo
@@ -719,6 +747,36 @@ interactive_ask_driver_version(){
             else
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver"
             fi
+
+            # extra packages
+            if ((is_extra_packages_wanted)) ; then
+                if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
+                fi
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
+                fi
+                # arch based packages:
+                if [[ "$( el_architecture host )" = "i386" ]] ; then
+                    if apt-cache show "libnvidia-$_NVIDIA_VERSION-cuda1-i386" 1>/dev/null 2>&1 ; then
+                        _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-cuda1-i386 $_NVIDIA_PACKAGES"
+                    fi
+                else
+                    if apt-cache show "libnvidia-$_NVIDIA_VERSION-cuda1" 1>/dev/null 2>&1 ; then
+                        _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-cuda1 $_NVIDIA_PACKAGES"
+                    fi
+                fi
+            fi
+
+
+
+
             ;;
     esac
 
@@ -1302,7 +1360,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdifm:lquvht" opt; do
+    while getopts ":acdifm:lquvhtx" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -1340,6 +1398,9 @@ main(){
                 ;;
             t)
                 is_mode_test_installed=1
+                ;;
+            x)
+                is_extra_packages_wanted=1
                 ;;
             h)
                 usage

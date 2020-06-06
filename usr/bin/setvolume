@@ -245,7 +245,7 @@ get_volume(){
     if [[ -n "$volume" ]] ; then
         echo "$volume"
     else
-        el_warning "unable to get actual volume with alsa: $( amixer get "$meter" 2>&1 )"
+        el_warning "unable to get actual volume with alsa: $( amixer get "$meter" 2>&1 )\namixer scontrols:\n$( amixer scontrols )"
     fi
 }
 #===  FUNCTION  ================================================================

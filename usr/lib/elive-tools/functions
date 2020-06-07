@@ -787,7 +787,7 @@ el_package_newer_check(){
 #                   - packages should include DISTRO in the version, in order to not install a candidate from a different distro
 #    PARAMETERS:  $1 = timeout for each package to download, $2 = force|normal, $@ = packages
 #                 normal means that only newer packages will be installed, force will allow downgrades
-#       RETURNS:  -
+#       RETURNS:  true if something was installed, false if failed or nothing found to install
 #===============================================================================
 el_package_upgrade_fast(){
     # pre {{{
@@ -973,6 +973,8 @@ el_package_upgrade_fast(){
                 failed=1
             fi
         fi
+    else
+        return 1
     fi
 
     cd "$dirprev"

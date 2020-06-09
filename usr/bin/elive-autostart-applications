@@ -8,10 +8,154 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
+do_list(){
+    local mode pass already_run line
+    mode="$1"
+    pass="$2"
+
+    sync
+
+    # run them:
+    if test -s "$order_file" ; then
+        while read -ru 3 line
+        do
+            unset executable cmd pid
+            read -r line <<< "$line"
+
+            # skip already runs:
+            if el_array_member_check "$line" "${already_run[@]}" ; then
+                continue
+            fi
+
+            # skip comments
+            if [[ "$line" = "#"* ]] || [[ -z "$line" ]] ; then
+                continue
+            fi
+
+            # parse and get info
+            case "$line" in
+                *.desktop|*.DESKTOP)
+                    cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' -e 's|%.*$||g' | tail -1 )"
+                    executable="$( echo "$cmd" | awk '{print $1}' )"
+
+                    ;;
+                *)
+                    cmd="$line"
+                    executable="$( echo "$line" | awk '{print $1}')"
+                    ;;
+            esac
+
+            # get the correct name of the command to use:
+            case "$executable" in
+                sudo|*bash|*zsh*|*perl*|*ruby*|*sh)
+                    # note: in the case of the sudo commands, we cannot get the pid because it doesn't belongs to us, in any case, is simply wrong to run things on sudo so there's no issues with this
+                    for arg in $cmd
+                    do
+                        if ! echo "$arg" | grep -qsiE "^(sudo|*bash|*zsh*|*perl*|*ruby*|*sh|\-.*)$" ; then
+                            if [[ -x "$( which "$arg" )" ]] ; then
+                                el_debug "fix: executable set to '$arg' instead of '$executable' "
+                                executable="$arg"
+                                break
+                            fi
+                        fi
+                    done
+                    ;;
+                *)
+            esac
+
+            # check and report to user
+            if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
+                unable_executable="$executable"
+                if [[ -z "$unable_executable" ]] ; then
+                    unable_executable="$cmd"
+                else
+                    if [[ -z "$unable_executable" ]] ; then
+                        unable_executable="$line"
+                    fi
+                fi
+
+                local message_unable_title
+                message_unable_title="$( printf "$( eval_gettext "Unable to run %s" )" "$unable_executable" )"
+                local message_unable_description
+                message_unable_description="$( printf "$( eval_gettext "You have an autostart application unable to be run. You must install this application or remove it from your list:" )" "" )"
+
+                notify-send -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list"
+
+                # next!
+                continue
+            fi
+
+            # start or stop them
+            if [[ -n "$cmd" ]] && [[ -n "$executable" ]] ; then
+
+                case "$mode" in
+                    start)
+                        # close other instances, just in case
+                        killall "$(basename "$executable" )"  2>/dev/null || true
+
+                        el_debug "running: $cmd"
+                        bash -c "$cmd  & disown"
+                        ;;
+
+                    stop)
+                        pid="$( ps kstart_time uxf | grep -v "grep .*$cmd" | grep "$cmd" | awk '{print $2}' | tail -1 )"
+                        if [[ -z "$pid" ]] ; then
+                            pid="$( ps kstart_time uxf | grep -v "grep .*$executable" | grep "$executable" | awk '{print $2}' | tail -1 )"
+                        fi
+
+                        if [[ -z "$pid" ]] ; then
+                            continue
+                        fi
+
+                        #if [[ -n "$pid" ]] ; then
+                            #el_debug "pid $pid for $executable :  $cmd"
+                        #fi
+
+                        # first pass
+                        case "$pass" in
+                            first)
+                                if ps --no-headers -p "$pid" 1>/dev/null 2>&1 ; then
+                                    kill "$pid"  2>/dev/null
+
+                                    if ! ps --no-headers -p "$pid" 1>/dev/null 2>&1 ; then
+                                        el_debug "killed successfully (first pass): $cmd"
+                                    fi
+                                fi
+                                ;;
+                            second)
+
+                                # still running? force it
+                                if ps --no-headers -p "$pid" 1>/dev/null 2>&1 ; then
+                                    kill -9 "$pid"  2>/dev/null
+
+                                    if ps --no-headers -p "$pid" 1>/dev/null 2>&1 ; then
+                                        el_debug "unable to kill with -9, WTF?: ex: '$executable' , cmd '$cmd'"
+                                    else
+                                        el_debug "killed successfully (SECOND pass): $cmd"
+                                    fi
+                                fi
+                                ;;
+                            *)
+                                el_error "dafuck $mode $pass"
+                                ;;
+                        esac
+                        ;;
+                esac
+            fi
+
+            # append to the already run list:
+            el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")
+
+        done 3<<< "$( cat "$order_file" )"
+    fi
+
+}
+
 
 main(){
     # pre {{{
-    local file mode cmd pid
+    #local file mode cmd pid pass
+    local mode pass
 
     # }}}
 
@@ -23,18 +167,7 @@ main(){
     fi
 
     mode="$1"
-
-    case "$mode" in
-        start)
-            is_start=1
-            ;;
-        stop)
-            is_stop=1
-            ;;
-        *)
-            el_error "unknown mode for $SOURCE"
-            ;;
-    esac
+    pass="$2"
 
     if [[ -n "$EROOT" ]] ; then
         # e16
@@ -60,98 +193,20 @@ main(){
         el_info "This file is a plain text list containing the full address of the .desktop files to run"
         el_info "example: /etc/xdg/autostart/elive-upgrader.desktop "
         exit 1
-
     fi
 
-    # run them:
-    if test -s "$order_file" ; then
-        while read -ru 3 line
-        do
-            unset executable cmd pid
-            read -r line <<< "$line"
-
-            # skip already runs:
-            if el_array_member_check "$line" "${already_run[@]}" ; then
-                continue
-            fi
-
-            # skip comments
-            if [[ "$line" = "#"* ]] || [[ -z "$line" ]] ; then
-                continue
-            fi
-
-            # parse and get info
-            case "$line" in
-                *.desktop|*.DESKTOP)
-                    cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | sed -e 's|%.*$||g' | tail -1 )"
-                    executable="$( echo "$cmd" | awk '{print $1}' )"
-
-                    ;;
-                *)
-                    cmd="$line"
-                    executable="$( echo "$line" | awk '{print $1}')"
-                    ;;
-            esac
-
-            # check and report to user
-            if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
-                #el_warning "unable to run executable '$executable' with command '$cmd': $line"
-                unable_executable="$executable"
-                if [[ -z "$unable_executable" ]] ; then
-                    unable_executable="$cmd"
-                else
-                    if [[ -z "$unable_executable" ]] ; then
-                        unable_executable="$line"
-                    fi
-                fi
-
-                local message_unable_title
-                message_unable_title="$( printf "$( eval_gettext "Unable to run %s" )" "$unable_executable" )"
-                local message_unable_description
-                message_unable_description="$( printf "$( eval_gettext "You have an autostart application unable to be run. You must install this application or remove it from your list:" )" "" )"
-
-                notify-send -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list"
-
-                # next!
-                continue
-            fi
-
-            # start or stop them
-            if [[ -n "$cmd" ]] && [[ -n "$executable" ]] ; then
-
-                if ((is_start)) ; then
-                    # close other instances, just in case
-                    killall "$(basename "$executable" )"  2>/dev/null || true
-
-                    el_debug "running: $cmd"
-                    bash -c "$cmd  & disown"
-                fi
-
-                if ((is_stop)) ; then
-                    el_debug "killing: $(basename "$executable" )"
-                    #el_debug "ex: $executable , cmd $cmd"
-                    if ! killall "$( basename "$executable" )"  2>/dev/null ; then
-                        if ! killall -9 "$( basename "$executable" )"  2>/dev/null ; then
-                            pid="$( ps kstart_time ux | grep -v "grep .*$cmd" | grep "$cmd" | awk '{print $2}' | tail -1 )"
-                            if [[ -n "$pid" ]] ; then
-                                kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null
-
-                                if ps -p "$pid" 1>/dev/null 2>&1 ; then
-                                    kill -9 "$pid" 2>/dev/null
-                                fi
-                            fi
-
-                        fi
-                    fi
-                fi
-            fi
-
-            # append to the already run list:
-            el_array_member_add "$line" "${already_run[@]}" ; already_run=("${_out[@]}")
-
-        done 3<<< "$( cat "$order_file" )"
-    fi
-
+    case "$mode" in
+        start)
+            do_list "start"
+            ;;
+        stop)
+            do_list "stop" first
+            do_list "stop" second
+            ;;
+        *)
+            el_error "unknown mode for $SOURCE"
+            ;;
+    esac
 
 }
 

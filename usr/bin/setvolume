@@ -201,7 +201,6 @@ get_meter(){
             else
                 audio-configurator
             fi
-            setvolume defaults
 
             is_already_configured=1
         fi

@@ -80,7 +80,7 @@ do_email_send(){
 
     if [[ -n "$title" ]] ; then
         if [[ "${template}" = "none" ]] ; then
-            el_warning "You have set a title but template $template doesn't supports it"
+            el_warning "You have set a title but template $template doesn't supports it (use 'plain' instead?)"
         fi
     else
         title="$subject"

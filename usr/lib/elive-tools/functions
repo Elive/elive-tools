@@ -1259,7 +1259,7 @@ el_sudo(){
 #===============================================================================
 el_check_translations_required(){
     # pre {{{
-    local textdomaindir stat percentage_untranslated is_translation_required
+    local textdomaindir stat percentage_untranslated is_translation_required mode
 
 
     if [[ -n "$TEXTDOMAINDIR" ]] ; then
@@ -1271,6 +1271,11 @@ el_check_translations_required(){
     # dont annoy users in the stable released
     if ! el_check_version_development ; then
         return 1
+    fi
+
+    mode="$1"
+    if [[ -z "$mode" ]] ; then
+        el_warning "deprecated use of $FUNCNAME from ${FUNCNAME[1]} without the \$mode var set"
     fi
 
     # }}}
@@ -1294,6 +1299,12 @@ el_check_translations_required(){
             fi
         fi
     fi
+
+    case "$mode" in
+        report)
+            el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improving the Elive translations, so that everybody can enjoy this system correctly translated in your language!" )"
+            ;;
+    esac
 
     if ((is_translation_required)) ; then
         return 0

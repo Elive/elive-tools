@@ -138,7 +138,7 @@ el_notify(){
     # count amount of seconds
     words="$( echo "$title $message" | wc -w )"
     time="$(( $words / 3 ))"
-    time="$(( $time + 4 ))"
+    time="$(( $time + 3 ))"
 
     case "$mode" in
         nor*)

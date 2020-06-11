@@ -1300,13 +1300,15 @@ el_check_translations_required(){
         fi
     fi
 
-    case "$mode" in
-        report)
-            el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improving the Elive translations, so that everybody can enjoy this system correctly translated in your language!" )"
-            ;;
-    esac
 
     if ((is_translation_required)) ; then
+
+        case "$mode" in
+            report)
+                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improving the Elive translations, so that everybody can enjoy this system correctly translated in your language!" )"
+                ;;
+        esac
+
         return 0
     else
         return 1

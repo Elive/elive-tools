@@ -2379,17 +2379,15 @@ el_report_to_elive(){
             return 0
         fi
         # make sure its not a modified version of Elive, so we don't want to receive reports from other things
-        if grep -qs "machine-id: " /etc/elive-version ; then
-            if grep -qs "fingerprint: " /etc/elive-version ; then
-                fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
-                if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
-                    return 0
-                fi
-            else
+        if grep -qs "machine-id: " /etc/elive-version && grep -qs "fingerprint: " /etc/elive-version ; then
+            fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
+            if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
                 return 0
             fi
         else
-            return 0
+            if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+                return 0
+            fi
         fi
         # same for specific versions of Elive
         if LC_ALL=C grep -qs "^special-version:" "/etc/elive-version" ; then

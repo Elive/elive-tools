@@ -974,6 +974,17 @@ install_driver(){
     sleep 2
 
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
+
+        local message_warning_install_failed_try_again
+        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by updating the packages list first. This problem can be also caused due a too much newer Kernel version." )" "" )"
+
+        if ! ((is_mode_auto)) ; then
+            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Compilation Failed" \
+                --msgbox "$message_warning_install_failed_try_again" \
+                0 0
+        fi
+
         el_aptget_update force
 
         if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
@@ -1227,10 +1238,8 @@ try_again(){
 #===============================================================================
 uninstall_driver(){
     # pre {{{
-    local line
+    local line _NVIDIA_PACKAGES
     el_debug
-
-    unset _NVIDIA_PACKAGES
 
     # }}}
 

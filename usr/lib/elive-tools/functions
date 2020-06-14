@@ -3049,13 +3049,13 @@ el_config_save(){
 
     # checks {{{
     if el_check_is_shell ; then
-        el_debug "ignoring el_config_* because we are from a shell"
-        return 0
+        el_warning "ignoring el_config_* because we are from a shell"
+        return 1
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
-        el_debug "\$0 (source tool) should be set to access to its conf ID"
-        return 0
+        el_error "\$0 (source tool) should be set to access to its conf ID"
+        return 1
     fi
 
     # }}}
@@ -3065,19 +3065,20 @@ el_config_save(){
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
 
     if [[ -z "$@" ]] ; then
-        el_warning "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
-        return 0
+        el_error "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
+        return 1
     fi
 
     if ! declare -p "$@" 1>/dev/null 2>&1 ; then
-        el_warning "$FUNCNAME called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
-        return 0
+        el_error "$FUNCNAME called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
+        return 1
     fi
 
     # create conf file
     if ! [[ -s "$tmp_conf_f" ]] ; then
         if ! mkdir -p "$( dirname "$tmp_conf_f" )" ; then
             el_error "unable to create confs dir: \"$( dirname "$tmp_conf_f" )\""
+            return 1
         fi
 
         touch "$tmp_conf_f"
@@ -3107,6 +3108,7 @@ el_config_save(){
     # append configuration, and save the variable as global so it can work outside this function
     # Warning: never use "local" variables in your function for the ones that you are going to save
     declare -p "$@" | sed -e 's|declare\s--|declare -|g' -e 's|declare -|declare -g|g' | awk '{$2 = $2" --"; print $0}' >> "$tmp_conf_f"
+    return 0
 }
 
 #===  FUNCTION  ================================================================

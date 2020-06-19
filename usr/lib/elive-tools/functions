@@ -575,7 +575,7 @@ EOF
         bash "$temp"
     else
         if el_check_sudo_automated ; then
-            for i in 1 2 3
+            for i in 1 2
             do
                 if sudo -H bash "$temp" ; then
                     is_password_ok=1
@@ -596,7 +596,7 @@ EOF
         fi
 
         # multiple gksu attempts
-        for i in 1 2 3
+        for i in 1 2
         do
             if [[ -x "$( which gksu )" ]] ; then
                 if gksu "$temp" ; then
@@ -722,7 +722,7 @@ el_aptget_update(){
                     fi
                     #gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                     # multiple gksu attempts
-                    for i in 1 2 3
+                    for i in 1 2
                     do
                         if gksu "$temp" ; then
                             if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
@@ -1236,7 +1236,7 @@ el_sudo(){
                 fi
 
                 # multiple gksu attempts
-                for i in 1 2 3
+                for i in 1 2
                 do
                     if gksu "$@" ; then
                         is_password_ok=1
@@ -2002,7 +2002,7 @@ el_group_add(){
             el_dependencies_install "gksu"
         fi
         # multiple gksu attempts
-        for i in 1 2 3
+        for i in 1 2
         do
             if gksu "adduser $USER $group" ; then
                 is_password_ok=1
@@ -2024,7 +2024,7 @@ el_group_add(){
                 el_dependencies_install "gksu"
             fi
             # multiple gksu attempts
-            for i in 1 2 3
+            for i in 1 2
             do
                 if gksu "adduser $USER $group" ; then
                     is_password_ok=1

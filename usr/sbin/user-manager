@@ -52,6 +52,12 @@ temp_error="/tmp/$(basename $0)-${USER}-$$"
 
 el_dependencies_check "zenity|yad|chpasswd|debconf-get-selections|grep|groupadd|elive-skel|chown|su|${USERADD}|${ADDUSER}|useradd|${USERDEL}"
 
+if [[ -e "/var/lib/dpkg/info/systemd.list" ]] && [[ -e "/var/lib/dpkg/info/live-config-systemd.list" ]] ; then
+    is_systemd=1
+else
+    is_sysvinit=1
+fi
+
 
 ###########################################################################
 exit_error(){
@@ -212,6 +218,34 @@ sudoers_user_generic(){
 
             # permissions
             chmod 0440 "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
+            ;;
+    esac
+}
+sudoers_user_power(){
+    local username mode
+    mode="$1"
+    shift
+    username="$1"
+    shift
+
+    if [[ -z "$username" ]] ; then
+        el_error "no username given"
+        return 1
+    fi
+
+    # always delete first
+    rm -f "/etc/sudoers.d/sudo_nopasswd_power_${username}" 2>/dev/null || true
+
+    case "$mode" in
+        add)
+            echo "$username ALL=(ALL) NOPASSWD: /sbin/halt" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /sbin/shutdown" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /sbin/poweroff" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /sbin/reboot" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-hibernate" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-suspend" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-suspend-hybrid" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            chmod 0440 "/etc/sudoers.d/sudo_nopasswd_power_${username}"
             ;;
     esac
 }
@@ -501,6 +535,9 @@ user_add(){
     # sudo configuration
     # always apply these generic ones
     sudoers_user_generic "add" "$username"
+    if ((is_sysvinit)) ; then
+        sudoers_user_power "add" "$username"
+    fi
 
     if [[ "$activatesudo" = "TRUE" ]] ; then
         sudoers_user "add" "$username"
@@ -630,6 +667,7 @@ user_del(){
     sudoers_user "del" "$username"
     sudoers_user_apt "del" "$username"
     sudoers_user_nopass "del" "$username"
+    sudoers_user_power "del" "$username"
     sudoers_user_generic "del" "$username"
 
     local translated_message
@@ -796,6 +834,9 @@ main(){
             ;;
         --user-sudo-generic-add)
             sudoers_user_generic "add" "$username"
+            if ((is_sysvinit)) ; then
+                sudoers_user_power "add" "$username"
+            fi
             ;;
         --user-sudo-apt-add)
             sudoers_user_apt "add" "$username"

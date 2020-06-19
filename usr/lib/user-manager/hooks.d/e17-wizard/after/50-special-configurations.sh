@@ -54,13 +54,14 @@ main(){
     fi
 
     # vaapi opitmized rendering?
-    if [[ -x "$(which vainfo )" ]] ; then
-        if LC_ALL=C vainfo | grep -qs "vainfo: Driver version: " ; then
-            sed -i -e 's|^driver\\vo.*|driver\\vo=vaapi|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
-            # depends on mpv
-            sed -i -e 's|^mplayer_bin=.*|mplayer_bin=mpv|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
-        fi
-    fi
+    # update: libmpv stills a much better option
+    #if [[ -x "$(which vainfo )" ]] ; then
+        #if LC_ALL=C vainfo | grep -qs "vainfo: Driver version: " ; then
+            #sed -i -e 's|^driver\\vo.*|driver\\vo=vaapi|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
+            ## depends on mpv
+            #sed -i -e 's|^mplayer_bin=.*|mplayer_bin=mpv|g' "$HOME/.config/smplayer/smplayer.ini" 2>/dev/null
+        #fi
+    #fi
 
 
     # change conky network configuration

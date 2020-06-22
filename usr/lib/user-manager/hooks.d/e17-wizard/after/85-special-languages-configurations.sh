@@ -31,7 +31,7 @@ main(){
 
 
     # know virtualized state
-    source /etc/elive/machine-profile
+    source /etc/elive/machine-profile 2>/dev/null || true
 
     # e16: skip
     if [[ "$EROOT" ]] ; then

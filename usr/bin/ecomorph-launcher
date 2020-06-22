@@ -406,7 +406,7 @@ main(){
     fi
 
     # }}}
-    source /etc/elive/machine-profile
+    source /etc/elive/machine-profile 2>/dev/null || true
 
     # abort in VM
     if [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then

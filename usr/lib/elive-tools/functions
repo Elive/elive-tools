@@ -2425,9 +2425,11 @@ el_report_to_elive(){
     fi
 
     if ((is_interactive)) ; then
-        messages_extra=" ||| terminal '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', blacklist all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
+        if ((is_terminal)) ; then
+            messages_extra=" ||| terminal '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', blacklist all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
+        fi
     else
-        messages_extra=" ||| is_interactive '${is_interactive}', (example of only-tools (no-interactive) report)"
+        messages_extra=" ||| is_interactive '${is_interactive}', is_terminal '${is_terminal}', (example of only-tools (no-interactive) report)"
     fi
 
 

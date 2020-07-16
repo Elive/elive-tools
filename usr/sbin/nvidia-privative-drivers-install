@@ -1061,18 +1061,19 @@ install_driver(){
     fi
 
     # add the packages to the installed system later too
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
-        # first remove any possible previous entry for nvidia
-        sed -i '/nvidia/d' /tmp/.packages-to-install 2>/dev/null
-        sed -i '/nvidia/d' /tmp/.packages-to-hold    2>/dev/null
+    # update: not needed in the new installer which should run the command to install it itself
+    #if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
+        ## first remove any possible previous entry for nvidia
+        #sed -i '/nvidia/d' /tmp/.packages-to-install 2>/dev/null
+        #sed -i '/nvidia/d' /tmp/.packages-to-hold    2>/dev/null
 
-        for package in $_NVIDIA_PACKAGES
-        do
-            echo "$package" >> /tmp/.packages-to-install
-            # just like the kernel, keep them holded, we don't want surprises, if a system works it works
-            echo "$package" >> /tmp/.packages-to-hold
-        done
-    fi
+        #for package in $_NVIDIA_PACKAGES
+        #do
+            #echo "$package" >> /tmp/.packages-to-install
+            ## just like the kernel, keep them holded, we don't want surprises, if a system works it works
+            #echo "$package" >> /tmp/.packages-to-hold
+        #done
+    #fi
 
     # - apt-get install }}}
     # load module {{{

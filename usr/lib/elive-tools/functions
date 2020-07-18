@@ -531,11 +531,11 @@ if [[ -x "\$( which urxvt )" ]] ; then
     urxvt -T 'Installing Packages' -e bash -c "
 source /usr/lib/elive-tools/functions
 export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
-if ! apt-get install -y $depends ; then
-    el_aptget_update ; apt-get -f install ; echo ; echo
-fi
+
 if ! apt-get install -y $depends ; then
     el_aptget_update force
+    apt-get -f install
+
     if ! apt-get install -y $depends ; then
         apt-get -f install ; el_aptget_update force ; apt-get install $depends
     fi
@@ -549,11 +549,10 @@ else
         su -c "
 source /usr/lib/elive-tools/functions
 export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
-if ! apt-get install -y $depends ; then
-    el_aptget_update ; apt-get -f install ; echo ; echo
-fi
+
 if ! apt-get install -y $depends ; then
     el_aptget_update force
+    apt-get -f install
     if ! apt-get install -y $depends ; then
         apt-get -f install ; el_aptget_update force ; apt-get install $depends
     fi
@@ -583,35 +582,38 @@ EOF
                 fi
             done
         else
+            # deps
             if ! el_dependencies_check gksu ; then
                 if [[ -x "$( which urxvt )" ]] ; then
-                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update' root"
-                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root"
+                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update ; apt-get install -y gksu ; ' root"
                 else
                     if ((is_interactive)) ; then
-                        su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y gksu' root
+                        su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update ; apt-get install -y gksu ; ' root
                     fi
                 fi
             fi
-        fi
 
-        # multiple gksu attempts
-        for i in 1 2
-        do
             if [[ -x "$( which gksu )" ]] ; then
-                if gksu "$temp" ; then
-                    is_password_ok=1
-                    break
-                fi
+                # multiple gksu attempts
+                for i in 1 2
+                do
+                    if gksu "$temp" ; then
+                        is_password_ok=1
+                        break
+                    fi
+                done
             else
                 if ((is_interactive)) ; then
                     el_info "Installing Dependencies"
-                    su -c "$temp" root
+
+                    if su -c "$temp" root ; then
+                        break
+                    fi
                 else
                     el_error "unable to run $temp, we don't have gksu, graphical system, or even a terminal where to do it"
                 fi
             fi
-        done
+        fi
     fi
 
     #if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then

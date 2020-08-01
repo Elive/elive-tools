@@ -239,7 +239,7 @@ main(){
 
         # do not run empty mimes
         if ! [[ -n "$mime" ]] ; then
-            $guitool --info --text="$( eval_gettext "This file doesn't have a mimetype assigned, we cannot run or open something that we don't know how it should be run. This file probably belongs to other purposes." )"
+            $guitool --info --text="$( eval_gettext "This file doesn't have a Mimetype assigned, we cannot run or open something that we don't know how it should be run. This file is probably used for other purposes." )"
             exit
         fi
 

@@ -379,10 +379,10 @@ user_add(){
         --field="$( eval_gettext "Email (for gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password" ):H" "$password" \
         --field="$( eval_gettext "Password confirmation" ):H" "$password" \
-        --field="$( eval_gettext "Auto login to desktop" ):CHK" "$want_autologin" \
+        --field="$( eval_gettext "Auto-login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
         --field="$( eval_gettext "Grant admin privileges (SUDO)" ):CHK" "$want_sudo" \
-        --field="$( eval_gettext "Grant admin, and never request password (not recommended)" ):CHK" "FALSE" \
+        --field="$( eval_gettext "Grant admin, and never request the password (not recommended)" ):CHK" "FALSE" \
         || echo cancel )"
 
     if [[ "$result" = "cancel" ]] ; then
@@ -632,7 +632,7 @@ user_del(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to delete" )" || echo cancel )"
+    username="$( echo "${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to remove" )" || echo cancel )"
 
     [[ "$username" = "cancel" ]] && exit 1
 
@@ -694,7 +694,7 @@ pass_change(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "root ${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user in which to change its password" )" || echo cancel )"
+    username="$( echo "root ${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user to change its password" )" || echo cancel )"
     [[ "$username" = "cancel" ]] && exit 1
 
     pass_step
@@ -717,7 +717,7 @@ autologin_conf(){
     local uid user userlist line
 
     local message_disable_autologin
-    message_disable_autologin="$( printf "$( eval_gettext "Disable autologin" )" "" )"
+    message_disable_autologin="$( printf "$( eval_gettext "Disable auto-login" )" "" )"
 
     while read -ru 3 line
     do
@@ -732,18 +732,18 @@ autologin_conf(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically login with." )" || echo cancel )"
+    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically log in with." )" || echo cancel )"
 
     # note: instead of check for a translated "disable", just check if the user exists (which stills valid)
     if [[ "$username" = "cancel" ]] || ! cat /etc/passwd | awk -v FS=":" '{print $1}' | grep -qs "^${username}$" ; then
         sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf"
-        $guitool --info --text="$( eval_gettext "Autologin disabled" )" || true
+        $guitool --info --text="$( eval_gettext "Auto-login disabled" )" || true
     else
         # enable autologin for user
         sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$username|g" "/etc/lightdm/lightdm.conf"
 
         local message_autologin_set
-        message_autologin_set="$( printf "$( eval_gettext "Autologin set to %s" )" "$username" )"
+        message_autologin_set="$( printf "$( eval_gettext "Auto-login set to %s" )" "$username" )"
 
         $guitool --info --text="$message_autologin_set" || true
     fi
@@ -813,7 +813,7 @@ main(){
 
 
     if [[ -z "$selection" ]] ;then
-        selection="$( $guitool --width=400 --height=280 --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete an user" )" '3' "$( eval_gettext "Change the password of an user" )" '4' "$( eval_gettext "Automated login configuration" )" || echo cancel )"
+        selection="$( $guitool --width=400 --height=280 --list --text="$( eval_gettext "Select an option" )" --column='' --column="$( eval_gettext "Option" )" '1' "$( eval_gettext "Add a new user" )" '2' "$( eval_gettext "Delete a user" )" '3' "$( eval_gettext "Change the password of a user" )" '4' "$( eval_gettext "Automated login configuration" )" || echo cancel )"
     fi
 
     case "$selection" in

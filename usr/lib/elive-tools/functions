@@ -1311,7 +1311,7 @@ el_check_translations_required(){
 
         case "$mode" in
             report)
-                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improving the Elive translations, so that everybody can enjoy this system correctly translated in your language!" )"
+                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help to improve the Elive translations, so everybody else could enjoy Elive correctly translated into your language!" )"
                 ;;
         esac
 
@@ -2343,9 +2343,9 @@ el_step_requires_fixme(){
         cd "${prev_dir}"
         el_set_display_variables
         local _dummy
-        _dummy="$( eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
+        _dummy="$( eval_gettext "Experimental or incomplete code found, report this to Elive if you found it necessary. Exiting..." )"
         if [[ "${DISPLAY}" = ":0.0" ]] ; then
-            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this if you found it necessary. Exiting..." )"
+            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this to Elive if you found it necessary. Exiting..." )"
         fi
         exit 1
     fi
@@ -2988,9 +2988,9 @@ el_request_donation(){
     # }}}
 
     local _dummy
-    _dummy="$( eval_gettext "Elive enjoys making the life of the users more easy with unique features and helpers. But Elive is a non-commercial project that only survives by a few donations." )"
+    _dummy="$( eval_gettext "Elive enjoys making the life of the users easier with unique features and helpers. But Elive is a non-commercial project that only survives by a few donations." )"
     local _dummy2
-    _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and always improving?" )"
+    _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and continue improving it?" )"
 
     local _dummy3
     _dummy3="$( eval_gettext "To make a donation only takes you one or two minutes and it guarantees that there will be more versions of Elive in the future and more improved!" )"

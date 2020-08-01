@@ -324,7 +324,7 @@ interactive_ask_driver_version(){
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
         local message_select_driver
-        message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphical card needs." )" "" )"
+        message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphics card needs." )" "" )"
         if [[ -n "$_FGLRX_VERSION" ]] ; then
             local message_select_driver_suggested
             message_select_driver_suggested="$( printf "$( eval_gettext "The version '%s' is probably the one that you need." )" "$_FGLRX_VERSION" )"
@@ -550,7 +550,7 @@ install_driver(){
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying open-drivers if they work for you." )" "" )"
         fi
 
 

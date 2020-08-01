@@ -55,7 +55,7 @@ main(){
 
         # ask for specific resolution in virtual machines
         if [[ "$MACHINE_VIRTUAL" = "yes" ]] && ! grep -qs "boot=live" /proc/cmdline && ! [[ "$( find -type f "$HOME/.screenlayout/" 2>/dev/null | wc -l )" -gt 0 ]] ; then
-            if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to set a specific resolution?" )"  ; then
+            if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to configure a specific resolution?" )"  ; then
                 elive-multiscreens -c
             fi
         fi
@@ -99,7 +99,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "No desktop acceleration selected. This option is more stable, but it may result in a less responsive desktop, especially during video playback. If you did not try the accelerated mode yet, it is suggested to select it. You will be able to see, then , if it is compatible with your graphic card." )" )"
+                message_gl="$( printf "$( eval_gettext "No desktop acceleration selected. This option is more stable, but it may result in a less responsive desktop, especially during video playback. If you did not try the accelerated mode yet, it is suggested to select it. You will be able to see, then, if it is compatible with your graphic card." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -113,7 +113,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop more responsive and a smoother feeling, improves also the video playback speed and quality. But if the drivers for your graphic card are not correctly supported it can lead to a broken desktop or window visuals, to fix this you will need to switch to software mode in the composite options or disable the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop more responsive and has a smoother feeling, it also improves video playback speed and its quality. But if the drivers of your graphic card are not enough stable, it can lead to a broken desktop or visual artifacts, to fix this you will need to switch to software mode in the composite options or disable the acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 

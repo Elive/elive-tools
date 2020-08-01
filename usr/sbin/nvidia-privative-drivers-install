@@ -343,7 +343,7 @@ detect_driver_version(){
             # suggest the version to use
             if ! ((is_mode_auto)) ; then
                 local message_version_suggest
-                message_version_suggest="$( printf "$( eval_gettext "The probably version of Nvidia driver that you need is '%s'. If it doesn't works, try with a different version of the drivers." )" "$_NVIDIA_VERSION" )"
+                message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version of the drivers." )" "$_NVIDIA_VERSION" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Suggested Version" \
@@ -442,9 +442,9 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones works better with the open driver. You should try both modes or each proprietary version to know which one is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of Nvidia? Some computers need them, while other ones work better with the open driver. You should try both modes or each closed-source version to know which one is more suitable for your computer." )" )"
                 local message_extra
-                message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the opensource driver instead." )" "" )"
+                message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open drivers instead." )" "" )"
 
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -473,14 +473,14 @@ interactive_ask_privative(){
                         message_reboot_and_select_privative_2="$( printf "$( eval_gettext "Or you can boot in any option but you need to press the Tab key and append the boot parameter:" )\nmodprobe.blacklist=nouveau" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                            --title "$( eval_gettext "Reboot needed using different option" )" \
+                            --title "$( eval_gettext "A reboot is needed using a different option" )" \
                             --msgbox "${message_reboot_and_select_privative_1}\n\n${message_reboot_and_select_privative_2}" \
                             0 0
 
                         if ((is_mode_live)) ; then
                             dialog --timeout 180 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
                                 --title "Reboot now?" \
-                                --yesno "$( eval_gettext "Do you want to reboot now to select the proprietary option? If you select no, we will continue using the open driver." )" \
+                                --yesno "$( eval_gettext "Do you want to reboot now to select the closed-source drivers? If you select no, we will continue using the open driver." )" \
                                 0 0
                             ret="$?"
 
@@ -499,7 +499,7 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the free drivers. Using a different version of Elive may work better too. You can find better help in our forums." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the free drivers. Using a different Elive version may work too. You can find better help in our forums." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "If the install fails..." \
@@ -518,7 +518,7 @@ interactive_ask_privative(){
                         if ((is_wheezy)) ; then
                             message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. Due to compatibility reasons the nouveau module is blacklisted on this boot, so you need to reboot on this mode or remove that parameter from the boot options." )" "" )"
                         else
-                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options pressing the Tab key. Due to compatibility reasons this module is blacklisted on this boot, so you need to remove that parameter from the boot options in order to use it." )" "modprobe.blacklist=nouveau" )"
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key. Due to compatibility reasons, is needed to boot without that driver loaded, that's why you need this step in order to continue." )" "modprobe.blacklist=nouveau" )"
                         fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -554,7 +554,7 @@ interactive_ask_driver_version(){
     # List available versions and ask in a dialog {{{
 
     local message_select_driver
-    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphical card needs." )" "" )"
+    message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphics card needs." )" "" )"
 
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
@@ -582,7 +582,7 @@ interactive_ask_driver_version(){
                         _desc="$( printf "$( eval_gettext "Tesla Nvidia drivers (very new)" )" )"
                         ;;
                     *nvidia|current)
-                        _desc="$( printf "$( eval_gettext "Last drivers for most newest cards" )" )"
+                        _desc="$( printf "$( eval_gettext "Last drivers for the newest cards" )" )"
                         # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                         _desc="$_desc ($( LC_ALL=C apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
                         ;;
@@ -593,7 +593,7 @@ interactive_ask_driver_version(){
                         _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older)" )" )"
                         ;;
                     *legacy-304xx)
-                        _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (older older)" )" )"
+                        _desc="$( printf "$( eval_gettext "Previous drivers for recent cards (more older)" )" )"
                         ;;
                     *legacy-173xx)
                         _desc="$( printf "$( eval_gettext "Drivers for old cards" )" )"
@@ -602,7 +602,7 @@ interactive_ask_driver_version(){
                         _desc="$( printf "$( eval_gettext "Drivers for oldest cards" )" )"
                         ;;
                     *legacy-71xx)
-                        _desc="$( printf "$( eval_gettext "Drivers for dinosaur devices" )" )"
+                        _desc="$( printf "$( eval_gettext "Drivers for prehistorik devices" )" )"
                         ;;
                     *legacy*)
                         _desc="$( printf "$( eval_gettext "Old drivers" )" )"
@@ -848,7 +848,7 @@ install_driver(){
         if laptop-detect ; then
 
             local message_brightness_force
-            message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'no' the next time. Select YES if you don't know." )" "" )"
+            message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'NO' the next time. Select 'YES' if you don't know." )" "" )"
 
             if ((is_mode_auto)) ; then
                 ret=0
@@ -877,7 +877,7 @@ install_driver(){
         # force dpi size to 96 {{{
 
         local message_dpi_force
-        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen looks wrong. Sometimes the autodetection fails resulting in bad sized elements. This option will set 96 DPI which is a common standard and in any of the cases should work good for most cases. But you should try first without this option set." )" "" )"
+        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen look wrong. Sometimes the auto-detection fails resulting in wrong sized elements. This option will set 96 DPI which is a common standard and in any of the cases should work well for most cases. But you should try first without this option." )" "" )"
 
         if ((is_mode_auto)) ; then
             ret=0
@@ -909,10 +909,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the Nvidia when needs more performance. You can use in Elive the Nvidia if you install Nvidia or it will use the Intel if you don't, so we are going to use now the Nvidia which is more performant. If you have any problem by running your graphical system we suggest you to enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the Nvidia when needs more performance. You can use Nvidia in Elive if you install Nvidia, or it will use the Intel if you don't, so we are going to use now the Nvidia which is more performant. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you to remove one of the graphic cards, if the other one is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -976,7 +976,7 @@ install_driver(){
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
         local message_warning_install_failed_try_again
-        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by updating the packages list first. This problem can be also caused due a too much newer Kernel version." )" "" )"
+        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by updating the packages list first. This problem can be probably caused due to a too much newer Kernel version." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1012,7 +1012,7 @@ install_driver(){
 
                     ## open an interactive shell
                     #if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. After to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                             #find "/lib/modules/$(uname -r)/updates -type f -iname '*'nvidia'*'
                             #el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                             #el_explain 0 "Type '__exit__' for continue..."
@@ -1033,7 +1033,7 @@ install_driver(){
         sleep 4
 
         local message_warning_install_failed
-        message_warning_install_failed="$( printf "$( eval_gettext "Failed to compile this Nvidia driver. Reboot and select a different kernel version to see if compiles with it, this is a common issue between the Kernel versions. Or check our forums for more help." )" "" )"
+        message_warning_install_failed="$( printf "$( eval_gettext "Failed to compile this Nvidia driver. Reboot and select a different kernel version to see if compiles with it, this is a common issue between different Kernel versions. Or check our forums for more help." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1049,7 +1049,7 @@ install_driver(){
             if [ "$(stat -c %d/%i /)" != "$(stat -Lc %d/%i /proc/1/root 2>/dev/null)" ]; then
                 echo -e "\n\n"
 
-                if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. We need to know what steps are missing from the drivers installer. So after to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. After to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                     find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*'
                     el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                     el_explain 0 "Type '__exit__' for continue..."
@@ -1105,18 +1105,18 @@ install_driver(){
                 if ! lsmod | grep -qs "^nvidia" ; then
                     NOREPORTS=1 el_error "Unable to load NVIDIA module"
 
-                    message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. Reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
+                    message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the NVIDIA module. The reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
                 fi
 
 
                 if modprobe $_NVIDIA_MODULE 2>&1 | grep -aqsE "(No supported display adapters|No such device)" || dmesg 2>&1 | colors-remove | grep -aqsi "No NVIDIA graphics adapter found" ; then
-                    message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't looks like to be compatible with this version of the drivers, try to use a different version, or try to use the Free-drivers instead." )" "" )"
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't look like to be compatible with this version of the drivers, try to use a different version, or try to use the open-drivers instead." )" "" )"
 
                 fi
 
                 # module simply was not compiled
                 if ! find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
-                    message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We suggest to use the Free-drivers if they works for you." )" "" )"
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying open-drivers if they work for you." )" "" )"
                 fi
 
 
@@ -1190,7 +1190,7 @@ try_again(){
     message_option_3="$( printf "$( eval_gettext "Exit from this tool and continue (unknown state)" )" "" )"
 
     local message_option_4
-    message_option_4="$( printf "$( eval_gettext "Reboot your computer to select another kernel or options" )" "" )"
+    message_option_4="$( printf "$( eval_gettext "Reboot your computer to select another kernel or boot options" )" "" )"
 
     # }}}
 

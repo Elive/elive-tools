@@ -98,9 +98,9 @@ take_screenshot(){
     # format message
     local message_result message_drag_range
     if ((is_mode_save)) ; then
-        message_result="$( eval_gettext "Screenshot saved in your pictures directory. You can paste it where you want using:" ) Ctrl + V"
+        message_result="$( eval_gettext "Screenshot saved in your pictures directory. You can paste it where you want, using:" ) Ctrl + V"
     else
-        message_result="$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" ) Ctrl + V"
+        message_result="$( eval_gettext "Screenshot copied to clipboard. Paste it where you want, using:" ) Ctrl + V"
     fi
     message_drag_range="$( eval_gettext "Drag your mouse to select a region to capture, or click in the desired window" )"
 

@@ -20,7 +20,7 @@ not_supported(){
 
 run_dmg(){
     local message_dmg
-    message_dmg="$( printf "$( eval_gettext "DMG files belongs to MacOS systems. You cannot use them in Linux, but we can open them in Elive so you can get its contents. Do you want to extract them now?" )" "" )"
+    message_dmg="$( printf "$( eval_gettext "DMG files belong to MacOS systems. You cannot use them in Linux, but we can open them in Elive so you can extract its contents. Do you want to open it now?" )" "" )"
 
     if $guitool --question --text="$message_dmg" ; then
         filename="$( basename "$file" )"
@@ -53,7 +53,7 @@ run_edje(){
 
     # uncompatible edje file
     if ((is_e_invalid)) ; then
-        $guitool --error --text="$( eval_gettext "This Edje file doesn't looks to be compatible or having a known usage. Make sure that you are using a version compatible for Enlightenment 17" )"
+        $guitool --error --text="$( eval_gettext "This EDJE file doesn't look to be compatible or having a known usage. Make sure that is compatible with your version of Enlightenment" )"
         return 0
     fi
 
@@ -83,7 +83,7 @@ run_edje(){
     fi
 
     # still here? implement it
-    $guitool --warning --text="$( eval_gettext "Seems like you are trying to run an edje file but we don't know how to use it. report this to the Elive BTS" )"
+    $guitool --warning --text="$( eval_gettext "Seems like you are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums" )"
 }
 
 run_script(){
@@ -95,12 +95,12 @@ run_script(){
     shift
 
     local message_done
-    message_done="$( printf "$( eval_gettext "All operations done, you can close the terminal" )" "" )"
+    message_done="$( printf "$( eval_gettext "All operations are finished. You can close the terminal" )" "" )"
 
 
     # nvidia installer?
     if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
-        if $guitool --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the nvidia drivers, do you want to run it instead of the official nvidia installer?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
             else

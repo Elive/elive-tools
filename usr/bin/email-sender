@@ -303,7 +303,7 @@ do_validate_sending(){
     case "$email_account_type" in
         Dreamhost)
             $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue after you verified it." )"
-            if $guitool --question --text="$( eval_gettext "Does the email sending correctly worked?" )" ; then
+            if $guitool --question --text="$( eval_gettext "Does the sending of email have worked correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
                 echo "email_account=\"$email_account\"" >> "$conf"
@@ -328,7 +328,7 @@ do_validate_sending(){
         if echo "$result" | grep -qs "testing elive email ($random)" ; then
             # succeed
             local message_success_sending
-            message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will found a testing email in your account, you can delete it." )" "" )"
+            message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will find a testing email in your account, you can delete it." )" "" )"
 
             if ! { [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; } ; then
                 $guitool --info --text="$message_success_sending" || true
@@ -362,7 +362,7 @@ do_validate_sending(){
 
         # it was not configured correctly before, so proceed normally with configuration
         local message_cannot_send_email
-        message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account. Is your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
+        message_cannot_send_email="$( printf "$( eval_gettext "Seems like we cannot send or read emails from this account. Are your username and password correctly set? You also need to have the POP and IMAP options activated in your email settings." )" "" )"
         $guitool --warning --text="$message_cannot_send_email"
 
     fi
@@ -466,7 +466,7 @@ do_configure(){
                 exit
                 ;;
             Gmail)
-                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with the detailed instructions. By other side you are welcome to improve this tool to support other services too, which is very easy by simply including the needed confs for that" )"
+                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with detailed instructions. By other side, you are welcome to improve this tool to support other services too, which is very easy by simply including the needed configurations for them" )"
                 ;;
             *)
                 true
@@ -483,7 +483,7 @@ do_configure(){
 
         local message_invalid
         #message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', try again." )" "john.smith@gmail.com" )"
-        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use an account of the listed services, for example '%s', try again." )" "john.smith@gmail.com" )"
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use an account of the listed services, for example '%s'. Try again." )" "john.smith@gmail.com" )"
 
         # verify username inserted
         #if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then

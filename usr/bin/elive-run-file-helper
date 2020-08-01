@@ -270,7 +270,7 @@ main(){
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/
-                if ! echo "$mime" | grep -qsE "(/debian.*package$|inode/directory)" ; then
+                if ! echo "$mime" | grep -qsE "(/.*debian.*package$|inode/directory)" ; then
                     not_supported "$mime" "$file"
                 fi
                 # run a default launcher in any of the cases!

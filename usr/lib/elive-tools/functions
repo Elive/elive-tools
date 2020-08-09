@@ -2988,7 +2988,7 @@ el_request_donation(){
     # }}}
 
     local _dummy
-    _dummy="$( eval_gettext "Elive enjoys making the life of the users easier with unique features and helpers. But Elive is a non-commercial project that only survives by a few donations." )"
+    _dummy="$( eval_gettext "Elive enjoys making the life of the users easier with unique features and tools. But Elive is a non-commercial project that only survives by a few donations." )"
     local _dummy2
     _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and continue improving it?" )"
 

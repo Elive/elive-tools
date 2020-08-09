@@ -303,7 +303,7 @@ do_validate_sending(){
     case "$email_account_type" in
         Dreamhost)
             $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue after you verified it." )"
-            if $guitool --question --text="$( eval_gettext "Does the sending of email have worked correctly?" )" ; then
+            if $guitool --question --text="$( eval_gettext "Does the sending of emails have worked correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
                 echo "email_account=\"$email_account\"" >> "$conf"

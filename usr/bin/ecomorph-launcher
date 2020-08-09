@@ -443,7 +443,7 @@ main(){
                 answer="$( zenity --width=580 --height=240 --list \
                     --text="$( eval_gettext "Select a profile for the visual effects" )\n\n${message_warn_user}" \
                     --column="$( eval_gettext "Type" )" --column="$( eval_gettext "Description" )" \
-                    "normal" "$( eval_gettext "Default, with simple effects, perfect for daily work" )" \
+                    "normal" "$( eval_gettext "Default option, with simple effects, perfect for daily work" )" \
                     "full" "$( eval_gettext "Lots of random visual effects, perfect for demonstration" )" \
                     "default" "$( eval_gettext "Use your previous configuration" )" \
                     || echo cancel)"

@@ -100,7 +100,7 @@ run_script(){
 
     # nvidia installer?
     if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
-        if $guitool --question --text="$( eval_gettext "Elive already includes a much better and cleaner installer of the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Elive includes a much better and cleaner installer for the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
             else

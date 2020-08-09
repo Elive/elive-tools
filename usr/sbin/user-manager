@@ -743,7 +743,7 @@ autologin_conf(){
         sed -i -e "s|^\(#\)*autologin-user=.*$|autologin-user=$username|g" "/etc/lightdm/lightdm.conf"
 
         local message_autologin_set
-        message_autologin_set="$( printf "$( eval_gettext "Auto-login set to %s" )" "$username" )"
+        message_autologin_set="$( printf "$( eval_gettext "Auto-login set for %s" )" "$username" )"
 
         $guitool --info --text="$message_autologin_set" || true
     fi

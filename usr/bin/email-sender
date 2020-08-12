@@ -462,11 +462,11 @@ do_configure(){
                 ;;
             other)
                 # TODO: implement a questions asking about the stmp / imap / ports addresses, all of them needed, it should simply work
-                $guitool --info --text="$( eval_gettext "This tool actually only supports the listed services avaialble, if you want to use a different one please improve the tool to include the needed conf for your service. Exiting..." )"
+                $guitool --info --text="$( eval_gettext "This tool only supports, for now, the listed services available, if you want to use a different one you can improve the tool to include the needed configuration for your service. Exiting..." )"
                 exit
                 ;;
             Gmail)
-                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with detailed instructions. By other side, you are welcome to improve this tool to support other services too, which is very easy by simply including the needed configurations for them" )"
+                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with detailed instructions. You are welcome to improve this tool to support other services too, which is very easy by simply including the needed configurations" )"
                 ;;
             *)
                 true

@@ -177,7 +177,7 @@ main(){
 
         el_debug "no audio cards found"
 
-        $guitool --warning --text="$( eval_gettext "No audio cards were detected in your system. We suggest trying a different kernel version to verify if has new drivers for your audio card." )"
+        $guitool --warning --text="$( eval_gettext "No audio cards were detected on your computer. We suggest using a different kernel version to try if has new drivers for your audio card." )"
 
         exit
     fi
@@ -233,7 +233,7 @@ main(){
             fi
 
             if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
-                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use, but it has not been the case reconfigure your audio card from the applications menus of Elive." )"
+                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use. You can also reconfigure it manually from the applications menus of Elive." )"
             fi
 
         else

@@ -54,7 +54,7 @@ run_edje(){
 
     # uncompatible edje file
     if ((is_e_invalid)) ; then
-        $guitool --error --text="$( eval_gettext "This EDJE file doesn't look to be compatible or having a known usage. Make sure that is compatible with your version of Enlightenment" )"
+        $guitool --error --text="$( eval_gettext "This EDJE file doesn't look to be compatible or we don't know its usage. Make sure that is compatible with your version of Enlightenment" )"
         return 0
     fi
 
@@ -84,7 +84,7 @@ run_edje(){
     fi
 
     # still here? implement it
-    $guitool --warning --text="$( eval_gettext "Seems like you are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums" )"
+    $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums so we can implement it" )"
 
     el_warning "Unknown EDJE purpose file: groups:\n$( edje_player -G "$file" )"
 }

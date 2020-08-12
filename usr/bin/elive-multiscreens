@@ -115,7 +115,7 @@ module_ecomorph_unload(){
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 
-                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work good with multiple screens. If you want this feature working we have the source code at Github." )"
+                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code at Github." )"
             fi
 
         else
@@ -166,7 +166,7 @@ configure_multiscreens(){
     timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are not yet inside a window manager, this means that you have no window controls and multiple things that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you have yet no window buttons or other features that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"
     fi
 
     # e16
@@ -180,7 +180,7 @@ configure_multiscreens(){
     el_debug "running gui configurator"
 
     # tell the user to save the conf
-    $guitool --info --text="$( eval_gettext "Important: if you want to use your custom resolution in every desktop startup, you need to save it in the 'Save As' option. Otherwise, your options will be not remembered, and they will be not loaded on startup." )"
+    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution in every desktop startup, you need to save it in the 'Save As' option. Otherwise, your options will be not remembered, and they will be not used on each startup." )"
 
     arandr
 
@@ -287,7 +287,7 @@ configure_multiscreens(){
             fi
         else
             if ! (($is_mode_previous_desktop)) ; then
-                $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens or with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
             fi
         fi
         )
@@ -374,7 +374,7 @@ load_multiscreens_configuration(){
                         true
                     else
                         if ! (($is_mode_previous_desktop)) ; then
-                            $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                            $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens or with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                         fi
                     fi
                     )
@@ -467,7 +467,7 @@ load_multiscreens_configuration(){
                     # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
                     true
                 else
-                    $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
+                    $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens or with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                 fi
                 )
 

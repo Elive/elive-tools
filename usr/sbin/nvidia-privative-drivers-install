@@ -343,7 +343,7 @@ detect_driver_version(){
             # suggest the version to use
             if ! ((is_mode_auto)) ; then
                 local message_version_suggest
-                message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version of the drivers." )" "$_NVIDIA_VERSION" )"
+                message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version." )" "$_NVIDIA_VERSION" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Suggested Version" \
@@ -444,7 +444,7 @@ interactive_ask_privative(){
                 local message_message
                 message_message="$( printf "$( eval_gettext "Do you want to install the closed-source graphical drivers of Nvidia? Some computers need them, while other ones work better with the open driver. You should try both modes or each closed-source version to know which one is more suitable for your computer." )" )"
                 local message_extra
-                message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open drivers instead." )" "" )"
+                message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open-source drivers." )" "" )"
 
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -499,7 +499,7 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the free drivers. Using a different Elive version may work too. You can find better help in our forums." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the open-source drivers. Using a different Elive version may work better too. You can find more help in our forums." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "If the install fails..." \
@@ -976,7 +976,7 @@ install_driver(){
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
         local message_warning_install_failed_try_again
-        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by updating the packages list first. This problem can be probably caused due to a too much newer Kernel version." )" "" )"
+        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by first updating the packages list. This problem can be probably caused due to a too much newer Kernel version." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1012,7 +1012,7 @@ install_driver(){
 
                     ## open an interactive shell
                     #if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. After to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and then run the graphical system. After to experiment you can report any change needed for this tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                             #find "/lib/modules/$(uname -r)/updates -type f -iname '*'nvidia'*'
                             #el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                             #el_explain 0 "Type '__exit__' for continue..."
@@ -1049,7 +1049,7 @@ install_driver(){
             if [ "$(stat -c %d/%i /)" != "$(stat -Lc %d/%i /proc/1/root 2>/dev/null)" ]; then
                 echo -e "\n\n"
 
-                if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and eventually run the graphical system. After to experiment you can report any change needed for the tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
+                if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and then run the graphical system. After to experiment you can report any change needed for this tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
                     find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*'
                     el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
                     el_explain 0 "Type '__exit__' for continue..."
@@ -1110,13 +1110,13 @@ install_driver(){
 
 
                 if modprobe $_NVIDIA_MODULE 2>&1 | grep -aqsE "(No supported display adapters|No such device)" || dmesg 2>&1 | colors-remove | grep -aqsi "No NVIDIA graphics adapter found" ; then
-                    message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't look like to be compatible with this version of the drivers, try to use a different version, or try to use the open-drivers instead." )" "" )"
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: Your model of graphic card doesn't look like to be compatible with this version of the drivers, try to use a different version, or try to use the open-source drivers instead." )" "" )"
 
                 fi
 
                 # module simply was not compiled
                 if ! find "/lib/modules/$(uname -r)/updates" -type f -iname '*'nvidia'*' | grep -qs "nvidia" ; then
-                    message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying open-drivers if they work for you." )" "" )"
+                    message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying open-source drivers if they work for you." )" "" )"
                 fi
 
 

@@ -1311,7 +1311,7 @@ el_check_translations_required(){
 
         case "$mode" in
             report)
-                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help to improve the Elive translations, so everybody else could enjoy Elive correctly translated into your language!" )"
+                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help to improve the Elive translations. Everybody will enjoy Elive correctly translated into your language too!" )"
                 ;;
         esac
 
@@ -2343,9 +2343,9 @@ el_step_requires_fixme(){
         cd "${prev_dir}"
         el_set_display_variables
         local _dummy
-        _dummy="$( eval_gettext "Experimental or incomplete code found, report this to Elive if you found it necessary. Exiting..." )"
+        _dummy="$( eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you found it necessary. Exiting..." )"
         if [[ "${DISPLAY}" = ":0.0" ]] ; then
-            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this to Elive if you found it necessary. Exiting..." )"
+            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you found it necessary. Exiting..." )"
         fi
         exit 1
     fi

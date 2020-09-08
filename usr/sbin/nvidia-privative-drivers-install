@@ -1086,7 +1086,7 @@ install_driver(){
         fi
             # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
-            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            dialog --timeout 900 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Simulation mode" \
                 --msgbox "$message_unable_to_load" \
                 0 0

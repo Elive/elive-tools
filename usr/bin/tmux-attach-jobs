@@ -46,8 +46,8 @@ else
     done
 
     # run things in a new window
-    #tmux new-window -t "${group_session}" -n "$win_name" "$@"
-    tmux new-window -t "${group_session}:+" -n "$win_name" "$@"
+    #tmux new-window -t "${group_session}:+" -n "$win_name" "$@"
+    tmux new-window -t "${group_session}" -n "$win_name" "$@"
 
     echo "Jobs run in a background tmux"
     echo "Tip: run 'tmux ls' to list tmux sessions or go to it with 'tmux attach -t $group_session'"

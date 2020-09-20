@@ -858,8 +858,14 @@ el_package_upgrade_fast(){
         # example:  pool/main/e/elive-tools/
         url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
         if [[ -z "$url_subdir" ]] ; then
-            el_error "unable to get the url_subdir for package ${package}: $url_subdir"
-            continue
+            # force update if is not found:
+            el_aptget_update force
+
+            url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
+            if [[ -z "$url_subdir" ]] ; then
+                el_error "unable to get the url_subdir for package ${package}: $url_subdir"
+                continue
+            fi
         fi
 
         # example:  file:///home/thana/packages/mirror-elive/elive/

@@ -108,59 +108,67 @@ get_all_partitions_list(){
     # }}}
     # RAID support (fake-raid - bios featured)) {{{
     if [[ -x /sbin/dmraid ]] && [[ -d /dev/mapper ]] ; then
-        # TODO: deleteme, betatesting
-        if /sbin/dmraid -r 1>/dev/null 2>/dev/null ; then
-            el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"
-        fi
 
         bios_raid_list="$( /sbin/dmraid -r 2>/dev/null | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
-        echo "$bios_raid_list" > /tmp/.bios_raid_list
-        while read -r bios_raid_disk
-        do
-            # RESULTS:
-            # /dev/sdb jmicron_GRAID
-            # /dev/sda jmicron_GRAID
-            for bios_raid_partition in "$bios_raid_disk"
+
+        if [[ -n "$bios_raid_list" ]] ; then
+            echo "$bios_raid_list" > /tmp/.bios_raid_list-$USER
+
+            while read -r bios_raid_disk
             do
-                bios_raid_partition_id="$( echo "$bios_raid_partition" | awk '{print $2}' )"
-                for bios_raid_partition_real in /dev/mapper/${bios_raid_partition_id}*
+                # RESULTS:
+                # /dev/sdb jmicron_GRAID
+                # /dev/sda jmicron_GRAID
+                for bios_raid_partition in "$bios_raid_disk"
                 do
-                    if test -b ${bios_raid_partition_real}
-                    then
-                        unset mounted
-                        bios_raid_partition_remove="$( echo "$bios_raid_partition" | awk '{print $1}' )"
-                        bios_raid_partition_add="${bios_raid_partition_real}"
-                        for bios_raid_partition_remove_number in ${bios_raid_partition_remove}*
-                        do
-                            [[ "$bios_raid_partition_remove_number" = "${bios_raid_partition_remove}" ]] && continue || true
-                            [[ ! -b ${bios_raid_partition_remove_number} ]] && continue || true
-                            mkdir -p /tmp/.mount_tests_$$
-                            if [[ ! "$mounted" = "yes" ]] ; then
-                                mount $bios_raid_partition_add /tmp/.mount_tests_$$ 2>/dev/null && mounted=yes
-                            fi
-                            umount /tmp/.mount_tests_$$ 2>/dev/null
-                            rmdir /tmp/.mount_tests_$$
-                            if [[ "$mounted" = "yes" ]] ; then
-                                listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove_number}||g" )"
-                            else
-                                break
-                            fi
-                        done
-                        [[ ! "$mounted" = "yes" ]] && break
-                        listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove}||g" )"
-                        if ! echo -e "${listpartitions}" | grep -q "${bios_raid_partition_add}"
+                    bios_raid_partition_id="$( echo "$bios_raid_partition" | awk '{print $2}' )"
+                    for bios_raid_partition_real in /dev/mapper/${bios_raid_partition_id}*
+                    do
+                        if test -b ${bios_raid_partition_real}
                         then
-                            listpartitions="${listpartitions} ${bios_raid_partition_add}"
+                            unset mounted
+                            bios_raid_partition_remove="$( echo "$bios_raid_partition" | awk '{print $1}' )"
+                            bios_raid_partition_add="${bios_raid_partition_real}"
+                            for bios_raid_partition_remove_number in ${bios_raid_partition_remove}*
+                            do
+                                [[ "$bios_raid_partition_remove_number" = "${bios_raid_partition_remove}" ]] && continue || true
+                                [[ ! -b ${bios_raid_partition_remove_number} ]] && continue || true
+                                mkdir -p /tmp/.mount_tests_$$
+                                if [[ ! "$mounted" = "yes" ]] ; then
+                                    mount $bios_raid_partition_add /tmp/.mount_tests_$$ 2>/dev/null && mounted=yes
+                                fi
+                                umount /tmp/.mount_tests_$$ 2>/dev/null
+                                rmdir /tmp/.mount_tests_$$
+                                if [[ "$mounted" = "yes" ]] ; then
+                                    listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove_number}||g" )"
+                                else
+                                    break
+                                fi
+                            done
+                            [[ ! "$mounted" = "yes" ]] && break
+                            listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove}||g" )"
+                            if ! echo -e "${listpartitions}" | grep -q "${bios_raid_partition_add}"
+                            then
+                                listpartitions="${listpartitions} ${bios_raid_partition_add}"
+                            fi
                         fi
-                    fi
+                    done
+                    unset bios_raid_partition_remove bios_raid_partition_add
                 done
-                unset bios_raid_partition_remove bios_raid_partition_add
-            done
-            unset bios_raid_partition
-        done < /tmp/.bios_raid_list
-        rm -f /tmp/.bios_raid_list
-        listpartitions="$( echo ${listpartitions} | sed "s|/dev/mapper/${bios_raid_partition_id} ||g" )"
-        unset bios_raid_list bios_raid_partition_id
+                unset bios_raid_partition
+            done < /tmp/.bios_raid_list-$USER
+
+            rm -f /tmp/.bios_raid_list-$USER
+
+            # TODO: deleteme, betatesting
+            #el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"
+            el_warning "the $(basename $0) tool detected a fake-raid (dmraid) on the computer but we don't know if is listed or not, so:\nin /dev/mapper: $(ls -1 /dev/mapper/)\nbios raid list: $(/sbin/dmraid -r 2>&1 )\nRESULT: $listpartitions\nRESULT AFTER: $( echo ${listpartitions} | sed "s|/dev/mapper/${bios_raid_partition_id} ||g" )"
+
+
+            listpartitions="$( echo ${listpartitions} | sed "s|/dev/mapper/${bios_raid_partition_id} ||g" )"
+            unset bios_raid_list bios_raid_partition_id
+
+        fi
     fi
     # put the original list on our array list
     for item in ${listpartitions}

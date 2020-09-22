@@ -320,7 +320,7 @@ main(){
 
     # get the ssid identifier
     if ((is_wifi)) ; then
-        connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | tr ' ' '\n' | grep ESSID | sed -e 's|ESSID:"||g' -e 's|".*$||g' | head -1 )"
+        connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | grep "ESSID:" | sed -e 's|^.*ESSID:"||g' | sed -e 's|"\s*$||g' | head -1 )"
     fi
 
 

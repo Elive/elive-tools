@@ -22,6 +22,11 @@ shift
 win_name="$1"
 shift
 
+if [[ "${group_session}" = "$win_name" ]] ; then
+    el_error "group and windows names should be different"
+    exit 1
+fi
+
 # note since there may be some missing env variables that will give us an empty result (if run from cronjobs for example), let's run this from a bash sub-wrapper
 tmux_nb="$(bash -c "tmux ls 2>/dev/null" | grep "^${group_session}: " | wc -l)"
 

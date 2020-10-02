@@ -109,7 +109,7 @@ get_all_partitions_list(){
     # RAID support (fake-raid - bios featured)) {{{
     if [[ -x /sbin/dmraid ]] && [[ -d /dev/mapper ]] ; then
 
-        bios_raid_list="$( LC_ALL="$EL_LC_EN" /sbin/dmraid -r 2>/dev/null | grep -v "^no raid disks$" | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
+        bios_raid_list="$( LC_ALL="$EL_LC_EN" /sbin/dmraid -r 2>/dev/null | grep -vE "^(no raid disks|no block devices found)$" | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
 
         if [[ -n "$bios_raid_list" ]] ; then
             echo "$bios_raid_list" > /tmp/.bios_raid_list-$USER

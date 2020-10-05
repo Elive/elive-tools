@@ -45,7 +45,7 @@ main(){
                 el_debug "added url '${arg}' "
                 shift
                 ;;
-            chrome|google-chrome|chromium|firefox|firefox-esr|iceweasel|links2|lynx|w3m|netsurf|surf)
+            chrome|google-chrome|chromium|firefox|firefox-esr|iceweasel|links2|lynx|w3m|netsurf|surf|palemoon)
                 el_array_member_add "${arg}" "${browsers[@]}" ; browsers=("${_out[@]}")
                 el_debug "added browser preference '${arg}' "
                 shift
@@ -98,7 +98,7 @@ main(){
         if verify_version_at_least "chromium" "37" ; then
             el_array_member_add "chromium" "${browsers[@]}" ; browsers=("${_out[@]}")
         fi
-        # less preference for firefox because it doens't has an "app" mode
+        # less preference for firefox because it doesn't has an "app" mode
         if verify_version_at_least "firefox-esr" "52" ; then
             el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
         fi
@@ -121,6 +121,7 @@ main(){
     el_array_member_add "firefox-esr" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "firefox" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "iceweasel" "${browsers[@]}" ; browsers=("${_out[@]}")
+    el_array_member_add "palemoon" "${browsers[@]}" ; browsers=("${_out[@]}")
     # lower alternatives
     el_array_member_add "surf" "${browsers[@]}" ; browsers=("${_out[@]}")
     el_array_member_add "netsurf" "${browsers[@]}" ; browsers=("${_out[@]}")
@@ -172,7 +173,7 @@ main(){
                     break
                 fi
                 ;;
-            iceweasel|firefox|firefox-esr)
+            iceweasel|firefox|firefox-esr|palemoon)
                 if [[ -x "$( which "$browser" )" ]] ; then
                     # always use firefox-esr as preference (args like --new-window dont works if not)
                     if [[ -x "$( which "firefox-esr" )" ]] ; then

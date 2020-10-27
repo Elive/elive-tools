@@ -315,7 +315,7 @@ main(){
         else
             if ((has_multiple_cards)) || ((has_usb_audio)) ; then
 
-                if ! $guitool --question --text="$( eval_gettext "Use the same audio card for your microphone?" )" ; then
+                if ! $guitool --question --text="$( eval_gettext "Do you want to use the same audio card for the microphone?" )" ; then
 
                     select_card_multiple
                     mic="$selection"

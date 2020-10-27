@@ -17,7 +17,7 @@ suggest_emodule_flag_keyboard(){
     fi
 
     local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country uses different keyboard layouts. If you want to switch between different language keyboards fastly, right click in the shelf of the bottom right corner to add as content the keyboard gadget." )" "" )"
+    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want to switch between different language keyboards fastly, right-click on the shelf of the corner to add as content the keyboard gadget." )" "" )"
 
     if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         zenity --info --text="$message_suggestion_flag"
@@ -55,7 +55,7 @@ main(){
         zh_CN*|zh_TW*)
             language="Chinese"
             local message_instructions_extra
-            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager first to install one of the suggested options supporting Chinese input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
+            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager first to install one of the suggested options supporting Chinese typing input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
             suggest_emodule_flag_keyboard
             ;;
         vi_VN*)
@@ -82,7 +82,7 @@ main(){
         message_asking="$( printf "$( eval_gettext "Do you want to add support for %s keyboard input to your Elive system?" )" "$language" )"
 
         local message_instructions
-        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings typing '%s' in the launcher. Or in %s. In these settings select the '%s' button and then '%s'. Finally select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. Open a graphical application now and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
+        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings typing '%s' in the launcher. Or in %s. In the opened settings select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
 
         # install
         if zenity --question --text="$message_asking" ; then

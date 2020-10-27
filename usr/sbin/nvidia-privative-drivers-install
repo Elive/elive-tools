@@ -405,7 +405,7 @@ interactive_ask_privative(){
     # more than one type of card found {{{
     if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
-        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
+        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card on your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
 
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -714,7 +714,7 @@ interactive_ask_driver_version(){
                 NOREPORTS=1 el_error "Version 'current' no longer supported for this architecture"
                 sleep 4
 
-                message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, we recommend using the 64bit version of Elive instead. The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
+                message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, you should use the 64bit version of Elive instead. The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
 
                 dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "WARNING" \
@@ -1184,7 +1184,7 @@ try_again(){
     message_option_1="$( printf "$( eval_gettext "Try to install a different version" )" "" )"
 
     local message_option_2
-    message_option_2="$( printf "$( eval_gettext "Use the open drivers:" )" "" ) nouveau"
+    message_option_2="$( printf "$( eval_gettext "Use the open-drivers:" )" "" ) nouveau"
 
     local message_option_3
     message_option_3="$( printf "$( eval_gettext "Exit from this tool and continue (unknown state)" )" "" )"

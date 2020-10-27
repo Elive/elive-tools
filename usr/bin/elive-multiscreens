@@ -163,7 +163,7 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want that Elive use it when starting the system you need to save the configuration." )"
+    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. But if you want Elive loads it when starting the system you need to save its configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
         timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you have yet no window buttons or other features that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"

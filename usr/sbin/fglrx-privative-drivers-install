@@ -195,7 +195,7 @@ interactive_ask_privative(){
     # more than one type of card found {{{
     if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+(AMD|ATI)\W+" | grep -E "(AMD|ATI)" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
         local message_multiple_cards
-        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card in your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
+        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card on your computer, if you select to install the proprietary drivers we will proceed by using your ATI graphic card." )" "" )"
 
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -254,7 +254,7 @@ interactive_ask_privative(){
                 # checks if we can install it {{{
                 if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=radeon" && lsmod | grep -qs '^radeon' ; then
                     local message_reboot_and_select_privative
-                    message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select that option from the boot menu. Or you can select any mode but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
+                    message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the privative drivers you must reboot and select that specific option from the boot menu. Or you can select any mode but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "Free-Driver Option" \
@@ -285,7 +285,7 @@ interactive_ask_privative(){
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
                     if ((is_wheezy)) ; then
-                        message_onlyfree="$( printf "$( eval_gettext "To use the free-drivers reboot and select the 'Only free-drivers' option. Due to compatibility reasons the Radeon module is blacklisted on this boot. In order to have the free-drivers working correctly you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                        message_onlyfree="$( printf "$( eval_gettext "To use the open-drivers reboot and select the 'Only open-drivers' option. Due to compatibility reasons, the Radeon module is blacklisted on this boot mode. In order to have the open-drivers working correctly, you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
                     else
                         message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key. Due to compatibility reasons, is needed to boot without that driver loaded, that's why you need this step in order to continue." )" "modprobe.blacklist=radeon*" )"
                     fi

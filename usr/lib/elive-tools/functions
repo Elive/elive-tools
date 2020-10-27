@@ -2999,7 +2999,7 @@ el_request_donation(){
     _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and continue improving it?" )"
 
     local _dummy3
-    _dummy3="$( eval_gettext "To make a donation only takes you one or two minutes and it guarantees that there will be more versions of Elive in the future and more improved!" )"
+    _dummy3="$( eval_gettext "Making a donation only takes you one or two minutes and it guarantees that there will be more versions of Elive in the future and more improved!" )"
 
     # show it
     #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )" || true

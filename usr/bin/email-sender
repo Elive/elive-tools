@@ -315,7 +315,7 @@ do_validate_sending(){
                 $guitool --info --text="$( eval_gettext "Ready! You can start using now the tool" )"
                 return 0
             else
-                $guitool --error --text="$( eval_gettext "Unable to configure your email, try with a different provider?" )"
+                $guitool --error --text="$( eval_gettext "Unable to configure your email. Try with a different provider?" )"
                 return 1
             fi
             ;;
@@ -439,7 +439,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails you first need to configure your email. Do you want to continue?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails you first need to configure your email. Do you want to do it now?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then
@@ -451,7 +451,7 @@ do_configure(){
         fi
 
         local message_email_service
-        message_email_service="$( printf "$( eval_gettext "Which email service provider you want to use?" )" "" )"
+        message_email_service="$( printf "$( eval_gettext "Which email provider you want to use?" )" "" )"
 
         email_account_type="$( echo -e "Gmail\nDreamhost\nother" | $guitool --list --column="Provider" --text="$message_email_service" || echo cancel )"
 

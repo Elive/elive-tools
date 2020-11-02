@@ -217,6 +217,14 @@ main(){
             "text/plain"|"application/octet-stream")
                 unset mime
 
+                # flatpak
+                if echo "$file" | grep -qsi "\.flatpakref" ; then
+                    # install dep
+                    if ! el_dependencies_check "flatpak" ; then
+                        el_dependencies_install "flatpak|gnome-software-plugin-flatpak"
+                    fi
+                fi
+
                 # edje files are octets
                 if echo "$file" | grep -qsi "\.edj" ; then
                     if edje_player -G "$file" | head -5 | grep -qs "group.*in file" ; then

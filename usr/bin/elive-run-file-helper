@@ -115,6 +115,13 @@ run_script(){
         fi
     fi
 
+    # window executables?
+    if echo "$file" | grep -qsi ".*\.exe" ; then
+        # in fact im not sure that "application/x-executable" is a mimemtype for windows files, but just in case:
+        wine start /unix "$file"
+        exit
+    fi
+
     # warn user
     if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source. Continue?" )" ; then
         return 0

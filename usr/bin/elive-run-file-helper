@@ -143,6 +143,7 @@ run_script(){
     fi
 
     if [[ "$UID" = 0 ]] ; then
+        # root run from a terminal
         if [[ -x "$( which urxvt )" ]] ; then
             $precmd urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
         else
@@ -151,7 +152,9 @@ run_script(){
             fi
         fi
     else
+        # user mode
         if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
+            # auto sudo
             if [[ -x "$( which urxvt )" ]] ; then
                 if ((is_root_wanted)) ; then
                     $precmd urxvt -hold -e bash -c "gksu $file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
@@ -168,6 +171,7 @@ run_script(){
                 fi
             fi
         else
+            # no sudo
             if [[ -x "$( which urxvt )" ]] ; then
                 if ((is_root_wanted)) ; then
                     $precmd urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"

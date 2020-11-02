@@ -9,4 +9,4 @@ StartupNotify=true
 NoDisplay=true
 Icon=logo-elive
 Exec=elive-run-file-helper %F
-MimeType=text/plain;text/x-shellscript;text/x-ruby;text/x-python;text/x-perl;text/x-awk;edj/edje;application/octet-stream
+MimeType=text/plain;text/x-shellscript;text/x-ruby;text/x-python;text/x-perl;text/x-awk;edj/edje;application/octet-stream;application/x-executable

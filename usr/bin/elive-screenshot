@@ -84,6 +84,9 @@ take_screenshot(){
     # range mode (user can click to take the screenshot of a window too)
     if ((is_mode_range)) ; then
         options="--select $options"
+        if scrot -h 2>&1 | grep -qs '\-\-freeze' ; then
+            options="--freeze $options"
+        fi
     fi
     # wait x seconds and show a counter
     if ((is_mode_delayed)) ; then

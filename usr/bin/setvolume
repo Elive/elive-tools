@@ -138,6 +138,22 @@ get_meter(){
             fi
         fi
     fi
+    ##################
+    if [[ -z "$meter" ]] ; then
+        if [[ "$list" = *"'Speaker'"* ]] ; then
+            meter=Speaker
+
+            # verify that this meter really works or skip to the next one
+            if ! set_volume "2%-" 2>/dev/null ; then
+                unset meter
+            fi
+            if ! set_volume "2%+" 2>/dev/null ; then
+                unset meter
+            fi
+        fi
+    fi
+
+
 
 
     # this doesn't exist on this time but may make things working in the future

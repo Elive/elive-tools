@@ -290,6 +290,9 @@ main(){
             "edj/edje"|"application/x-extension-edj"|"application/edje")
                 run_edje "$file"
                 ;;
+            "regular file, no read permission")
+                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to do it, open your file-manager in Admin mode by right-clicking on the directory, then change the properties of the file you want to use." )"
+                ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/
                 if ! echo "$mime" | grep -qsE "(/.*debian.*package$|inode/directory)" ; then

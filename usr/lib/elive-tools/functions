@@ -3091,7 +3091,7 @@ el_config_save(){
     # create conf file
     if ! [[ -s "$tmp_conf_f" ]] ; then
         if ! mkdir -p "$( dirname "$tmp_conf_f" )" ; then
-            el_error "unable to create confs dir: \"$( dirname "$tmp_conf_f" )\""
+            el_error "unable to create confs dir: $( mkdir -p \"$( dirname "$tmp_conf_f" )\" 2>&1 ), $( ls -la "$HOME" | grep "\.config" | tr '\n' ';'  ), $( ls -la "${HOME}/.config/elive/elive-tools/" | tr '\n' ';'  )"
             return 1
         fi
 

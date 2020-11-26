@@ -142,7 +142,7 @@ el_notify(){
 
     case "$mode" in
         nor*)
-            time="$(( $time + 1 ))"
+            time="$(( $time + 2 ))"
             extra_args="$extra_args -u normal"
             ;;
         imp*)

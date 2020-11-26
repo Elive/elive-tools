@@ -68,18 +68,17 @@ do_list(){
                 unable_executable="$executable"
                 if [[ -z "$unable_executable" ]] ; then
                     unable_executable="$cmd"
-                else
-                    if [[ -z "$unable_executable" ]] ; then
-                        unable_executable="$line"
-                    fi
+                fi
+                if [[ -z "$unable_executable" ]] ; then
+                    unable_executable="$line"
                 fi
 
                 local message_unable_title
-                message_unable_title="$( printf "$( eval_gettext "Unable to run %s" )" "$unable_executable" )"
+                message_unable_title="$( printf "$( eval_gettext "Unable to run an autostart application" )" "" )"
                 local message_unable_description
                 message_unable_description="$( printf "$( eval_gettext "You have an autostart application unable to be run. You must install this application or remove it from your list:" )" "" )"
 
-                notify-send -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list"
+                notify-send -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list\n\nFAILED: ${unable_executable}"
 
                 # next!
                 continue

@@ -115,7 +115,7 @@ module_ecomorph_unload(){
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 
-                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code at Github." )"
+                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code on Github at github.com/elive." )"
             fi
 
         else
@@ -166,12 +166,12 @@ configure_multiscreens(){
     timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. But if you want Elive loads it when starting the system you need to save its configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you have yet no window buttons or other features that can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you have yet no window buttons or other features - it can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"
     fi
 
     # e16
     if [[ -n "$EROOT" ]] ; then
-        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens so well as newer versions of Enlightenment.  It is possible that some gadgets or windows will be moved to unexpected positions on the desktop." )"
+        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens so well as newer versions of Enlightenment. It is possible that some gadgets or windows will be moved to unexpected positions on the desktop." )"
     fi
 
     # - explain }}}
@@ -191,7 +191,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have saved any configuration, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
+        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any configuration saved, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
 
             # configure
             arandr
@@ -293,12 +293,12 @@ configure_multiscreens(){
         )
 
         if [[ -n "$E_START" ]] ; then
-            timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that avoids you to be able to move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can found this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+            timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that doesn't let you move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can find this option in the Settings -> Windows -> Window display -> Screen Limits" )"
         fi
 
         sleep 1
 
-        if timeout 25 $guitool --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start again your graphical system?" )" ; then
+        if timeout 25 $guitool --question --text="$( eval_gettext "Do you want to save this configuration to be used when you start your graphical system?" )" ; then
 
             conf_multiscreens_last_autoload_wanted="yes"
             el_debug "user wanted to save permanently this configuration"

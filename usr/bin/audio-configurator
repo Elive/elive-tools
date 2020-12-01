@@ -258,7 +258,7 @@ main(){
 
     # user's conf
     if [[ -e "$DHOME/.shared-home" ]] ; then
-        if $guitool --question --text="$( eval_gettext "Your home is shared with another system, if you try to configure your audio card it may not work in your other system. In such a case you will need to remove the .asoundrc file later. Do you want to continue?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Your home folder is shared with another system, if you try to configure your audio card it may not work in your other system. In such a case you will need to remove the .asoundrc file later. Do you want to continue?" )" ; then
             echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
             echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
         fi
@@ -373,7 +373,7 @@ EOF
             rm -f "${HOME}/.config/setvolume"
             setvolume defaults
 
-            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volumes application in the Sound menu." )" || true
+            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase and to turn down the volume, use your keyboard hotkeys, if they do not work, you can add a new one in the Enlightenment keybinding preferences. You also have a volume application in the Sound menu." )" || true
         fi
 
     fi

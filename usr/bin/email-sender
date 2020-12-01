@@ -303,7 +303,7 @@ do_validate_sending(){
     case "$email_account_type" in
         Dreamhost)
             $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue after you verified it." )"
-            if $guitool --question --text="$( eval_gettext "Does the sending of emails have worked correctly?" )" ; then
+            if $guitool --question --text="$( eval_gettext "Does the sending of emails work correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
                 echo "email_account=\"$email_account\"" >> "$conf"
@@ -377,7 +377,7 @@ do_validate_sending(){
 
     # configure less-secure apps
     local message_lesssecure
-    message_lesssecure="$( printf "$( eval_gettext "You may need to set your google account to allow applications which are considered less secure. Enable it now?" )" )"
+    message_lesssecure="$( printf "$( eval_gettext "You may need to set your Google account to allow applications which are considered less secure. Enable it now?" )" )"
     if $guitool --question --text="$message_lesssecure" ; then
         /etc/alternatives/x-www-browser "https://myaccount.google.com/security?pli=1" &
         sleep 20

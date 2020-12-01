@@ -427,7 +427,7 @@ interactive_ask_privative(){
             if [[ "${memory}" -lt "640000" ]] && ! ((is_mode_auto)) ; then
 
                 local message_low_memory
-                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
+                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this, if is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After you have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Low Memory Computer" \
@@ -440,9 +440,9 @@ interactive_ask_privative(){
                 ret=0
             else
                 local message_title
-                message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+                message_title="$( printf "$( eval_gettext "Nvidia Graphics Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the closed-source graphical drivers of Nvidia? Some computers need them, while other ones work better with the open driver. You should try both modes or each closed-source version to know which one is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install the closed-source graphical drivers of Nvidia? Some computers need them, while other ones work better with the open driver. You should try both modes or each proprietary version to know which one is more suitable for your computer." )" )"
                 local message_extra
                 message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open-source drivers." )" "" )"
 
@@ -499,7 +499,7 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or block your computer, try with the other versions and also check the other boot options, or use the open-source drivers. Using a different Elive version may work better too. You can find more help in our forums." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If these drivers fail or freeze your computer, try with the other versions and also check the other boot options, or use the open-source drivers. Using a different Elive version may work better too. You can find more help in our forums." )" "" )"
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "If the install fails..." \
@@ -848,7 +848,7 @@ install_driver(){
         if laptop-detect ; then
 
             local message_brightness_force
-            message_brightness_force="$( printf "$( eval_gettext "The brightness of your screen works correctly? If you see any problem with the brightness select 'NO' the next time. Select 'YES' if you don't know." )" "" )"
+            message_brightness_force="$( printf "$( eval_gettext "Does the brightness of your screen work correctly? If you see any problem with the brightness select 'NO' the next time. Select 'YES' if you don't know." )" "" )"
 
             if ((is_mode_auto)) ; then
                 ret=0
@@ -976,7 +976,7 @@ install_driver(){
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
         local message_warning_install_failed_try_again
-        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by first updating the packages list. This problem can be probably caused due to a too much newer Kernel version." )" "" )"
+        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by first updating the packages list. This problem can be probably caused due to an excessively new kernel version." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1331,7 +1331,7 @@ uninstall_driver(){
     # reboot needed for nouveau
     #if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=nouveau" ; then
         #local message_title
-        #message_title="$( printf "$( eval_gettext "Nvidia Graphic Card" )" "" )"
+        #message_title="$( printf "$( eval_gettext "Nvidia Graphics Card" )" "" )"
         #local message_message_reboot_open
         #message_message_reboot_open="$( printf "$( eval_gettext "To use the open driver you must reboot without the option of the proprietary drivers because nouveau is disabled. Reboot now to select the other option? Or you can continue to select a different version." )" )"
 

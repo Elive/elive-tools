@@ -333,7 +333,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require compatible 3D accelerated drivers. Try to load the Ecomorph module manually, if it works correctly on your computer, report this issue to the Elive BTS." )"
                 ;;
             multiscreens)
-                zenity --error --text="$( eval_gettext "The module Ecomorph doesn't work well with multiple screens. If you want to make this feature working we have the source code available on Github." )"
+                zenity --error --text="$( eval_gettext "The Ecomorph module doesn't work well with multiple screens. If you want to make this feature working we have the source code available on GitHub at github.com/Elive." )"
                 ;;
         esac
     fi
@@ -426,7 +426,7 @@ main(){
 
     # note: ecomp.sh is needed to detect if emodule-ecomorph is installed (not the lib but the module)
     if ((has_glxinfo_ecomorph_compatibility)) && [[ -x "$(which ecomorph)" ]] && [[ "$( which ecomp.sh )" ]] ; then
-        if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer, and sometimes will be faster. You can deactivate them later disabling the Ecomorph module." )" ; then
+        if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer, and in some cases will be faster. You can deactivate them later disabling the Ecomorph module." )" ; then
             #Some slow computers can also have the desktop slower.
 
             if ! grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then

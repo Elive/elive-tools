@@ -287,7 +287,7 @@ main(){
     if ! ((is_live)) ; then
         if ! ((is_polkit_auth_included)) ; then
             if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
-                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent, but is very important for the correct work of your system, it allows you to use media devices or mount hard disks. But Elive can add a special configuration that can allows you to still use perfectly the disks, are you sure that you want to disable it ?" )" ; then
+                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent, but is very important for the correct work of your system, it allows you to use media devices or mount hard disks. However, Elive can add a special configuration that can allows you to still use perfectly the disks. Are you sure that you want to disable it?" )" ; then
                     is_polkit_auth_disabled_wanted=1
                 else
                     # re-enable it
@@ -330,7 +330,7 @@ EOF
     # gdu
     if ! ((is_live)) ; then
         if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
-            if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case there are errors discovered on your hard disk. Are you sure you want to disable it ?" )" ; then
+            if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case there are errors discovered on your hard disk. Are you sure you want to disable it?" )" ; then
                 true
             else
                 # re-enable it

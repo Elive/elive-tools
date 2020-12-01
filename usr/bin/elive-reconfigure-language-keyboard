@@ -25,7 +25,7 @@ main(){
 
     # mode basic or advanced {{{
     #if zenity --question --text="Do you want to use the basic and easier interface instead of the advanced and complete one?" ; then
-    if zenity --question --text="$( eval_gettext "Do you want to use the basic and easier interface instead of the advanced and complete one?" )" ; then
+    if zenity --question --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" ; then
         is_basic_mode=1
     fi
 

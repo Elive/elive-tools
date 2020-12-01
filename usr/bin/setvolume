@@ -209,7 +209,7 @@ get_meter(){
 
         if ((is_already_configured)) ; then
             el_error "No meters found to configure volumes, is your audio card working?:\nset_volume result with PCM,0: $(amixer -q set PCM "2%-" 2>&1 )\nset_volume result with PCM,1: $(amixer -q set PCM,1 "2%-" 2>&1 )\nset_volume result with MASTER,0: $(amixer -q set MASTER "2%-" 2>&1 )\nlist: $list\namixer scontrols: $(amixer scontrols)\n|$(cat /proc/asound/cards)\n|$(cat "$HOME/.asoundrc" )|###"
-            el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "Your default configured audio card doesn't contain a playback track. Please reconfigure it or reboot your computer" )"
+            el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "Your default configured audio card doesn't contain a playback track. Please reconfigure it or reboot your computer." )"
 
         else
             export is_already_configured=1

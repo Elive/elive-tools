@@ -20,7 +20,7 @@ not_supported(){
 
 run_dmg(){
     local message_dmg
-    message_dmg="$( printf "$( eval_gettext "DMG files belong to MacOS systems. You cannot use them in Linux, but we can open them in Elive so you can extract its contents. Do you want to open it now?" )" "" )"
+    message_dmg="$( printf "$( eval_gettext "DMG files belong to macOS systems. You cannot use them in Linux, but we can open them in Elive so you can extract its contents. Do you want to open it now?" )" "" )"
 
     if $guitool --question --text="$message_dmg" ; then
         filename="$( basename "$file" )"
@@ -84,7 +84,7 @@ run_edje(){
     fi
 
     # still here? implement it
-    $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums so we can implement it" )"
+    $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums so we can implement it." )"
 
     el_warning "Unknown EDJE purpose file: groups:\n$( edje_player -G "$file" )"
 }
@@ -98,7 +98,7 @@ run_script(){
     shift
 
     local message_done
-    message_done="$( printf "$( eval_gettext "All operations are finished. You can close the terminal" )" "" )"
+    message_done="$( printf "$( eval_gettext "All operations are finished. You can now close the terminal." )" "" )"
 
 
     # nvidia installer?
@@ -123,7 +123,7 @@ run_script(){
     fi
 
     # warn user
-    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a confident author or source. Continue?" )" ; then
+    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a well-known or trusted author or source. Continue?" )" ; then
         return 0
     fi
 
@@ -144,7 +144,7 @@ run_script(){
         if $guitool --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
             $precmd chmod +x "$file"
         else
-            $guitool --error --text="$( eval_gettext "If the file has no executable permissions we cannot run it. Exiting..." )"
+            $guitool --error --text="$( eval_gettext "If the file has doesn't have executable permissions we cannot run it. Exiting..." )"
             return 1
         fi
     fi

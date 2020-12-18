@@ -377,11 +377,17 @@ do_validate_sending(){
 
     # configure less-secure apps
     local message_lesssecure
-    message_lesssecure="$( printf "$( eval_gettext "You may need to set your Google account to allow applications which are considered less secure. Enable it now?" )" )"
-    if $guitool --question --text="$message_lesssecure" ; then
-        /etc/alternatives/x-www-browser "https://myaccount.google.com/security?pli=1" &
-        sleep 20
-    fi
+    message_lesssecure="$( printf "$( eval_gettext "You first need the 2-step verification enabled in your Google account" )" )"
+    $guitool --info --text="$message_lesssecure"
+    /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/signinoptions/two-step-verification/enroll-welcome" &
+    sleep 20
+
+    # configure less-secure apps (more)
+    local message_app_password
+    message_app_password="$( printf "$( eval_gettext "Now you need to create an App password. Select Email for the App and Other for the Device, then give a name. Save the password given, this is the one to use with this tool." )" )"
+    $guitool --info --text="$message_app_password"
+    /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/apppasswords" &
+    sleep 20
 
 
     local message_try_again

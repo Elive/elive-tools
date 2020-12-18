@@ -291,10 +291,10 @@ main(){
                 run_edje "$file"
                 ;;
             "application/x-iso9660-image")
-                $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it into a DVD or a USB, Elive includes a special tool for the last one. Or you can also mount it to open its contents by right-clicking to the file which is also another feature by Elive." )"
+                $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it into a DVD or a USB; Elive includes a special tool for the latter. Or you can also mount it to open its contents by right-clicking the file which is also another feature by Elive." )"
                 ;;
             "regular file, no read permission")
-                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to do it, open your file-manager in Admin mode by right-clicking on the directory, then change the properties of the file you want to use." )"
+                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to read the, open your file manager in Admin mode by right-clicking on the directory, then change the properties of the file you want to use." )"
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/

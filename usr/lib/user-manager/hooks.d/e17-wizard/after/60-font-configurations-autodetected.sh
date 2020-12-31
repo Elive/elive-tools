@@ -88,8 +88,8 @@ main(){
         # disable google chrome bookmarks due to size limitations
         for i in "$HOME/.config/google-chrome/Default/Preferences" "$HOME/.config/chromium/Default/Preferences" "/etc/chromium/master_preferences" "/etc/google-chrome/master_preferences" "/etc/skel/.config/google-chrome/Default/Preferences" "/etc/skel/.config/chromium/Default/Preferences"
         do
-            sed -i -e "s|\"show_on_all_tabs\":true|\"show_on_all_tabs\":false|g" "$i"
-            sed -i -e "s|\"show_on_all_tabs\" : true|\"show_on_all_tabs\" : false|g" "$i"
+            sed -i -e "s|^.*\"show_on_all_tabs\":.*$|\"show_on_all_tabs\":false|g" "$i"
+            sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i"
         done
 
         if [[ "$resolution_h" -ge 800 ]] ; then

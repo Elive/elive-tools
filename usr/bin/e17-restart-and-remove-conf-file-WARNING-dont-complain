@@ -25,6 +25,9 @@ if [[ -n "$E_START" ]] ; then
 fi
 
 
+# do a small pause before to continue with anything, because we need to make sure that the confs are removed
+sleep 20
+
 
 #killall -9 Xorg &
 

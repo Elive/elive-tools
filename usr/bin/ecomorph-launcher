@@ -499,7 +499,7 @@ main(){
             if ! ((is_ecomorph_working)) ; then
                 enlightenment_remote -module-disable ecomorph
                 enlightenment_remote -module-unload ecomorph
-                zenity --warning --text="$( eval_gettext "Ecomorph will not work on this computer due to your graphics hardware. You can try to manually enable the module in Settings/Modules, but if it still does not work, you will need to try using it on a different computer." )"
+                zenity --warning --text="$( eval_gettext "Ecomorph will not probably work on this computer due to your graphics hardware. You can try to manually enable the module in Settings/Modules, but if it still does not work, you will need to try using it on a different computer." )"
 
                 exit
             fi

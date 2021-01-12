@@ -638,7 +638,7 @@ user_del(){
 
 
     local translated_message
-    translated_message="$( printf "$( eval_gettext "Are you sure to want to delete the user %s ?" )" "$username" )"
+    translated_message="$( printf "$( eval_gettext "Are you sure to want to delete the user %s?" )" "$username" )"
 
     $guitool --question --text="$translated_message" || exit 1
 

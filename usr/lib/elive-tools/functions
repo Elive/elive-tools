@@ -836,7 +836,7 @@ el_package_upgrade_fast(){
         installed="$( LC_ALL=C apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' )"
         read -r installed <<< "$installed"
         if [[ -z "$installed" ]] ; then
-            el_error "unable to get the version of installed package ${package}: $installed"
+            el_error "unable to get the version of installed package '${package}': $installed:\n$( LC_ALL=C apt-cache policy $package )"
             continue
         fi
 
@@ -850,7 +850,7 @@ el_package_upgrade_fast(){
                 arch="_all"
                 ;;
             *)
-                el_error "unable to get the arch value for package ${package}: $arch"
+                el_error "unable to get the arch value for package '${package}': $arch"
                 continue
                 ;;
         esac
@@ -863,7 +863,7 @@ el_package_upgrade_fast(){
 
             url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
             if [[ -z "$url_subdir" ]] ; then
-                el_error "unable to get the url_subdir for package ${package}: $url_subdir"
+                el_error "unable to get the url_subdir for package '${package}': $url_subdir"
                 continue
             fi
         fi
@@ -875,14 +875,14 @@ el_package_upgrade_fast(){
             #make sure we end on slash
             url="${url%/}/"
         else
-            el_error "unable to get the 'url' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )\nthis feature only works for now with packages from the Elive repository"
+            el_error "unable to get the 'url' for package '${package}': $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )\nthis feature only works for now with packages from the Elive repository"
             continue
         fi
 
         # example:  buster
         distro="$( grep -hE "^deb (http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | tail -1 )"
         if [[ -z "$distro" ]] ; then
-            el_error "unable to get the 'distro' for package ${package}: $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
+            el_error "unable to get the 'distro' for package '${package}': $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
             continue
         fi
 
@@ -892,7 +892,7 @@ el_package_upgrade_fast(){
             "file:///"*)
                 package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package_}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
                 if ! [[ -s "$package_url" ]] ; then
-                    el_error "unable to get the 'package_url' for package ${package} in file:/// mode:\n$( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
+                    el_error "unable to get the 'package_url' for package '${package}' in file:/// mode:\n$( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
                     continue
                 fi
                 ;;
@@ -918,7 +918,7 @@ el_package_upgrade_fast(){
         # example:  3.8.9+0.0.1+git3118fc936-6buster11
         candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
         if [[ -z "$candidate" ]] ; then
-            el_error "unable to get the 'candidate' for package ${package}: $(echo "$package_url" )"
+            el_error "unable to get the 'candidate' for package '${package}': $(echo "$package_url" )"
             continue
         fi
 

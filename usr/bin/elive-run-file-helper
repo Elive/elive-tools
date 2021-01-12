@@ -20,7 +20,7 @@ not_supported(){
 
 run_dmg(){
     local message_dmg
-    message_dmg="$( printf "$( eval_gettext "DMG files belong to macOS systems. You cannot use them in Linux, but we can open them in Elive so you can extract its contents. Do you want to open it now?" )" "" )"
+    message_dmg="$( printf "$( eval_gettext "DMG files belong to macOS systems. You cannot create or modify them in Linux, but you can open them so you can extract its contents. Do you want to open it now?" )" "" )"
 
     if $guitool --question --text="$message_dmg" ; then
         filename="$( basename "$file" )"

@@ -909,10 +909,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the Nvidia when needs more performance. You can use Nvidia in Elive if you install Nvidia, or it will use the Intel if you don't, we are going to use now the Nvidia which is more performant. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected in your system, maybe your laptop uses the special Nvidia Optimus drivers, where the internal card is used for save battery and switches to the Nvidia when needs more performance. You can use Nvidia in Elive if you install Nvidia, or it will use the Intel if you don't, we are going to use now the Nvidia which is more performant. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An extra graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected in your system, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \

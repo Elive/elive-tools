@@ -2937,7 +2937,7 @@ el_processes_using_mountpoint(){
     if [[ "${mode}" = "kill" ]] ; then
         el_debug "Killing processes in reverse mode until the mountpoints is freed"
         # reverse loop of array
-        for (( pid=${#pids_mountpoint[@]}-1 ; pid>=0 ; pid-- ))
+        for (( pid=${#pids_mountpoint[@]} ; pid>=0 ; pid-- ))
         do
             if ps "${pids_mountpoint[pid]}" 1>/dev/null 2>&1 ; then
                 el_debug "Killing process: \n$( ps "${pids_mountpoint[pid]}" )"

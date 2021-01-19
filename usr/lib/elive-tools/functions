@@ -437,13 +437,79 @@ el_title_set(){ # set the Title on the actual Window
 #   Resolutions, get the resolution values
 #-------------------------------------------------------------------------------
 el_resolution_get(){ # show our actual resolution
+    local buf resolution_h resolution_v resolution
 
-    el_dependencies_check xdpyinfo
     el_set_display_variables
 
-    xdpyinfo | LC_ALL=C grep "dimensions:.*x" | awk '{print $2}' | tail -1
+    # xrandr: more reliable based on the primary screen:
+    if [[ -z "$resolution" ]] ; then
+        if [[ -x "$( which xrandr )" ]] ; then
+            buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
 
+            resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
+            read -r resolution_h <<< "$resolution_h"
+            resolution_v="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|^.*x||g' -e 's|\+.*$||g' )"
+            read -r resolution_v <<< "$resolution_v"
+
+            resolution="${resolution_h}x${resolution_v}"
+        else
+            el_warning "suggested missing dependency: xrandr"
+        fi
+    fi
+
+    # faster default fallback
+    if [[ -z "$resolution" ]] ; then
+        if [[ -x "$( which xdpyinfo )" ]] ; then
+            resolution="$( LC_ALL=C xdpyinfo | LC_ALL=C grep "dimensions:.*x" | awk '{print $2}' | tail -1 )"
+        fi
+    fi
+
+    if [[ -n "$resolution" ]] ; then
+        echo "$resolution"
+    else
+        el_error "problem obtaining primary screen resolution, missing dependencies? xdpyinfo | xrandr"
+    fi
 }
+
+#-------------------------------------------------------------------------------
+#   Get the DPI of the primary screen connected
+#-------------------------------------------------------------------------------
+el_dpi_get(){
+    local resolution_h resolution_v screen_size_v screen_size_h buf dpi_v dpi_h
+
+    if el_dependencies_check "xrandr" ; then
+
+        buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
+
+        resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
+        read -r resolution_h <<< "$resolution_h"
+        resolution_v="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|^.*x||g' -e 's|\+.*$||g' )"
+        read -r resolution_v <<< "$resolution_v"
+
+        screen_size_h="$( echo "$buf" | grep "[[:digit:]]mm" | head -1 | sed -e 's|mm||g' )"
+        screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
+        screen_size_v="$( echo "$buf" | grep "[[:digit:]]mm" | tail -1 | sed -e 's|mm||g' )"
+        screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
+
+        if [[ -z "$screen_size_h" ]] || [[ -z "$screen_size_v" ]] ; then
+            el_error "problem obtaining screen sizes"
+            return
+        fi
+    else
+        el_error "missing dependency: xrandr"
+    fi
+
+
+    dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+    dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+
+    if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
+        echo "${dpi_h}x${dpi_v}"
+    else
+        el_error "problem fetching DPI sizes"
+    fi
+}
+
 
 #-------------------------------------------------------------------------------
 #   Dependencies Check

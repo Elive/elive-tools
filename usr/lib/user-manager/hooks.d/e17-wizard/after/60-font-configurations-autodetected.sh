@@ -44,8 +44,7 @@ main(){
 
     # e16
     if [[ -n "$EROOT" ]] ; then
-        resolution="$( LC_ALL=C xrandr -q | grep "^Screen 0" | tr ',' '\n' | grep "current .*x" | sed -e 's|^.*current ||g' -e 's| ||g' | head -1 )"
-        read -r resolution <<< "$resolution"
+        resolution="$( el_resolution_get )"
         resolution_h="${resolution%%x*}"
         resolution_v="${resolution##*x}"
         # defaults
@@ -120,7 +119,9 @@ main(){
     # TODO: add terminology support (12 default, 10 for medium-small, since buster)
 
     # save confs
-    ERM -save
+    if [[ -n "$E_START" ]] ; then
+        ERM -save
+    fi
 
 
     # if we are debugging give it a little pause to see what is going on

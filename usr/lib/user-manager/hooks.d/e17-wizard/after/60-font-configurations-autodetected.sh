@@ -14,6 +14,7 @@ ERM(){
 }
 
 gtk_font_size_change(){
+    # XXX not needed if we use scaling
     local size is_xsettingsd_running
     size="$1"
 
@@ -41,6 +42,32 @@ main(){
 
     # }}}
 
+    dpi="$( el_dpi_get )"
+    if [[ "${dpi}" = *"x"* ]] ; then
+        dpi_h="${dpi%x*}"
+
+        # temporal debug:
+        if [[ "${dpi_h}" != "96" ]] ; then
+            el_warning "temporal debug: new DPI found: $dpi_h"
+        fi
+    fi
+
+    # generic settings:
+    if [[ -n "$dpi_h" ]] ; then
+        # bigger screens:
+        if [[ "${dpi_h}" -ge "120" ]] ; then
+            sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
+            echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
+        fi
+
+        # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)
+        # TODO: VERIFY which file affects this:
+        #gsettings set org.gnome.desktop.interface scaling-factor 2
+        # TODO configure elementary manually?
+
+    else
+        el_error "unable to get dpi value"
+    fi
 
     # e16
     if [[ -n "$EROOT" ]] ; then
@@ -98,7 +125,6 @@ main(){
             # urxvt font size:
             #sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
             sed -i -e 's|pixelsize=.*$|pixelsize=9|g' "$HOME/.Xdefaults"
-            xrdb "$HOME/.Xdefaults"
         else
             if [[ "$resolution_h" -lt 800 ]] ; then
                 # very extreme cases (very small screens)
@@ -106,7 +132,6 @@ main(){
                 gtk_font_size_change "7"
                 # urxvt font size:
                 sed -i -e 's|pixelsize=.*$|pixelsize=7|g' "$HOME/.Xdefaults"
-                xrdb "$HOME/.Xdefaults"
             fi
         fi
     fi
@@ -123,6 +148,8 @@ main(){
         ERM -save
     fi
 
+    # load settings
+    xrdb -merge "$HOME/.Xdefaults"
 
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then

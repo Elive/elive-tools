@@ -502,6 +502,9 @@ el_dpi_get(){
 
     dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
     dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+    # round it into steps of 10?
+    #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
+
 
     if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
         echo "${dpi_h}x${dpi_v}"

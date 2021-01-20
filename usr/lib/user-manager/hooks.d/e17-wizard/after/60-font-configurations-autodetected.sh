@@ -31,6 +31,9 @@ gtk_font_size_change(){
     sed -i -e "/^gtk-font-name=/s|Sans.*$|Sans $size\"|g" "$HOME/.gtkrc-2.0"
 
 
+    # load settings
+    xrdb -merge "$HOME/.Xdefaults"
+
     if ((is_xsettingsd_running)) ; then
         ( xsettingsd 1>/dev/null 2>&1 & )
     fi
@@ -56,8 +59,21 @@ main(){
     if [[ -n "$dpi_h" ]] ; then
         # bigger screens:
         if [[ "${dpi_h}" -ge "120" ]] ; then
+
+            # Set scaling factor into Xdefaults
             sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
             echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
+
+            scale_factor="$( echo "scale=4 ; $dpi_h / 96" | LC_ALL=C bc -l )"
+            if ! echo "$scale_factor" | grep -qs "[[:digit:]]" ; then
+                unset scale_factor
+            fi
+            #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
+
+            if [[ -n "$scale_factor" ]] ; then
+                # set gsettings (saved in ~/.config/dconf/user )
+                gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
+            fi
         fi
 
         # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)

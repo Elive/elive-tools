@@ -40,8 +40,8 @@ main(){
             # update: not works with dots (?)
             #gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
 
-            # set elementary and all E to use the same scaling: NOTE: it is not working ATM
-            #elementary_config -q -s "${scale_factor}"
+            # set elementary and all E to use the same scaling:
+            elementary_config -q -s "${scale_factor}"
 
             # set urxvt to a specific size
             # FIXME: this is overwritten after aparently

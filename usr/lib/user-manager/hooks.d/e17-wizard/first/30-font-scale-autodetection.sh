@@ -47,6 +47,12 @@ main(){
             # FIXME: this is overwritten after aparently
             rxvt_font_size="$( echo "9 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
             sed -i -e "s|pixelsize=.*$|pixelsize=${rxvt_font_size}|g" "$HOME/.Xdefaults"
+
+            # cairo-dock size, 34 value is the default size we used to have
+            cairo_dock_icon_size="$( echo "34 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            sed -i -e "s|^launcher size=.*$|launcher size=${cairo_dock_icon_size};${cairo_dock_icon_size};|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
+            cairo_dock_zoom_space="$( echo "175 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            sed -i -e "s|^sinusoid width=.*$|sinusoid width=${cairo_dock_zoom_space}|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
         fi
 
         # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)
@@ -54,6 +60,24 @@ main(){
         #gsettings set org.gnome.desktop.interface scaling-factor 2
         # TODO configure elementary manually?
         # TODO: terminals like urxvt (font size?)
+
+        # TODO: create a file called ~/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml  in elive-skel files, FROM a new thunar default window opened, and change THEIR relative values to the OBTAINED ones like on this example:
+#--- a/xfce4/xfconf/xfce-perchannel-xml/thunar.xml	2021-01-21 15:29:04.000000000 -0500
+#+++ b/xfce4/xfconf/xfce-perchannel-xml/thunar.xml	2021-01-21 15:31:15.245482016 -0500
+#@@ -3,9 +3,9 @@
+ #<channel name="thunar" version="1.0">
+   #<property name="last-view" type="string" value="ThunarIconView"/>
+   #<property name="last-location-bar" type="string" value="ThunarLocationEntry"/>
+#-  <property name="last-icon-view-zoom-level" type="string" value="THUNAR_ZOOM_LEVEL_100_PERCENT"/>
+#-  <property name="last-window-width" type="int" value="1347"/>
+#-  <property name="last-window-height" type="int" value="859"/>
+#+  <property name="last-icon-view-zoom-level" type="string" value="THUNAR_ZOOM_LEVEL_400_PERCENT"/>
+#+  <property name="last-window-width" type="int" value="1764"/>
+#+  <property name="last-window-height" type="int" value="983"/>
+   #<property name="last-window-maximized" type="bool" value="false"/>
+#-  <property name="last-separator-position" type="int" value="315"/>
+#+  <property name="last-separator-position" type="int" value="279"/>
+
 
     else
         el_error "unable to get dpi value"

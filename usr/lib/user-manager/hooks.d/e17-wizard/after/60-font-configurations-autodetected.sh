@@ -70,6 +70,14 @@ main(){
         if [[ -n "$scale_factor" ]] ; then
             # set gsettings (saved in ~/.config/dconf/user )
             gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
+
+            # set elementary and all E to use the same scaling: NOTE: it is not working ATM
+            #elementary_config -q -s "${scale_factor}"
+
+            # set urxvt to a specific size
+            # FIXME: this is overwritten after aparently
+            rxvt_font_size="$( echo "9 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            sed -i -e "s|pixelsize=.*$|pixelsize=${rxvt_font_size}|g" "$HOME/.Xdefaults"
         fi
 
         # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)

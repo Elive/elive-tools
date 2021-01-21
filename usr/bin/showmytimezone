@@ -331,60 +331,10 @@ convert_timezone()
 }
 
 main(){
-    # pre {{{
-    local result location latitude longitude time_delay time_hwclock time_date
 
-    if ! el_dependencies_check curl ; then
-        if ! el_dependencies_install curl ; then
-            exit 1
-        fi
-    fi
-
-    if ! el_verify_internet ; then
-        el_error "no internet connection found"
-        exit 1
-    fi
-
-    # }}}
-
-    location="$( showmylocation )"
-
-    if ! echo "$location" | grep -qi "Latitude" ; then
-        el_warning "Cannot get latitude info from internet right now"
-    fi
-
-    latitude="$( echo "$location" | awk -v FS="::" '{if ( $1 == "latitude") print $2}' )"
-    longitude="$( echo "$location" | awk -v FS="::" '{if ( $1 == "longitude") print $2}' )"
-
-    if [[ -z "$latitude" ]] || [[ -z "$longitude" ]] ; then
-        el_warning "Cannot get latitude or longitude info from internet right now"
-    fi
-
-    # get our timezone
-    #curl -k -L -s --max-time 12 -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" 1>&2
-    # UPDATE: google maps not works anymore without api, let's disable it
-    #result="$( curl -L -k -s --max-time 12 -A "Mozilla" "https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=$(date +%s)&sensor=false" )"
-
-    # service by: https://github.com/BertoldVdb/ZoneDetect (offline C library too!:)
-    result="$( curl -L -k -s --max-time 12 -A "Mozilla" "https://api.bertold.org/geozone?lat=${latitude}&lon=${longitude}" )"
-
-    if ! echo "$result" | grep -qsi "Timezoneid" ; then
-        # service by: http://www.geonames.org/export/web-services.html#timezone (LIMITED!)
-        result="$( curl -L -k -s --max-time 12 -A "Mozilla" "http://api.geonames.org/timezone?lat=${latitude}&lng=${longitude}&username=demo" )"
-
-        if ! echo "$result" | grep -qsi "Timezoneid" ; then
-            el_warning "Unknown timezone location, using a smart method..."
-            result="$( cat /etc/elive-tools/geolocation/timezones.conf | grep "^last:::" | sed -e 's|^last:::||g' )"
-            if [[ -n "$result" ]] ; then
-                result="<timezoneId>$result</timezoneId>"
-            fi
-        fi
-    fi
-
+    timezone="$( showmylocation | grep "timezone" | awk -v FS="::" '{print $2}' )"
 
     # validate and parse
-    timezone="$( echo "$result" | grep -i "timezoneid" | sed -e 's|^.*timeZoneId" : "||g' -e 's|<timezoneId>||g' -e 's|</timezoneId>||g' -e 's|^.*: "||g' -e 's|",.*$||g' -e 's|"||g' -e '/^$/d' | grep -E "[[:alpha:]]" )"
-
     if [[ -n "$timezone" ]] ; then
         # translate to a useful value
         timezone="$( convert_timezone $timezone )"

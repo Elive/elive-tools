@@ -57,29 +57,26 @@ main(){
 
     # generic settings:
     if [[ -n "$dpi_h" ]] ; then
-        # bigger screens:
-        if [[ "${dpi_h}" -ge "120" ]] ; then
+        # Set scaling factor into Xdefaults
+        sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
+        echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
 
-            # Set scaling factor into Xdefaults
-            sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
-            echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
+        scale_factor="$( echo "scale=4 ; $dpi_h / 96" | LC_ALL=C bc -l )"
+        if ! echo "$scale_factor" | grep -qs "[[:digit:]]" ; then
+            unset scale_factor
+        fi
+        #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
 
-            scale_factor="$( echo "scale=4 ; $dpi_h / 96" | LC_ALL=C bc -l )"
-            if ! echo "$scale_factor" | grep -qs "[[:digit:]]" ; then
-                unset scale_factor
-            fi
-            #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
-
-            if [[ -n "$scale_factor" ]] ; then
-                # set gsettings (saved in ~/.config/dconf/user )
-                gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
-            fi
+        if [[ -n "$scale_factor" ]] ; then
+            # set gsettings (saved in ~/.config/dconf/user )
+            gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
         fi
 
         # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)
         # TODO: VERIFY which file affects this:
         #gsettings set org.gnome.desktop.interface scaling-factor 2
         # TODO configure elementary manually?
+        # TODO: terminals like urxvt (font size?)
 
     else
         el_error "unable to get dpi value"
@@ -97,7 +94,7 @@ main(){
     # e17
     if [[ -n "$E_START" ]] ; then
         # check
-        if [[ "$(enlightenment_remote -ping)" != *pong ]] ; then
+        if [[ "$( enlightenment_remote -ping )" != *pong ]] ; then
             el_error "Unable to connect to DBUS enlightenment_remote"
             exit 1
         fi

@@ -53,6 +53,14 @@ main(){
             sed -i -e "s|^launcher size=.*$|launcher size=${cairo_dock_icon_size};${cairo_dock_icon_size};|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
             cairo_dock_zoom_space="$( echo "175 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
             sed -i -e "s|^sinusoid width=.*$|sinusoid width=${cairo_dock_zoom_space}|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
+
+            # thunar sizes:
+            thunar_separator_position="$( echo "180 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            thunar_window_width="$( echo "640 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            thunar_window_height="$( echo "490 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+            sed -i -e "/last-separator-position/s/value=\".*\"/value=\"${thunar_separator_position}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
+            sed -i -e "/last-window-width/s/value=\".*\"/value=\"${thunar_window_width}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
+            sed -i -e "/last-window-height/s/value=\".*\"/value=\"${thunar_window_height}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         fi
 
         # TODO: define a scaling factor value to configure gnome-3 and elementary (which will include terminology and E too aparently)

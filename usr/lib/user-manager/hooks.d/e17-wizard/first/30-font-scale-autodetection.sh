@@ -18,7 +18,7 @@ main(){
         dpi_h="${dpi%x*}"
 
         # temporal debug:
-        if [[ "${dpi_h}" != "96" ]] ; then
+        if [[ "${dpi_h}" != "96" ]] && [[ "${dpi_h}" != "157" ]] ; then
             el_warning "temporal debug: new DPI found: $dpi_h"
         fi
     fi

@@ -87,6 +87,10 @@ main(){
 #+  <property name="last-separator-position" type="int" value="279"/>
 
 
+        # TODO: set statuc average values for improved size:
+            # Note: While you can set any dpi you like and applications using Qt and GTK will scale accordingly, it's recommended to set it to 96, 120 (25% higher), 144 (50% higher), 168 (75% higher), 192 (100% higher) etc., to reduce scaling artifacts to GUI that use bitmaps. Reducing it below 96 dpi may not reduce size of graphical elements of GUI as typically the lowest dpi the icons are made for is 96.
+
+
     else
         el_error "unable to get dpi value"
     fi

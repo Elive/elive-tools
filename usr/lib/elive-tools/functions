@@ -486,6 +486,11 @@ el_dpi_get(){
         resolution_v="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|^.*x||g' -e 's|\+.*$||g' )"
         read -r resolution_v <<< "$resolution_v"
 
+        if [[ -z "$resolution_v" ]] || [[ -z "$resolution_h" ]] ; then
+            el_error "problem obtaining screen sizes for dpi"
+            return
+        fi
+
         screen_size_h="$( echo "$buf" | grep "[[:digit:]]mm" | head -1 | sed -e 's|mm||g' )"
         screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
         screen_size_v="$( echo "$buf" | grep "[[:digit:]]mm" | tail -1 | sed -e 's|mm||g' )"
@@ -509,7 +514,7 @@ el_dpi_get(){
     if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
         echo "${dpi_h}x${dpi_v}"
     else
-        el_error "problem fetching DPI sizes"
+        el_error "problem fetching DPI sizes - $resolution_v - $resolution_h | $screen_size_v - $screen_size_h | $dpi_v - $dpi_h | $buf"
     fi
 }
 

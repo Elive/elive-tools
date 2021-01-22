@@ -21,7 +21,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # from enlightenment values {{{
-    local display e_ipc_socket
+    local display e_ipc_socket pid
 
     # unset XAUTHORITY if is not from our user (bugs when we "su otheruser")
     # update: we should never unset the XAUTHORITY, verify that this was really wrong before..
@@ -246,7 +246,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target interface
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet_connection"
     mkdir -p "$( dirname "${stamp_hour_prev}" )"
@@ -581,7 +581,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
 #   Install required packages
 #-------------------------------------------------------------------------------
 el_dependencies_install(){
-    local depends temp
+    local depends temp is_password_ok
     # TODO deleteme this deprecated code and all other comma substitution occurencies when the code is updated
         # originall made before 3.8.12
     if echo "$@" | grep -qs "," ; then
@@ -702,7 +702,7 @@ EOF
 #   apt-get wrapper with lock feature
 #-------------------------------------------------------------------------------
 el_aptget(){
-    local is_waiting i
+    local is_waiting i j
     i=0
 
     tput sc
@@ -744,7 +744,7 @@ el_aptget(){
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){
-    local message_updating force want_update buf
+    local message_updating force want_update buf is_password_ok
     force="$1"
 
     el_set_display_variables
@@ -1297,7 +1297,7 @@ el_check_sudo_automated(){
 #===============================================================================
 el_sudo(){
     # pre {{{
-    local args
+    local args is_password_ok
     el_security_function_loop || return 0
 
     args="$@"
@@ -1456,7 +1456,7 @@ el_elive_version_get(){
 #===============================================================================
 el_check_version_is_days_recent(){
     # pre {{{
-    local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference
+    local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference date_today_total_days
     el_debug
     el_security_function_loop || return 0
 
@@ -1523,7 +1523,7 @@ el_check_version_is_days_recent(){
 #===============================================================================
 el_check_version_development_is_days_recent(){
     # pre {{{
-    local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference
+    local date_builded_y date_builded_m date_builded_d date_today_y date_today_m date_today_d days_required date_builded date_today date_builded_total_days days_difference date_today_total_days
     el_debug
     el_security_function_loop || return 0
 
@@ -1731,7 +1731,7 @@ el_debug(){
         return 0
     fi
 
-    local count counter funcnames sourcenames arg sourcename message
+    local count counter funcnames sourcenames_arr arg sourcename message
     message="$@"
 
     # }}}
@@ -1757,23 +1757,23 @@ el_debug(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             if [[ -n "$arg" ]] ; then
                 arg="$( readlink -f "$arg" || true )"
-                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
             fi
         fi
     done
 
     sourcename="$( readlink -f "$0" || true )"
-    if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
-            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+    if [[ -n "$sourcenames_arr" ]] ; then
+        if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
+            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$sourcename $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
-        sourcenames="${sourcenames% }"
-        sourcenames="${sourcenames#> }"
-        #read -r sourcenames <<< "$sourcenames"
+        sourcenames_arr="${sourcenames_arr% }"
+        sourcenames_arr="${sourcenames_arr#> }"
+        #read -r sourcenames_arr <<< "$sourcenames_arr"
     else
-        sourcenames="$sourcename"
+        sourcenames_arr="$sourcename"
     fi
 
     # }}}
@@ -1781,9 +1781,9 @@ el_debug(){
 
     if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if [[ -n "$message" ]] ; then
-            echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
+            echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
         else
-            echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
+            echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
         fi
     else
         if [[ -n "$message" ]] ; then
@@ -1805,7 +1805,7 @@ el_info(){
         return 0
     fi
 
-    local count counter funcnames sourcenames arg sourcename message
+    local count counter funcnames sourcenames_arr arg sourcename message
     message="$@"
 
     # }}}
@@ -1831,30 +1831,30 @@ el_info(){
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             if [[ -n "$arg" ]] ; then
                 arg="$( readlink -f "$arg" || true )"
-                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
             fi
         fi
     done
 
     sourcename="$( readlink -f "$0" || true )"
-    if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$sourcename >"* ]] ; then
-            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+    if [[ -n "$sourcenames_arr" ]] ; then
+        if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
+            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$sourcename $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
-        sourcenames="${sourcenames% }"
-        sourcenames="${sourcenames#> }"
-        #read -r sourcenames <<< "$sourcenames"
+        sourcenames_arr="${sourcenames_arr% }"
+        sourcenames_arr="${sourcenames_arr#> }"
+        #read -r sourcenames_arr <<< "$sourcenames_arr"
     else
-        sourcenames="$sourcename"
+        sourcenames_arr="$sourcename"
     fi
 
     # }}}
     # show info {{{
 
     if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-        echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
+        echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
     else
         echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
     fi
@@ -1869,7 +1869,7 @@ el_info(){
 #===============================================================================
 el_warning(){
     # pre {{{
-    local count counter funcnames sourcenames arg message
+    local count counter funcnames sourcenames_arr arg message
     message="$@"
 
     # }}}
@@ -1894,21 +1894,21 @@ el_warning(){
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             if [[ -n "$arg" ]] ; then
-                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
             fi
         fi
     done
-    if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
-            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+    if [[ -n "$sourcenames_arr" ]] ; then
+        if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
-        sourcenames="${sourcenames% }"
-        sourcenames="${sourcenames#> }"
-        #read -r sourcenames <<< "$sourcenames"
+        sourcenames_arr="${sourcenames_arr% }"
+        sourcenames_arr="${sourcenames_arr#> }"
+        #read -r sourcenames_arr <<< "$sourcenames_arr"
     else
-        sourcenames="$0"
+        sourcenames_arr="$0"
     fi
 
     # }}}
@@ -1917,7 +1917,7 @@ el_warning(){
     if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 1 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
+                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
             fi
@@ -1943,7 +1943,7 @@ el_warning(){
         el_c_gr="\033[1;30m" # Gray color
         el_c_gr2="\033[0;30m" # Gray2 color
 
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_y2}$message${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_y2}$message${el_c_n}"
     fi
 
     # }}}
@@ -1956,7 +1956,7 @@ el_warning(){
 #===============================================================================
 el_error(){
     # pre {{{
-    local count counter funcnames sourcenames arg message
+    local count counter funcnames sourcenames_arr arg message
     message="$@"
 
     # }}}
@@ -1981,21 +1981,21 @@ el_error(){
         count="$(( $count + 1 ))"
         if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
             if [[ -n "$arg" ]] ; then
-                el_array_member_add "$arg >" "${sourcenames[@]}" ; sourcenames=("${_out[@]}")
+                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
             fi
         fi
     done
-    if [[ -n "$sourcenames" ]] ; then
-        if [[ "${sourcenames[@]}" = "$0 >"* ]] ; then
-            sourcenames="$( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+    if [[ -n "$sourcenames_arr" ]] ; then
+        if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         else
-            sourcenames="$0 $( echo "${sourcenames[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
         fi
-        sourcenames="${sourcenames% }"
-        sourcenames="${sourcenames#> }"
-        #read -r sourcenames <<< "$sourcenames"
+        sourcenames_arr="${sourcenames_arr% }"
+        sourcenames_arr="${sourcenames_arr#> }"
+        #read -r sourcenames_arr <<< "$sourcenames_arr"
     else
-        sourcenames="$0"
+        sourcenames_arr="$0"
     fi
 
     # }}}
@@ -2005,7 +2005,7 @@ el_error(){
     if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 0 ]] ; then
             if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
+                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
             else
                 echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
             fi
@@ -2018,7 +2018,7 @@ el_error(){
 
     if [[ -n "${BASH_SOURCE[@]}" ]] ; then
         # set colors for our reports
-        local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2
+        local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2 el_c_gr el_c_gr2
         el_c_n="\033[0;39m" # Normal color  (orig: normal)
         el_c_r="\033[1;31m" # Red color  (orig: red)
         el_c_r2="\033[0;31m" # Red2 color  (orig: red)
@@ -2036,7 +2036,7 @@ el_error(){
         el_c_gr2="\033[0;30m" # Gray2 color
 
         # always report warnings with debug (function calls)
-        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
     fi
 
     # }}}
@@ -2072,7 +2072,7 @@ el_group_check(){
 #===============================================================================
 el_group_add(){
     # pre {{{
-    local group
+    local group is_password_ok
 
     group="$1"
 
@@ -2389,7 +2389,7 @@ el_array_print_per_line(){
 #===============================================================================
 el_step_requires_fixme(){
     # pre {{{
-    local dir prev_dir
+    local dir prev_dir message
 
     dir="$1"
     shift
@@ -2450,7 +2450,7 @@ el_report_to_elive(){
         fi
     fi
 
-    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra tool
+    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint
     el_security_function_loop || return 0
     # max 5 reports per tool
     limit_reports_amount=6
@@ -2912,7 +2912,7 @@ el_request_report_bug(){
     local execution_stack
     execution_stack="$( pstree -A -l -n -s $$ )"
     execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
-    el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
+    el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
 
     # - use el_report_to_elive }}}
     # we don't need anything more since the new tool # TODO: remove old code
@@ -2968,7 +2968,7 @@ el_request_report_bug(){
 #===============================================================================
 el_processes_using_mountpoint(){
     # pre {{{
-    local dir mode pid commands pids_mountpoint
+    local dir mode pid commands pids_mountpoint_arr
     el_debug
     el_security_function_loop || return 0
 
@@ -3004,25 +3004,25 @@ el_processes_using_mountpoint(){
         commands="$( ps axo pid,comm 2>/dev/null | awk -v pid="$pid" '{if ($1 == pid) { $1="" ; print $0 }}' | sed 's| $||g' )"
         if [[ -n "$commands" ]] ; then
             echo "Mountpoint busy by process $pid: $commands"
-            el_array_member_add "$pid" "${pids_mountpoint[@]}" ; pids_mountpoint=("${_out[@]}")
+            el_array_member_add "$pid" "${pids_mountpoint_arr[@]}" ; pids_mountpoint_arr=("${_out[@]}")
         fi
     done
 
     if [[ "${mode}" = "kill" ]] ; then
         el_debug "Killing processes in reverse mode until the mountpoints is freed"
         # reverse loop of array
-        for (( pid=${#pids_mountpoint[@]} ; pid>=0 ; pid-- ))
+        for (( pid=${#pids_mountpoint_arr[@]} ; pid>=0 ; pid-- ))
         do
-            if ps "${pids_mountpoint[pid]}" 1>/dev/null 2>&1 ; then
-                el_debug "Killing process: \n$( ps "${pids_mountpoint[pid]}" )"
-                kill "${pids_mountpoint[pid]}" 2>/dev/null
-                kill -9 "${pids_mountpoint[pid]}" 2>/dev/null
+            if ps "${pids_mountpoint_arr[pid]}" 1>/dev/null 2>&1 ; then
+                el_debug "Killing process: \n$( ps "${pids_mountpoint_arr[pid]}" )"
+                kill "${pids_mountpoint_arr[pid]}" 2>/dev/null
+                kill -9 "${pids_mountpoint_arr[pid]}" 2>/dev/null
                 LC_ALL=C sleep 0.2
             fi
         done
     fi
 
-    unset pids_mountpoint
+    unset pids_mountpoint_arr
 }
 
 #===  FUNCTION  ================================================================

@@ -488,7 +488,8 @@ el_dpi_get(){
 
         screen_size_h="$( echo "$buf" | grep "[[:digit:]]mm" | head -1 | sed -e 's|mm||g' )"
         screen_size_v="$( echo "$buf" | grep "[[:digit:]]mm" | tail -1 | sed -e 's|mm||g' )"
-        if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] ; then
+
+        if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "$screen_size_v" -gt 0 ]] && [[ "$screen_size_h" -gt 0 ]] ; then
             screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
             screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
         fi
@@ -496,7 +497,7 @@ el_dpi_get(){
         el_error "missing dependency: xrandr"
     fi
 
-    if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
+    if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "$screen_size_v" -gt 0 ]] && [[ "$screen_size_h" -gt 0 ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
         dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
         dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
         # round it into steps of 10?

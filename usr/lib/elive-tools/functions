@@ -486,62 +486,59 @@ el_dpi_get(){
         resolution_v="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|^.*x||g' -e 's|\+.*$||g' )"
         read -r resolution_v <<< "$resolution_v"
 
-        if [[ -z "$resolution_v" ]] || [[ -z "$resolution_h" ]] ; then
-            el_error "problem obtaining screen sizes for dpi"
-            return
-        fi
-
         screen_size_h="$( echo "$buf" | grep "[[:digit:]]mm" | head -1 | sed -e 's|mm||g' )"
-        screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
         screen_size_v="$( echo "$buf" | grep "[[:digit:]]mm" | tail -1 | sed -e 's|mm||g' )"
-        screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
-
-        if [[ -z "$screen_size_h" ]] || [[ -z "$screen_size_v" ]] ; then
-            el_error "problem obtaining screen sizes"
-            return
+        if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] ; then
+            screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
+            screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
         fi
     else
         el_error "missing dependency: xrandr"
     fi
 
+    if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
+        dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+        dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+        # round it into steps of 10?
+        #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
 
-    dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
-    dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
-    # round it into steps of 10?
-    #dpi_rounded="$((m=dpi_h%10, d=dpi_h-m, m >= 10/2 ? d+10 : d))"
 
+        if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
 
-    if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
-
-        if [[ "$1" != "rounded" ]] ; then
-            echo "${dpi_h}x${dpi_v}"
-        else
-
-            if [[ "${dpi_h}" -le 80 ]] ; then
-                echo "96x96"
-                # temporal debug: this value should be correct?
-                el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
-
-            elif [[ "${dpi_h}" -le 120 ]] ; then
-                echo "96x96"
-            elif [[ "${dpi_h}" -le 165 ]] ; then
-                # 96 x 1.5
-                echo "144x144"
-            elif [[ "${dpi_h}" -le 200 ]] ; then
-                # 96 x 2
-                echo "192x192"
+            if [[ "$1" != "rounded" ]] ; then
+                echo "${dpi_h}x${dpi_v}"
             else
-                # 96 x 2.5 | this should be the maximum default value for now
-                echo "240x240"
-                if [[ "${dpi_h}" -ge 400 ]] ; then
+
+                if [[ "${dpi_h}" -le 80 ]] ; then
+                    echo "96x96"
+                    # temporal debug: this value should be correct?
                     el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+
+                elif [[ "${dpi_h}" -le 120 ]] ; then
+                    echo "96x96"
+                elif [[ "${dpi_h}" -le 165 ]] ; then
+                    # 96 x 1.5
+                    echo "144x144"
+                elif [[ "${dpi_h}" -le 200 ]] ; then
+                    # 96 x 2
+                    echo "192x192"
+                else
+                    # 96 x 2.5 | this should be the maximum default value for now
+                    echo "240x240"
+                    if [[ "${dpi_h}" -ge 400 ]] ; then
+                        el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+                    fi
                 fi
+
+
             fi
-
-
+        else
+            el_error "problem fetching DPI sizes - $resolution_v - $resolution_h | $screen_size_v - $screen_size_h | $dpi_v - $dpi_h | $buf"
         fi
+
     else
-        el_error "problem fetching DPI sizes - $resolution_v - $resolution_h | $screen_size_v - $screen_size_h | $dpi_v - $dpi_h | $buf"
+        # fallback value when we don't have screen sizes and similar
+        echo "96x96"
     fi
 }
 

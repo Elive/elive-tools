@@ -29,6 +29,20 @@ main(){
         sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
         echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
 
+        # cursor size, should be not needed because is already dynamic by dpi
+        #sed -i -e '/Xcursor.size:/d' "$HOME/.Xdefaults"
+        #echo "Xcursor.size: 48" >> "$HOME/.Xdefaults"
+
+        # set a default X cursor mouse theme:
+        if [[ -d "/usr/share/icons/Breeze_Snow/cursors" ]] ; then
+            sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
+            echo "Xcursor.theme: Breeze Snow" >> "$HOME/.Xdefaults"
+
+        elif [[ -d "/usr/share/icons/whiteglass/cursors" ]] ; then
+            sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
+            echo "Xcursor.theme: whiteglass" >> "$HOME/.Xdefaults"
+        fi
+
         scale_factor="$( echo "scale=4 ; $dpi_h / 96" | LC_ALL=C bc -l )"
         if ! echo "$scale_factor" | grep -qs "[[:digit:]]" ; then
             unset scale_factor

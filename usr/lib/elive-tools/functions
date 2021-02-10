@@ -512,7 +512,34 @@ el_dpi_get(){
 
 
     if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
-        echo "${dpi_h}x${dpi_v}"
+
+        if [[ "$1" != "rounded" ]] ; then
+            echo "${dpi_h}x${dpi_v}"
+        else
+
+            if [[ "${dpi_h}" -le 80 ]] ; then
+                echo "96x96"
+                # temporal debug: this value should be correct?
+                el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+
+            elif [[ "${dpi_h}" -le 120 ]] ; then
+                echo "96x96"
+            elif [[ "${dpi_h}" -le 165 ]] ; then
+                # 96 x 1.5
+                echo "144x144"
+            elif [[ "${dpi_h}" -le 200 ]] ; then
+                # 96 x 2
+                echo "192x192"
+            else
+                # 96 x 2.5 | this should be the maximum default value for now
+                echo "240x240"
+                if [[ "${dpi_h}" -ge 400 ]] ; then
+                    el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+                fi
+            fi
+
+
+        fi
     else
         el_error "problem fetching DPI sizes - $resolution_v - $resolution_h | $screen_size_v - $screen_size_h | $dpi_v - $dpi_h | $buf"
     fi

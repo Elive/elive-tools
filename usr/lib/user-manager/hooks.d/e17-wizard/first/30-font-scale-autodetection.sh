@@ -13,7 +13,7 @@ main(){
 
     # }}}
 
-    dpi="$( el_dpi_get )"
+    dpi="$( el_dpi_get "rounded" )"
     if [[ "${dpi}" = *"x"* ]] ; then
         dpi_h="${dpi%x*}"
 

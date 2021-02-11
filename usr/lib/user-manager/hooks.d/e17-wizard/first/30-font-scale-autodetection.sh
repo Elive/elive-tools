@@ -36,7 +36,7 @@ main(){
         # set a default X cursor mouse theme:
         if [[ -d "/usr/share/icons/Breeze_Snow/cursors" ]] ; then
             sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
-            echo "Xcursor.theme: Breeze Snow" >> "$HOME/.Xdefaults"
+            echo "Xcursor.theme: Breeze_Snow" >> "$HOME/.Xdefaults"
 
         elif [[ -d "/usr/share/icons/whiteglass/cursors" ]] ; then
             sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"

@@ -23,7 +23,7 @@ main(){
         # Set scaling factor into Xdefaults
         sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
         echo "Xft.dpi: $dpi_h" >> "$HOME/.Xdefaults"
-        touch /tmp/desktop-restart-$USER
+        is_restart_needed=1
 
         # cursor size, should be not needed because is already dynamic by dpi
         #sed -i -e '/Xcursor.size:/d' "$HOME/.Xdefaults"
@@ -33,12 +33,12 @@ main(){
         if [[ -d "/usr/share/icons/Breeze_Snow/cursors" ]] ; then
             sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
             echo "Xcursor.theme: Breeze_Snow" >> "$HOME/.Xdefaults"
-            touch /tmp/desktop-restart-$USER
+            is_restart_needed=1
 
         elif [[ -d "/usr/share/icons/whiteglass/cursors" ]] ; then
             sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
             echo "Xcursor.theme: whiteglass" >> "$HOME/.Xdefaults"
-            touch /tmp/desktop-restart-$USER
+            is_restart_needed=1
         fi
 
         scale_factor="$( echo "scale=4 ; $dpi_h / 96" | LC_ALL=C bc -l )"
@@ -59,7 +59,7 @@ main(){
             # FIXME: this is overwritten after aparently
             rxvt_font_size="$( echo "9 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
             sed -i -e "s|pixelsize=.*$|pixelsize=${rxvt_font_size}|g" "$HOME/.Xdefaults"
-            touch /tmp/desktop-restart-$USER
+            is_restart_needed=1
 
             # cairo-dock size, 34 value is the default size we used to have
             cairo_dock_icon_size="$( echo "34 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
@@ -112,13 +112,11 @@ main(){
     xrdb -merge "$HOME/.Xdefaults"
 
     # reload desktop
-    if [[ -e "/tmp/desktop-restart-$USER" ]] ; then
+    if ((is_restart_needed)) ; then
         if [[ -n "$EROOT" ]] ; then
             eesh save_config
             eesh restart
         fi
-
-        rm -f /tmp/desktop-restart-$USER
     fi
 
     # if we are debugging give it a little pause to see what is going on

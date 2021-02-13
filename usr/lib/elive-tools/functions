@@ -489,7 +489,7 @@ el_dpi_get(){
         screen_size_h="$( echo "$buf" | grep "[[:digit:]]mm" | head -1 | sed -e 's|mm||g' )"
         screen_size_v="$( echo "$buf" | grep "[[:digit:]]mm" | tail -1 | sed -e 's|mm||g' )"
 
-        if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "$screen_size_v" -gt 0 ]] && [[ "$screen_size_h" -gt 0 ]] ; then
+        if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "${screen_size_v%.*}" -gt 0 ]] && [[ "${screen_size_h%.*}" -gt 0 ]] ; then
             screen_size_h="$( echo "$screen_size_h / 25.4" | LC_ALL=C  bc -l )"
             screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
         fi
@@ -497,7 +497,7 @@ el_dpi_get(){
         el_error "missing dependency: xrandr"
     fi
 
-    if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "$screen_size_v" -gt 0 ]] && [[ "$screen_size_h" -gt 0 ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
+    if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "${screen_size_v%.*}" -gt 0 ]] && [[ "${screen_size_h%.*}" -gt 0 ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
         dpi_h="$( echo "$resolution_h / $screen_size_h" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
         dpi_v="$( echo "$resolution_v / $screen_size_v" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
         # round it into steps of 10?
@@ -508,27 +508,33 @@ el_dpi_get(){
 
             if [[ "$1" != "rounded" ]] ; then
                 echo "${dpi_h}x${dpi_v}"
+                return 0
             else
 
                 if [[ "${dpi_h}" -le 80 ]] ; then
                     echo "96x96"
                     # temporal debug: this value should be correct?
                     el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+                    return 0
 
                 elif [[ "${dpi_h}" -le 120 ]] ; then
                     echo "96x96"
+                    return 0
                 elif [[ "${dpi_h}" -le 165 ]] ; then
                     # 96 x 1.5
                     echo "144x144"
+                    return 0
                 elif [[ "${dpi_h}" -le 200 ]] ; then
                     # 96 x 2
                     echo "192x192"
+                    return 0
                 else
                     # 96 x 2.5 | this should be the maximum default value for now
                     echo "240x240"
                     if [[ "${dpi_h}" -ge 400 ]] ; then
                         el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
                     fi
+                    return 0
                 fi
 
 
@@ -540,6 +546,7 @@ el_dpi_get(){
     else
         # fallback value when we don't have screen sizes and similar
         echo "96x96"
+        return 0
     fi
 }
 

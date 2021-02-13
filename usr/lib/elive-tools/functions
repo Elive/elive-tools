@@ -528,9 +528,14 @@ el_dpi_get(){
                     # 96 x 2
                     echo "192x192"
                     return 0
-                else
-                    # 96 x 2.5 | this should be the maximum default value for now
+                #elif [[ "${dpi_h}" -le 300 ]] ; then
+                elif [[ "${dpi_h}" -le 300 ]] ; then
+                    # 96 x 2.5
                     echo "240x240"
+                    return 0
+                else
+                    # 96 x 3 | this should be the maximum default value for now
+                    echo "288x288"
                     if [[ "${dpi_h}" -ge 400 ]] ; then
                         el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
                     fi

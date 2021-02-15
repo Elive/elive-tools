@@ -63,7 +63,7 @@ main(){
         #gsettings set org.gnome.desktop.interface scaling-factor "${scale_factor}"
 
         # set elementary and all E to use the same scaling:
-        elementary_config -q -s "${scale_factor}"
+        elementary_config -q -s "${scale_factor}"  2>/dev/null
 
         # set urxvt to a specific size
         # FIXME: this is overwritten after aparently

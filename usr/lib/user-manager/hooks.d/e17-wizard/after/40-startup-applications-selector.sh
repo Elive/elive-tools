@@ -119,7 +119,7 @@ main(){
                 ;;
             *)
                 if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
+                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
                         menu+=("TRUE")
                         menu_auto+=("$file")
                         el_debug "state: TRUE"
@@ -142,7 +142,7 @@ main(){
 
 
         # auto menu for live mode
-        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-|pulseaudio)" ; then
+        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
             menu_auto_live+=("$file")
         fi
         # - default to enabled/disabled }}}

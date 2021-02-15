@@ -1,16 +1,17 @@
 #!/bin/bash
 #SOURCE="$0"
-#source /usr/lib/elive-tools/functions
+source /usr/lib/elive-tools/functions
 #REPORTS="1"
 #el_make_environment
 #. gettext.sh
 #TEXTDOMAIN=""
 #export TEXTDOMAIN
 
-
 ERM(){
     if [[ -n "$E_START" ]] ; then
-        enlightenment_remote "$@"
+        el_warning "disabled eremote for fonts configurations in the new versions: $@"
+        #enlightenment_remote "$@"
+        true
         return "$?"
     fi
     if [[ -n "$EROOT" ]] ; then
@@ -18,11 +19,12 @@ ERM(){
         true
         return "$?"
     fi
-
-    el_warning "enlightenment_remote not available?"
 }
 
-gtk_font_size_change(){
+# INFO:
+# Default sizes for the differents dpi's:
+# - 96x96:  8
+font_size_change(){
     # XXX not needed if we use scaling
     local size is_xsettingsd_running
     size="$1"
@@ -39,6 +41,12 @@ gtk_font_size_change(){
     # gtk-2
     sed -i -e "/^gtk-font-name=/s|Sans.*$|Sans $size\"|g" "$HOME/.gtkrc-2.0"
 
+    # urxvt size:
+    sed -i -e "s|pixelsize=.*$|pixelsize=$(( $size + 2 ))|g" "$HOME/.Xdefaults"
+
+    # conky font size change?
+    #sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
+
 
     # load settings
     xrdb -merge "$HOME/.Xdefaults"
@@ -54,14 +62,11 @@ main(){
 
     # }}}
 
-    # e16
-    if [[ -n "$EROOT" ]] ; then
-        resolution="$( el_resolution_get )"
-        resolution_h="${resolution%%x*}"
-        resolution_v="${resolution##*x}"
-        # defaults
-        font="DejaVu Sans"
-    fi
+    # defaults
+    resolution="$( el_resolution_get )"
+    resolution_h="${resolution%%x*}"
+    resolution_v="${resolution##*x}"
+    font="DejaVu Sans"
 
     # e17
     if [[ -n "$E_START" ]] ; then
@@ -81,52 +86,45 @@ main(){
         # automatically set the Font for applications in an optimal size based in the DPI:
         enlightenment_remote -font-set-auto "application" "$font"
 
-        resolution="$( enlightenment_remote -resolution-get )"
-        read -r resolution <<< "$resolution"
-        resolution_h="${resolution%%x*}"
-        resolution_v="${resolution##*x}"
+        #resolution="$( enlightenment_remote -resolution-get )"
+        #read -r resolution <<< "$resolution"
+        #resolution_h="${resolution%%x*}"
+        #resolution_v="${resolution##*x}"
     fi
 
 
+    # this should be the default for all dpi's with the new scaling system:
+    # UPDATE: we don't need it to be dynamic since its default set like it in the confs
+    #font_size_change "8"
 
     # set more specific font sizes for extreme cases
-    if [[ "$resolution_h" -gt 1024 ]] ; then
-        # not needed: we have it already set more optimally
-        #ERM -font-set "application" "$font" 9
-        #gtk_font_size_change "10"
-        true
-    else
-        # disable google chrome bookmarks due to size limitations
+    if [[ "$resolution_h" -le 1024 ]] ; then
+        # disable google chrome bookmarks due to size limitations (only in live due to sudo)
         for i in "$HOME/.config/google-chrome/Default/Preferences" "$HOME/.config/chromium/Default/Preferences" "/etc/chromium/master_preferences" "/etc/google-chrome/master_preferences" "/etc/skel/.config/google-chrome/Default/Preferences" "/etc/skel/.config/chromium/Default/Preferences"
         do
-            sed -i -e "s|^.*\"show_on_all_tabs\":.*$|\"show_on_all_tabs\":false|g" "$i"
-            sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i"
-        done
-
-        if [[ "$resolution_h" -ge 800 ]] ; then
-            # resolutions between 800x* & 1024x*
-            ERM -font-set "application" "$font" 8
-            gtk_font_size_change "8"
-            # urxvt font size:
-            #sed -i -e 's|\(^URxvt.font.*:pixelsize\)=.*|\1=9|g' "$HOME/.Xdefaults"
-            sed -i -e 's|pixelsize=.*$|pixelsize=9|g' "$HOME/.Xdefaults"
-        else
-            if [[ "$resolution_h" -lt 800 ]] ; then
-                # very extreme cases (very small screens)
-                ERM -font-set "application" "$font" 7
-                gtk_font_size_change "7"
-                # urxvt font size:
-                sed -i -e 's|pixelsize=.*$|pixelsize=7|g' "$HOME/.Xdefaults"
+            if grep -qs "boot=live" /proc/cmdline ; then
+                sudo -H sed -i -e "s|^.*\"show_on_all_tabs\":.*$|\"show_on_all_tabs\":false|g" "$i"
+                sudo -H sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i"
+            else
+                sed -i -e "s|^.*\"show_on_all_tabs\":.*$|\"show_on_all_tabs\":false|g" "$i" 2>/dev/null || true
+                sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i" 2>/dev/null || true
             fi
-        fi
+        done
     fi
 
-    if [[ "$resolution_v" -le 800 ]] ; then
+    #if [[ "$resolution_h" -ge 800 ]] ; then
+        ## resolutions between 800x* & 1024x*
+        #ERM -font-set "application" "$font" 8
+        #font_size_change "8"
+    #fi
+    if [[ "$resolution_h" -le 800 ]] ; then
+        # very extreme cases (very small screens)
+        ERM -font-set "application" "$font" 7
+        font_size_change "7"
+        # conky small screens configurations:
         sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
         sed -i -e '/^$/d' "$HOME/.conkyrc"
     fi
-
-    # TODO: add terminology support (12 default, 10 for medium-small, since buster)
 
     # save confs
     if [[ -n "$E_START" ]] ; then

@@ -44,7 +44,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
         if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
-            el_explain 0 "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -52,7 +52,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
         if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
-            el_explain 0 "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -60,7 +60,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
         if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
-            el_explain 0 "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -68,7 +68,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
         if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
-            el_explain 0 "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -76,7 +76,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
         if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
-            el_explain 0 "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -84,7 +84,7 @@ migrate_conf_file(){
     if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
         if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
-            el_explain 0 "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
+            el_debug "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
@@ -94,7 +94,7 @@ migrate_conf_file(){
 
     # show debug to compare results
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        el_explain 0 "Migrated conf file $file as:" 2>> "$cachedir/logs.txt"
+        el_debug "Migrated conf file $file as:" 2>> "$cachedir/logs.txt"
 
         if which colordiff 1>/dev/null 2>&1 ; then
             diff "$file_bkp" "$file" | colordiff >> "$cachedir/logs.txt"
@@ -121,7 +121,7 @@ main(){
     fi
 
     if [[ -e "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" ]] && dpkg --compare-versions "$( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" | tail -1 )" ge "$version" ; then
-        el_explain 0 "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
+        el_debug "xdg home dirs already migrated to new language, version: $( cat "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state" )"
         exit 0
     fi
 

@@ -21,8 +21,8 @@ main(){
         return 0
     fi
 
-    # if we are not in live mode always add a new dpi setting, if we are, ignore if already set
-    if ! grep -qs "boot=live" /proc/cmdline || ! grep -qs "^Xft.dpi: [[:digit:]]+x[[:digit:]]+" "$HOME/.Xdefaults" ; then
+    # if was not configured yet
+    if ! grep -qs "^Xft.dpi: [[:digit:]]" "$HOME/.Xdefaults" ; then
         # Set scaling factor into Xdefaults
         sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
         echo "Xft.dpi: ${dpi%x*}" >> "$HOME/.Xdefaults"

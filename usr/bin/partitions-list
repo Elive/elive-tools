@@ -421,7 +421,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL="$EL_LC_EN" lsblk -nbrino KNAME,SIZE "${item}" | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -nbrino KNAME,SIZE "${item}" 2>/dev/null | awk -v item="${item##*/}" '{if ($1 == item) print $2}' | sort -ug | tail -1 )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 
@@ -595,7 +595,7 @@ get_filesystem(){
     #fi
 
     # use hal
-    fs="$(get_filesystem_lsblk "$dev" )"
+    fs="$(get_filesystem_lsblk "$dev" 2>/dev/null )"
     read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
@@ -624,7 +624,7 @@ get_filesystem(){
 get_filesystem_lsblk(){
     local fs
 
-    fs="$( lsblk -d -rino FSTYPE "$1" )"
+    fs="$( lsblk -d -rino FSTYPE "$1" 2>/dev/null )"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
     fi

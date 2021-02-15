@@ -494,7 +494,7 @@ el_dpi_get(){
             screen_size_v="$( echo "$screen_size_v / 25.4" | LC_ALL=C  bc -l )"
         fi
     else
-        el_error "missing dependency: xrandr"
+        NOREPORTS=1 el_error "missing dependency: xrandr"
     fi
 
     if [[ -n "$screen_size_v" ]] && [[ -n "$screen_size_h" ]] && [[ "${screen_size_v%.*}" -gt 0 ]] && [[ "${screen_size_h%.*}" -gt 0 ]] && [[ -n "$resolution_v" ]] && [[ -n "$resolution_h" ]] ; then
@@ -635,6 +635,7 @@ el_dependencies_install(){
     temp="/tmp/.$(basename $0)-${USER}-$$"
     cat > "${temp}" << EOF
 #!/bin/bash
+SOURCE=dummy
 
 echo -e "Installing Dependencies"
 
@@ -3179,7 +3180,7 @@ el_config_save(){
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
-        el_error "\$0 (source tool) should be set to access to its conf ID"
+        NOREPORTS=1 el_error "\$0 (source tool) should be set to access to its conf ID"
         return 1
     fi
 

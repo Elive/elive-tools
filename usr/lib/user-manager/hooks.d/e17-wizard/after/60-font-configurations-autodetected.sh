@@ -94,8 +94,9 @@ main(){
 
 
     # this should be the default for all dpi's with the new scaling system:
-    # UPDATE: we don't need it to be dynamic since its default set like it in the confs
     #font_size_change "8"
+    # el_dpi_get in mode lowered:
+    font_size_change "9"
 
     # set more specific font sizes for extreme cases
     if [[ "$resolution_h" -le 1024 ]] ; then

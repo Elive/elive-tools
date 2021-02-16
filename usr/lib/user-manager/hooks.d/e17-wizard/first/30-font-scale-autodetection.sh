@@ -14,10 +14,10 @@ main(){
     # }}}
 
     # fetch machine dpi
-    dpi="$( el_dpi_get "rounded" )"
+    dpi="$( el_dpi_get "lowered" )"
     # premature exit
     if [[ "${dpi}" != *"x"* ]] ; then
-        el_error "unable to get machine DPI: $(el_dpi_get 2>&1)"
+        el_error "unable to get machine DPI: $( el_dpi_get 'lowered' 2>&1)"
         return 0
     fi
 

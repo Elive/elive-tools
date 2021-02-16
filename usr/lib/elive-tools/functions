@@ -511,7 +511,12 @@ el_dpi_get(){
                     # reduce dpi by 3 / 4 which looks better
                     dpi_lowered="$( echo "((( ${dpi_h} / 4 ) * 3 ) / 96 ) * 100" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
                     if [[ -n "$dpi_lowered" ]] ; then
-                        echo "${dpi_lowered}x${dpi_lowered}"
+                        if [[ "$dpi_lowered" -le 98 ]] ; then
+                            # 96 should be the min default
+                            echo "96x96"
+                        else
+                            echo "${dpi_lowered}x${dpi_lowered}"
+                        fi
                     else
                         echo "${dpi_h}x${dpi_v}"
                         el_warning "unable to lower the dpi calculation, used the original values instead: ${dpi_h}x${dpi_v}"

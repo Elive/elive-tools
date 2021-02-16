@@ -42,7 +42,8 @@ font_size_change(){
     sed -i -e "/^gtk-font-name=/s|Sans.*$|Sans $size\"|g" "$HOME/.gtkrc-2.0"
 
     # urxvt size:
-    sed -i -e "s|pixelsize=.*$|pixelsize=$(( $size + 2 ))|g" "$HOME/.Xdefaults"
+    # should be statically set to 10 ?? i think it doesn't change
+    #sed -i -e "s|pixelsize=.*$|pixelsize=$(( $size + 2 ))|g" "$HOME/.Xdefaults"
 
     # conky font size change?
     #sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
@@ -95,8 +96,10 @@ main(){
 
     # this should be the default for all dpi's with the new scaling system:
     #font_size_change "8"
-    # el_dpi_get in mode lowered:
-    font_size_change "9"
+    # el_dpi_get in mode lowered en 157
+    #font_size_change "9"
+    # el_dpi_get in mode lowered en 96
+    font_size_change "8"
 
     # set more specific font sizes for extreme cases
     if [[ "$resolution_h" -le 1024 ]] ; then

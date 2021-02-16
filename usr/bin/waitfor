@@ -17,8 +17,9 @@ main(){
     if [[ -z "$1" ]] && ! ((is_stdin)) ; then
         #el_explain 0 "Usage: __$(basename $0)__ XXwatchingXX command-to-run and parameters"
         el_explain 0 "Usage: __$(basename $0)__ XXwatchingXX && another-command"
-        el_explain 0 "Waits for a process that finishes before to continue (exit)"
+        el_explain 0 "Waits for another process to finish before to continue (exits), so it can be used to run commands after others has finished"
         el_explain 0 "Details: only one word should be given as process to watch, the process needs to match a simple __ps aux__"
+        el_explain 0 "Example: run in a terminal 'sleep 10', and in another 'waitfor sleep && echo all sleeps finished'"
         exit 1
     fi
     if [[ -n "$2" ]] ; then

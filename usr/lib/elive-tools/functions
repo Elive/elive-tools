@@ -475,7 +475,7 @@ el_resolution_get(){ # show our actual resolution
 #   Get the DPI of the primary screen connected
 #-------------------------------------------------------------------------------
 el_dpi_get(){
-    local resolution_h resolution_v screen_size_v screen_size_h buf dpi_v dpi_h
+    local resolution_h resolution_v screen_size_v screen_size_h buf dpi_v dpi_h dpi_lowered
 
     if el_dependencies_check "xrandr" ; then
 
@@ -506,44 +506,56 @@ el_dpi_get(){
 
         if [[ -n "$dpi_h" ]] && [[ -n "$dpi_v" ]] ; then
 
-            if [[ "$1" != "rounded" ]] ; then
-                echo "${dpi_h}x${dpi_v}"
-                return 0
-            else
-
-                if [[ "${dpi_h}" -le 80 ]] ; then
-                    echo "96x96"
-                    # temporal debug: this value should be correct?
-                    el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
-                    return 0
-
-                elif [[ "${dpi_h}" -le 120 ]] ; then
-                    echo "96x96"
-                    return 0
-                elif [[ "${dpi_h}" -le 165 ]] ; then
-                    # 96 x 1.5
-                    echo "144x144"
-                    return 0
-                elif [[ "${dpi_h}" -le 200 ]] ; then
-                    # 96 x 2
-                    echo "192x192"
-                    return 0
-                #elif [[ "${dpi_h}" -le 300 ]] ; then
-                elif [[ "${dpi_h}" -le 300 ]] ; then
-                    # 96 x 2.5
-                    echo "240x240"
-                    return 0
-                else
-                    # 96 x 3 | this should be the maximum default value for now
-                    echo "288x288"
-                    if [[ "${dpi_h}" -ge 400 ]] ; then
-                        el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+            case "$1" in
+                lowered)
+                    # reduce dpi by 3 / 4 which looks better
+                    dpi_lowered="$( echo "((( ${dpi_h} / 4 ) * 3 ) / 96 ) * 100" | LC_ALL=C  bc -l | sed -e 's|\..*$||g' )"
+                    if [[ -n "$dpi_lowered" ]] ; then
+                        echo "${dpi_lowered}x${dpi_lowered}"
+                    else
+                        echo "${dpi_h}x${dpi_v}"
+                        el_warning "unable to lower the dpi calculation, used the original values instead: ${dpi_h}x${dpi_v}"
                     fi
+                    ;;
+
+                rounded)
+                    if [[ "${dpi_h}" -le 80 ]] ; then
+                        echo "96x96"
+                        # temporal debug: this value should be correct?
+                        el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+                        return 0
+
+                    elif [[ "${dpi_h}" -le 120 ]] ; then
+                        echo "96x96"
+                        return 0
+                    elif [[ "${dpi_h}" -le 165 ]] ; then
+                        # 96 x 1.5
+                        echo "144x144"
+                        return 0
+                    elif [[ "${dpi_h}" -le 200 ]] ; then
+                        # 96 x 2
+                        echo "192x192"
+                        return 0
+                    #elif [[ "${dpi_h}" -le 300 ]] ; then
+                    elif [[ "${dpi_h}" -le 300 ]] ; then
+                        # 96 x 2.5
+                        echo "240x240"
+                        return 0
+                    else
+                        # 96 x 3 | this should be the maximum default value for now
+                        echo "288x288"
+                        if [[ "${dpi_h}" -ge 400 ]] ; then
+                            el_error "wrong dpi fetch? ${dpi_h}x${dpi_v}"
+                        fi
+                        return 0
+                    fi
+                    ;;
+
+                *)
+                    echo "${dpi_h}x${dpi_v}"
                     return 0
-                fi
-
-
-            fi
+                    ;;
+            esac
         else
             el_error "problem fetching DPI sizes - $resolution_v - $resolution_h | $screen_size_v - $screen_size_h | $dpi_v - $dpi_h | $buf"
         fi

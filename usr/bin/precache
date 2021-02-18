@@ -6,7 +6,7 @@ source /usr/lib/elive-tools/functions
 
 
 el_explain_plain(){
-    if [[ "${EL_DEBUG}" -gt "1" ]] ; then
+    if [[ "${EL_DEBUG}" -ge "2" ]] ; then
         echo -e "$@"
     fi
 }

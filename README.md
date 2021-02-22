@@ -20,7 +20,7 @@ One of the most AMAZING tools ever made, extremely handy. It saves "states" of y
 A small tool for using pastebin and sending the link to the elive channels
 
 * waitfor  
-It waits on the shell for a process that terminates and exits, you can use it to do things like when you run `rebuild-packages` but forgot you need to rebuild the iso after, so you can do `$ waitfor rebuild-packages && rebuild-iso` which will wait for the rebuilding of the packages to complete before it rebuilds the ISO, similar to simply typing `rebuild-packages && rebuild-iso` but works without having to quit the rebuild-packages process; you can just run waitfor from another shell!
+It waits on the shell for a process that terminates and exits, you can use it to do things like when you run `rebuild-packages` but forgot you need to rebuild the iso after, so you can do `waitfor rebuild-packages && rebuild-iso` which will wait for the rebuilding of the packages to complete before it rebuilds the ISO, similar to simply typing `rebuild-packages && rebuild-iso` but works without having to quit the rebuild-packages process; you can just run waitfor from another shell!
 
 * user-manager  
 The tool to create users in Elive, it is meant to include all the user-creation features

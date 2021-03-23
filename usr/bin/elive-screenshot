@@ -117,13 +117,16 @@ take_screenshot(){
         if ((is_interactive)) ; then
             el_info "$message_drag_range"
         else
-            # we need to wait a bit so the user is not pressing the keyboard
-            LC_ALL=C sleep 0.33
             notify-send -t 3800 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+            sync
+            LC_ALL=C sleep 0.5
         fi
 
     fi
 
+
+    # we need to wait a bit so the user is not pressing the keyboard
+    LC_ALL=C sleep 0.33
 
     # take screenshot in png first
     scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true

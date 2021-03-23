@@ -537,7 +537,7 @@ install_driver(){
             sleep 4
             NOREPORTS=1 el_error "Unable to load FGLRX module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. The reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version, like the OLD ones. If the video card is old then an older version of the FGLRX driver will be required from an older kernel." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. The reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
         fi
 
 

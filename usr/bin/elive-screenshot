@@ -107,6 +107,9 @@ take_screenshot(){
     fi
     message_drag_range="$( eval_gettext "Drag your mouse to select a region to capture, or click in the desired window" )"
 
+    message_hotkeys="$( eval_gettext "Use Alt or Shift with the hotkey 'Impr' for other options" )"
+    message_window_delayed="$( eval_gettext "Pick the window you want to take a screenshot of by clicking on it, and wait a few seconds." )"
+
 
     # screenshot
     cd "$tmpdir"
@@ -117,16 +120,26 @@ take_screenshot(){
         if ((is_interactive)) ; then
             el_info "$message_drag_range"
         else
-            notify-send -t 3800 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "$message_drag_range"
+            notify-send -t 3800 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_drag_range}\n\n${message_hotkeys}"
             sync
-            LC_ALL=C sleep 0.5
+            LC_ALL=C sleep 0.6
         fi
 
     fi
 
+    if ((is_mode_window)) && ((is_mode_delayed)) ; then
+        if ((is_interactive)) ; then
+            el_info "$message_window_delayed"
+        else
+            notify-send -t 3000 -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
+            sync
+            LC_ALL=C sleep 0.6
+        fi
+    fi
+
 
     # we need to wait a bit so the user is not pressing the keyboard
-    LC_ALL=C sleep 0.33
+    LC_ALL=C sleep 0.4
 
     # take screenshot in png first
     scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true

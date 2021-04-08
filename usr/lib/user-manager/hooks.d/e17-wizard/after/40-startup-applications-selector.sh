@@ -368,6 +368,12 @@ EOF
         menu+=("compositor")
         menu+=("Compositor: Enables transparencies and make dock look better")
 
+        # include xchat by default (going back to old times?)
+        menu+=("FALSE")
+        menu+=("xchat")
+        menu+=("IRC Chat: The Elive Chat channel in IRC")
+
+
         # conky
         if [[ -x "$(which 'conky' )" ]] ; then
             menu+=("TRUE")

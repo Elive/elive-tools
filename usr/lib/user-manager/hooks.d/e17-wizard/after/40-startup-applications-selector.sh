@@ -119,13 +119,25 @@ main(){
                 ;;
             *)
                 if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
-                        menu+=("TRUE")
-                        menu_auto+=("$file")
-                        el_debug "state: TRUE"
+                    # E16 requires different ones
+                    if [[ -n "$EROOT" ]] ; then
+                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-|blueman)" ; then
+                            menu+=("TRUE")
+                            menu_auto+=("$file")
+                            el_debug "state: TRUE"
+                        else
+                            menu+=("FALSE")
+                            el_debug "state: FALSE"
+                        fi
                     else
-                        menu+=("FALSE")
-                        el_debug "state: FALSE"
+                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
+                            menu+=("TRUE")
+                            menu_auto+=("$file")
+                            el_debug "state: TRUE"
+                        else
+                            menu+=("FALSE")
+                            el_debug "state: FALSE"
+                        fi
                     fi
                 else
                     if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
@@ -142,8 +154,14 @@ main(){
 
 
         # auto menu for live mode
-        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
-            menu_auto_live+=("$file")
+        if [[ -n "$EROOT" ]] ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio|blueman)" ; then
+                menu_auto_live+=("$file")
+            fi
+        else
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
+                menu_auto_live+=("$file")
+            fi
         fi
         # - default to enabled/disabled }}}
 

@@ -13,7 +13,7 @@ if [[ -n "$EROOT" ]] ; then
     # stop all launched applications first
     elive-autostart-applications "stop"
     # freeze E, restore everything, then kill E to restart it
-    tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
+    tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; killall -9 cairo-dock 2>/dev/null ; killall -9 conky 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
 fi
 
 if [[ -n "$E_START" ]] ; then

@@ -303,7 +303,7 @@ main(){
                 fi
                 # run a default launcher in any of the cases!
                 if [[ -x "/usr/bin/thunar" ]] ; then
-                    $precmd thunar "$file"
+                    $precmd xdg-open "$file"
                 fi
                 ;;
         esac

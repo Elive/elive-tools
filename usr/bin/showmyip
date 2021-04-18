@@ -74,7 +74,7 @@ main(){
 
 
     if ! verify_ip_validity ; then
-        el_error "Not correct external IP get"
+        el_error "Not correct external IP get: '$ip'"
         exit 1
     else
         echo "$ip"

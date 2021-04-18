@@ -9,7 +9,7 @@ This is a brief summary of tools and features:
 
 <details><summary>audio-configurator</summary>
 
-It let's you to configure and use a specific alsa card (yes, really!)
+It lets you configure and use a specific alsa card (yes, really!)
 
 </details>
 <details>

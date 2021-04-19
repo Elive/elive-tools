@@ -769,7 +769,7 @@ el_aptget(){
             3 ) j="/" ;;
         esac
         tput rc
-        echo -en "\r[$j] Waiting for other software managers to finish..." 1>&2
+        echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
         is_waiting=1
 
         sleep 0.5

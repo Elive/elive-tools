@@ -48,9 +48,9 @@ main(){
         fi
 
         if [[ -n "$minutes" ]] ; then
-            echo -en "\rProcess ${watcher} still running, waiting... [$minutes minutes]     "
+            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$minutes minutes]     "
         else
-            echo -en "\rProcess ${watcher} still running, waiting... [$counter seconds]     "
+            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$counter seconds]     "
         fi
 
 

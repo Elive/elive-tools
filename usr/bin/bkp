@@ -171,7 +171,7 @@ do_save(){
 
     version="$( do_sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
 
-    echo -e "\r${el_c_g}Saved${el_c_n}  [${version}]"
+    echo -e "\r\033[K${el_c_g}Saved${el_c_n}  [${version}]"
     #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
 
 }

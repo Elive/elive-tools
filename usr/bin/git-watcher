@@ -1224,8 +1224,8 @@ do_count_commits(){
                 fi
             fi
 
-            #echo -en "\r${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
-            echo -en "\r${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+            #echo -en "\r\033[K${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+            echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
         fi
 
     done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} )"

@@ -33,7 +33,7 @@ main(){
                     3 ) j="/" ;;
                 esac
                 tput rc
-                echo -en "\r[$j] Waiting for other software managers to finish..."
+                echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
                 flag_busy=1
 
                 sleep 0.5

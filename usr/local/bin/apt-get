@@ -18,7 +18,7 @@ waiter(){
             3 ) j="/" ;;
         esac
         tput rc
-        echo -en "\r[$j] Waiting for other software managers to finish..."
+        echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
         is_waiting=1
 
         LC_ALL=C  sleep 0.5

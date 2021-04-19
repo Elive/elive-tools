@@ -47,12 +47,12 @@ main(){
     rm -f "$tempfile" # it will be created later, but we have the name
 
     echo -e "Going to record, press 'q' for finish, starting in:"
-    #echo -en "\r5" ; sleep 1
-    #echo -en "\r4" ; sleep 1
-    echo -en "\r3" ; sleep 1
-    echo -en "\r2" ; sleep 1
-    echo -en "\r1" ; sleep 1
-    echo -en "\r0\n"
+    #echo -en "\r\033[K5" ; sleep 1
+    #echo -en "\r\033[K4" ; sleep 1
+    echo -en "\r\033[K3" ; sleep 1
+    echo -en "\r\033[K2" ; sleep 1
+    echo -en "\r\033[K1" ; sleep 1
+    echo -en "\r\033[K0\n"
     #-f alsa -ac 2 -ab 128k -i default
 
     ffmpeg -v warning -f x11grab \

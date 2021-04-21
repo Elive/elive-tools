@@ -550,7 +550,7 @@ install_driver(){
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too much recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying open-drivers if they work for you." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying the open source drivers if they work for you." )" "" )"
         fi
 
 

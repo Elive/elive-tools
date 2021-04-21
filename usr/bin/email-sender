@@ -328,7 +328,7 @@ do_validate_sending(){
         if echo "$result" | grep -qs "testing elive email ($random)" ; then
             # succeed
             local message_success_sending
-            message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will find a testing email in your account. You can safely dlete it." )" "" )"
+            message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working, you will find a testing email in your account. You can safely delete it." )" "" )"
 
             if ! { [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; } ; then
                 $guitool --info --text="$message_success_sending" || true

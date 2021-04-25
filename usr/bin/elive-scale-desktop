@@ -307,13 +307,13 @@ main(){
         if ((is_restart_needed_conky)) ; then
             if pidof conky 1>/dev/null ; then
                 killall conky
-                ( conky 1>/dev/null 2>&1 )
+                ( conky 1>/dev/null 2>&1 & disown )
             fi
         fi
         if ((is_restart_needed_cairodock)) ; then
             if pidof cairo-dock 1>/dev/null ; then
                 killall cairo-dock
-                ( cairo-dock 1>/dev/null 2>&1 )
+                ( cairo-dock 1>/dev/null 2>&1 & disown )
             fi
         fi
     fi

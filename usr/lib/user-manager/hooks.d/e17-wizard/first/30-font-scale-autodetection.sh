@@ -64,6 +64,8 @@ main(){
 
         # set elementary and all E to use the same scaling:
         elementary_config -q -s "${scale_factor}"
+        # refresh:
+        elementary_config -q
 
         # set urxvt to a specific size
         # FIXME: this is overwritten after aparently

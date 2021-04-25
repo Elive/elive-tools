@@ -239,6 +239,8 @@ main(){
         fi
     else
         dpi_lowered="$( el_dpi_get "lowered" )"
+        max_value="$(( ${dpi_lowered%x*} * 2.2 ))"
+        max_value="${max_value%.*}"
         # get confs
         el_config_get
         # defaults
@@ -257,7 +259,7 @@ main(){
                 --image-on-top --image=input-touchpad \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}" )" \
-                --scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --mark="Default:96" \
+                --scale --value="$conf_selected_dpi" --min-value=50 --max-value=${max_value} --step=1 --inc-buttons --mark="Default:96" \
                 $NULL || echo cancel )"
         else
             result="$(
@@ -265,11 +267,11 @@ main(){
                 --image-on-top --image=input-touchpad \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}\n\n${message_select_extra}" )" \
-                --scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
+                --scale --value="$conf_selected_dpi" --min-value=50 --max-value=${max_value} --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
                 $NULL || echo cancel )"
         fi
 
-        #--scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --vertical --mark="Default:96" --mark="Your Screen:$( el_dpi_get )"  --mark="Suggested:${dpi_lowered%x*}" \
+        #--scale --value="$conf_selected_dpi" --min-value=50 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="Default:96" --mark="Your Screen:$( el_dpi_get )"  --mark="Suggested:${dpi_lowered%x*}" \
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
             #dpi="$( echo "${result}" | awk -v FS="|" '{print $1}' )"

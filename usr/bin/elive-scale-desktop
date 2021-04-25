@@ -35,7 +35,7 @@ font_size_change(){
         killall xsettingsd
     fi
 
-    el_debug "setting font sizes to ${size} for gtk* apps"
+    el_debug "setting font sizes to ${size} for GTK apps"
 
     # xsettingsd confs:
     sed -i -e "/FontName /s|Sans.*$|Sans $size\"|g" "$HOME/.xsettingsd"
@@ -309,6 +309,7 @@ main(){
         if ((is_restart_needed_e16)) ; then
             if [[ -n "$EROOT" ]] ; then
                 eesh save_config
+                el_debug "restarting E16"
                 eesh restart
             fi
         fi
@@ -316,12 +317,14 @@ main(){
         if ((is_restart_needed_conky)) ; then
             if pidof conky 1>/dev/null ; then
                 killall conky
+                el_debug "restarting conky"
                 ( conky 1>/dev/null 2>&1 & disown )
             fi
         fi
         if ((is_restart_needed_cairodock)) ; then
             if pidof cairo-dock 1>/dev/null ; then
                 killall cairo-dock
+                el_debug "restarting cairo-dock"
                 ( cairo-dock 1>/dev/null 2>&1 & disown )
             fi
         fi

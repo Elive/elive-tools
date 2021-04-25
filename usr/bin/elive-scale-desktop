@@ -259,8 +259,15 @@ main(){
 
         local message_select
         message_select="$( printf "$( eval_gettext "Select the DPI of your screen. This value will resize your desktop as on its percentage." )" "" )"
-        local message_select_extra
-        message_select_extra="$( printf "$( eval_gettext "Point 'A' is the default value of most common screens, select it to optimize your pixels and dimension. Point 'B' is the suggested value for your screen. Point 'C' is the real DPI value of your screen, we suggest a lower value than this one to be able to visualize a more amount of elements in your desktop." )" "" )"
+        #local message_select_extra
+        #message_select_extra="$( printf "$( eval_gettext "Point 'A' is the default value of most common screens, select it to optimize your pixels and dimension. Point 'B' is the suggested value for your screen. Point 'C' is the real DPI value of your screen, we suggest a lower value than this one to be able to visualize a more amount of elements in your desktop." )" "" )"
+        local message_default
+        message_default="$( printf "$( eval_gettext "Default" )" "" )"
+        local message_suggested
+        message_suggested="$( printf "$( eval_gettext "Suggested" )" "" )"
+        local message_yourscreen
+        message_yourscreen="$( printf "$( eval_gettext "Your Screen" )" "" )"
+
 
         if [[ "${dpi_lowered%x*}" -gt 90 ]] && [[ "${dpi_lowered%x*}" -lt 110 ]] ; then
             result="$(
@@ -268,7 +275,7 @@ main(){
                 --image-on-top --image=input-touchpad \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}" )" \
-                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="Default:96" \
+                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="${message_default}:96" \
                 $NULL || echo cancel )"
         else
             result="$(
@@ -276,11 +283,11 @@ main(){
                 --image-on-top --image=input-touchpad \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}\n\n${message_select_extra}" )" \
-                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
+                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="${message_default}:96" --mark="${message_yourscreen}:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="${message_suggested}:${dpi_lowered%x*}" \
                 $NULL || echo cancel )"
         fi
 
-        #--scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="Default:96" --mark="Your Screen:$( el_dpi_get )"  --mark="Suggested:${dpi_lowered%x*}" \
+        #--scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
             #dpi="$( echo "${result}" | awk -v FS="|" '{print $1}' )"

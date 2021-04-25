@@ -3,9 +3,9 @@ SOURCE="$0"
 source /usr/lib/elive-tools/functions
 REPORTS="1"
 #el_make_environment
-#. gettext.sh
-#TEXTDOMAIN=""
-#export TEXTDOMAIN
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
 
 
 ERM(){
@@ -242,7 +242,7 @@ main(){
         el_config_get
         # defaults
         if [[ -z "$conf_selected_dpi" ]] ; then
-            conf_selected_dpi="$dpi_lowered"
+            conf_selected_dpi="${dpi_lowered%x*}"
         fi
 
         result="$(
@@ -250,9 +250,9 @@ main(){
             --image-on-top --image=input-touchpad \
             --title="$( eval_gettext "Desktop Size" )" \
             --text="$( eval_gettext "Select the DPI of your screen. This value will resize your desktop as on its percentage.\n\nPoint 'A' is the default value of most common screens, select it to optimize your pixels and dimension. Point 'B' is the suggested value for your screen. Point 'C' is the real DPI value of your screen, we suggest a lower value than this one to be able to visualize a more amount of elements in your desktop." )" \
-            --scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get )"  --mark="B:${dpi_lowered}" \
+            --scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
             $NULL || echo cancel )"
-            #--scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --vertical --mark="Default:96" --mark="Your Screen:$( el_dpi_get )"  --mark="Suggested:${dpi_lowered}" \
+            #--scale --value="$conf_selected_dpi" --min-value=50 --max-value=400 --step=1 --inc-buttons --vertical --mark="Default:96" --mark="Your Screen:$( el_dpi_get )"  --mark="Suggested:${dpi_lowered%x*}" \
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
             #dpi="$( echo "${result}" | awk -v FS="|" '{print $1}' )"

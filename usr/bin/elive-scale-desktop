@@ -271,16 +271,16 @@ main(){
 
         if [[ "${dpi_lowered%x*}" -gt 90 ]] && [[ "${dpi_lowered%x*}" -lt 110 ]] ; then
             result="$(
-            yad --width=600 --height=200 --center \
-                --image-on-top --image=input-touchpad \
+            yad --width=600 --height=200 --center --on-top \
+                --image-on-top --image=preferences-desktop-display \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}" )" \
                 --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="${message_default}:96" \
                 $NULL || echo cancel )"
         else
             result="$(
-            yad --width=260 --height=480 --center \
-                --image-on-top --image=input-touchpad \
+            yad --width=260 --height=480 --center --on-top \
+                --image-on-top --image=preferences-desktop-display \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}\n\n${message_select_extra}" )" \
                 --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="${message_default}:96" --mark="${message_yourscreen}:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="${message_suggested}:${dpi_lowered%x*}" \

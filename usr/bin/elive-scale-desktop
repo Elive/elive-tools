@@ -143,7 +143,7 @@ update_scaling(){
         # Set scaling factor into Xdefaults
         sed -i -e '/Xft.dpi:/d' "$HOME/.Xdefaults"
         echo "Xft.dpi: ${dpi%x*}" >> "$HOME/.Xdefaults"
-        is_restart_needed=1
+        is_restart_needed_e16=1
     #fi
 
     # cursor size, should be not needed because is already dynamic by dpi
@@ -155,12 +155,12 @@ update_scaling(){
         if [[ -d "/usr/share/icons/Breeze_Snow/cursors" ]] ; then
             sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
             echo "Xcursor.theme: Breeze_Snow" >> "$HOME/.Xdefaults"
-            is_restart_needed=1
+            is_restart_needed_e16=1
         else
             if [[ -d "/usr/share/icons/whiteglass/cursors" ]] ; then
                 sed -i -e '/Xcursor.theme:/d' "$HOME/.Xdefaults"
                 echo "Xcursor.theme: whiteglass" >> "$HOME/.Xdefaults"
-                is_restart_needed=1
+                is_restart_needed_e16=1
             fi
         fi
     fi
@@ -217,6 +217,10 @@ main(){
                     ;;
                 -q|--quiet)
                     is_guide_mode=0
+                    shift
+                    ;;
+                -r|--reload)
+                    is_reload_wanted=1
                     shift
                     ;;
             esac
@@ -289,24 +293,26 @@ main(){
     # load new settings
     xrdb -merge "$HOME/.Xdefaults"
 
-    # reload desktop
-    if ((is_restart_needed)) ; then
-        if [[ -n "$EROOT" ]] ; then
-            eesh save_config
-            eesh restart
+    if ((is_reload_wanted)) ; then
+        # reload desktop
+        if ((is_restart_needed_e16)) ; then
+            if [[ -n "$EROOT" ]] ; then
+                eesh save_config
+                eesh restart
+            fi
         fi
-    fi
 
-    if ((is_restart_needed_conky)) ; then
-        if pidof conky 1>/dev/null ; then
-            killall conky
-            ( conky 1>/dev/null 2>&1 )
+        if ((is_restart_needed_conky)) ; then
+            if pidof conky 1>/dev/null ; then
+                killall conky
+                ( conky 1>/dev/null 2>&1 )
+            fi
         fi
-    fi
-    if ((is_restart_needed_cairodock)) ; then
-        if pidof cairo-dock 1>/dev/null ; then
-            killall cairo-dock
-            ( cairo-dock 1>/dev/null 2>&1 )
+        if ((is_restart_needed_cairodock)) ; then
+            if pidof cairo-dock 1>/dev/null ; then
+                killall cairo-dock
+                ( cairo-dock 1>/dev/null 2>&1 )
+            fi
         fi
     fi
 

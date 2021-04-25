@@ -209,6 +209,11 @@ update_scaling(){
 
 main(){
     # args {{{
+
+    #defaults
+    is_reload_wanted=1
+
+
     if [[ -n "$1" ]] ; then
         for arg in "$@"
         do
@@ -221,8 +226,8 @@ main(){
                     is_guide_mode=0
                     shift
                     ;;
-                -r|--reload)
-                    is_reload_wanted=1
+                --no-reload)
+                    unset is_reload_wanted
                     shift
                     ;;
             esac

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Desktop Size
+GenericName=Configure the size of your fonts and desktop elements
+Icon=preferences-desktop-display
+Exec=elive-scale-desktop
+Terminal=false
+Categories=System;Settings;
+OnlyShowIn=E16

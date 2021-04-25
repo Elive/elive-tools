@@ -50,7 +50,9 @@ font_size_change(){
 
     # conky font size change?
     #sed -i -e 's|:size=8|:size=7|g' "$HOME/.conkyrc"
-    #is_restart_needed_conky=1
+
+    # always restart conky, it needs to refresh the font sizes
+    is_restart_needed_conky=1
 
 
     # load settings

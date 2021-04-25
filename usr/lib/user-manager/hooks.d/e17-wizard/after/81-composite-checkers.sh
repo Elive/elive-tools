@@ -20,11 +20,6 @@ main(){
     # pre {{{
     local file dir temp
 
-    # already shown, ignore
-    if el_flag check "composite-details" ; then
-        return 0
-    fi
-
     # }}}
 
     # virtualized? {{{
@@ -55,11 +50,11 @@ main(){
 
         # ask for specific resolution in virtual machines
         if [[ "$MACHINE_VIRTUAL" = "yes" ]] && ! grep -qs "boot=live" /proc/cmdline && ! [[ "$( find -type f "$HOME/.screenlayout/" 2>/dev/null | wc -l )" -gt 0 ]] ; then
+
             if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to set for it a specific resolution?" )"  ; then
                 elive-multiscreens -c
             fi
         fi
-
     fi
 
     # }}}
@@ -147,9 +142,6 @@ main(){
 
     fi
     # end e17 }}}
-
-
-    el_flag add "composite-details"
 
 
     # if we are debugging give it a little pause to see what is going on

@@ -279,7 +279,7 @@ main(){
                 $NULL || echo cancel )"
         else
             result="$(
-            yad --width=600 --height=200 --center \
+            yad --width=260 --height=480 --center \
                 --image-on-top --image=input-touchpad \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}\n\n${message_select_extra}" )" \

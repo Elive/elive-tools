@@ -186,39 +186,87 @@ update_scaling(){
 
         # set urxvt to a specific size
         # FIXME: this is overwritten after aparently
-        rxvt_font_size="$( echo "9 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+        rxvt_font_size="$( echo "9 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
         sed -i -e "s|pixelsize=.*$|pixelsize=${rxvt_font_size}|g" "$HOME/.Xdefaults"
         el_debug "setting URXVT font size to '${rxvt_font_size}'"
 
         # cairo-dock size, 34 value is the default size we used to have
-        cairo_dock_icon_size="$( echo "34 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+        cairo_dock_icon_size="$( echo "34 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
         sed -i -e "s|^launcher size=.*$|launcher size=${cairo_dock_icon_size};${cairo_dock_icon_size};|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
-        cairo_dock_zoom_space="$( echo "175 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+        cairo_dock_zoom_space="$( echo "175 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
         sed -i -e "s|^sinusoid width=.*$|sinusoid width=${cairo_dock_zoom_space}|g" "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
         is_restart_needed_cairodock=1
         el_debug "setting Cairo-Dock to: icon size '${cairo_dock_icon_size}', zoom space '${cairo_dock_zoom_space}'"
 
         # thunar sizes:
-        thunar_separator_position="$( echo "180 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
-        thunar_window_width="$( echo "640 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
-        thunar_window_height="$( echo "490 * ${scale_factor}" | bc -l | sed -e 's|\..*$||g' )"
+        thunar_separator_position="$( echo "180 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+        thunar_window_width="$( echo "640 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+        thunar_window_height="$( echo "490 * ${scale_factor}" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
         sed -i -e "/last-separator-position/s/value=\".*\"/value=\"${thunar_separator_position}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         sed -i -e "/last-window-width/s/value=\".*\"/value=\"${thunar_window_width}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         sed -i -e "/last-window-height/s/value=\".*\"/value=\"${thunar_window_height}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         el_debug "setting Thunar to: separator position '${thunar_separator_position}', window width '${thunar_window_width}', window height '${thunar_window_height}'"
+
+        # reconfigure chrome / chromium zoom values: {{{
+
+        # default values to resize the conf
+        # 150 % = 2.223901085741545
+        # 125 % = 1.2239010857415449
+        # 110 % = 0.5227586988632231
+        # 100 % = 0.0
+        # 90 % = -0.5778829311823857
+        # 80 % = -1.2239010857415447
+        # 75 % = -1.5778829311823859
+        # 67 % = -2.2239010857415455
+        # 50 % = -3.8017840169239308
+        # 33 % = -6.025685102665476
+        # 25 % = -7.6035680338478615
+
+        scale_percent="$( echo "$scale_factor * 100" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+        chrome_zoom_percent="$( echo "scale=4 ; 100 / ( ${dpi%x*} / 96 )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+
+        if [[ -n "$chrome_zoom_percent" ]] ; then
+            if [[ "${chrome_zoom_percent}" -le "25" ]] ; then
+                chrome_zoom_value="-7.6035680338478615"
+            elif [[ "${chrome_zoom_percent}" -le "33" ]] ; then
+                chrome_zoom_value="-6.025685102665476"
+            elif [[ "${chrome_zoom_percent}" -le "50" ]] ; then
+                chrome_zoom_value="-3.8017840169239308"
+            elif [[ "${chrome_zoom_percent}" -le "67" ]] ; then
+                chrome_zoom_value="-2.2239010857415455"
+            elif [[ "${chrome_zoom_percent}" -le "75" ]] ; then
+                chrome_zoom_value="-1.5778829311823859"
+            elif [[ "${chrome_zoom_percent}" -le "80" ]] ; then
+                chrome_zoom_value="-1.2239010857415447"
+            elif [[ "${chrome_zoom_percent}" -le "90" ]] ; then
+                chrome_zoom_value="-0.5778829311823857"
+            elif [[ "${chrome_zoom_percent}" -le "100" ]] ; then
+                chrome_zoom_value="0.0"
+            elif [[ "${chrome_zoom_percent}" -le "110" ]] ; then
+                chrome_zoom_value="0.5227586988632231"
+            elif [[ "${chrome_zoom_percent}" -le "125" ]] ; then
+                chrome_zoom_value="1.2239010857415449"
+            elif [[ "${chrome_zoom_percent}" -le "150" ]] ; then
+                chrome_zoom_value="2.223901085741545"
+            fi
+        fi
+
+        # }}}
+
+        # chromium / chrome zooms are very big by default, improve them:
+        if pidof chromium 1>/dev/null 2>&1 ; then
+            killall -9 chromium
+            sync ; sleep 2
+        fi
+        if pidof google-chrome 1>/dev/null 2>&1 ; then
+            killall -9 google-chrome
+            sync ; sleep 2
+        fi
+        # update confs
+        perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
+        perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
     fi
 
-    # chromium / chrome zooms are very big by default, improve them:
-    #if pidof chromium 1>/dev/null 2>&1 ; then
-        #killall -9 chromium
-        #sync ; sleep 2
-    #fi
-    #if pidof google-chrome 1>/dev/null 2>&1 ; then
-        #killall -9 google-chrome
-        #sync ; sleep 2
-    #fi
-    #perl -p -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":0.000},|" "$HOME/.config/google-chrome/Default/Preferences"
-    #perl -p -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":0.000},|" "$HOME/.config/chromium/Default/Preferences"
 }
 
 main(){
@@ -261,7 +309,7 @@ main(){
         fi
     else
         dpi_lowered="$( el_dpi_get "lowered" )"
-        max_value="$( echo "${dpi_lowered%x*} * 2.2" | bc -l )"
+        max_value="$( echo "${dpi_lowered%x*} * 2.2" | LC_ALL=C bc -l )"
         max_value="${max_value%.*}"
         el_debug "detected DPI (suggested) ${dpi_lowered}, max DPI suggested for your screen: ${max_value}"
         # get confs

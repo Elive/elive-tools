@@ -207,6 +207,18 @@ update_scaling(){
         sed -i -e "/last-window-height/s/value=\".*\"/value=\"${thunar_window_height}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         el_debug "setting Thunar to: separator position '${thunar_separator_position}', window width '${thunar_window_width}', window height '${thunar_window_height}'"
     fi
+
+    # chromium / chrome zooms are very big by default, improve them:
+    #if pidof chromium 1>/dev/null 2>&1 ; then
+        #killall -9 chromium
+        #sync ; sleep 2
+    #fi
+    #if pidof google-chrome 1>/dev/null 2>&1 ; then
+        #killall -9 google-chrome
+        #sync ; sleep 2
+    #fi
+    #perl -p -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":0.000},|" "$HOME/.config/google-chrome/Default/Preferences"
+    #perl -p -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":0.000},|" "$HOME/.config/chromium/Default/Preferences"
 }
 
 main(){

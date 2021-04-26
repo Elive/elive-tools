@@ -259,7 +259,7 @@ update_scaling(){
                 sync ; sleep 2
             fi
             if pidof chrome 1>/dev/null 2>&1 ; then
-                killall -9 google-chrome
+                killall -9 chrome
                 sync ; sleep 2
             fi
             # update confs

@@ -207,64 +207,67 @@ update_scaling(){
         sed -i -e "/last-window-height/s/value=\".*\"/value=\"${thunar_window_height}\"/g" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml"
         el_debug "setting Thunar to: separator position '${thunar_separator_position}', window width '${thunar_window_width}', window height '${thunar_window_height}'"
 
-        # reconfigure chrome / chromium zoom values: {{{
-
-        # default values to resize the conf
-        # 150 % = 2.223901085741545
-        # 125 % = 1.2239010857415449
-        # 110 % = 0.5227586988632231
-        # 100 % = 0.0
-        # 90 % = -0.5778829311823857
-        # 80 % = -1.2239010857415447
-        # 75 % = -1.5778829311823859
-        # 67 % = -2.2239010857415455
-        # 50 % = -3.8017840169239308
-        # 33 % = -6.025685102665476
-        # 25 % = -7.6035680338478615
-
-        scale_percent="$( echo "$scale_factor * 100" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
-        chrome_zoom_percent="$( echo "scale=4 ; 100 / ( ${dpi%x*} / 96 )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
-
-        if [[ -n "$chrome_zoom_percent" ]] ; then
-            if [[ "${chrome_zoom_percent}" -le "25" ]] ; then
-                chrome_zoom_value="-7.6035680338478615"
-            elif [[ "${chrome_zoom_percent}" -le "33" ]] ; then
-                chrome_zoom_value="-6.025685102665476"
-            elif [[ "${chrome_zoom_percent}" -le "50" ]] ; then
-                chrome_zoom_value="-3.8017840169239308"
-            elif [[ "${chrome_zoom_percent}" -le "67" ]] ; then
-                chrome_zoom_value="-2.2239010857415455"
-            elif [[ "${chrome_zoom_percent}" -le "75" ]] ; then
-                chrome_zoom_value="-1.5778829311823859"
-            elif [[ "${chrome_zoom_percent}" -le "80" ]] ; then
-                chrome_zoom_value="-1.2239010857415447"
-            elif [[ "${chrome_zoom_percent}" -le "90" ]] ; then
-                chrome_zoom_value="-0.5778829311823857"
-            elif [[ "${chrome_zoom_percent}" -le "100" ]] ; then
-                chrome_zoom_value="0.0"
-            elif [[ "${chrome_zoom_percent}" -le "110" ]] ; then
-                chrome_zoom_value="0.5227586988632231"
-            elif [[ "${chrome_zoom_percent}" -le "125" ]] ; then
-                chrome_zoom_value="1.2239010857415449"
-            elif [[ "${chrome_zoom_percent}" -le "150" ]] ; then
-                chrome_zoom_value="2.223901085741545"
-            fi
-        fi
-
-        # }}}
-
         # chromium / chrome zooms are very big by default, improve them:
-        if pidof chromium 1>/dev/null 2>&1 ; then
-            killall -9 chromium
-            sync ; sleep 2
+        if ! ((is_no_chrome)) ; then
+            # reconfigure chrome / chromium zoom values: {{{
+
+            # default values to resize the conf
+            # 150 % = 2.223901085741545
+            # 125 % = 1.2239010857415449
+            # 110 % = 0.5227586988632231
+            # 100 % = 0.0
+            # 90 % = -0.5778829311823857
+            # 80 % = -1.2239010857415447
+            # 75 % = -1.5778829311823859
+            # 67 % = -2.2239010857415455
+            # 50 % = -3.8017840169239308
+            # 33 % = -6.025685102665476
+            # 25 % = -7.6035680338478615
+
+            scale_percent="$( echo "$scale_factor * 100" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+            chrome_zoom_percent="$( echo "scale=4 ; 100 / ( ${dpi%x*} / 96 )" | LC_ALL=C bc -l | sed -e 's|\..*$||g' )"
+
+            if [[ -n "$chrome_zoom_percent" ]] ; then
+                if [[ "${chrome_zoom_percent}" -le "25" ]] ; then
+                    chrome_zoom_value="-7.6035680338478615"
+                elif [[ "${chrome_zoom_percent}" -le "33" ]] ; then
+                    chrome_zoom_value="-6.025685102665476"
+                elif [[ "${chrome_zoom_percent}" -le "50" ]] ; then
+                    chrome_zoom_value="-3.8017840169239308"
+                elif [[ "${chrome_zoom_percent}" -le "67" ]] ; then
+                    chrome_zoom_value="-2.2239010857415455"
+                elif [[ "${chrome_zoom_percent}" -le "75" ]] ; then
+                    chrome_zoom_value="-1.5778829311823859"
+                elif [[ "${chrome_zoom_percent}" -le "80" ]] ; then
+                    chrome_zoom_value="-1.2239010857415447"
+                elif [[ "${chrome_zoom_percent}" -le "90" ]] ; then
+                    chrome_zoom_value="-0.5778829311823857"
+                elif [[ "${chrome_zoom_percent}" -le "100" ]] ; then
+                    chrome_zoom_value="0.0"
+                elif [[ "${chrome_zoom_percent}" -le "110" ]] ; then
+                    chrome_zoom_value="0.5227586988632231"
+                elif [[ "${chrome_zoom_percent}" -le "125" ]] ; then
+                    chrome_zoom_value="1.2239010857415449"
+                elif [[ "${chrome_zoom_percent}" -le "150" ]] ; then
+                    chrome_zoom_value="2.223901085741545"
+                fi
+            fi
+
+            # }}}
+            if pidof chromium 1>/dev/null 2>&1 ; then
+                killall -9 chromium
+                sync ; sleep 2
+            fi
+            if pidof google-chrome 1>/dev/null 2>&1 ; then
+                killall -9 google-chrome
+                sync ; sleep 2
+            fi
+            # update confs
+            perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
+            perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
+
+            el_debug "setting Chromium / Chrome to its default 96-dpi like value to avoid it to be huge"
         fi
-        if pidof google-chrome 1>/dev/null 2>&1 ; then
-            killall -9 google-chrome
-            sync ; sleep 2
-        fi
-        # update confs
-        perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
-        perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
     fi
 
 }
@@ -290,6 +293,10 @@ main(){
                     ;;
                 --no-reload)
                     unset is_reload_wanted
+                    shift
+                    ;;
+                --no-chromium|--no-chrome)
+                    unset is_no_chrome=1
                     shift
                     ;;
             esac

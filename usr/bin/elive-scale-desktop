@@ -266,7 +266,7 @@ update_scaling(){
             perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
             perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
 
-            el_debug "setting Chromium / Chrome to its default 96-dpi like value to avoid it to be huge"
+            el_debug "setting Chromium / Chrome Zoom value to ${chrome_zoom_percent} % to avoid websites to look huge and cramped"
         fi
     fi
 

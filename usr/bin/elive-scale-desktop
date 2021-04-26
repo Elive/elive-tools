@@ -326,7 +326,7 @@ main(){
         local message_default
         message_default="$( printf "$( eval_gettext "Default" )" "" )"
         local message_suggested
-        message_suggested="$( printf "$( eval_gettext "Suggested" )" "" )"
+        message_suggested="$( printf "$( eval_gettext "Recommended" )" "" )"
         local message_yourscreen
         message_yourscreen="$( printf "$( eval_gettext "Your Screen" )" "" )"
 

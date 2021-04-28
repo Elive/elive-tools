@@ -51,6 +51,7 @@ main(){
 
     # create a default dir
     mkdir -p "$(dirname "$order_file" )"
+    mkdir -p "$HOME/.config/autostart"
 
     while read -ru 3 file
     do
@@ -236,7 +237,7 @@ main(){
         el_debug "       (loop)"
         # }}}
 
-    done 3<<< "$( find /etc/xdg/autostart/ -type f -iname '*'.desktop | sort -u )"
+    done 3<<< "$( find /etc/xdg/autostart/ "$HOME/.config/autostart/" -type f -iname '*'.desktop | sort -u )"
 
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then

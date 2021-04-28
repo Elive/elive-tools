@@ -70,26 +70,32 @@ main(){
             iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
             if [[ -n "$iface" ]] ; then
                 case "$iface" in
-                    eth|enp)
+                    eth*|enp*)
                         # ETH lan cable networks, disable wifi features
                         sed -i -e "s|^\(ESSID.*\)$|#\1|gI" "$HOME/.conkyrc"
                         sed -i -e "s|^\(Connection quality.*\)$|#\1|gI" "$HOME/.conkyrc"
                         ;;
+                    lo)
+                        true
+                        ;;
+                    *)
+                        # change iface to our used one
+                        # update: this is not needed, but we need to have the network already set up from wlan before to run this, so it will probably run only when the system is installed
+                        #iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
+                        #if [[ -z "$iface" ]] ; then
+                            #iface="wlan0"
+                        #fi
+                        sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
+                        ;;
                 esac
-                # change iface to our used one
-                # update: this is not needed, but we need to have the network already set up from wlan before to run this, so it will probably run only when the system is installed
-                #iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
-                #if [[ -z "$iface" ]] ; then
-                    #iface="wlan0"
-                #fi
-                sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
             fi
         fi
 
         # change interval if computer is slow
         if [[ "$RAM_TOTAL_SIZE_mb" -lt 2300 ]] ; then
             # reduce time interval
-            sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
+            #sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
+            sed -i -e "s|^.*update_interval.*$|\tupdate_interval = 4.0,|gI" "$HOME/.conkyrc"
         fi
     fi
 

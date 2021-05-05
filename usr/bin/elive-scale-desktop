@@ -331,7 +331,7 @@ main(){
         #local message_select_extra
         #message_select_extra="$( printf "$( eval_gettext "Point 'A' is the default value of most common screens, select it to optimize your pixels and dimension. Point 'B' is the suggested value for your screen. Point 'C' is the real DPI value of your screen, we suggest a lower value than this one to be able to visualize a more amount of elements in your desktop." )" "" )"
         local message_default
-        message_default="$( printf "$( eval_gettext "Default" )" "" )"
+        message_default="$( printf "$( eval_gettext "Traditional" )" "" )"
         local message_suggested
         message_suggested="$( printf "$( eval_gettext "Recommended" )" "" )"
         local message_yourscreen

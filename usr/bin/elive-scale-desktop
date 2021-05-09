@@ -316,7 +316,7 @@ main(){
         fi
     else
         dpi_lowered="$( el_dpi_get "lowered" )"
-        max_value="$( echo "${dpi_lowered%x*} * 2.2" | LC_ALL=C bc -l )"
+        max_value="$( echo "${dpi_lowered%x*} * 1.8" | LC_ALL=C bc -l )"
         max_value="${max_value%.*}"
         el_debug "detected DPI (suggested) ${dpi_lowered}, max DPI suggested for your screen: ${max_value}"
         # get confs
@@ -352,11 +352,12 @@ main(){
                 --image-on-top --image=preferences-desktop-display \
                 --title="$( eval_gettext "Desktop Size" )" \
                 --text="$( eval_gettext "${message_select}\n\n${message_select_extra}" )" \
-                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="${message_default}:96" --mark="${message_yourscreen}:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="${message_suggested}:${dpi_lowered%x*}" \
+                --scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="${message_default}:96" --mark="${message_suggested}:${dpi_lowered%x*}" \
                 $NULL || echo cancel )"
         fi
 
         #--scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --mark="A:96" --mark="C:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="B:${dpi_lowered%x*}" \
+        #--scale --value="$conf_selected_dpi" --min-value=60 --max-value=${max_value} --step=1 --inc-buttons --vertical --mark="${message_default}:96" --mark="${message_yourscreen}:$( el_dpi_get | sed -e 's|x.*$||g' )"  --mark="${message_suggested}:${dpi_lowered%x*}" \
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
             #dpi="$( echo "${result}" | awk -v FS="|" '{print $1}' )"

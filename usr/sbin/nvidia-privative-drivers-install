@@ -1084,7 +1084,7 @@ install_driver(){
         if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
             message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
         else
-            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' )"
+            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' | grep -v "typec_nvidia" )"
         fi
             # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then

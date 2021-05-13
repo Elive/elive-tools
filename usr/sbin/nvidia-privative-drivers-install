@@ -979,6 +979,8 @@ install_driver(){
         message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by first updating the packages list. This problem can be caused due to an excessively new kernel version." )" "" )"
 
         if ! ((is_mode_auto)) ; then
+            # wait a few seconds before to show this message, so that we can read the pervious errors:
+            sleep 3
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Compilation Failed" \
                 --msgbox "$message_warning_install_failed_try_again" \

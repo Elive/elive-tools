@@ -578,7 +578,7 @@ interactive_ask_driver_version(){
                 fi
 
                 case $_id in
-                    *tesla-418*|*tesla-440*|tesla)
+                    *tesla-*)
                         _desc="$( printf "$( eval_gettext "Tesla Nvidia drivers (very new)" )" )"
                         ;;
                     *nvidia|current)
@@ -623,7 +623,7 @@ interactive_ask_driver_version(){
                     echo -e "'$_id' '$_desc'"
                 fi
 
-            done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r ; } )" \
+            done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | psort -- -p "current" -p "legacy" -p "tesla"  ; } )" \
                 | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
             # user canceled? uninstall and exit

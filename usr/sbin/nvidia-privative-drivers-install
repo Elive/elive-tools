@@ -824,6 +824,7 @@ install_driver(){
         mkdir -p /etc/X11/xorg.conf.d
     fi
 
+    local message_warning_install_failed_try_again
 
     # }}}
 
@@ -971,12 +972,19 @@ install_driver(){
     # apt-get install {{{
 
     echo -e "\n\n\n\n\nInstalling... Please be patient...\n\n"
-    sleep 2
+    sleep 1
 
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
-        local message_warning_install_failed_try_again
-        message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to compile the driver. We will try again by first updating the packages list. This problem can be caused due to an excessively new kernel version." )" "" )"
+        NOREPORTS=1 el_error "error ^^^^^^^^^^^^^^^^^^^^^^^^"
+        sleep 6
+
+        # CUDA in live mode? this won't work due to too much RAM needed:
+        if ((is_extra_packages_wanted)) && grep -qs "boot=live" /proc/cmdline && ! grep -qs "persistence" /proc/cmdline ; then
+            message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to install and compile the driver. We will try again by first updating the packages list. If you are trying to install extra packages like CUDA we suggest you first install Elive on your hard disk and then run this tool, since this operation requires a lot of RAM memory." )" "" )"
+        else
+            message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to install and compile the driver. We will try again by first updating the packages list. This problem can be caused due to an excessively new kernel version, or because you don't have enough RAM memory if you are installing in Live mode." )" "" )"
+        fi
 
         if ! ((is_mode_auto)) ; then
             # wait a few seconds before to show this message, so that we can read the pervious errors:

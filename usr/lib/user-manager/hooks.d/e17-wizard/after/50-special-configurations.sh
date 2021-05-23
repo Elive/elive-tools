@@ -66,6 +66,11 @@ main(){
 
     # change conky network configuration
     if [[ -e "$HOME/.conkyrc" ]] ; then
+        if pidof conky 1>/dev/null ; then
+            killall conky
+            is_restart_needed_conky=1
+        fi
+
         if el_verify_internet ; then
             iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
             if [[ -n "$iface" ]] ; then
@@ -96,6 +101,11 @@ main(){
             # reduce time interval
             #sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
             sed -i -e "s|^.*update_interval.*$|\tupdate_interval = 4.0,|gI" "$HOME/.conkyrc"
+        fi
+
+        if ((is_restart_needed_conky)) ; then
+            el_debug "restarting conky"
+            ( conky 1>/dev/null 2>&1 & disown )
         fi
     fi
 

@@ -215,9 +215,12 @@ main(){
     for file in "$@"
     do
         file="$( LC_ALL="$EL_LC_EN" readlink -f "$file" )"
+        [[ ! -e "$file" ]] && continue
+
         dirname="$( dirname "$file" )"
 
         mime="$( LC_ALL="$EL_LC_EN" file -bi "$file" | sed -e 's|; charset.*$||g' )"
+        [[ -z "$mime" ]] && continue
 
         # some fixes
         case "$mime" in
@@ -260,7 +263,7 @@ main(){
         esac
 
         # do not run empty mimes
-        if ! [[ -n "$mime" ]] ; then
+        if [[ -z "$mime" ]] ; then
             $guitool --info --text="$( eval_gettext "This file doesn't have a Mimetype assigned, we cannot run or open something that we don't know how it should be run. This file is probably used for other purposes." )"
             exit
         fi

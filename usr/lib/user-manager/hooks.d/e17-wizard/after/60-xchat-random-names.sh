@@ -18,13 +18,10 @@ main(){
         exit 1
     fi
 
-    if el_check_variables "LANG" ; then
-        if ! echo "$LANG" | grep -qsi "UTF" ; then
-            el_warning "Your language is not set to UTF-8 mode? '$LANG'"
-        fi
-    else
+    if [[ -z "$LANG" ]] ; then
         el_warning "LANG variable is not set?"
     fi
+
 
     # - checks }}}
 

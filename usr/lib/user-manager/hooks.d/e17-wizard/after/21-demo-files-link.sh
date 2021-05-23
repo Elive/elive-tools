@@ -96,7 +96,7 @@ main(){
     fi
 
     # check
-    if [[ -z "$LANG" ]] || ! echo "$LANG" | grep -qsE "\.(UTF-8|utf8)" ; then
+    if [[ "$LANG" != *UTF* ]] && ! grep -qs "^${LANG} UTF-8" /etc/locale.gen ; then
         el_warning "wrong language set? LANG is '$LANG', and /etc/default/locale set to '$(cat /etc/default/locale)' "
     fi
 

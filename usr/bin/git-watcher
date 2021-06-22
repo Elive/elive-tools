@@ -57,6 +57,8 @@ exit_cleanups(){
     if [[ -n "$branch_working_prev" ]] ; then
         command git checkout "$branch_working_prev"
     fi
+
+    rm -rf "$tmpdir"
 }
 
 el_add_on_exit exit_cleanups
@@ -1539,6 +1541,7 @@ options_main_interact(){
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other or multiple commits (cherry-pick)"
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
+    option_show "E"         "Edit (visualize) how the contents would change if we import it"
     option_show "m"         "mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
     option_show "g"         "Go to commit id (space-time travel)"
@@ -1549,7 +1552,7 @@ options_main_interact(){
     if [[ -n "$user_input_backport_branches" ]] ; then
         option_show "b"         " > Backport to: $user_input_backport_branches"
     else
-        option_show "b"         "Backport it to another branches too (set them as comma-separated)"
+        option_show "b"         "Backport to other branches too (define them as comma-separated)"
     fi
     option_show "z"         "Undo last commit in your working branch"
     option_show "c"         "compile (make), useful for check if new code is compatible"
@@ -1560,7 +1563,7 @@ options_main_interact(){
     #fi
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
-    option_show "q"         "Quit"
+    option_show "q"         "Quit & Save"
     option_show "Q"         "Quit!"
     echo -e "${el_c_b}================================================================${el_c_n}"
 
@@ -1834,6 +1837,38 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
+
+        E)  # edit (visualize) how the contents would change if we import it
+            mkdir -p "$tmpdir/sources-before" "$tmpdir/sources-after"
+
+            # save files before to apply the commit
+            while read -ru 3 file
+            do
+                printf "%s\n" "$file" | cpio -padu -- "$tmpdir/sources-before"
+            done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+
+            # apply the commit
+            if ! command git cherry-pick -Xpatience -x -s "$commit_id" ; then
+                el_error 0 "failed using: git cherry-pick -Xpatience -x -s '$commit_id'"
+            fi
+
+            # save files after to apply the commit
+            while read -ru 3 file
+            do
+                printf "%s\n" "$file" | cpio -padu -- "$tmpdir/sources-after"
+            done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+
+            # compare files
+            meld "$tmpdir/sources-before" "$tmpdir/sources-after"
+
+            # remove temporally imported commit
+            command git reset --hard HEAD~1
+            rm -rf "$tmpdir"
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
         i)  # cherry-pick
             do_cherry_pick
 
@@ -2089,6 +2124,9 @@ main(){
         exit 1
     fi
 
+    tmpdir="/tmp/.$(basename $0)-${USER}"
+    rm -rf "$tmpdir"
+    mkdir -p "$tmpdir"
 
     # }}}
     # input parameters {{{

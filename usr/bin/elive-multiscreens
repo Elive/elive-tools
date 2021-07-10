@@ -115,7 +115,7 @@ module_ecomorph_unload(){
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 
-                timeout 30 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code on Github at github.com/elive." )"
+                timeout 40 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code on Github at github.com/elive." )"
             fi
 
         else

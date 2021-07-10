@@ -507,7 +507,7 @@ load_multiscreens_configuration(){
                     sleep 15
                 fi
 
-                if timeout 180 $guitool --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive?" )" ; then
+                if timeout 30 $guitool --question --text="$( eval_gettext "You have multiple screens connected, do you want to use them optimally with Elive?" )" ; then
 
                     # configure
                     configure_multiscreens
@@ -594,6 +594,10 @@ main(){
                 ;;
             p)
                 is_mode_previous_desktop=1
+                # set default language to english if we didn't started the desktop yet
+                if grep -qs "boot=live" /proc/cmdline ; then
+                    export LC_ALL=C
+                fi
                 ;;
             \?)
                 usage

@@ -1,0 +1,73 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    guitool="$(which zenity) --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+
+    message_intro="$( printf "$( eval_gettext "Before reporting an issue, is very important to know to where report it, if you are unsure just use our forums so that we can guide you better. Remember that by reporting and fixing a bug you will be directly benefited from that and also everybody else facing the same problem." )" "" )"
+
+    message_option1="$( printf "$( eval_gettext "I have an issue with something specific to Elive" )" "" )"
+    message_option2="$( printf "$( eval_gettext "I have an issue with the desktop itself" )" "" )"
+    message_option3="$( printf "$( eval_gettext "I have an issue with an application independent to Elive" )" "" )"
+    message_option4="$( printf "$( eval_gettext "I have a problem with my hardware drivers" )" "" )"
+    message_option5="$( printf "$( eval_gettext "Help, guide me" )" "" )"
+
+
+
+    message_report_info_elive="$( printf "$( eval_gettext "Use the next page to report the issue. Tell us all the details we need to know to reproduce and fix it. For debating an issue use our forums instead." )" "" )"
+
+
+    $guitool --info --text="$message_intro"
+
+
+    answer="$( $guitool --height=260 --width=700 --list --column="" --column="$( eval_gettext "Option" )" --hide-column="1" \
+        "elive" "$message_option1" \
+        "desktop" "$message_option2" \
+        "application" "$message_option3" \
+        "drivers" "$message_option4" \
+        "help" "$message_option5" \
+        2>/dev/null || echo cancel )"
+
+    #el_debug "answer: $answer"
+
+    case "$answer" in
+        elive|drivers)
+            $guitool --info --text="$message_report_info_elive"
+            web-launcher "https://bugs.elivecd.org"
+            ;;
+        desktop)
+            $guitool --info --text="$( eval_gettext "You are using the Enlightenment desktop, which is nicely customized by Elive, make sure that the issue is not caused by Elive or is specific to it, you can ask for more help about that in our forums, after that, you can report the issue to Elive or to the desktop itself" )"
+            if $guitool --question --cancel-label="No" --text="$( eval_gettext "Do you want to report the issue to the desktop authors? Select NO if you want to report it to Elive instead." )" ; then
+                if [[ -n "$EROOT" ]] ; then
+                    $guitool --info --text="Important: Make sure you have a login or register. Select Maniphest to report the issue. Select 'Create Task' in the corner. Be descriptive in the title and details. Assign it to 'raster' so the author can be informed about it, set the Tag to 'enlightenment-git'." &
+                    sleep 4
+                else
+                    $guitool --info --text="Important: Make sure you have a login or register. Select Maniphest to report the issue. Select 'Create Task' in the corner. Be descriptive in the title and details. Assign it to 'kwo' so the author can be informed about it, set the Tag to 'enlightenment16'." &
+                    sleep 4
+                fi
+                web-launcher "https://phab.enlightenment.org"
+            else
+                web-launcher "https://bugs.elivecd.org"
+            fi
+            ;;
+        application)
+            $guitool --info --text="$( eval_gettext "First, you need to know if the application comes from Debian or is packaged by Elive itself, you can check that by using apt-cache and see from which repository it comes. If it's from Debian you should report the issue to Debian itself by making sure it's not caused by an Elive modification. If the application was packaged by Elive you should report it to the author of the application itself directly from its project website, because Elive mostly builds its packages from the original and updated sources." )"
+            ;;
+        help)
+            web-launcher "https://forum.elivelinux.org/c/system/bugs/33"
+            ;;
+        cancel)
+            $guitool --info --text="$( eval_gettext "If you need more help, you can use our forums from the Elive website." )"
+            ;;
+    esac
+
+    # bye
+    $guitool --info --text="$( eval_gettext "Thanks for your collaboration." )"
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

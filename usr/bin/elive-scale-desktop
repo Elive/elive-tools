@@ -118,6 +118,10 @@ special_screens(){
                 sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i" 2>/dev/null || true
             fi
         done
+
+        # update xchat fonts
+        sed -i -e 's|^text_font = .*|text_font = Monospace 8|g' "$HOME/.xchat2/xchat.conf"
+        is_restart_needed_xchat=1
     fi
 
     #if [[ "$resolution_h" -ge 800 ]] ; then
@@ -134,6 +138,10 @@ special_screens(){
         sed -i -e '/^$/d' "$HOME/.conkyrc"
         is_restart_needed_conky=1
         el_debug "setting conky to use a small font size (8 -> 7)"
+
+        # update xchat fonts
+        sed -i -e 's|^text_font = .*|text_font = Monospace 7|g' "$HOME/.xchat2/xchat.conf"
+        is_restart_needed_xchat=1
     fi
 
     # load settings

@@ -46,13 +46,13 @@ main(){
             randomized="$RANDOM$RANDOM$RANDOM"
 
             NUMBERRANDOM="${randomized:0:2}"
-            sed -i "s|^.*irc_nick1 = Elive_user1.*$|irc_nick1 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
 
             NUMBERRANDOM="${randomized:2:2}"
-            sed -i "s|^.*irc_nick2 = Elive_user2.*$|irc_nick2 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
 
             NUMBERRANDOM="${randomized:4:2}"
-            sed -i "s|^.*irc_nick3 = Elive_user3.*$|irc_nick3 = Elive_user_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
         #fi
     else
         el_error "No xchat conf dir exist? ignoring..."

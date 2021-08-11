@@ -550,7 +550,7 @@ mute_modes(){
 
             ;;
         *)
-            el_error "Unkown $mode option for $FUNCNAME"
+            el_error "Unknown $mode option for $FUNCNAME"
             ;;
     esac
 

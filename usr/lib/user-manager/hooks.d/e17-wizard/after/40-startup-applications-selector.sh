@@ -51,6 +51,7 @@ main(){
 
     # create a default dir
     mkdir -p "$(dirname "$order_file" )"
+    touch "$order_file"
     mkdir -p "$HOME/.config/autostart"
 
     while read -ru 3 file

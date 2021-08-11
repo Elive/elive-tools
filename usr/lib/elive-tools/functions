@@ -2888,7 +2888,7 @@ el_flag(){
             fi
             ;;
         *)
-            el_error "unkown action ${action}, func: ${FUNCNAME[1]}"
+            el_error "unknown action ${action}, func: ${FUNCNAME[1]}"
             ;;
     esac
 }

@@ -173,7 +173,7 @@ main(){
 
         # include name {{{
         if [[ "${LANG%%.*}" = "en_US" ]] ; then
-            name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            name="$( LC_ALL=C grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
         fi
         if [[ -z "$name" ]] ; then
             name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
@@ -207,7 +207,7 @@ main(){
         # }}}
         # include comment {{{
         if [[ "${LANG%%.*}" = "en_US" ]] ; then
-            comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            comment="$( LC_ALL=C grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
         fi
         if [[ -z "$comment" ]] ; then
             comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
@@ -403,7 +403,7 @@ EOF
             menu+=("cairo-dock: A multiple feature dock for your desktop")
 
             # add the installer icon in live mode
-            if grep -qs "boot=live" /proc/cmdline ; then
+            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
                 cp -f "$HOME/.config/cairo-dock/current_theme/launchers/01launcher.desktop" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^Exec=.*$|Exec=eliveinstaller-wrapper|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^Order=.*$|Order=101.25|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"

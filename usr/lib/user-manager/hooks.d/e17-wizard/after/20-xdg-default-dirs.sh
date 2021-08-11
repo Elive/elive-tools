@@ -343,6 +343,11 @@ main(){
 
                 # is a dir, scan all subfiles from it
                 if [[ -d "$entry" ]] ; then
+                    # ignore these unneeded ones for speed reasons
+                    if echo "$entry" | grep -qsE "$HOME/\.(gimp-|kde$|vim$|cargo$|ccache$|themes$|e$|java$|smc$)" ; then
+                        continue
+                    fi
+
                     while read -ru 3 file
                     do
                         if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
@@ -375,7 +380,6 @@ main(){
                             esac
                         fi
                     done 3<<< "$( find "$entry" -type f | grep -v "$cachedir" )"
-
                 fi
 
                 # is a file
@@ -399,7 +403,8 @@ main(){
                     fi
                 fi
             fi
-        done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
+        #done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
+        done 3<<< "$( ls -a1 "$HOME" | grep -vE "(\.old$|^\.$|^\.\.$)" )"
     fi
 
 

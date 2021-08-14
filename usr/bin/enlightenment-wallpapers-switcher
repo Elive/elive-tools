@@ -31,9 +31,6 @@ main(){
         time_switching_seconds="20"
     fi
 
-    # default wallpaper to use
-    default_wallpaper="/usr/share/enlightenment/data/backgrounds/Elive Stars.edj"
-
     #el_debug "Starting (infinite) loop for switching between existing wallpapers"
     #while true
     #do
@@ -45,24 +42,48 @@ main(){
 
     el_debug "Starting demo switch between wallpapers"
 
-    # not infinite loop mode, so more friendly
-    for file in /usr/share/enlightenment/data/backgrounds/*edj $HOME/.e/*/backgrounds/*edj
-    do
-        if [[ -s "$file" ]] ; then
+    # E17+
+    if [[ -n "$E_START" ]] ; then
+        # default wallpaper to use
+        default_wallpaper="/usr/share/enlightenment/data/backgrounds/Elive Stars.edj"
 
-            el_debug "Switching to desktop wallpaper: $file"
+        # not infinite loop mode, so more friendly
+        for file in /usr/share/enlightenment/data/backgrounds/*edj $HOME/.e/*/backgrounds/*edj
+        do
+            if [[ -s "$file" ]] ; then
 
-            enlightenment_remote -desktop-bg-set "$file"
+                el_debug "Switching to desktop wallpaper: $file"
 
-            sleep "$time_switching_seconds"
+                enlightenment_remote -desktop-bg-set "$file"
+
+                sleep "$time_switching_seconds"
+            fi
+        done
+
+        if [[ -s "$default_wallpaper" ]] ; then
+            el_debug "Set default wallpaper: $default_wallpaper"
+            enlightenment_remote -desktop-bg-set "$default_wallpaper"
         fi
-    done
-
-    if [[ -s "$default_wallpaper" ]] ; then
-        el_debug "Set default wallpaper: $default_wallpaper"
-        enlightenment_remote -desktop-bg-set "$default_wallpaper"
     fi
 
+    # E16
+    if [[ -n "$EROOT" ]] ; then
+        default_wallpaper="$( eesh bg | grep "^0 " | sed -e 's|^0 ||g' )"
+        el_debug "Default wallpaper in desktop 0 of E16 is: $default_wallpaper"
+
+        while read -ru 3 line
+        do
+            el_debug "Switching to desktop wallpaper: $line"
+
+            # set wallpaper on first desktop only for now
+            eesh bg use "$line" 0
+
+            sleep "$time_switching_seconds"
+        done 3<<< "$( eesh bg list )"
+
+        # switch back to the original one
+        eesh bg use "$default_wallpaper" 0
+    fi
 }
 
 #

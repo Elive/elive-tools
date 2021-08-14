@@ -2551,7 +2551,7 @@ el_report_to_elive(){
         if [[ -e "/var/lib/dpkg/info/netcat-openbsd.list" ]] ; then
             tool="nc -N"
         else
-            tool="nc"
+            tool="nc -q1"
         fi
     else
         return 0

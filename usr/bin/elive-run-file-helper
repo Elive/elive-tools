@@ -38,6 +38,27 @@ run_dmg(){
     fi
 }
 
+run_e16(){
+    local mode
+    mode="$1"
+    shift
+    file="$1"
+    shift
+
+    case "$mode" in
+        theme)
+            if [[ -z "$EROOT" ]] ; then
+                $guitool --error --text="$( eval_gettext "This is an Enlightenment 16 theme, but you are not running this window manager, start your graphical system in order to be able to use this file." )"
+                return
+            fi
+            mkdir -p "$HOME/.e16/themes"
+            cp -f "$file" "$HOME/.e16/themes/"
+            # full path is needed for home themes
+            eesh theme use "$HOME/.e16/themes/$file"
+            ;;
+    esac
+}
+
 run_edje(){
     local file
     file="$1"
@@ -224,6 +245,12 @@ main(){
 
         # some fixes
         case "$mime" in
+            "application/gzip"|"application/zip")
+                if echo "$file" | grep -qsi "\.etheme" ; then
+                    mime="e16/theme"
+                fi
+
+                ;;
             "text/plain"|"application/octet-stream")
                 unset mime
 
@@ -292,6 +319,9 @@ main(){
                 ;;
             "edj/edje"|"application/x-extension-edj"|"application/edje")
                 run_edje "$file"
+                ;;
+            "e16/theme")
+                run_e16 "theme" "$file"
                 ;;
             "application/x-iso9660-image")
                 $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it into a DVD or a USB; Elive includes a special tool for the latter. Or you can also mount it to open its contents by right-clicking the file which is also another feature by Elive." )"

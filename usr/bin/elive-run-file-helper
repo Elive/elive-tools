@@ -54,7 +54,7 @@ run_e16(){
             mkdir -p "$HOME/.e16/themes"
             cp -f "$file" "$HOME/.e16/themes/"
             # full path is needed for home themes
-            eesh theme use "$HOME/.e16/themes/$file"
+            eesh theme use "$HOME/.e16/themes/$( basename "$file" )"
             ;;
     esac
 }

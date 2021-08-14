@@ -244,10 +244,11 @@ main(){
         [[ -z "$mime" ]] && continue
 
         # some fixes
+        # XXX IMPORTANT: file --mime-type doesn't always include all the values, check in thunar properties "what name says the file type has" and then search it in the mimetype freedesktop database in /usr/share/mime/packages/freedesktop.org.xml
         case "$mime" in
-            "application/gzip"|"application/zip")
+            "application/gzip"|"application/zip"|"application/x-e-theme")
                 if echo "$file" | grep -qsi "\.etheme" ; then
-                    mime="e16/theme"
+                    mime="application/x-e-theme"
                 fi
 
                 ;;
@@ -320,7 +321,7 @@ main(){
             "edj/edje"|"application/x-extension-edj"|"application/edje")
                 run_edje "$file"
                 ;;
-            "e16/theme")
+            "application/x-e16-theme"|"application/x-e-theme")
                 run_e16 "theme" "$file"
                 ;;
             "application/x-iso9660-image")

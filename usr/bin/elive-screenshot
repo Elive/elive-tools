@@ -115,7 +115,6 @@ take_screenshot(){
     cd "$tmpdir"
     rm -f *png *jpg
 
-    unset is_interactive
     el_config_get
     [[ -z "$conf_notifications_amount" ]] && conf_notifications_amount=0
     notify_timeout=3400

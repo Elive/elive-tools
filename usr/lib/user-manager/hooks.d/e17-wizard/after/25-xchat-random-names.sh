@@ -47,12 +47,21 @@ main(){
 
             NUMBERRANDOM="${randomized:0:2}"
             sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            if grep -qs "boot=live" /proc/cmdline ; then
+                sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            fi
 
             NUMBERRANDOM="${randomized:2:2}"
             sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            if grep -qs "boot=live" /proc/cmdline ; then
+                sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            fi
 
             NUMBERRANDOM="${randomized:4:2}"
             sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+            if grep -qs "boot=live" /proc/cmdline ; then
+                sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            fi
         #fi
     else
         el_error "No xchat conf dir exist? ignoring..."

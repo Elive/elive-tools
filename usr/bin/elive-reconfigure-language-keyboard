@@ -206,12 +206,13 @@ EOF
     # }}}
 
     # warn user that extra configurations are needed
+    # e24+
     if [[ -n "$E_START" ]] ; then
         zenity --info --text="$( eval_gettext "You have configured your system to use the selected language and keyboard. But to enable them, you need to select them on your desktop configurations." )"
     else
         # just say ok
         if ! grep -qs "boot=live" /proc/cmdline ; then
-            zenity --info
+            zenity --info --text="$( eval_gettext "Changes have been saved, to use the new settings you must reboot your computer or re-login in your desktop." )"
         fi
     fi
 

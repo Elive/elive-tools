@@ -3166,8 +3166,8 @@ el_config_get(){
     fi
     # variable must be set
     if [[ -z "${SOURCE}" ]] ; then
-        el_debug "\$0 (source tool) should be set to access to its conf ID"
-        return 0
+        el_error "\$0 (source tool) should be set to access to its conf ID"
+        return 1
     fi
 
     # }}}

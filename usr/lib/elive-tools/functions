@@ -314,16 +314,18 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     rm -f "$stamp_hour_prev"
 
     # do we have booted the computer recently? (and so no internet yet), needed for things like geolocation in live
-    if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 300 ]] ; then
+    if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+        if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 300 ]] ; then
 
-        # we just booted the system, wait for real 40 secons
-        for i in $( seq 30 )
-        do
-            if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
-                return 0
-            fi
-            sleep 1
-        done
+            # we just booted the system, wait for real 40 secons
+            for i in $( seq 30 )
+            do
+                if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
+                    return 0
+                fi
+                sleep 1
+            done
+        fi
     fi
 
 

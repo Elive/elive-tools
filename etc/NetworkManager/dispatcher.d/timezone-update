@@ -98,7 +98,7 @@ update_ntp_time_from_server(){
     bios_mode_get
 
     # 5-6 minutes max try to connect to internet before to set time
-    for i in $(seq 30)
+    for i in $(seq 10)
     do
         if el_verify_internet 2>/dev/null 1>/dev/null ; then
             break

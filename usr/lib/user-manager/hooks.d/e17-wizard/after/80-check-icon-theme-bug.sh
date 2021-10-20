@@ -2,7 +2,11 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
-# gettext not works here because we are on first page
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 
 main(){

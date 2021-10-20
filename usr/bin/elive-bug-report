@@ -1,5 +1,13 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 main(){
     guitool="$(which zenity) --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"

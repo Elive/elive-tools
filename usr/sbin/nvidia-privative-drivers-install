@@ -2,6 +2,11 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 # include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
 if [[ "$PATH" != *"/usr/sbin"* ]] ; then

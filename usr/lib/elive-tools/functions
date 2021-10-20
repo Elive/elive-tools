@@ -1,4 +1,5 @@
 #!/bin/bash
+##TEXTDOMAIN="elive-tools" # disabled on purpose for compatibility, do not enable
 
 if [[ -n "$ZSH_VERSION" ]] ; then
     # Note: if you use ZSH, you must set the SOURCE var name from the main script

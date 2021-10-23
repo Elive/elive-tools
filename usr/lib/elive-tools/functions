@@ -1794,44 +1794,46 @@ el_debug(){
 
     # }}}
     # get the list of function names array {{{
-    counter="${#FUNCNAME[*]}"
-    count=0
-    for arg in "${FUNCNAME[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
-                funcnames="$arg > $funcnames"
+    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        counter="${#FUNCNAME[*]}"
+        count=0
+        for arg in "${FUNCNAME[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
+                    funcnames="$arg > $funcnames"
+                fi
             fi
-        fi
-    done
-    funcnames="${funcnames% >*}"
+        done
+        funcnames="${funcnames% >*}"
 
-    counter="${#BASH_SOURCE[*]}"
-    count=0
-    for arg in "${BASH_SOURCE[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ -n "$arg" ]] ; then
-                arg="$( readlink -f "$arg" || true )"
-                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+        counter="${#BASH_SOURCE[*]}"
+        count=0
+        for arg in "${BASH_SOURCE[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ -n "$arg" ]] ; then
+                    arg="$( readlink -f "$arg" || true )"
+                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                fi
             fi
-        fi
-    done
+        done
 
-    sourcename="$( readlink -f "$0" || true )"
-    if [[ -n "$sourcenames_arr" ]] ; then
-        if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
-            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcename="$( readlink -f "$0" || true )"
+        if [[ -n "$sourcenames_arr" ]] ; then
+            if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
+                sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            else
+                sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            fi
+            sourcenames_arr="${sourcenames_arr% }"
+            sourcenames_arr="${sourcenames_arr#> }"
+            #read -r sourcenames_arr <<< "$sourcenames_arr"
         else
-            sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$sourcename"
         fi
-        sourcenames_arr="${sourcenames_arr% }"
-        sourcenames_arr="${sourcenames_arr#> }"
-        #read -r sourcenames_arr <<< "$sourcenames_arr"
-    else
-        sourcenames_arr="$sourcename"
     fi
 
     # }}}
@@ -1868,44 +1870,47 @@ el_info(){
 
     # }}}
     # get the list of function names array {{{
-    counter="${#FUNCNAME[*]}"
-    count=0
-    for arg in "${FUNCNAME[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
-                funcnames="$arg > $funcnames"
+    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        counter="${#FUNCNAME[*]}"
+        count=0
+        for arg in "${FUNCNAME[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
+                    funcnames="$arg > $funcnames"
+                fi
             fi
-        fi
-    done
-    funcnames="${funcnames% >*}"
+        done
 
-    counter="${#BASH_SOURCE[*]}"
-    count=0
-    for arg in "${BASH_SOURCE[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ -n "$arg" ]] ; then
-                arg="$( readlink -f "$arg" || true )"
-                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+        funcnames="${funcnames% >*}"
+
+        counter="${#BASH_SOURCE[*]}"
+        count=0
+        for arg in "${BASH_SOURCE[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ -n "$arg" ]] ; then
+                    arg="$( readlink -f "$arg" || true )"
+                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                fi
             fi
-        fi
-    done
+        done
 
-    sourcename="$( readlink -f "$0" || true )"
-    if [[ -n "$sourcenames_arr" ]] ; then
-        if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
-            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        sourcename="$( readlink -f "$0" || true )"
+        if [[ -n "$sourcenames_arr" ]] ; then
+            if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
+                sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            else
+                sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            fi
+            sourcenames_arr="${sourcenames_arr% }"
+            sourcenames_arr="${sourcenames_arr#> }"
+            #read -r sourcenames_arr <<< "$sourcenames_arr"
         else
-            sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$sourcename"
         fi
-        sourcenames_arr="${sourcenames_arr% }"
-        sourcenames_arr="${sourcenames_arr#> }"
-        #read -r sourcenames_arr <<< "$sourcenames_arr"
-    else
-        sourcenames_arr="$sourcename"
     fi
 
     # }}}
@@ -1927,46 +1932,49 @@ el_info(){
 #===============================================================================
 el_warning(){
     # pre {{{
-    local count counter funcnames sourcenames_arr arg message
+    local count counter funcnames sourcenames_arr arg message is_noreports
     message="$@"
 
     # }}}
     # get the list of function names array {{{
-    counter="${#FUNCNAME[*]}"
-    count=0
-    for arg in "${FUNCNAME[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
-                funcnames="$arg > $funcnames"
-            fi
-        fi
-    done
-    funcnames="${funcnames% >*}"
+    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
 
-    counter="${#BASH_SOURCE[*]}"
-    count=0
-    for arg in "${BASH_SOURCE[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ -n "$arg" ]] ; then
-                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+        counter="${#FUNCNAME[*]}"
+        count=0
+        for arg in "${FUNCNAME[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
+                    funcnames="$arg > $funcnames"
+                fi
             fi
-        fi
-    done
-    if [[ -n "$sourcenames_arr" ]] ; then
-        if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
-            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        done
+        funcnames="${funcnames% >*}"
+
+        counter="${#BASH_SOURCE[*]}"
+        count=0
+        for arg in "${BASH_SOURCE[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ -n "$arg" ]] ; then
+                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                fi
+            fi
+        done
+        if [[ -n "$sourcenames_arr" ]] ; then
+            if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+                sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            else
+                sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            fi
+            sourcenames_arr="${sourcenames_arr% }"
+            sourcenames_arr="${sourcenames_arr#> }"
+            #read -r sourcenames_arr <<< "$sourcenames_arr"
         else
-            sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$0"
         fi
-        sourcenames_arr="${sourcenames_arr% }"
-        sourcenames_arr="${sourcenames_arr#> }"
-        #read -r sourcenames_arr <<< "$sourcenames_arr"
-    else
-        sourcenames_arr="$0"
     fi
 
     # }}}
@@ -2019,41 +2027,43 @@ el_error(){
 
     # }}}
     # get the list of function names array {{{
-    counter="${#FUNCNAME[*]}"
-    count=0
-    for arg in "${FUNCNAME[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
-                funcnames="$arg > $funcnames"
+    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+        counter="${#FUNCNAME[*]}"
+        count=0
+        for arg in "${FUNCNAME[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ "$arg" != "source" ]] && [[ "$arg" != "main" ]] ; then
+                    funcnames="$arg > $funcnames"
+                fi
             fi
-        fi
-    done
-    funcnames="${funcnames% >*}"
+        done
+        funcnames="${funcnames% >*}"
 
-    counter="${#BASH_SOURCE[*]}"
-    count=0
-    for arg in "${BASH_SOURCE[@]}"
-    do
-        count="$(( $count + 1 ))"
-        if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
-            if [[ -n "$arg" ]] ; then
-                el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+        counter="${#BASH_SOURCE[*]}"
+        count=0
+        for arg in "${BASH_SOURCE[@]}"
+        do
+            count="$(( $count + 1 ))"
+            if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
+                if [[ -n "$arg" ]] ; then
+                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                fi
             fi
-        fi
-    done
-    if [[ -n "$sourcenames_arr" ]] ; then
-        if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
-            sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+        done
+        if [[ -n "$sourcenames_arr" ]] ; then
+            if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+                sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            else
+                sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            fi
+            sourcenames_arr="${sourcenames_arr% }"
+            sourcenames_arr="${sourcenames_arr#> }"
+            #read -r sourcenames_arr <<< "$sourcenames_arr"
         else
-            sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            sourcenames_arr="$0"
         fi
-        sourcenames_arr="${sourcenames_arr% }"
-        sourcenames_arr="${sourcenames_arr#> }"
-        #read -r sourcenames_arr <<< "$sourcenames_arr"
-    else
-        sourcenames_arr="$0"
     fi
 
     # }}}
@@ -2412,17 +2422,26 @@ el_array_member_add(){
     local i item=$1 match
     shift
 
+    # see if we have the entry already
     for i in "$@"; do
-        [[ -z "$i" ]] && continue
-        if [[ "$item" = "$i" ]]; then
-            match=1
+        if [[ -n "$i" ]] ; then
+            if [[ "$item" = "$i" ]]; then
+                match=1
+            fi
         fi
-
-        # add elements to the new array
-        _out+=("$i")
     done
 
-    if ! ((match)) ; then
+    # if is repeated, just show the default array, otherwise, append the value
+    if ((match)) ; then
+        _out="$@"
+    else
+        for i in "$@"; do
+            if [[ -n "$i" ]] ; then
+                _out+=("$i")
+            fi
+        done
+
+        # add elements to the new array
         _out+=("$item")
     fi
 }

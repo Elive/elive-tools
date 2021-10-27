@@ -140,7 +140,7 @@ main(){
 
     # }}}
 
-    for browser in "${browsers[@]}"
+    for browser in ${browsers[@]}
     do
         case "$browser" in
             chrome|google-chrome|chromium)

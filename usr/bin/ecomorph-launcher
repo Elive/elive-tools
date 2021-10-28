@@ -333,7 +333,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require compatible 3D accelerated drivers. Try to load the Ecomorph module manually, if it works correctly on your computer, report this issue to the Elive BTS." )"
                 ;;
             multiscreens)
-                zenity --error --text="$( eval_gettext "The Ecomorph module doesn't work well with multiple screens. If you want to make this feature working we have the source code available on GitHub at github.com/Elive." )"
+                zenity --error --text="$( eval_gettext "The Ecomorph module doesn't work well with multiple screens. If you want to make this feature working the source code is available on GitHub at github.com/Elive." )"
                 ;;
         esac
     fi

@@ -381,7 +381,7 @@ user_add(){
         --field="$( eval_gettext "Password confirmation" ):H" "$password" \
         --field="$( eval_gettext "Auto-login to desktop" ):CHK" "$want_autologin" \
         --field="$( eval_gettext "Privileges to install packages" ):CHK" "$want_sudo_apt" \
-        --field="$( eval_gettext "Grant admin privileges (SUDO)" ):CHK" "$want_sudo" \
+        --field="$( eval_gettext "Grant admin (sudo) privileges (recommended)" ):CHK" "$want_sudo" \
         --field="$( eval_gettext "Grant admin, and never request the password (not recommended)" ):CHK" "FALSE" \
         || echo cancel )"
 

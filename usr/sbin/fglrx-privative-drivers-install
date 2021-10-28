@@ -453,7 +453,7 @@ install_driver(){
             message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected on your system. Your laptop probably uses special ATI shared drivers, using the internal card to save battery power and switching to the ATI driver when more performance is necessary. You can use the ATI graphic card in Elive if you install FGLRX. Otherwise, the Intel card will be used. FGLRX will be used for now. If you have any problem with your graphical system, it is suggested to disable one of them in the BIOS settings. Use Google to find out how to set up your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \

@@ -2433,7 +2433,7 @@ el_array_member_add(){
 
     # if is repeated, just show the default array, otherwise, append the value
     if ((match)) ; then
-        _out="$@"
+        _out=("$@")
     else
         for i in "$@"; do
             if [[ -n "$i" ]] ; then

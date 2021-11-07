@@ -266,8 +266,12 @@ main(){
                 # edje files are octets
                 if echo "$file" | grep -qsi "\.edj" ; then
                     if edje_player -G "$file" | head -5 | grep -qs "group.*in file" ; then
-                        mime="edj/edje"
+                        mime="application/edje"
                     fi
+                fi
+                # edc files are text/plain
+                if echo "$file" | grep -qsi "\.edc" ; then
+                    mime="text/edje"
                 fi
 
                 # script files
@@ -318,7 +322,7 @@ main(){
                     $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
                 fi
                 ;;
-            "edj/edje"|"application/x-extension-edj"|"application/edje")
+            "application/edje"|"application/x-extension-edj")
                 run_edje "$file"
                 ;;
             "application/x-e16-theme"|"application/x-e-theme")

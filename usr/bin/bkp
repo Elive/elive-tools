@@ -276,7 +276,9 @@ do_diff(){
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
+    #diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
+    # seems like "strings" eat words, but maybe we need it?
+    diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
 
     #if [[ -n "$( which lsdiff )" ]] ; then
         #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | lsdiff | wc -l )"

@@ -79,6 +79,7 @@ main(){
                         # ETH lan cable networks, disable wifi features
                         sed -i -e "s|^\(ESSID.*\)$|#\1|gI" "$HOME/.conkyrc"
                         sed -i -e "s|^\(Connection quality.*\)$|#\1|gI" "$HOME/.conkyrc"
+                        sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
                         ;;
                     lo)
                         true

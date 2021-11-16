@@ -2536,7 +2536,7 @@ el_report_to_elive(){
 
     messages_extra=""
 
-    if ((EL_REPORTS)) ; then
+    if ((EL_REPORTS)) && ! ((FORCE_REPORTS)) ; then
         # never send reports for systems that are not elive, we don't need them at all (and them don't want that too)
         if ! [[ -s "/etc/elive-version" ]] ; then
             return 0

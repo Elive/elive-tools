@@ -3,9 +3,10 @@ SOURCE="$0"
 source /usr/lib/elive-tools/functions
 
 main(){
-    c1="${el_c_w}"
-    c2="${el_c_c2}"
-    c3="${el_c_b2}"
+    c1="${el_c_w}" # white strong
+    c2="${el_c_c2}" # cyan
+    #c3="${el_c_b2}" # blue
+    c3="${el_c_c2}" # cyan
 
     for arg in "$@"
     do

@@ -151,6 +151,7 @@ take_screenshot(){
     LC_ALL=C sleep 0.5
 
     # take screenshot in png first
+    el_debug "scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png'"
     scrot $options 'Elive_Screenshot_%Y-%m-%d_%H:%M:%S__$wx$h.png' || true
 
     # set the image filename to use

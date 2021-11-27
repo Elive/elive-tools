@@ -3432,7 +3432,7 @@ el_get_machine_id(){
 
     # get system uuid
     if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-uuid )"
+        machine_id="$( dmidecode -s system-uuid 2>/dev/null || true )"
         read -r machine_id <<< "$machine_id"
         if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
             unset machine_id
@@ -3443,7 +3443,7 @@ el_get_machine_id(){
 
     # get board serial number
     if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( cat /sys/class/dmi/id/board_serial )"
+        machine_id="$( cat /sys/class/dmi/id/board_serial 2>/dev/null || true )"
         read -r machine_id <<< "$machine_id"
         if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
             unset machine_id
@@ -3454,7 +3454,7 @@ el_get_machine_id(){
 
     # get system serial number
     if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-serial-number )"
+        machine_id="$( dmidecode -s system-serial-number 2>/dev/null || true)"
         read -r machine_id <<< "$machine_id"
         if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
             unset machine_id
@@ -3465,7 +3465,7 @@ el_get_machine_id(){
 
     # get product name
     if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-product-name )"
+        machine_id="$( dmidecode -s system-product-name 2>/dev/null || true )"
         read -r machine_id <<< "$machine_id"
         if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
             unset machine_id
@@ -3487,7 +3487,7 @@ el_get_machine_id(){
     if [[ -z "$machine_id" ]] ; then
         # re-use a backup if we cannot fetch machine-id in shutdown step
         if [[ -e "/tmp/.machine-id" ]] ; then
-            machine_id="$( cat /tmp/.machine-id 2>/dev/null )"
+            machine_id="$( cat /tmp/.machine-id 2>/dev/null || true )"
             read -r machine_id <<< "$machine_id"
         fi
     fi

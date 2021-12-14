@@ -122,9 +122,9 @@ do_email_send(){
         if ! ((is_stdin)) ; then
             # if is stdin we have already it
             if ((is_message_file)) ; then
-                cp -f "$message" "$tempfile_tmp"
+                cat "$message" | sed -e 's|\&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|g' > "$tempfile_tmp"
             else
-                echo "$message" > "$tempfile_tmp"
+                echo "$message" | sed -e 's|\&|\&amp;|g' -e 's|<|\&lt;|g' -e 's|>|\&gt;|g' > "$tempfile_tmp"
             fi
         fi
 

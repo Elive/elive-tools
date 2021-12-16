@@ -556,6 +556,7 @@ do_configure(){
 # stmp, sending of emails:
 set smtp_url = "smtp://${email_account}@smtp.dreamhost.com:587/"
 set smtp_pass = "${email_password}"
+set from = "${USER}@${email_account#*@}"
 set realname = "${USER} from $(hostname) - Elive"
 set copy = no
 set timeout = 120

@@ -2552,7 +2552,7 @@ el_report_to_elive(){
                 return 0
             fi
         else
-            if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+            if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline && ! LC_ALL=C grep -qs "elive-codename: eliveserver" /etc/elive-version ; then
                 return 0
             fi
         fi

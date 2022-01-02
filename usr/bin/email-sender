@@ -653,6 +653,11 @@ EOF
             ;;
     esac
 
+    # make it default if we have not another config previously
+    if [[ ! -e "$HOME/.muttrc" ]] ; then
+        ln -s "$conf_mutt" "$HOME/.muttrc"
+    fi
+
 }
 
 #===  FUNCTION  ================================================================

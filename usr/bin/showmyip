@@ -29,6 +29,16 @@ verify_ip_validity(){
 }
 
 main(){
+
+    for arg in "$@"
+    do
+        case "$arg" in
+            "--ipv6"|"--ip6")
+                is_ipv6=1
+                ;;
+        esac
+    done
+
     if ! el_dependencies_check curl ; then
         if ! el_dependencies_install curl ; then
             exit 1
@@ -39,6 +49,21 @@ main(){
         el_error "no internet connection found"
         exit 1
     fi
+
+    # only ipv6 mode
+    if ((is_ipv6)) ; then
+
+        ip="$( curl -Ls --max-time 12 http://ip6only.me/api/ 2>/dev/null | tr ',' '\n' | grep ":.*:.*:.*:" )"
+
+        if echo "$ip" | grep ":.*:.*:.*:" ; then
+            echo "$ip"
+            #else
+            #ip="$( curl -Ls http://ip6only.me/api/ | tr ',' '\n' | grep ":.*:.*:.*:" )"
+        fi
+
+        exit
+    fi
+
 
     # superfastest one (requires dnsutils)
     if [[ -x "$(which dig)" ]] ; then

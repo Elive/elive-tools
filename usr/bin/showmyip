@@ -53,9 +53,9 @@ main(){
     # only ipv6 mode
     if ((is_ipv6)) ; then
 
-        ip="$( curl -Ls --max-time 12 http://ip6only.me/api/ 2>/dev/null | tr ',' '\n' | grep ":.*:.*:.*:" )"
+        ip="$( curl -Ls --max-time 12 http://ip6only.me/api/ 2>/dev/null | tr ',' '\n' | grep ":.*:.*:.*:" | sort -u | tail -1 )"
 
-        if echo "$ip" | grep ":.*:.*:.*:" ; then
+        if echo "$ip" | grep -qs ":.*:.*:.*:" ; then
             echo "$ip"
             #else
             #ip="$( curl -Ls http://ip6only.me/api/ | tr ',' '\n' | grep ":.*:.*:.*:" )"

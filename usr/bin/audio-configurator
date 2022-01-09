@@ -7,6 +7,8 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+asound_cards="/proc/asound/cards"
+#asound_cards="/tmp/asoundcards.txt" # only for betatesting with fake list cards
 
 reconfigure_applications(){
     local name mic num
@@ -19,8 +21,8 @@ reconfigure_applications(){
                     _a=1
                 fi
                 if ((_a)) ; then
-                    if echo "$line" | grep -qsE "^\s+card " ; then
-                        mic="$( echo "$line" | grep -qsE "^\s+card " | sed -e 's|^.*card ||g' )"
+                    if echo "$line" | grep -qsE "^\s*card " ; then
+                        mic="$( echo "$line" | grep -qsE "^\s*card " | sed -e 's|^.*card ||g' )"
                     fi
                 fi
                 if [[ -n "$mic" ]] ; then
@@ -35,8 +37,8 @@ reconfigure_applications(){
 
         # configure
         if [[ -n "$mic" ]] ; then
-            num="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | awk '{print $1}' )"
-            name="$( cat /proc/asound/cards | grep -E "\[${mic}\s*\]" | head -1 | sed -e 's|^.* - ||g' )"
+            num="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | head -1 | awk '{print $1}' )"
+            name="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | head -1 | sed -e 's|^.* - ||g' )"
             if [[ -n "$name" ]] && [[ -n "$num" ]] ; then
                 sed -i -e "s|NameCaptureCard=.*|NameCaptureCard=\"[hw:${num},0] ${name}\"|g" "$HOME/.config/vokoscreen/vokoscreen.conf"
             fi
@@ -45,7 +47,7 @@ reconfigure_applications(){
 }
 
 select_card_multiple(){
-    local _id _description menu
+    local _id _name _description menu
     # list cards, per priority
     unset menu
 
@@ -55,9 +57,11 @@ select_card_multiple(){
             continue
         fi
 
-        _id="$( echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' )"
+        _id="$( echo "$line" | awk '{print $1}' )"
+        _name="$( echo "$line" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g' )"
         # remove extra leading blank chars
-        read -r _id <<< "$_id"
+        read -r _name <<< "$_name"
+        el_debug "name = '$_name'"
         el_debug "id = '$_id'"
 
         _description="${line##*- }"
@@ -66,24 +70,24 @@ select_card_multiple(){
         el_debug "description = '$_description'"
 
 
-        if [[ "$_id" ]] && [[ -n "$_description" ]] ; then
+        if [[ "$_name" ]] && [[ -n "$_description" ]] ; then
 
             # skip unwanted ones
-            case "$_id" in
+            case "$_name" in
                 Modem|Dummy|system)
-                    el_debug "skipping $_id because is not a useful card"
+                    el_debug "skipping $_name because is not a useful card"
                     continue
                     ;;
             esac
-            if [[ "$_id" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
+            if [[ "$_name" = "ThinkPadEC" ]] && [[ "$_description" = "ThinkPad Console Audio Control" ]] ; then
                 el_debug "skipping ThinkPadEC because is not a useful one"
                 continue
             fi
 
-            menu+=("$( echo "$_id" )")
+            menu+=("$( echo "$_name" )")
             menu+=("$( echo "$_description" )")
         fi
-    done 3<<< "$( cat /proc/asound/cards | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" | grep -v "at 0x.*irq" )"
+    done 3<<< "$( cat "$asound_cards" | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" | grep -v "at 0x.*irq" )"
     # note: this psort is not very important since it's only going to be used for menu
 
     # set auto mode unless we have an USB/DAC audio card, also because we may want the mic from elsewhere
@@ -99,6 +103,11 @@ select_card_multiple(){
 
     # remove extra leading blank chars
     read -r selection <<< "$selection"
+    if ((is_buster)) || ((is_wheezy)) ; then
+        selection="$selection"
+    else
+        selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+    fi
 
     if [[ "${selection}" = "cancel" ]] ; then
         return 1
@@ -115,19 +124,37 @@ main(){
         fi
     fi
 
+    case "$( cat /etc/debian_version )" in
+        10.*|"buster"*)
+            is_buster=1
+            ;;
+        7.*|"wheezy"*)
+            is_wheezy=1
+            ;;
+        *)
+            # by default, normal mode:
+            true
+            ;;
+    esac
+
     # }}}
 
     # NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
 
     guitool=zenity
 
-    list_cards="$(cat /proc/asound/cards | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+    #if ((is_buster)) || ((is_wheezy)) ; then
+        #list_cards="$(cat "$asound_cards" | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
+    #else
+        #list_cards="$(cat "$asound_cards" | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | awk '{print $1}' )"
+    #fi
+    list_cards="$(cat "$asound_cards" | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$|\]|g' )"
 
-    if grep -qsE "\[(USB|DAC)\s*]" /proc/asound/cards ; then
+    if grep -qsE "\[(USB|DAC)\s*]" "$asound_cards" ; then
         has_usb_audio=1
     fi
 
-    if [[ "$( cat /proc/asound/cards | grep -vE "\[(ThinkPadEC|NVidia|midi|MIDI|Dummy|system|Modem)" | grep -E "\[.*\]" | wc -l )" -gt 1 ]]  ; then
+    if [[ "$( cat "$asound_cards" | grep -vE "\[(ThinkPadEC|NVidia|midi|MIDI|Dummy|system|Modem)" | grep -E "\[.*\]" | wc -l )" -gt 1 ]]  ; then
         el_debug "there is multiple cards found"
         has_multiple_cards=1
     fi
@@ -150,11 +177,11 @@ main(){
             shift
         fi
         # if first argument is the name of the card that we want to use itself
-        if [[ -n "$arg" ]] && [[ "$arg" != -* ]] ; then
-            if echo "$list_cards" | grep -qs -- "$arg" ; then
-                list_cards="$arg"
-            fi
-        fi
+        #if [[ -n "$arg" ]] && [[ "$arg" != -* ]] ; then
+            #if echo "$list_cards" | grep -qs -- "$arg" ; then
+                #list_cards="$arg"
+            #fi
+        #fi
         if [[ "$arg" = "--help" ]] ; then
             echo -e "Usage: $(basename $0) without arguments allows you to select the audio card to use"
             echo -e "--smart: performs a smart way to detect the correct audio card to use"
@@ -186,7 +213,11 @@ main(){
 
     # only one card found
     if [[ "$number_cards" -eq "1" ]] ; then
-        selection="$list_cards"
+        if ((is_buster)) || ((is_wheezy)) ; then
+            selection="$( echo "$list_cards" | sed -e 's|\].*$||g' -e 's|^.*\[||g')"
+        else
+            selection="$( echo "$list_cards" | awk '{print $1}' )"
+        fi
         # remove extra leading blank chars
         read -r selection <<< "$selection"
 
@@ -203,19 +234,27 @@ main(){
                 rm -f "${HOME}/.asoundrc"
                 [[ -z "$line" ]] && continue
 
+                id="$( echo "$line" | awk '{print $1}' )"
+                name="$( echo "$line" | sed -e 's|\].*$||g' -e 's|^.*\[||g')"
+
                 # note: this is needed to configure the amixer next command, based on the while loop psort
-                echo "defaults.ctl.card ${line}" >> "${HOME}/.asoundrc"
-                echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
+                if ((is_buster)) || ((is_wheezy)) ; then
+                    echo "defaults.ctl.card ${name}" >> "${HOME}/.asoundrc"
+                    echo "defaults.pcm.card ${name}" >> "${HOME}/.asoundrc"
+                else
+                    echo "defaults.ctl.card ${id}" >> "${HOME}/.asoundrc"
+                    echo "defaults.pcm.card ${id}" >> "${HOME}/.asoundrc"
+                fi
+
 
                 # set a preferenced result
-                if [[ "$line" = DAC ]] ; then
-                    el_debug "we have a DAC audio card, using it as a preferenced one"
+                if [[ "$selection" = DAC ]] || grep -qsE "\s*${selection}\s*\[\s*DAC\s*\]" "$asound_cards" ; then
                     preferenced="DAC"
                 fi
 
-                array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+                array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $name"
 
-            done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+            done 3<<< "$( echo "$list_cards" | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
             # select the card that has most tracks
             # first detect the max number of tracks
@@ -224,12 +263,16 @@ main(){
             # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
             selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
 
-            if [[ -n "$preferenced" ]] ; then
+            if [[ "$preferenced" = "DAC" ]] ; then
                 #if ((is_auto_mode)) ; then
-                selection="DAC"
+                if ((is_buster)) || ((is_wheezy)) ; then
+                    selection="DAC"
+                else
+                    selection="$( grep -E "\[\s*DAC\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+                fi
                 #fi
             else
-                el_debug "we selected the card $selected from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
+                el_debug "we selected the card '$selected' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
             fi
 
             if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
@@ -298,7 +341,7 @@ main(){
                         array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
                     fi
 
-                done 3<<< "$( echo "$list_cards" | tr ' ' '\n' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+                done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
                 # restore
                 mv -f "$HOME/.asoundrc.bak" "$HOME/.asoundrc"
@@ -326,6 +369,11 @@ main(){
         # append (important) mic conf
         if [[ -n "$mic" ]] ; then
             el_debug "configuring a different mic source to $mic"
+            if ((is_buster)) || ((is_wheezy)) ; then
+                mic="$mic"
+            else
+                mic="$( grep -E "\[\s*${mic}\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+            fi
 
             cat >> "${HOME}/.asoundrc" << EOF
 

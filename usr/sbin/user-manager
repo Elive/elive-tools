@@ -215,6 +215,8 @@ sudoers_user_generic(){
             # brightness control
             echo -e "# User should always be able to change the brightness of the screen\n${username}   ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl\n" >> "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
 
+            # profile-sync-daemon
+            echo -e "# profile-sync-daemon which is needed for the browsers requires privileges\n${username}   ALL=(ALL) NOPASSWD: /usr/bin/psd-overlay-helper\n" >> "/etc/sudoers.d/sudo_nopasswd_generic_${username}"
 
             # permissions
             chmod 0440 "/etc/sudoers.d/sudo_nopasswd_generic_${username}"

@@ -56,7 +56,6 @@ usage(){
 Usage: $(basename $0) [options]
 
 -d  delayed:     wait 5 seconds before to take the screenshot
--w  window:      take a screenshot to the focused window
 -r  range:       drag your mouse to select what you want to take in your screenshot,
                  or just click in the window that you want to take the screenshot
 -q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90. (not available for PNG)
@@ -65,6 +64,7 @@ Usage: $(basename $0) [options]
 
 Notes: if no window or range is specified, the full desktop is used for the screenshot
 "
+#-w  window:      take a screenshot to the focused window
 }
 
 take_screenshot(){
@@ -74,13 +74,13 @@ take_screenshot(){
     options="--silent"
 
     # no need to click, just take a screenshot of the focused window
-    if ((is_mode_window)) ; then
-        options="--focused $options"
-    fi
+    #if ((is_mode_window)) ; then
+        #options="--focused $options"
+    #fi
     # borders are not included if we are in range mode
-    if ((is_mode_borders)) ; then
-        options="--border $options"
-    fi
+    #if ((is_mode_borders)) ; then
+        #options="--border $options"
+    #fi
     # range mode (user can click to take the screenshot of a window too)
     if ((is_mode_range)) ; then
         options="--select $options"
@@ -105,10 +105,10 @@ take_screenshot(){
     else
         message_result="$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" ) Ctrl + V"
     fi
-    message_drag_range="$( eval_gettext "Drag your mouse to select a region to capture, or click in the desired window" )"
+    message_drag_range="$( eval_gettext "Drag your mouse to select a region, or click in the desired window to capture" )"
 
     message_hotkeys="$( eval_gettext "Use Alt or Shift with the hotkey 'Impr' for other options" )"
-    message_window_delayed="$( eval_gettext "Pick the window you want to take a screenshot of by clicking on it, and wait a few seconds." )"
+    #message_window_delayed="$( eval_gettext "Pick the window you want to take a screenshot of by clicking on it, and wait a few seconds." )"
 
 
     # screenshot
@@ -135,16 +135,16 @@ take_screenshot(){
 
     fi
 
-    if ((is_mode_window)) && ((is_mode_delayed)) ; then
-        if ((is_interactive)) ; then
-            el_info "$message_window_delayed"
-        else
-            notify-send -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
-            conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
-            el_config_save "conf_notifications_amount"
-            sync
-        fi
-    fi
+    #if ((is_mode_delayed)) ; then
+        #if ((is_interactive)) ; then
+            #el_info "$message_window_delayed"
+        #else
+            #notify-send -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
+            #conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
+            #el_config_save "conf_notifications_amount"
+            #sync
+        #fi
+    #fi
 
 
     # we need to wait a bit so the user is not pressing the keyboard
@@ -238,15 +238,15 @@ main(){
                 ;;
             r)
                 is_mode_range=1
-                is_mode_borders=1
+                #is_mode_borders=1
                 ;;
             s)
                 is_mode_save=1
                 ;;
-            w)
-                is_mode_window=1
-                is_mode_borders=1
-                ;;
+            #w)
+                #is_mode_window=1
+                #is_mode_borders=1
+                #;;
             #q)
                 ## less use of debug functions:
                 #export EL_DEBUG=0
@@ -305,10 +305,10 @@ main(){
         fi
     fi
 
-    if ((is_mode_range)) && ((is_mode_window)) ; then
-        unset is_mode_range
-        NOREPORTS=1 el_warning "Range and window mode cannot be used at the same time, switching to capture the focused window only"
-    fi
+    #if ((is_mode_range)) && ((is_mode_window)) ; then
+        #unset is_mode_range
+        #NOREPORTS=1 el_warning "Range and window mode cannot be used at the same time, switching to capture the focused window only"
+    #fi
 
     # run
     take_screenshot

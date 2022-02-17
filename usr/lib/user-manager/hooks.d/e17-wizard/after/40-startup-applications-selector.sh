@@ -434,29 +434,38 @@ EOF
             result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
         fi
 
-        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] ; then
-            while read -ru 3 line
-            do
-                # run composite
-                if [[ "$line" = "compositor" ]] ; then
-                    # we must enable compositor for it first:
-                    eesh compmgr start
-                    # wait that its started before to run other things:
-                    sleep 3
-                    # do not add to list, just continue
-                    continue
-                fi
+        # defaults in case the user canceled the dialog
+        if [[ "$result" = "cancel" ]] ; then
+            echo -e "conky" >> "$HOME/.e16/startup-applications.list"
+            echo -e "cairo-dock" >> "$HOME/.e16/startup-applications.list"
+            eesh compmgr start
+            sleep 3
+        else
+            # selections by user
+            if [[ -n "$result" ]] ; then
+                while read -ru 3 line
+                do
+                    # run composite
+                    if [[ "$line" = "compositor" ]] ; then
+                        # we must enable compositor for it first:
+                        eesh compmgr start
+                        # wait that its started before to run other things:
+                        sleep 3
+                        # do not add to list, just continue
+                        continue
+                    fi
 
-                if [[ -x "$(which "$line" )" ]] ; then
-                    # add to known list
-                    echo "$line" >> "$HOME/.e16/startup-applications.list"
+                    if [[ -x "$(which "$line" )" ]] ; then
+                        # add to known list
+                        echo "$line" >> "$HOME/.e16/startup-applications.list"
 
-                    # run
-                    # update: do not run: we will run them all later
-                    #( $line & )
+                        # run
+                        # update: do not run: we will run them all later
+                        #( $line & )
 
-                fi
-            done 3<<< "$( echo "$result" | tr '|' '\n' )"
+                    fi
+                done 3<<< "$( echo "$result" | tr '|' '\n' )"
+            fi
         fi
     fi
 

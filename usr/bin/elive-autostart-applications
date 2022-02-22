@@ -124,13 +124,8 @@ do_list(){
                         killall "$(basename "$executable" )"  2>/dev/null || true
                         killall -9 "$(basename "$executable" )"  2>/dev/null || true
 
-                        if el_array_member_check "$cmd" "${apps_launched[@]}" ; then
-                            el_warning "ignoring duplicated entry to run: $cmd"
-                        else
-                            el_debug "running: $cmd"
-                            bash -c "$cmd  & disown"
-                            el_array_member_add "$cmd" "${apps_launched[@]}" ; apps_launched=("${_out[@]}")
-                        fi
+                        el_debug "running: $cmd"
+                        bash -c "$cmd  & disown"
                         ;;
 
                     stop)

@@ -28,7 +28,7 @@ main(){
     #time_switching_seconds="$(( 5 * 60 ))"
     # seconds
     if [[ -z "$time_switching_seconds" ]] ; then
-        time_switching_seconds="30"
+        time_switching_seconds="40"
     fi
 
     #el_debug "Starting (infinite) loop for switching between existing wallpapers"
@@ -73,6 +73,9 @@ main(){
 
         while read -ru 3 line
         do
+            [[ -z "$line" ]] && continue
+            [[ "$line" = "NONE" ]] && continue
+
             el_debug "Switching to desktop wallpaper: $line"
 
             # set wallpaper on first desktop only for now

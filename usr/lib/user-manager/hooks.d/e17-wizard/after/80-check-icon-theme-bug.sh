@@ -7,6 +7,13 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
+fix_cairodock(){
+    if [[ "$( pidof cairo-dock | wc -w )" -ge 2 ]] ; then
+        killall cairo-dock 1>/dev/null 2>&1
+        killall -9 cairo-dock 1>/dev/null 2>&1
+        bash -c "cairo-dock  & disown"
+    fi
+}
 
 
 main(){
@@ -17,6 +24,7 @@ main(){
 
     # e16
     if [[ -n "$EROOT" ]] ; then
+        fix_cairodock
         # nothing to do
         return 0
     fi

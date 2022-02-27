@@ -41,7 +41,7 @@ main(){
     if [[ -x "/usr/bin/elive-help" ]] ; then
         if ! grep -qs "thanatests" /proc/cmdline ; then
             elive-help --hotkeys --fs --iconify &
-            sleep 5
+            #sleep 5
         fi
     fi
 

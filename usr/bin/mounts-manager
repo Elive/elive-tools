@@ -192,7 +192,7 @@ chroot_layers_mount(){
             mkdir -p "$dir/run/dbus"
             mount --bind "/run/dbus" "${dir}/run/dbus"
             # enable access to graphical system too
-            xhost local:localhost 1>/dev/null
+            xhost local:localhost 1>/dev/null 2>&1
         fi
         if [[ -d "/run/lvm" ]] ; then
             mkdir -p "$dir/run/lvm"
@@ -403,7 +403,7 @@ chroot_layers_umount(){
     if ((is_mode_bind)) ; then
         if check_is_mounted "$dir/run/dbus" 2>/dev/null 1>&2 ; then
             umount "$dir/run/dbus"
-            xhost -local:localhost 1>/dev/null
+            xhost -local:localhost 1>/dev/null 2>&1
         fi
         if check_is_mounted "$dir/run/lvm" 2>/dev/null 1>&2 ; then
             umount "$dir/run/lvm"

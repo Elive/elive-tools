@@ -108,7 +108,7 @@ main(){
 
         case "$filename" in
             # do we need a touch-screen keyboard?
-            onboard-autostart.desktop)
+            "onboard-autostart.desktop")
                 if grep -qs "keyboard: not found" /etc/elive-version ; then
                     menu+=("TRUE")
                     menu_auto+=("$file")
@@ -119,11 +119,29 @@ main(){
                     el_debug "state: FALSE"
                 fi
                 ;;
+            "blueman.desktop")
+                # make sure we have bluetooth device
+                if hcitool dev | grep -qs ":.*:.*:" || dmesg | grep -qs "Bluetooth" ; then
+                    if [[ -n "$EROOT" ]] ; then
+                        menu+=("TRUE")
+                        menu_auto+=("$file")
+                        menu_auto_live+=("$file")
+                        el_debug "state: TRUE"
+                    else
+                        menu+=("FALSE")
+                        el_debug "state: FALSE"
+                    fi
+                else
+                    menu+=("FALSE")
+                    el_debug "state: FALSE"
+                fi
+                ;;
+
             *)
                 if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
                     # E16 requires different ones
                     if [[ -n "$EROOT" ]] ; then
-                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-|blueman)" ; then
+                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
                             menu+=("TRUE")
                             menu_auto+=("$file")
                             el_debug "state: TRUE"
@@ -157,7 +175,7 @@ main(){
 
         # auto menu for live mode
         if [[ -n "$EROOT" ]] ; then
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio|blueman)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
                 menu_auto_live+=("$file")
             fi
         else

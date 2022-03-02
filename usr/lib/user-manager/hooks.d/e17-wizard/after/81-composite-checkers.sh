@@ -46,10 +46,12 @@ main(){
                     killall conky
                     is_restart_needed_conky=1
                 fi
+                sync
                 #sed -i -e "s|^.*own_window_argb_visual.*$|own_window_argb_visual yes|gI" "$HOME/.conkyrc"
                 sed -i -e "s|^.*own_window_argb_visual.*$|\town_window_argb_visual = true,|gI" "$HOME/.conkyrc"
                 if ((is_restart_needed_conky)) ; then
                     el_debug "restarting conky"
+                    LC_ALL=C sleep 1
                     ( conky 1>/dev/null 2>&1 & disown )
                 fi
             fi

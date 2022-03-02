@@ -401,8 +401,12 @@ EOF
             echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
         fi
 
-        # include composite feature
-        menu+=("TRUE")
+        # include composite, only if the video card has enough power
+        if [[ "$( glxinfo | grep "Video memory:" | sed -e 's|^.*memory: ||g' -e 's|MB.*$||g' )" -ge 128 ]] ; then
+            menu+=("TRUE")
+        else
+            menu+=("FALSE")
+        fi
         menu+=("compositor")
         menu+=("Compositor: Enables transparencies and make dock look better")
 

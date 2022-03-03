@@ -28,7 +28,7 @@ main(){
     #time_switching_seconds="$(( 5 * 60 ))"
     # seconds
     if [[ -z "$time_switching_seconds" ]] ; then
-        time_switching_seconds="40"
+        time_switching_seconds="60"
     fi
 
     #el_debug "Starting (infinite) loop for switching between existing wallpapers"

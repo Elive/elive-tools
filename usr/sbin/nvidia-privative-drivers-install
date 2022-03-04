@@ -936,7 +936,13 @@ install_driver(){
         else
             rmmod nouveau
             if lsmod | grep -qsE "^nouveau\s+" ; then
-                echo -e "\nE: nouveau module is loaded and we cannot unload it"
+                # report
+                if grep -qs "boot=live" /proc/cmdline && grep -qs "blacklist.*nouveau" /proc/cmdline ; then
+                    el_error "Nouveau module unable to unload while boot parameters are meant to be blacklisted:\n$(cat /proc/cmdline)"
+                else
+                    echo -e "\nE: nouveau module is loaded and we cannot unload it"
+                fi
+
                 echo -e "You should reboot and add the boot parameter 'modprobe.blacklist=nouveau' to tell the kernel to not load it, or you can use the -f option (but it can make your screen unreadable, which is ok if you are running it from a ssh)"
 
                 if ! ((is_mode_auto)) ; then
@@ -962,11 +968,6 @@ install_driver(){
                                 ;;
                         esac
                     fi
-                fi
-
-                # report
-                if grep -qs "boot=live" /proc/cmdline && grep -qs "blacklist.*nouveau" /proc/cmdline ; then
-                    el_error "Nouveau module unable to unload while boot parameters are meant to be blacklisted:\n$(cat /proc/cmdline)"
                 fi
 
             fi

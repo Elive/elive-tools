@@ -121,7 +121,7 @@ main(){
                 ;;
             "blueman.desktop")
                 # make sure we have bluetooth device
-                if hcitool dev | grep -qs ":.*:.*:" || dmesg | grep -qs "Bluetooth" ; then
+                if hcitool dev | grep -qs ":.*:.*:" ; then
                     if [[ -n "$EROOT" ]] ; then
                         menu+=("TRUE")
                         menu_auto+=("$file")

@@ -73,7 +73,11 @@ main(){
             #dirname=$(dirname "${lib}")
 
             if [[ -e "$lib" ]] ; then
-                el_array_member_add "$lib" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
+                if [[ -L "/lib" ]] && [[ -s "/usr/lib/${lib#/lib/}" ]] ; then
+                    el_array_member_add "/usr/lib/${lib#/lib/}" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
+                else
+                    el_array_member_add "$lib" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
+                fi
             fi
 
         done

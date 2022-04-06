@@ -73,11 +73,9 @@ main(){
             #dirname=$(dirname "${lib}")
 
             if [[ -e "$lib" ]] ; then
-                if [[ -L "/lib" ]] && [[ -s "/usr/lib/${lib#/lib/}" ]] ; then
-                    el_array_member_add "/usr/lib/${lib#/lib/}" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
-                else
-                    el_array_member_add "$lib" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
-                fi
+                # get the correct location of the file, this is needed also for compatibility reasons like the squashfs sort file
+                lib="$( readlink -f "$lib" )"
+                el_array_member_add "$lib" "${cached_arr[@]}" ; cached_arr=("${_out[@]}")
             fi
 
         done

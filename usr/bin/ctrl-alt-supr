@@ -1,0 +1,128 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
+main(){
+    # pre {{{
+    local var
+
+    if ! el_dependencies_check "gksu" ; then
+        el_dependencies_install "gksu"
+    fi
+
+    # }}}
+
+    # pre fixes:
+    elive-audio-fixes
+    elive-reconfigurations
+    elive-heath --no-delay
+
+
+    unset menu
+
+    menu+=("lock")
+    menu+=("$( eval_gettext "Lock your desktop" )")
+
+    menu+=("userswitch")
+    menu+=("$( eval_gettext "Switch user" )")
+
+    menu+=("logout")
+    menu+=("$( eval_gettext "Logout" )")
+
+    menu+=("tasks")
+    menu+=("$( eval_gettext "Task Manager" )")
+
+    menu+=("newdesktop")
+    menu+=("$( eval_gettext "Reset desktop settings" )")
+
+    #menu+=("resetaudio")
+    #menu+=("$( eval_gettext "Reset audio volumes" )")
+
+    menu+=("resetaudio")
+    menu+=("$( eval_gettext "Reset audio configurations" )")
+
+    menu+=("userconf")
+    menu+=("$( eval_gettext "User configuration manager" )")
+
+    menu+=("bugreport")
+    menu+=("$( eval_gettext "Report an issue to Elive" )")
+
+
+    answer="$( timeout 1200 zenity --list --height=280 --text="" --column="" --column="$( eval_gettext "Option" )" "${menu[@]}" --print-column=1 --hide-column=1 || echo cancel )"
+
+    case "$answer" in
+        "lock")
+            elive-pm "lock"
+            ;;
+        "userswitch")
+            if pidof lightdm 1>/dev/null 2>&1 ; then
+                dm-tool switch-to-greeter
+            else
+                zenity --error --text="$( eval_gettext "You are not using Lightdm, in order to switch between user desktops you need to use the Lightdm login manager, install this package if you don't have it yet." )"
+            fi
+            ;;
+        "logout")
+            elive-pm "logout"
+            ;;
+        "tasks")
+            if which gnome-system-monitor 1>/dev/null 2>&1 ; then
+                gnome-system-monitor -p
+            else
+                if which evisum 1>/dev/null 2>&1 ; then
+                    evisum
+                fi
+            fi
+            ;;
+        "newdesktop")
+            e17-restart-and-remove-conf-file-WARNING-dont-complain --ask
+            ;;
+        "resetaudio")
+            if pidof pulseaudio 1>/dev/null 2>&1 ; then
+                systemctl --user stop pulseaudio.service pulseaudio.socket
+                killall -9 pulseaudio
+                rm -f /home/*/.config/pulse/cookie /home/*/.pulse/*
+                audio-configurator  --quiet --auto --smart
+                systemctl --user start pulseaudio.service pulseaudio.socket
+            else
+                audio-configurator  --quiet --auto --smart
+            fi
+
+            # fix volumes
+            rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
+
+            setvolume defaults
+
+            timeout 5 aplay /dev/null 2>/dev/null
+            LC_ALL=C sleep 0.2
+
+
+            ;;
+        "userconf")
+            gksu user-manager
+            ;;
+        "bugreport")
+            elive-bug-report
+            ;;
+    esac
+
+
+
+
+    # post fixes:
+    elive-news
+    elive-upgrader
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

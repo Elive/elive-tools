@@ -1,36 +1,61 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
 
-# XXX Note: there's a .desktop that references to this (name $0) command, do not break up things
+main(){
+    for arg in "$@" ; do
+        case "$arg" in
+
+            "--ask")
+                if ! zenity --question --text="$( eval_gettext "Do you want to reset your desktop configurations? It will restart your desktop settings to a new default one. Useful to restore your desktop if you messed up something and you don't know how to recover it." )" ; then
+                    exit
+                fi
+
+                zenity --info --text="$( eval_gettext "Make sure to close correctly all your running applications before continuing." )"
+                ;;
+        esac
+    done
+
+    # XXX Note: there's a .desktop that references to this (name $0) command, do not break up things
+    if [[ -n "$EROOT" ]] ; then
+        #killall -9 e16 2>/dev/null
+        #rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
+        #cd "$HOME"
+        #elive-skel upgrade .e16
+        #elive-skel upgrade .config/cairo-dock
+        # stop all launched applications first
+        elive-autostart-applications "stop"
+        # freeze E, restore everything, then kill E to restart it
+        tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; killall -9 cairo-dock 2>/dev/null ; killall -9 conky 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; sync ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
+    fi
+
+    if [[ -n "$E_START" ]] ; then
+        #killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+        #rm -fr "$HOME/.e" "$HOME/.xsession-errors"
+        # stop all launched applications first
+        # freeze E, restore everything, then kill E to restart it
+        tmux-attach-jobs background erestart "sync ; killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\" ; sync ; killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null"
+    fi
 
 
-if [[ -n "$EROOT" ]] ; then
-    #killall -9 e16 2>/dev/null
-    #rm -fr "$HOME/.e16" "$HOME/.xsession-errors"
-    #cd "$HOME"
-    #elive-skel upgrade .e16
-    #elive-skel upgrade .config/cairo-dock
-    # stop all launched applications first
-    elive-autostart-applications "stop"
-    # freeze E, restore everything, then kill E to restart it
-    tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; killall -9 cairo-dock 2>/dev/null ; killall -9 conky 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
-fi
-
-if [[ -n "$E_START" ]] ; then
-    #killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-    #rm -fr "$HOME/.e" "$HOME/.xsession-errors"
-    # stop all launched applications first
-    # freeze E, restore everything, then kill E to restart it
-    tmux-attach-jobs background erestart "sync ; killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\" ; sync ; killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null"
-fi
+    # do a small pause before to continue with anything, because we need to make sure that the confs are removed
+    #sleep 20
 
 
-# do a small pause before to continue with anything, because we need to make sure that the confs are removed
-sleep 20
+    #killall -9 Xorg &
 
 
-#killall -9 Xorg &
+    #wait
+}
 
+#
+#  MAIN
+#
+main "$@"
 
-#wait
-
+# vim: set foldmethod=marker :

@@ -719,11 +719,18 @@ interactive_ask_driver_version(){
                 NOREPORTS=1 el_error "Version 'current' no longer supported for this architecture"
                 sleep 4
 
-                message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, you should use the 64bit version of Elive instead. The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
+                local message_warning_no_longer_supported message_warning_no_longer_supported_fallback
+                message_warning_no_longer_supported="$( printf "$( eval_gettext "This version of Nvidia drivers is no longer supported by this architecture. If you need this version of the driver, you should use the 64bit version of Elive instead." )" )"
+                message_warning_no_longer_supported_fallback="$( printf "$( eval_gettext "The installation will proceed using another version instead:" )" "" ) $(apt-cache show nvidia-driver | grep "Depends: " | sed -e 's|^Depends: ||g' | sort -u )"
 
                 dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "WARNING" \
                     --msgbox "$message_warning_no_longer_supported" \
+                    0 0
+
+                dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                    --title "WARNING" \
+                    --msgbox "$message_warning_no_longer_supported_fallback" \
                     0 0
             fi
             ;;
@@ -1397,6 +1404,28 @@ main(){
     fi
 
     args="$@"
+
+    # know arch
+    case "$(uname -m)" in
+        i*86)
+            local message_unsupported_arch
+            message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive, there are no Nvidia official drivers for this architecture, we will continue but this drivers installer will probably fail. You should use the 64-bit version of Elive to have your drivers correctly working." )" "" )"
+
+            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Suggested Version" \
+                --msgbox "$message_unsupported_arch" \
+                0 0
+
+            is_i386=1
+            ;;
+        *64)
+            is_amd64=1
+            ;;
+        *)
+            el_error "unknown architecture on $SOURCE"
+            is_amd64=1
+            ;;
+    esac
 
     # }}}
 

@@ -40,7 +40,7 @@ main(){
     # show the hokeys pdf at every new desktop creation
     if [[ -x "/usr/bin/elive-help" ]] ; then
         if ! grep -qs "thanatests" /proc/cmdline ; then
-            elive-help --hotkeys --fs --iconify &
+            elive-help --hotkeys --fs --iconify --preview &
             #sleep 5
         fi
     fi

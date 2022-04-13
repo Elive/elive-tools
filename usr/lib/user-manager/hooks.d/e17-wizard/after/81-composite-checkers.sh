@@ -155,6 +155,20 @@ main(){
     fi
     # end e17 }}}
 
+    # hardware check: broken bios?
+    if dmesg | grep -qsi "you might be running a broken BIOS" ; then
+        local message_efiboot
+        if el_check_dir_has_files "/sys/firmware/efi/" 1>/dev/null 2>&1 ; then
+            message_efiboot="$( printf "$( eval_gettext "Note: Elive has a feature to install BIOS updates but for that, you need to reinstall Elive using the EFI boot mode in your BIOS." )" "" )"
+        else
+            message_efiboot=""
+        fi
+        local message_broken_bios
+        message_broken_bios="$( printf "$( eval_gettext "A warning message has been found that your BIOS may be broken. If you experience any hardware issues we strongly recommend updating your BIOS. " )" "" )"
+
+        $guitool --warning --text="${message_broken_bios} ${message_efiboot}" 1>/dev/null 2>&1 || true
+    fi
+
 
     # if we are debugging give it a little pause to see what is going on
     #if grep -qs "debug" /proc/cmdline ; then

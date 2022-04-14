@@ -68,7 +68,7 @@ main(){
             fi
             ;;
         "logout")
-            elive-pm "logout"
+            elive-pm "logoutmenu"
             ;;
         "tasks")
             if which gnome-system-monitor 1>/dev/null 2>&1 ; then

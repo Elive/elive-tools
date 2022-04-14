@@ -21,7 +21,7 @@ main(){
     # pre fixes:
     elive-audio-fixes
     elive-reconfigurations
-    elive-heath --no-delay
+    elive-health --no-delay
 
 
     unset menu

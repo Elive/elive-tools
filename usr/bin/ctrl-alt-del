@@ -20,11 +20,11 @@ main(){
 
     # pre fixes:
     #el_debug "audio fixes"
-    ( elive-audio-fixes & )
+    elive-audio-fixes &
     #el_debug "reconfigurations"
-    ( elive-reconfigurations & )
+    elive-reconfigurations &
     #el_debug "health"
-    ( elive-health --no-delay & )
+    elive-health --no-delay &
 
 
     unset menu
@@ -122,9 +122,9 @@ main(){
 
     # post fixes:
     #el_debug "news"
-    ( elive-news & )
+    elive-news &
     #el_debug "upgrader"
-    ( elive-upgrader & )
+    elive-upgrader &
 
     wait
 }

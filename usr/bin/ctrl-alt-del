@@ -19,8 +19,11 @@ main(){
     # }}}
 
     # pre fixes:
+    el_debug "audio fixes"
     elive-audio-fixes
+    el_debug "reconfigurations"
     elive-reconfigurations
+    el_debug "health"
     elive-health --no-delay
 
 
@@ -63,12 +66,14 @@ main(){
         "userswitch")
             if pidof lightdm 1>/dev/null 2>&1 ; then
                 dm-tool switch-to-greeter
+                exit
             else
                 zenity --error --text="$( eval_gettext "You are not using Lightdm, in order to switch between user desktops you need to use the Lightdm login manager, install this package if you don't have it yet." )"
             fi
             ;;
         "logout")
             elive-pm "logoutmenu"
+            exit
             ;;
         "tasks")
             if which gnome-system-monitor 1>/dev/null 2>&1 ; then
@@ -81,6 +86,7 @@ main(){
             ;;
         "newdesktop")
             e17-restart-and-remove-conf-file-WARNING-dont-complain --ask
+            exit
             ;;
         "resetaudio")
             if pidof pulseaudio 1>/dev/null 2>&1 ; then
@@ -115,7 +121,9 @@ main(){
 
 
     # post fixes:
+    el_debug "news"
     elive-news
+    el_debug "upgrader"
     elive-upgrader
 
 }

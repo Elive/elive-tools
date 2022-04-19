@@ -118,12 +118,6 @@ main(){
     # pre {{{
     local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode
 
-    if ! el_dependencies_check zenity ; then
-        if ! el_dependencies_install zenity ; then
-            exit 1
-        fi
-    fi
-
     case "$( cat /etc/debian_version )" in
         10.*|"buster"*)
             is_buster=1
@@ -141,7 +135,7 @@ main(){
 
     # NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
 
-    guitool=zenity
+    guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 
     #if ((is_buster)) || ((is_wheezy)) ; then
         #list_cards="$(cat "$asound_cards" | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"

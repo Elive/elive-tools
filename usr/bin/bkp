@@ -286,8 +286,8 @@ do_diff(){
     #else
         local _different_files
         _different_files="$( diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
-        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files"
-        diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
+        diff -Naur --exclude=".git" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
     do_sudo rm -rf "${1}.differ"
@@ -326,8 +326,8 @@ do_diff_reverse(){
     #else
         local _different_files
         _different_files="$( diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
-        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files"
-        diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g'
+        echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
+        diff -Naur --exclude=".git" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
     do_sudo rm -rf "${1}.differ"

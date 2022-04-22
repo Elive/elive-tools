@@ -10,6 +10,11 @@ export TEXTDOMAIN
 
 main(){
     # pre {{{
+
+    if grep -qs "thanatests" /proc/cmdline ; then
+        exit
+    fi
+
     script="$( mktemp )"
 
     on_exit rm -f "$script"

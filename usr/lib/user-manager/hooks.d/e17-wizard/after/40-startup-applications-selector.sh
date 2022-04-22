@@ -453,7 +453,11 @@ EOF
 
 
         if [[ -n "${menu[@]}" ]] ; then
-            result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+            if grep -qs "thanatests" /proc/cmdline ; then
+                result="compositor|conky|cairo-dock"
+            else
+                result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+            fi
         fi
 
         # defaults in case the user canceled the dialog

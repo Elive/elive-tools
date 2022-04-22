@@ -72,7 +72,9 @@ main(){
     # }}}
 
     # show a tip suggestion about resizing windows, needed for big-windows that appears out of hte borders (e16), but also useful for e17:
-    notify-send -u low -t 30000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
+    if ! grep -qs "thanatests" /proc/cmdline ; then
+        notify-send -u low -t 30000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
+    fi
 
     # e17 {{{
     if [[ -n "$E_START" ]] ; then
@@ -155,7 +157,7 @@ main(){
     fi
     # end e17 }}}
 
-    # hardware check: broken bios?
+    # hardware check: broken bios? {{{
     if dmesg | grep -qsi "you might be running a broken BIOS" ; then
         local message_efiboot
         if el_check_dir_has_files "/sys/firmware/efi/" 1>/dev/null 2>&1 ; then
@@ -168,6 +170,8 @@ main(){
 
         $guitool --warning --text="${message_broken_bios} ${message_efiboot}" 1>/dev/null 2>&1 || true
     fi
+
+    # }}}
 
 
     # if we are debugging give it a little pause to see what is going on

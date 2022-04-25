@@ -119,9 +119,9 @@ special_screens(){
             fi
         done
 
-        # update xchat fonts
-        sed -i -e 's|^text_font = .*|text_font = Monospace 8|g' "$HOME/.xchat2/xchat.conf"
-        is_restart_needed_xchat=1
+        # update hexchat fonts
+        sed -i -e 's|^text_font = .*|text_font = Monospace 8|g' "$HOME/.config/hexchat/hexchat.conf"
+        is_restart_needed_hexchat=1
     fi
 
     #if [[ "$resolution_h" -ge 800 ]] ; then
@@ -139,9 +139,9 @@ special_screens(){
         is_restart_needed_conky=1
         el_debug "setting conky to use a small font size (8 -> 7)"
 
-        # update xchat fonts
-        sed -i -e 's|^text_font = .*|text_font = Monospace 7|g' "$HOME/.xchat2/xchat.conf"
-        is_restart_needed_xchat=1
+        # update hexchat fonts
+        sed -i -e 's|^text_font = .*|text_font = Monospace 7|g' "$HOME/.config/hexchat/hexchat.conf"
+        is_restart_needed_hexchat=1
     fi
 
     # load settings
@@ -398,6 +398,14 @@ main(){
                 eesh restart
             fi
         fi
+
+        if ((is_restart_needed_hexchat)) ; then
+            if pidof hexchat 1>/dev/null ; then
+                el_debug "restarting hexchat"
+                ( hexchat 1>/dev/null 2>&1 & disown )
+            fi
+        fi
+
 
         if ((is_restart_needed_conky)) ; then
             if pidof conky 1>/dev/null ; then

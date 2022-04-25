@@ -179,17 +179,17 @@ main(){
     fi
 
     # send to channel
-    if ps ux | grep -v grep | grep -q xchat && el_dependencies_check xchat 1>/dev/null 2>/dev/null ; then
+    if ps ux | grep -v grep | grep -q hexchat && el_dependencies_check hexchat 1>/dev/null 2>/dev/null ; then
         # send first a message
         if [[ -n "$message" ]] ; then
-            xchat -e -c "msg #$channel $message"
+            hexchat -e -c "msg #$channel $message"
         fi
 
         if ((direct_paste)) ; then
-            xchat -e -c "msg #$channel \$ $command"
-            xchat -e -c "msg #$channel $buffer"
+            hexchat -e -c "msg #$channel \$ $command"
+            hexchat -e -c "msg #$channel $buffer"
         else
-            xchat -e -c "msg #$channel [$command] $url"
+            hexchat -e -c "msg #$channel [$command] $url"
         fi
 
         echo ""

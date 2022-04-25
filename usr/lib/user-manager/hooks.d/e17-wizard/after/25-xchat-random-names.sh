@@ -10,7 +10,7 @@ main(){
 
     # }}}
 
-    # set xchat random names {{{
+    # set hexchat random names {{{
     # checks {{{
     if ! el_check_variables "HOME" || ! [[ -d "$HOME" ]]  ; then
         el_error "no HOME exist for this user? exiting..."
@@ -25,26 +25,26 @@ main(){
 
     # - checks }}}
 
-    if [[ -f "$HOME/.xchat2/xchat.conf" ]] ; then
+    if [[ -f "$HOME/.config/hexchat/hexchat.conf" ]] ; then
 
         randomized="$RANDOM$RANDOM$RANDOM"
 
         NUMBERRANDOM="${randomized:0:2}"
-        sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+        sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if grep -qs "boot=live" /proc/cmdline ; then
-            sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:2:2}"
-        sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+        sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if grep -qs "boot=live" /proc/cmdline ; then
-            sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:4:2}"
-        sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.xchat2/xchat.conf" || true
+        sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if grep -qs "boot=live" /proc/cmdline ; then
-            sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.xchat2/xchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
     fi
 

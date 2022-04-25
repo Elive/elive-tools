@@ -437,9 +437,9 @@ EOF
 
         fi
 
-        # include xchat by default (going back to old times?)
+        # include hexchat by default (going back to old times?)
         menu+=("FALSE")
-        menu+=("xchat")
+        menu+=("hexchat")
         menu+=("IRC Chat: The Elive Chat channel in IRC")
 
 

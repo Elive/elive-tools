@@ -179,6 +179,17 @@ chroot_layers_mount(){
         mount sysfs-$id -t sysfs "${dir}/sys" || true
     fi
 
+    # efivars sysfs
+    if el_check_dir_has_files "/sys/firmware/efi/" 1>/dev/null 2>&1 ; then
+        mkdir -p "$dir/sys/firmware/efi/efivars"
+        if ((is_mode_bind)) ; then
+            mount --bind "/sys/firmware/efi/efivars" "${dir}/sys/firmware/efi/efivars"
+        else
+            mount efivarfs-$id -t efivarfs "${dir}/sys/firmware/efi/efivars" || true
+        fi
+    fi
+
+
     # debian chroot mark
     mkdir -p "$dir/etc"
     if [[ -e "$dir/etc/debian_chroot" ]] ; then
@@ -378,6 +389,11 @@ chroot_layers_umount(){
                 umount "$dir/sys/fs/selinux"
             fi
         fi
+    fi
+
+    # efivars
+    if check_is_mounted "$dir/sys/firmware/efi/efivars" 2>/dev/null 1>&2 ; then
+        umount "$dir/sys/firmware/efi/efivars"
     fi
 
     # sysfs

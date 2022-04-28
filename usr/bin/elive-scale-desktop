@@ -339,11 +339,11 @@ main(){
         #local message_select_extra
         #message_select_extra="$( printf "$( eval_gettext "Point 'A' is the default value of most common screens, select it to optimize your pixels and dimension. Point 'B' is the suggested value for your screen. Point 'C' is the real DPI value of your screen, we suggest a lower value than this one to be able to visualize a more amount of elements in your desktop." )" "" )"
         local message_default
-        message_default="$( printf "$( eval_gettext "Traditional" )" "" )"
+        message_default="$( printf "$( eval_gettext "Traditional" )" "" ) 96"
         local message_suggested
-        message_suggested="$( printf "$( eval_gettext "Recommended" )" "" )"
+        message_suggested="$( printf "$( eval_gettext "Recommended" )" "" ) ${dpi_lowered%x*}"
         local message_yourscreen
-        message_yourscreen="$( printf "$( eval_gettext "Your Screen" )" "" )"
+        message_yourscreen="$( printf "$( eval_gettext "Your Screen" )" "" ) $( el_dpi_get | sed -e 's|x.*$||g' )"
 
 
         if [[ "${dpi_lowered%x*}" -gt 90 ]] && [[ "${dpi_lowered%x*}" -lt 110 ]] ; then

@@ -131,6 +131,7 @@ chroot_layers_mount(){
     if ((is_mode_bind)) ; then
         mount --bind "/dev" "${dir}/dev"
         mount --bind "/dev/pts" "${dir}/dev/pts"
+        mount -t tmpfs devshm-$id "${dir}/dev/shm"
     else
         if ((is_wheezy)) ; then
             mount devpts-$id -t devpts "${dir}/dev/pts" || true
@@ -189,6 +190,13 @@ chroot_layers_mount(){
         fi
     fi
 
+    #
+    if el_check_dir_has_files "/var/lib/dbus/" 1>/dev/null 2>&1 ; then
+        mkdir -p "$dir/var/lib/dbus"
+        if ((is_mode_bind)) ; then
+            mount --bind "/var/lib/dbus" "${dir}/var/lib/dbus"
+        fi
+    fi
 
     # debian chroot mark
     mkdir -p "$dir/etc"
@@ -288,6 +296,9 @@ chroot_layers_mount(){
         chmod 755 "$dir/bin/hostname"
     fi
 
+    # machine-id for pulseaudio
+    cp -f /etc/machine-id "$dir/etc/"
+
     el_explain 2 "Layers for chroot ready"
 
 }
@@ -333,6 +344,10 @@ chroot_layers_umount(){
         if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
             umount "$dir/dev/pts"
         fi
+        if check_is_mounted "$dir/dev/shm" 2>/dev/null 1>&2 ; then
+            umount "$dir/dev/shm"
+        fi
+
         if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
             umount "$dir/dev"
         fi
@@ -404,6 +419,13 @@ chroot_layers_umount(){
     else
         if check_is_mounted "$dir/sys" 2>/dev/null 1>&2 || [[ -e "$dir/sys/class" ]] ; then
             umount "$dir/sys"
+        fi
+    fi
+
+    # /var/lib/dbus for pulseaudio
+    if ((is_mode_bind)) ; then
+        if check_is_mounted "$dir/var/lib/dbus" 2>/dev/null 1>&2 ; then
+            umount "$dir/var/lib/dbus"
         fi
     fi
 
@@ -487,6 +509,13 @@ chroot_layers_umount(){
         rm -f "${dir}/bin/hostname"
         chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
     fi
+
+    # machine-id for pulseaudio
+    rm -f "$dir/etc/machine-id"
+    # XXX note: to make pulseaudio working you must also mount as bind mode:
+    # /tmp
+    # ~/.pulse
+    # user's $XDG_RUNTIME_DIR
 
     el_explain 2 "Layers for chroot umounted"
 

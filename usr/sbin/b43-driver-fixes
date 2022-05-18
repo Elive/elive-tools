@@ -220,7 +220,7 @@ main(){
 
                 if [[ -n "$DISPLAY" ]] ; then
                     if ! ((conf_is_user_reported_install_failed)) ; then
-                        zenity --error --text="$( eval_gettext "Elive was unable to install the B43 drivers for your WiFi card. These are difficult drivers, please try to make it work and report to Elive which exact changes we need to include, in order to make it work by default and others can benefit. Your wireless card model is:" ) $(lspci -nn -d "14e4:" | sed -e 's|^.*BCM|BCM|g' | awk '{print $1}' )"
+                        zenity --error --text="$( eval_gettext "Elive was unable to install the B43 drivers for your WiFi card. These are difficult drivers, please try to make it work and report to Elive which exact changes we need to include, in order to make it work by default. Doing this will help everyone." )\n\nWiFi Model: $(lspci -nn -d "14e4:" | sed -e 's|^.*BCM|BCM|g' | awk '{print $1}' )"
                         conf_is_user_reported_install_failed=1
                         el_config_save "conf_is_user_reported_install_failed"
                     fi

@@ -348,7 +348,7 @@ detect_driver_version(){
             # suggest the version to use
             if ! ((is_mode_auto)) ; then
                 local message_version_suggest
-                message_version_suggest="$( printf "$( eval_gettext "Probably the version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version." )" "$_NVIDIA_VERSION" )"
+                message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version." )" "$_NVIDIA_VERSION" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Suggested Version" \

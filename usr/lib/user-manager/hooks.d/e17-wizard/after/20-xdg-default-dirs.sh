@@ -417,7 +417,7 @@ main(){
 
         if LC_ALL=C dpkg --compare-versions "$eliveversion" "lt" "2.2.9" && el_check_version_development_is_days_recent 20 ; then
             local message_share_results
-            message_share_results="$( printf "$( eval_gettext "Since you are testing a Beta version of Elive, we cannot guarantee that everything was migrated properly. Please help us improve the migration tools by sending the contents of the file '%s' to Thanatermesis (via website). He will let you know if all looks good. By submitting these details you are contributing by reporting any possible errors, and he will also tell you how to restore any file if you need to." )" "$cachedir/logs-unknown-filetypes.txt" )"
+            message_share_results="$( printf "$( eval_gettext "Since you are testing a Beta version of Elive, we cannot guarantee that everything was migrated properly. Please help us improve the migration tools by sending the content of the file '%s' to Thanatermesis (via website). He will let you know if all is well. By submitting these details you can contribute through reporting any possible errors, and he will also tell you how to restore any file if needed." )" "$cachedir/logs-unknown-filetypes.txt" )"
             if zenity --question --text="$message_share_results" ; then
                 hexchat &
                 sleep 5

@@ -90,7 +90,7 @@ pass_verify(){
     fi
 
     if [[ -z "$userpass" ]] ; then
-        $guitool --error --text="$( eval_gettext "You need to insert a password to continue. This password of your choice will be used to secure your system." )"
+        $guitool --error --text="$( eval_gettext "You need to insert a password to continue. This password you choose will be used to secure your system." )"
         userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
     fi
 
@@ -411,7 +411,7 @@ user_add(){
 
     # verifications {{{
     if [[ -z "$username" ]] || [[ -z "$username_real" ]] || [[ -z "$userpass" ]] ; then
-        $guitool --error --text="$( eval_gettext "Please fill all the needed information" )"
+        $guitool --error --text="$( eval_gettext "Please enter all the needed information" )"
         # recursive
         $FUNCNAME "$@"
         return 0
@@ -602,7 +602,7 @@ user_add(){
     fi
 
     local translated_message
-    translated_message="$( printf "$( eval_gettext "You have added successfully the user %s, you can use it now" )" "$username" )"
+    translated_message="$( printf "$( eval_gettext "You have successfully added the user %s, you can use it now" )" "$username" )"
 
     # useful output result to fetch from a wrapper tool (like the installer)
     # required for: post-configuration of $username - configure root password as the same as the user if no system password has been set
@@ -673,7 +673,7 @@ user_del(){
     sudoers_user_generic "del" "$username"
 
     local translated_message
-    translated_message="$( printf "$( eval_gettext "You have removed successfully the user %s" )" "$username" )"
+    translated_message="$( printf "$( eval_gettext "You have successfully removed the user %s" )" "$username" )"
 
     $guitool --info --text="$translated_message" || true
 
@@ -734,7 +734,7 @@ autologin_conf(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to automatically log in with." )" || echo cancel )"
+    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to log in with automatically." )" || echo cancel )"
 
     # note: instead of check for a translated "disable", just check if the user exists (which stills valid)
     if [[ "$username" = "cancel" ]] || ! cat /etc/passwd | awk -v FS=":" '{print $1}' | grep -qs "^${username}$" ; then

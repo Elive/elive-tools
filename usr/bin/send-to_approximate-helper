@@ -41,7 +41,7 @@ main(){
     # check and report if target is not found
     if [[ ! -d "$where" ]] ; then
         if echo "$where" | grep -qs "dropbox" ; then
-            message_unabletofound="$( printf "$( eval_gettext "Unable to find the location of %s. Have you already configured your Dropbox account? You can find it in your applications menus." )" "$where" )"
+            message_unabletofound="$( printf "$( eval_gettext "Unable to find the location of %s. Have you configured your Dropbox account? You can find it in your applications menus." )" "$where" )"
         else
             message_unabletofound="$( printf "$( eval_gettext "Unable to find the location of %s." )" "$where" )"
         fi

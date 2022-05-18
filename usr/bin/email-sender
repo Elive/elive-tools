@@ -314,7 +314,7 @@ do_validate_sending(){
 
                 chmod og-rwx "${conf}"
 
-                $guitool --info --text="$( eval_gettext "Ready! You can start using now the tool" )"
+                $guitool --info --text="$( eval_gettext "Ready! You can start using the tool now" )"
                 return 0
             else
                 $guitool --error --text="$( eval_gettext "Unable to configure your email. Try with a different provider?" )"
@@ -330,7 +330,7 @@ do_validate_sending(){
                 if echo "$result" | grep -qs "testing elive email ($random)" ; then
                     # succeed
                     local message_success_sending
-                    message_success_sending="$( printf "$( eval_gettext "Email configuration is correctly working: you will find a testing email in your account. You can safely delete it." )" "" )"
+                    message_success_sending="$( printf "$( eval_gettext "Email configuration is working correctly: you will find a test email in your account. You can safely delete it." )" "" )"
 
                     if ! { [[ -s "$conf" ]] && grep -qs "email_password=" "$conf" ; } ; then
                         $guitool --info --text="$message_success_sending" || true
@@ -352,7 +352,7 @@ do_validate_sending(){
             done
             ;;
         *)
-            if $guitool --question --text="$( eval_gettext "Does the sending of emails work correctly?" )" ; then
+            if $guitool --question --text="$( eval_gettext "Does sending emails work correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
                 echo "email_account=\"$email_account\"" >> "$conf"
@@ -361,7 +361,7 @@ do_validate_sending(){
 
                 chmod og-rwx "${conf}"
 
-                $guitool --info --text="$( eval_gettext "Ready! You can start using now the tool" )"
+                $guitool --info --text="$( eval_gettext "Ready! You can start using the tool now" )"
                 return 0
             fi
             ;;
@@ -388,7 +388,7 @@ do_validate_sending(){
 
     # configure pop / imap?
     local message_popimap
-    message_popimap="$( printf "$( eval_gettext "Do you want to configure now the POP and IMAP options in your Gmail account? You need them to be enabled." )" )"
+    message_popimap="$( printf "$( eval_gettext "Do you want to configure the POP and IMAP options in your Gmail account now? You need to enable them." )" )"
     if $guitool --question --text="$message_popimap" ; then
         /etc/alternatives/x-www-browser "https://mail.google.com/mail/#settings/fwdandpop" &
         sleep 25
@@ -396,14 +396,14 @@ do_validate_sending(){
 
     # configure less-secure apps
     local message_lesssecure
-    message_lesssecure="$( printf "$( eval_gettext "You first need 2-step verification enabled in your Google account" )" )"
+    message_lesssecure="$( printf "$( eval_gettext "You need 2-step verification enabled in your Google account first" )" )"
     $guitool --info --text="$message_lesssecure"
     /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/signinoptions/two-step-verification/enroll-welcome" &
     sleep 20
 
     # configure less-secure apps (more)
     local message_app_password
-    message_app_password="$( printf "$( eval_gettext "Now you need to create an app password. Select Email for the App and Other for the Device, then give a name. Save the password given, this is the one to use with this tool." )" )"
+    message_app_password="$( printf "$( eval_gettext "Now you need to create an app password. Select Email for the App and Other for the Device, then give a name. Save the given password, which is the one to use with this tool." )" )"
     $guitool --info --text="$message_app_password"
     /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/apppasswords" &
     sleep 20
@@ -464,7 +464,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails you first need to configure your email. Do you want to do it now?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails you need to configure your email first. Do you want to do it now?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then
@@ -487,11 +487,11 @@ do_configure(){
                 ;;
             other)
                 # TODO: implement a questions asking about the stmp / imap / ports addresses, all of them needed, it should simply work
-                $guitool --info --text="$( eval_gettext "This tool only supports, for now, the listed services available, if you want to use a different one you can improve the tool to include the needed configuration for your service. Exiting..." )"
+                $guitool --info --text="$( eval_gettext "This tool only supports (for now) the listed services available, if you want to use a different one you can improve the tool to include the needed configuration for your service. Exiting..." )"
                 exit
                 ;;
             Gmail)
-                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with detailed instructions. You are welcome to improve this tool to support other services too, which is very easy by simply including the needed configurations" )"
+                $guitool --warning --text="$( eval_gettext "There have been some difficulties trying to use Gmail recently. We hope you can manage to make it working with detailed instructions. You are welcome to improve this tool to support other services too, by simply including the needed configurations" )"
                 ;;
             *)
                 true
@@ -544,7 +544,7 @@ do_configure(){
     case "$email_account_type" in
         SMTP)
             local message_ask_smtp_url
-            message_ask_smtp_url="$( printf "$( eval_gettext "Insert the URL where for connect to your SMTP." )" "" )"
+            message_ask_smtp_url="$( printf "$( eval_gettext "Insert the URL for your SMTP connection." )" "" )"
             smtp_url="$( $guitool --entry --entry-text="smtp.yourdomain.com" --text="$message_ask_smtp_url" || echo "" )"
 
             local message_ask_smtp_port
@@ -552,7 +552,7 @@ do_configure(){
             smtp_port="$( $guitool --entry --entry-text="587" --text="$message_ask_smtp_port" || echo "" )"
 
             local message_ask_imap_url
-            message_ask_imap_url="$( printf "$( eval_gettext "Insert the IMAP address where to connect to check your email." )" "" )"
+            message_ask_imap_url="$( printf "$( eval_gettext "Insert the IMAP address to check your email with." )" "" )"
             imap_url="$( $guitool --entry --entry-text="mail.yourdomain.com" --text="$message_ask_imap_url" || echo "" )"
 
             if [[ -z "$smtp_url" ]] || [[ -z "$smtp_port" ]] || [[ -z "$imap_url" ]] ; then

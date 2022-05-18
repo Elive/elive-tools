@@ -20,7 +20,7 @@ not_supported(){
 
 run_dmg(){
     local message_dmg
-    message_dmg="$( printf "$( eval_gettext "DMG files belong to macOS systems. You cannot create or modify them in Linux, but you can open them so you can extract its contents. Do you want to open it now?" )" "" )"
+    message_dmg="$( printf "$( eval_gettext "DMG files belong to macOS systems. You cannot create or modify them in Linux, but you can open them so you can extract its content. Do you want to open it now?" )" "" )"
 
     if $guitool --question --text="$message_dmg" ; then
         filename="$( basename "$file" )"
@@ -97,7 +97,7 @@ run_edje(){
             $precmd cp -f "$file" "$HOME/.e/e17/themes/"
             # update: seems like it doesn't works?
             #enlightenment_remote -theme-set
-            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may be not always fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
+            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may not always be fully compatible, we suggest to use the Elive theme for compatibility, stability and features." )"
 
         fi
 
@@ -144,19 +144,19 @@ run_script(){
     fi
 
     # warn user
-    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code in your machine, you should always verify that they comes from a well-known or trusted author or source. Continue?" )" ; then
+    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code on your machine, you should always verify that they come from a well-known, trusted author or source. Continue?" )" ; then
         return 0
     fi
 
     #el_config_get "is_user_warned_root"
     #if ! ((is_user_warned_root)) ; then
-        #$guitool --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if is the case you need to right-click in the filemanager to enter in admin mode, then running the file from this new session." )"
+        #$guitool --info --text="$( eval_gettext "Important: sometimes these scripts needs administrator privileges, if this is the case you need to right-click in the filemanager to enter in admin mode, then run the file from this new session." )"
         #is_user_warned_root=1
         #el_config_save "conf_is_user_warned_root"
     #fi
 
     if ! [[ "$UID" = 0 ]] ; then
-        if $guitool --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver in your system. We suggest to first try to run the file without the administrator privileges." )" ; then
+        if $guitool --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver to your system. We suggest to first try to run the file without the administrator privileges." )" ; then
             is_root_wanted=1
         fi
     fi
@@ -296,7 +296,7 @@ main(){
 
         # do not run empty mimes
         if [[ -z "$mime" ]] ; then
-            $guitool --info --text="$( eval_gettext "This file doesn't have a Mimetype assigned, we cannot run or open something that we don't know how it should be run. This file is probably used for other purposes." )"
+            $guitool --info --text="$( eval_gettext "This file doesn't have a Mimetype assigned, we cannot run or open something if we don't know how it should be run. This file is probably used for other purposes." )"
             exit
         fi
 
@@ -329,10 +329,10 @@ main(){
                 run_e16 "theme" "$file"
                 ;;
             "application/x-iso9660-image")
-                $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it into a DVD or a USB; Elive includes a special tool for the latter. Or you can also mount it to open its contents by right-clicking the file which is also another feature by Elive." )"
+                $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it to a DVD or a USB device; Elive includes a special tool for the latter. You can also mount it and open its contents by right-clicking the file which is also an Elive feature." )"
                 ;;
             "regular file, no read permission")
-                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to read the, open your file manager in Admin mode by right-clicking on the directory, then change the properties of the file you want to use." )"
+                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to read it, open your file manager in Admin mode by right-clicking on the directory, then change the properties of the file you want to use." )"
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/

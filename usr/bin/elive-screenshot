@@ -107,7 +107,7 @@ take_screenshot(){
     fi
     message_drag_range="$( eval_gettext "Drag your mouse to select a region, or click in the desired window to capture" )"
 
-    message_hotkeys="$( eval_gettext "Use Alt or Shift with the hotkey 'Impr' for other options" )"
+    message_hotkeys="$( eval_gettext "Use Alt or Shift with the hotkey 'PrSc' for other options" )"
     #message_window_delayed="$( eval_gettext "Pick the window you want to take a screenshot of by clicking on it, and wait a few seconds." )"
 
 

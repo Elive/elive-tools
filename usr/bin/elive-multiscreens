@@ -115,7 +115,7 @@ module_ecomorph_unload(){
                     el_error "ecomorph module was unloaded but stills here"
                 fi
 
-                timeout 40 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want this feature working we have the source code on Github at github.com/elive." )"
+                timeout 40 $guitool --info --text="$( eval_gettext "The module Ecomorph has been deactivated because it doesn't work well with multiple screens. If you want to help getting this feature to work, we have the source code on Github at github.com/elive." )"
             fi
 
         else
@@ -163,15 +163,15 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. But if you want Elive loads it when starting the system you need to save its configuration." )"
+    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. But if you want Elive to load it when starting the system you need to save its configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you have yet no window buttons or other features - it can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application from the menus (or using the CTRL+Q keys)" )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you don't have window buttons or other features yet - it can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application through the menu (or using the CTRL+Q keys)" )"
     fi
 
     # e16
     if [[ -n "$EROOT" ]] ; then
-        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens so well as newer versions of Enlightenment. It is possible that some gadgets or windows will be moved to unexpected positions on the desktop." )"
+        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens as well as newer versions of Enlightenment. It is possible that some gadgets or windows will move to unexpected positions on the desktop." )"
     fi
 
     # - explain }}}
@@ -180,7 +180,7 @@ configure_multiscreens(){
     el_debug "running gui configurator"
 
     # tell the user to save the conf
-    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution in every desktop startup, you need to save it in the 'Save As' option. Otherwise, your options will be not remembered, and they will be not used on each startup." )"
+    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution on every desktop startup, you need to save it with the 'Save As' option. Otherwise, your options will be not remembered, and they will be available on each startup." )"
 
     arandr
 
@@ -191,7 +191,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any configuration saved, so Elive cannot use it to remember your screens setup. Do you want to try again? You need to select the option to 'Save As' and type a desired name in the default location." )" ; then
+        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any saved configurations, so Elive cannot use one to remember your screens setup. Do you want to try again? You need to select the option 'Save As' and type a desired name in the default location." )" ; then
 
             # configure
             arandr
@@ -293,7 +293,7 @@ configure_multiscreens(){
         )
 
         if [[ -n "$E_START" ]] ; then
-            timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that doesn't let you move a window out of the limits of your screens, working with multiple screens may be better to disable this feature. You can find this option in the Settings -> Windows -> Window display -> Screen Limits" )"
+            timeout 40 $guitool --info --text="$( eval_gettext "Note: There is a unique feature in Elive that doesn't let you move a window out of the limits of your screen, when working with multiple screens it may be better to disable this feature. You can find this option in Settings -> Windows -> Window display -> Screen Limits" )"
         fi
 
         sleep 1
@@ -304,7 +304,7 @@ configure_multiscreens(){
             el_debug "user wanted to save permanently this configuration"
 
             if ((is_mode_configure)) ; then
-                timeout 90 $guitool --info --text="$( eval_gettext "Note: if the desktop doesn't act as expected, try to restart to a new desktop configuration" )"
+                timeout 90 $guitool --info --text="$( eval_gettext "Note: if the desktop doesn't behave as expected, try to restart to a new desktop configuration" )"
             fi
         else
             conf_multiscreens_last_autoload_wanted="no"
@@ -642,7 +642,7 @@ main(){
 
             # inform
             if xrandr --query | grep -qs " disconnected" ; then
-                $guitool --error --text="$( eval_gettext "Your screen appears disconnected, turn it ON first and try again." )"
+                $guitool --error --text="$( eval_gettext "Your screen appears to be disconnected, turn it ON first and try again." )"
             else
                 # report
                 el_error "no screens connected? \n$( xrandr --query )"

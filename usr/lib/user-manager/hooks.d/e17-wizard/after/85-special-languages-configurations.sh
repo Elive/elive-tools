@@ -17,7 +17,7 @@ suggest_emodule_flag_keyboard(){
     fi
 
     local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want to switch between different language keyboards fastly, right-click on the shelf of the corner to add as content the keyboard gadget." )" "" )"
+    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want fast switching between different language lay-outs, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
 
     if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         zenity --info --text="$message_suggestion_flag"
@@ -55,7 +55,7 @@ main(){
         zh_CN*|zh_TW*)
             language="Chinese"
             local message_instructions_extra
-            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager first to install one of the suggested options supporting Chinese typing input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
+            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager to install one of the suggested options supporting Chinese typing input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
             suggest_emodule_flag_keyboard
             ;;
         vi_VN*)
@@ -102,7 +102,7 @@ main(){
             zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type in any text here." )" || true
 
             # final note
-            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find that there is a better alternative, report it to Elive, so it can be implemented and work for everybody." )" || true
+            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find that there is a better alternative, report it to Elive, so it can be implemented and work for everyone else." )" || true
         fi
 
         # add package in installed system

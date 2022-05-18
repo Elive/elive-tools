@@ -108,7 +108,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "Hardware-accelerated desktop not used. This option is more stable, but it may result in a slower desktop, especially during video playback. If you did not try the accelerated mode yet, it is suggested to try it. You will be able to see, then, if it is compatible with your graphics card." )" )"
+                message_gl="$( printf "$( eval_gettext "Hardware-accelerated desktop not used. This option is stabler but it may result in a slower desktop, especially during video playback. If you haven't tried the accelerated mode yet, we recommend to try it. You will see, then, if it is compatible with your graphics card." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -122,7 +122,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and having a smoother feeling, it also improves video playback speed and its quality. But if the drivers of your graphic card are not stable enough, it can lead to a broken desktop and/or visual artifacts, to fix this you will need to switch to software mode in the compositor options or disable the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and has a smoother feeling, it also improves video playback speed and its quality. But if the drivers of your graphic card are not stable enough, it can lead to a broken desktop and/or visual artifacts, to fix this you will need to switch to software mode in the compositor options or disable the acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 
@@ -131,7 +131,7 @@ main(){
                         true
                     else
                         local message_vsync_disabled
-                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for composite (vertical synchronization). This option allows you to play videos perfectly smoothly and without horizontal lines. Go to the options panel, and in the options panel, go to the composite section." )" "vsync" )"
+                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for composite (vertical synchronization). This option allows you to play videos smoothly and without horizontal lines. Go to the options panel, and in the panel, go to the composite section." )" "vsync" )"
                         zenity --info --text="$message_vsync_disabled" || true
                     fi
                 fi

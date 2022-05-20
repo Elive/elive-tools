@@ -358,9 +358,10 @@ detect_driver_version(){
         fi
 
         # preselect to not ask later
-        if ! ((is_mode_simulate)) ; then
-            nvidia_version_live_preselected="$_NVIDIA_VERSION"
-        fi
+        # Update: never preselect the driver for the user, let him pick which one wants to use, sometimes a version works better than another and also this can be a problem with the fallback "current" version
+        #if ! ((is_mode_simulate)) ; then
+            #nvidia_version_live_preselected="$_NVIDIA_VERSION"
+        #fi
 
     else
         NOREPORTS=1 el_warning "Unable to detect the version of nvidia you need, assuming 'current'"
@@ -632,7 +633,7 @@ interactive_ask_driver_version(){
                 | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
             # user canceled? uninstall and exit
-            if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
+            if echo "$?" | grep -qsE "^(1|123|255|125)$" || grep -qsE "^(1|123|255|125)$" "/tmp/.$(basename $0)-ret" ; then
                 #uninstall_driver
                 try_again
                 exit
@@ -1228,7 +1229,7 @@ try_again(){
 
 
     # user canceled? uninstall and exit
-    if echo "$?" | grep -qsE "^(1|123|255|125)$" ; then
+    if echo "$?" | grep -qsE "^(1|123|255|125)$" || grep -qsE "^(1|123|255|125)$" "/tmp/.$(basename $0)-ret" ; then
         ret="exit"
     else
         # get result

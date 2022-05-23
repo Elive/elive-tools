@@ -230,22 +230,20 @@ detect_driver_version(){
     # try to search for ID's {{{
     #
     # first on your system installed id's
-    # update: better to search in all the IDs for the good one
-    #for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls /usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
-    #for _NVIDIA_IDS in $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r ) ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids
-    #do
-        #if [ -e "${_NVIDIA_IDS}" ]
-        #then
-            #if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
-            #then
-                #_NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
-                #echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
-                #_NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
+    for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r )
+    do
+        if [ -e "${_NVIDIA_IDS}" ]
+        then
+            if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
+            then
+                _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
+                _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
 
-                #break
-            #fi
-        #fi
-    #done
+                break
+            fi
+        fi
+    done
 
     # if nothing found, search in already-downloaded packages (if we are in live mode we should have them already there)
     if [[ -z "$_NVIDIA_VERSION" ]] ; then
@@ -295,8 +293,7 @@ detect_driver_version(){
         done
 
         # get the version
-        #for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
-        for _NVIDIA_IDS in $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r ) ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids
+        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r )
         do
             if [ -e "${_NVIDIA_IDS}" ]
             then
@@ -1002,7 +999,7 @@ install_driver(){
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
         NOREPORTS=1 el_error "error ^^^^^^^^^^^^^^^^^^^^^^^^"
-        sleep 6
+        sleep 12
 
         # CUDA in live mode? this won't work due to too much RAM needed:
         if ((is_extra_packages_wanted)) && grep -qs "boot=live" /proc/cmdline && ! grep -qs "persistence" /proc/cmdline ; then

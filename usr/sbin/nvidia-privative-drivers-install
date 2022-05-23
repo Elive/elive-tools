@@ -1401,8 +1401,10 @@ main(){
 
     if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
         is_wheezy=1
-        is_xorg_template_wanted=1
     fi
+
+    # always require the template, important
+    is_xorg_template_wanted=1
 
     args="$@"
 

@@ -2236,10 +2236,10 @@ el_confirm(){
         fi
 
         case $reply in
-            y|Y|Yes|YES|s|S)
+            y|Y|yes|Yes|YES|s|S)
                 return  0
                 ;;
-            n|N|no|NO|nope)
+            n|N|no|No|NO|nope)
                 return  1
                 ;;
             *)

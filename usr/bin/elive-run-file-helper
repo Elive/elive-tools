@@ -130,7 +130,7 @@ run_script(){
     fi
 
     # warn user
-    if ! $guitool --question --text="$( eval_gettext "You are going to execute a script, since a script can run arbitrary code on your machine, you should always verify that they come from a well-known, trusted author or source. Continue?" )" ; then
+    if ! $guitool --question --text="$( eval_gettext "You are going to execute a file, since they can run arbitrary code on your machine, is important to always verify that it comes from a well-known, trusted author or source. Continue?" )" ; then
         return 0
     fi
 

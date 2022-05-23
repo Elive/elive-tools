@@ -230,21 +230,22 @@ detect_driver_version(){
     # try to search for ID's {{{
     #
     # first on your system installed id's
-    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls /usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
+    # update: better to search in all the IDs for the good one
+    #for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls /usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
+    #for _NVIDIA_IDS in $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r ) ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids
+    #do
+        #if [ -e "${_NVIDIA_IDS}" ]
+        #then
+            #if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
+            #then
+                #_NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                #echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
+                #_NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
 
-    do
-        if [ -e "${_NVIDIA_IDS}" ]
-        then
-            if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
-            then
-                _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
-                echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
-                _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
-
-                break
-            fi
-        fi
-    done
+                #break
+            #fi
+        #fi
+    #done
 
     # if nothing found, search in already-downloaded packages (if we are in live mode we should have them already there)
     if [[ -z "$_NVIDIA_VERSION" ]] ; then
@@ -294,8 +295,8 @@ detect_driver_version(){
         done
 
         # get the version
-        for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
-
+        #for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r)
+        for _NVIDIA_IDS in $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r ) ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids
         do
             if [ -e "${_NVIDIA_IDS}" ]
             then

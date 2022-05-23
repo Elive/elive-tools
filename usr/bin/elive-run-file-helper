@@ -122,20 +122,6 @@ run_script(){
     message_done="$( printf "$( eval_gettext "All operations are finished. You can now close the terminal." )" "" )"
 
 
-    # nvidia installer?
-    if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
-        if $guitool --question --text="$( eval_gettext "Elive includes a much better and cleaner installer for the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
-            if [[ -x "$( which urxvt )" ]] ; then
-                $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
-            else
-                el_error "no urxvt found"
-            fi
-
-            #all done
-            exit
-        fi
-    fi
-
     # window executables?
     if echo "$file" | grep -qsi ".*\.exe" ; then
         # in fact im not sure that "application/x-executable" is a mimemtype for windows files, but just in case:
@@ -156,7 +142,7 @@ run_script(){
     #fi
 
     if ! [[ "$UID" = 0 ]] ; then
-        if $guitool --question --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver to your system. We suggest to first try to run the file without the administrator privileges." )" ; then
+        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver to your system. We suggest to first try to run the file without the administrator privileges." )" ; then
             is_root_wanted=1
         fi
     fi
@@ -169,6 +155,30 @@ run_script(){
             return 1
         fi
     fi
+
+
+
+    # nvidia installer?
+    if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
+        if $guitool --question --text="$( eval_gettext "Elive includes a much better and cleaner installer for the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
+            if [[ -x "$( which urxvt )" ]] ; then
+                $precmd gksu "urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'"
+            else
+                el_error "no urxvt found"
+            fi
+
+            #all done
+            exit
+        fi
+    fi
+
+    # AppImage files
+    if echo "$file" | grep -qsi ".*\.AppImage$" ; then
+        "$file"
+        exit
+    fi
+
+
 
     if [[ "$UID" = 0 ]] ; then
         # root run from a terminal

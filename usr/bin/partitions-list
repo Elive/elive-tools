@@ -196,7 +196,7 @@ main(){
 
     # show uuid|label:
     # blkid
-    # /sbin/udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
+    # udevadm info --query=all --name=/dev/mapper/vg_rootdisk-lv_var
 
     if ! el_dependencies_check "udevadm" ; then
         if ! el_dependencies_install udev ; then
@@ -346,7 +346,7 @@ main(){
                     # UPDATE: not-formated partitions has not uuid (so they needs to be considered real partitions if we want to select them as available, but they are not possible to be mounted)
                     #if [[ "$EL_DEBUG" -gt 2 ]] ; then
                         #el_debug "$(basename $0) checking '${item}', it is not a partition? (no UUID):"
-                        #LC_ALL="$EL_LC_EN" /sbin/udevadm info --query=all --name="$item" 1>&2
+                        #LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$item" 1>&2
                     #fi
                 fi
             fi

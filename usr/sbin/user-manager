@@ -569,7 +569,7 @@ user_add(){
 
     # fingerprint support
     if grep -qsi "fingerprint" /proc/bus/input/devices || lsusb | grep -qsi "Upek" ; then
-        $guitool --info --text="$( eval_gettext "Your computer has a fingerprint reader, check the Elive howtos to know how to enable the login using your fingerprint." )" || true
+        $guitool --info --text="$( eval_gettext "Your computer has a fingerprint reader, check the Elive howtos to know how to enable login via fingerprint." )" || true
     fi
     # deprecated, we use e17-wizard startup now
     #su -c "/usr/share/user-manager/hooks/newuser-static.sh" "$username"

@@ -260,7 +260,7 @@ main(){
 
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then
-        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled for your desktop. Note that you don't have much RAM memory and they will use it. Elive has already pre-selected the best options for you." )" )"
+        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled for your desktop. Note that you don't have much RAM memory and services will use it. Elive has already pre-selected the best options for you." )" )"
     else
         message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Elive has already pre-selected the best options for you." )" )"
     fi
@@ -325,7 +325,7 @@ main(){
     if ! ((is_live)) ; then
         if ! ((is_polkit_auth_included)) ; then
             if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
-                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent, but is very important for correct system functionality, it allows you to use media devices or mount hard disks. However, Elive can add a special configuration that allows you to still use the disks. Are you sure that you want to disable it?" )" ; then
+                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent which is crucial for correct system functionality, it allows you to use media devices or mount hard disks. However, Elive can add a special configuration that allows you to still use the disks. Are you sure that you want to disable it?" )" ; then
                     is_polkit_auth_disabled_wanted=1
                 else
                     # re-enable it

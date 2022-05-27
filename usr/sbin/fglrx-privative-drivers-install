@@ -218,7 +218,7 @@ interactive_ask_privative(){
             if [[ "${memory}" -lt "640000" ]] && ! ((is_mode_auto)) ; then
 
                 local message_low_memory
-                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM memory, the installation of some big packages in live mode can fail because of this. If is the case you can try to install first Elive in your hard disk and then try again to install these packages so you will not run out of memory. After to have installed Elive you can boot with the boot parameter 'init 1' to avoid the start of the graphical system, and run this command like '%s -a' to start again the process of installation." )" "$(basename $0)" )"
+                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM, the installation of some big packages in live mode can fail because of this. Try installing Elive to your hard disk and then try instalingl these packages again, to avoid running out of memory. After you have installed Elive you can boot with the boot parameter 'init 1' to avoid starting the graphical system and run this command '%s -a' to start the installation process again." )" "$(basename $0)" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Low Memory Computer" \
@@ -234,7 +234,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "AMD/ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install the proprietary graphical drivers of ATI? Some computers need them, while other ones work better with the open drivers. You must try both modes to know which one is more suitable for you. But if you cannot make them work correctly, or you have graphical issues, we suggest you use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install AtTI's proprietary graphical driversI? Some computers need them, while others work better with the open drivers. Try both modes to know which one suits you best. If you cannot make them work correctly, or you have graphical issues, we suggest you use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \
@@ -270,7 +270,7 @@ interactive_ask_privative(){
                 # }}}
                 # remember that this is not stable {{{
                 local message_remember
-                message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try with another option from the list, or use the open-source drivers. If none works in a stable way of experience, buy a better supported graphical card for your computer. Your computer and especially your file-system will be grateful to you." )" "" )"
+                message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try with another option from the list, or use the open-source drivers. If none work in a stable way, buy a better supported graphical card for your computer. Your computer and especially your file-system will thank you." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "If the install fails..." \
@@ -286,9 +286,9 @@ interactive_ask_privative(){
                     # tell the user to reboot with onlyfree option
                     local message_onlyfree
                     if ((is_wheezy)) ; then
-                        message_onlyfree="$( printf "$( eval_gettext "To use the open-drivers reboot and select the 'Only open-drivers' option. Due to compatibility reasons, the Radeon module is blacklisted on this boot mode. In order to have the open-drivers working correctly, you need to reboot and select this option or to remove Radeon from the blacklist within the boot parameter options." )" "" )"
+                        message_onlyfree="$( printf "$( eval_gettext "To use the open-drivers reboot and select the 'Only open-drivers' option. Due to compatibility reasons, the Radeon module is blacklisted on boot. In order to have the open-drivers work, reboot and select this option or remove Radeon from the blacklist within the boot parameter options." )" "" )"
                     else
-                        message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key. Due to compatibility reasons, is needed to boot without that driver loaded, that's why you need this step in order to continue." )" "modprobe.blacklist=radeon*" )"
+                        message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key. Due to compatibility reasons, booting without that driver is needed, this step is needed in order to continue." )" "modprobe.blacklist=radeon*" )"
                     fi
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -332,7 +332,7 @@ interactive_ask_driver_version(){
         fi
 
         dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver""\n\n$message_select_driver_suggested" 0 0 0 \
-            "free-driver" "$( eval_gettext "Suggested open-source driver" )" \
+            "free-driver" "$( eval_gettext "Recommended open-source driver" )" \
             "current" "$( eval_gettext "For new cards, since the Radeon series 5000" )" \
             "legacy" "$( eval_gettext "For older cards, up to the Radeon 4000 series" )" \
             2>"/tmp/.$(basename $0)-ret"
@@ -450,10 +450,10 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected on your system. Your laptop probably uses special ATI shared drivers, using the internal card to save battery power and switching to the ATI driver when more performance is necessary. You can use the ATI graphic card in Elive if you install FGLRX. Otherwise, the Intel card will be used. FGLRX will be used for now. If you have any problem with your graphical system, it is suggested to disable one of them in the BIOS settings. Use Google to find out how to set up your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected. Your laptop probably uses special ATI shared drivers, using the internal card to save battery power and switching to the ATI driver when more performance is necessary. You can use the ATI graphic card in Elive if you install FGLRX. Otherwise, the Intel card will be used. FGLRX will be used for now. If you have any problems with your graphical system, it is suggested to disable one of them in the BIOS settings. Use Google to find out how to set up your BIOS." )" "" )"
         else
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected in your system, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphics card has been detected, we will proceed by using FGLRX but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable it from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -538,20 +538,20 @@ install_driver(){
             sleep 4
             NOREPORTS=1 el_error "Unable to load FGLRX module"
 
-            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. The reasons may be the compilation has failed, the device is busy, or the device was not found. We suggest a reboot and select a different kernel version. If the video card is very old you may have better luck with an older version of Elive or the kernel. Check our forums to find more help." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Elive was unable to load the FGLRX module. The reasons may be that compilation has failed or the device is busy or not found. We suggest a reboot and selecting a different kernel version. If the video card is very old you may have better luck with an older version of Elive or kernel. Check our forums to find more help." )" "" )"
         fi
 
 
         if modprobe fglrx 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't look like to accept your model of graphic card, you should try with the other versions too, and if no works, just try to use the open-source drivers." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers don't appear to accept your graphic card model, You should try with the other versions too and if that doesn't work, try to use the open-source drivers." )" "" )"
 
         fi
 
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you have a too recent kernel, or too old, try to reboot and select to use a different kernel version from the boot selector list. We also suggest trying the open source drivers if they work for you." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver has not compiled successfully, this normally happens when you either have a too recent kernel or a too old one. Try to reboot and select a different kernel version from the boot selector list. We also suggest trying the open source drivers they might work." )" "" )"
         fi
 
 
@@ -581,7 +581,7 @@ install_driver(){
     # inform {{{
     if ! ((is_mode_auto)) ; then
         local message_remember
-        message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the open-source drivers should solve the problem, or in an inverse way maybe you need the closed-source drivers, only your own experience will tell you." )" "" )"
+        message_remember="$( printf "$( eval_gettext "Remember, if you have issues trying to run the graphical system, or if you experience instability issues of any kind, it can be due to these drivers. Using the open-source drivers should solve the problem, or inversely you maybe do need the closed-source drivers, only your own experience will tell." )" "" )"
 
         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
             --title "Ready to be run" \

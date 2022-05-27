@@ -108,7 +108,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "Hardware-accelerated desktop not used. This option is stabler but it may result in a slower desktop, especially during video playback. If you haven't tried the accelerated mode yet, we recommend to try it. You will see, then, if it is compatible with your graphics card." )" )"
+                message_gl="$( printf "$( eval_gettext "Hardware-accelerated desktop not in use. This option is more stable but may result in a slower desktop, especially during video playback. If you haven't tried the accelerated mode yet, we recommend to try it. You will then see whether it is compatible with your graphics card." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -122,7 +122,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and has a smoother feeling, it also improves video playback speed and its quality. But if the drivers of your graphic card are not stable enough, it can lead to a broken desktop and/or visual artifacts, to fix this you will need to switch to software mode in the compositor options or disable the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feel smoother, it also improves video playback speed and usablity. If the drivers of your graphic card are not stable enough,, which can cause a broken desktop and/or visual artifacts. Fixing this will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 

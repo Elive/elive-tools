@@ -321,7 +321,7 @@ abort_with_fallback_wm(){
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers which don't work on virtual machines. Use Elive on a real computer to have them." )"
                 ;;
             traditional)
-                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You are using a standard driver that is more compatible and can make your graphical interface work correctly, but insufficient to enable the special effects. This can happen with very old computers or very recent ones, you can try a different version of Elive using different driver setups." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You are using a standard driver that is more compatible and can make your graphical interface work but is insufficient to enable the special effects. This can happen with very old computers or very recent ones, you can try a different version of Elive using different driver setups." )"
                 ;;
             nvidia)
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You are using an Nvidia driver which appears to be incompatible." )"
@@ -487,7 +487,7 @@ main(){
                     #enlightenment_remote -restart
                     sleep 5
                     #zenity --info --text="$( eval_gettext "Applications already opened will not be included in the Ecomorph layer - only the ones that you open from now on. To have Ecomorph fully functioning, log out and in again." )" || true
-                    zenity --info --text="$( eval_gettext "Your applications already open will not be included in the Ecomorph layer, only the ones that you open from now. If does not work correctly, log out and in again." )" || true
+                    zenity --info --text="$( eval_gettext "Your opened applications will not be included in the Ecomorph layer, only the ones that you open from now on. If it does not work correctly, log out and back in again." )" || true
                     #sleep 10
                     #zenity --info --text="$( eval_gettext "In order to improve your experience you can enable some hotkeys to trigger special features like the Expo, the windows transparecy value, or the window switcher in your Enlightenment preferences, keybindings." )" || true
                     is_ecomorph_working=1

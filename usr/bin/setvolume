@@ -215,7 +215,7 @@ get_meter(){
             export is_already_configured=1
 
             if grep -qs "boot=live" /proc/cmdline ; then
-                audio-configurator --quiet --smart --auto
+                audio-configurator --quiet --smart --auto --nomessages
             else
                 audio-configurator
             fi

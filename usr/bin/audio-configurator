@@ -170,6 +170,10 @@ main(){
             is_quiet_mode=1
             shift
         fi
+        if [[ "$arg" = "--nomessages" ]] ; then
+            is_nomessages=1
+            shift
+        fi
         # if first argument is the name of the card that we want to use itself
         #if [[ -n "$arg" ]] && [[ "$arg" != -* ]] ; then
             #if echo "$list_cards" | grep -qs -- "$arg" ; then
@@ -181,6 +185,7 @@ main(){
             echo -e "--smart: performs a smart way to detect the correct audio card to use"
             echo -e "--auto: automatically selects the audio card to use"
             echo -e "--quiet: silent mode, not interactive at all"
+            echo -e "--nomessages: do not show messages"
             echo -e "NAME: this allows to configure the audio card to the given parameter name of the audio card to use"
             exit
         fi
@@ -269,7 +274,7 @@ main(){
                 el_debug "we selected the card '$selected' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
             fi
 
-            if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] ; then
+            if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] && ! ((is_nomessages)) ; then
                 $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use. You can also reconfigure it manually from the applications menus of Elive." )"
             fi
 

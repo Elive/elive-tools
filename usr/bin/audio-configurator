@@ -103,6 +103,7 @@ select_card_multiple(){
 
     # remove extra leading blank chars
     read -r selection <<< "$selection"
+    # bullseye and up works with ID instead of name
     if ((is_buster)) || ((is_wheezy)) ; then
         selection="$selection"
     else
@@ -119,6 +120,9 @@ main(){
     local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode
 
     case "$( cat /etc/debian_version )" in
+        11.*|"bullseye"*)
+            is_bullseye=1
+            ;;
         10.*|"buster"*)
             is_buster=1
             ;;
@@ -137,6 +141,7 @@ main(){
 
     guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 
+    # bullseye and up works with ID instead of name
     #if ((is_buster)) || ((is_wheezy)) ; then
         #list_cards="$(cat "$asound_cards" | grep "^.*[[:digit:]].*\[.*\]:" | grep -v "at 0x.*irq" | sed -e 's|\]:.*$||g' -e 's|^.*\[||g')"
     #else
@@ -212,6 +217,7 @@ main(){
 
     # only one card found
     if [[ "$number_cards" -eq "1" ]] ; then
+        # bullseye and up works with ID instead of name
         if ((is_buster)) || ((is_wheezy)) ; then
             selection="$( echo "$list_cards" | sed -e 's|\].*$||g' -e 's|^.*\[||g')"
         else
@@ -241,6 +247,7 @@ main(){
                     echo "defaults.ctl.card ${name}" >> "${HOME}/.asoundrc"
                     echo "defaults.pcm.card ${name}" >> "${HOME}/.asoundrc"
                 else
+                    # bullseye and up works with ID instead of name
                     echo "defaults.ctl.card ${id}" >> "${HOME}/.asoundrc"
                     echo "defaults.pcm.card ${id}" >> "${HOME}/.asoundrc"
                 fi
@@ -263,7 +270,7 @@ main(){
             selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
 
             if [[ "$preferenced" = "DAC" ]] ; then
-                #if ((is_auto_mode)) ; then
+                # bullseye and up works with ID instead of name
                 if ((is_buster)) || ((is_wheezy)) ; then
                     selection="DAC"
                 else
@@ -368,6 +375,7 @@ main(){
         # append (important) mic conf
         if [[ -n "$mic" ]] ; then
             el_debug "configuring a different mic source to $mic"
+            # bullseye and up works with ID instead of name
             if ((is_buster)) || ((is_wheezy)) ; then
                 mic="$mic"
             else

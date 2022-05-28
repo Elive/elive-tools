@@ -52,7 +52,7 @@ main(){
     if [[ -z "$1" ]] && ! ((is_stdin)) ; then
         #echo -e "Usage: $(basename $BASH_SOURCE) [options]"
         echo -e "Example: elivepaste sourcecode.c"
-        echo -e "Example: dmesg | tail -n 200 | elivepate"
+        echo -e "Example: dmesg | tail -n 200 | elivespate"
         echo -e "Options:"
         echo -e "-c channel: second parameter is the name of the IRC channel where to send the message"
         echo -e "-m message: an optional extra message to include"

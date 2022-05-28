@@ -26,10 +26,9 @@ TODO for Thanatermesis : Here add the full documentation for bkp!
 <details>
 <summary>elivepaste</summary>
 
-elivepaste
-A small tool for using pastebin and sending the link to the elive channels
+Run elivepaste on a text file (or pipe something in!); it will be uploaded to a service similar to pastebin, and will send the link to #elive on libera.chat.
 
-Run elivepaste on a text file; it will be uploaded to a service similar to pastebin, and will give you the link.
+If you don't want the link sent on IRC, use the `-s` parameter.
 
 </details>
 

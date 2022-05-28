@@ -174,10 +174,15 @@ run_script(){
 
     # AppImage files
     if echo "$file" | grep -qsi ".*\.AppImage$" ; then
+
+        if ! $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "Run this AppImage it in sandbox mode? Strongly suggested for security reasons unless you need to run it in your own system" )" ; then
+            options_appimage="--no-sandbox ${options_appimage}"
+        fi
+
         if ((is_root_wanted)) ; then
-            gksu "$file"
+            gksu "$file" ${options_appimage}
         else
-            "$file"
+            "$file" ${options_appimage}
         fi
 
         exit

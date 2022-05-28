@@ -174,7 +174,12 @@ run_script(){
 
     # AppImage files
     if echo "$file" | grep -qsi ".*\.AppImage$" ; then
-        "$file"
+        if ((is_root_wanted)) ; then
+            gksu "$file"
+        else
+            "$file"
+        fi
+
         exit
     fi
 

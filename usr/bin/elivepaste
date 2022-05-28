@@ -48,15 +48,16 @@ main(){
         source "${conf}"
     fi
 
-
-    # show help if no parameters
+    # Usage
     if [[ -z "$1" ]] && ! ((is_stdin)) ; then
-        el_explain 0 "__$(basename $0)__ to help doing pastes:"
-        el_explain 0 "options: -c channel -m message -d (direct paste) [-s (silent mode)]"
-        el_explain 0 "example: $(basename $0) file.c"
-        el_explain 0 "example: $(basename $0) esu -d thunar"
-        el_explain 0 "example: command args | tail | $(basename $0)"
-        el_explain 0 "__note__: the last one is useful if you want to run it from alias or in other ways"
+        #echo -e "Usage: $(basename $BASH_SOURCE) [options]"
+        echo -e "Example: elivepaste sourcecode.c"
+        echo -e "Example: dmesg | tail -n 200 | elivepate"
+        echo -e "Options:"
+        echo -e "-c channel: second parameter is the name of the IRC channel where to send the message"
+        echo -e "-m message: an optional extra message to include"
+        echo -e "-d : direct paste mode (warning to not include more than 5 lines or this is considered flood"
+        echo -e "-s : silent mode: do not send to any IRC channel, just get the returned url"
         exit 1
     fi
 
@@ -73,9 +74,11 @@ main(){
                 ;;
             -d)
                 direct_paste=1
+                shift
                 ;;
             -s)
                 unset is_irc_paste
+                shift
                 ;;
         esac
     done

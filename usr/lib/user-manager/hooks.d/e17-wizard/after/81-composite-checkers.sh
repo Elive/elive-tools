@@ -122,7 +122,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feel smoother, it also improves video playback speed and usablity. If the drivers of your graphic card are not stable enough,, which can cause a broken desktop and/or visual artifacts. Fixing this will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feel smoother, it also improves video playback speed and usablity. If the drivers of your graphic card are not stable enough, which can cause a broken desktop and/or visual artifacts. Fixing this will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 

@@ -234,7 +234,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "AMD/ATI Graphic Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install AtTI's proprietary graphical driversI? Some computers need them, while others work better with the open drivers. Try both modes to know which one suits you best. If you cannot make them work correctly, or you have graphical issues, we suggest you use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install ATI's proprietary graphical drivers? Some computers need them, while others work better with the open drivers. Try both modes to know which one suits you best. If you cannot make them work correctly, or you have graphical issues, we suggest you use an Nvidia or Intel graphic card, which are more reliable." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "$message_title" \

@@ -29,6 +29,7 @@ main(){
     max_lines="10000"
     min_lines="10"
     user="$USER"
+    is_irc_paste=1
     #urldefault="http://paste2.org" # broken
     # openstack don't accept syntax parameter? at least not for C (edc) files
     #urldefault="http://paste.openstack.org" # broken
@@ -48,11 +49,10 @@ main(){
     fi
 
 
-
     # show help if no parameters
     if [[ -z "$1" ]] && ! ((is_stdin)) ; then
         el_explain 0 "__$(basename $0)__ to help doing pastes:"
-        el_explain 0 "options: -c channel -m message -d (direct paste)"
+        el_explain 0 "options: -c channel -m message -d (direct paste) [-s (silent mode)]"
         el_explain 0 "example: $(basename $0) file.c"
         el_explain 0 "example: $(basename $0) esu -d thunar"
         el_explain 0 "example: command args | tail | $(basename $0)"
@@ -60,7 +60,7 @@ main(){
         exit 1
     fi
 
-    for arg in $@
+    for arg in "$@"
     do
         case "$arg" in
             -c)
@@ -73,6 +73,9 @@ main(){
                 ;;
             -d)
                 direct_paste=1
+                ;;
+            -s)
+                unset is_irc_paste
                 ;;
         esac
     done
@@ -179,7 +182,7 @@ main(){
     fi
 
     # send to channel
-    if ps ux | grep -v grep | grep -q hexchat && el_dependencies_check hexchat 1>/dev/null 2>/dev/null ; then
+    if ((is_irc_paste)) && ps ux | grep -v grep | grep -q hexchat && el_dependencies_check hexchat 1>/dev/null 2>/dev/null ; then
         # send first a message
         if [[ -n "$message" ]] ; then
             hexchat -e -c "msg #$channel $message"

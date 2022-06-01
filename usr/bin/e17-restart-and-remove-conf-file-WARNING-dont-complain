@@ -31,7 +31,22 @@ main(){
         # stop all launched applications first
         elive-autostart-applications "stop"
         # freeze E, restore everything, then kill E to restart it
-        tmux-attach-jobs background erestart "sync ; killall -s STOP e16 2>/dev/null ; killall -9 cairo-dock 2>/dev/null ; killall -9 conky 2>/dev/null ; rm -fr \"$HOME/.e16\" \"$HOME/.xsession-errors\" ; cd \"$HOME\" ; sync ; elive-skel upgrade .e16 ; elive-skel upgrade .config/cairo-dock ; elive-skel upgrade .conkyrc ; sync ; killall -9 e16 2>/dev/null "
+        tmux-attach-jobs background erestart "
+        sync ;
+        killall -s STOP e16 starte16 efreetd  2>/dev/null ;
+        killall -9 cairo-dock 2>/dev/null ;
+        killall -9 conky 2>/dev/null ;
+        rm -fr \"~/.e16\" \"~/.xsession-errors\" ;
+        rm -fr \"~/.config/user-dirs\"* ;
+        rm -fr \"~/.config/elive/migrator/\"* ;
+        cd ~ ;
+        sync ;
+        elive-skel upgrade .config/cairo-dock ;
+        elive-skel upgrade .conkyrc ;
+        killall -9 e16 2>/dev/null ;
+        sync ;
+        elive-skel upgrade .e16 ;
+        "
     fi
 
     if [[ -n "$E_START" ]] ; then
@@ -39,7 +54,13 @@ main(){
         #rm -fr "$HOME/.e" "$HOME/.xsession-errors"
         # stop all launched applications first
         # freeze E, restore everything, then kill E to restart it
-        tmux-attach-jobs background erestart "sync ; killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ; rm -fr \"$HOME/.e\" \"$HOME/.xsession-errors\" ; sync ; killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null"
+        tmux-attach-jobs background erestart "
+        sync ;
+        killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ;
+        rm -fr \"~/.e\" \"~/.xsession-errors\" ;
+        sync ;
+        killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null ;
+        "
     fi
 
 

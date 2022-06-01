@@ -37,8 +37,6 @@ main(){
         killall -9 cairo-dock 2>/dev/null ;
         killall -9 conky 2>/dev/null ;
         rm -fr \"~/.e16\" \"~/.xsession-errors\" ;
-        rm -fr \"~/.config/user-dirs\"* ;
-        rm -fr \"~/.config/elive/migrator/\"* ;
         cd ~ ;
         sync ;
         elive-skel upgrade .config/cairo-dock ;

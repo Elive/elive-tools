@@ -148,12 +148,12 @@ run_script(){
     fi
 
     if ! test -x "$file" ; then
-        if $guitool --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
+        #if $guitool --question --text="$( eval_gettext "Add executable permissions to the file?" )" ; then
             $precmd chmod +x "$file"
-        else
-            $guitool --error --text="$( eval_gettext "If the file has doesn't have executable permissions we cannot run it. Exiting..." )"
-            return 1
-        fi
+        #else
+            #$guitool --error --text="$( eval_gettext "If the file has doesn't have executable permissions we cannot run it. Exiting..." )"
+            #return 1
+        #fi
     fi
 
 

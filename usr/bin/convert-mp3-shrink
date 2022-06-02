@@ -74,7 +74,13 @@ main(){
             fi
 
             # file is bigger than original AND file is bigger than 800 kb (which should be broken in conversion) --> copy back the original one
-            if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -lt "$( du -s "$file" | awk '{print $1}' )" ]] \
+            size_dest="$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )"
+            size_orig="$( du -s "$file" | awk '{print $1}' )"
+
+            # make it at least 200k smaller or ignore
+            size_dest_extra="$(( $size_dest + 200 ))"
+
+            if [[ "$size_dest_extra" -lt "$size_orig" ]] \
                 && [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                 # add a visual mark (ls) to see that we have converted it
                 #chmod +x "$dest/$( basename "$file" )"

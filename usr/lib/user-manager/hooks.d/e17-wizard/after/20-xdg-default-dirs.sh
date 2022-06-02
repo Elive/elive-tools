@@ -344,7 +344,7 @@ main(){
                 # is a dir, scan all subfiles from it
                 if [[ -d "$entry" ]] ; then
                     # ignore these unneeded ones for speed reasons
-                    if echo "$entry" | grep -qsE "$HOME/\.(gimp-|kde$|vim$|cargo$|ccache$|themes$|e$|java$|smc$)" ; then
+                    if echo "$entry" | grep -qsE "$HOME/\.(gimp-|kde$|vim$|cargo$|ccache$|themes$|e$|java$|smc$|config/GIMP)" ; then
                         continue
                     fi
 

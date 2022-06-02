@@ -12,7 +12,7 @@ export TEXTDOMAIN
 main(){
     guitool="$(which zenity) --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 
-    message_intro="$( printf "$( eval_gettext "Before reporting an issue, it's very important to know to where to report it, if you are unsure just use our forums so that we can assist. Remember that by reporting and fixing a bug you will directly benefit including others facing the same problem." )" "" )"
+    #message_intro="$( printf "$( eval_gettext "Before reporting an issue, it's very important to know to where to report it, if you are unsure just use our forums so that we can assist. Remember that by reporting and fixing a bug you will directly benefit including others facing the same problem." )" "" )"
 
     message_option1="$( printf "$( eval_gettext "I have an issue with something specific to Elive" )" "" )"
     message_option2="$( printf "$( eval_gettext "I have an issue with the desktop itself" )" "" )"
@@ -25,7 +25,7 @@ main(){
     message_report_info_elive="$( printf "$( eval_gettext "Use the next page to report the issue. Tell us all the details we need to know to reproduce and fix it. For debating an issue use our forums instead." )" "" )"
 
 
-    $guitool --info --text="$message_intro"
+    #$guitool --info --text="$message_intro"
 
 
     answer="$( $guitool --height=260 --width=700 --list --column="" --column="$( eval_gettext "Option" )" --hide-column="1" \

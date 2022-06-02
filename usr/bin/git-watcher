@@ -2223,13 +2223,9 @@ main(){
     # check if we have checkoutable the watching branch too
     # update: we may not need to checkoutable, just access (like when a branch is just fetched)
     if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qs "$branch_watch" ; then
-        #el_explain 0 "Pre-checking out: __${branch_watch}__"
+        el_explain 0 "Pre-checking out: __${branch_working}__"
         #command git checkout "${branch_watch}"
-        #command git checkout "${branch_working}"
-        if ! [[ -s ".git/refs/remotes/$branch_watch" ]] ; then
-            el_error "Branch ${branch_watch} seems like to not have any data, you need to be able to checkout it or at least to have it fetched"
-        fi
-
+        command git checkout "${branch_working}"
     fi
     # force checkout in the working branch
     if ! [[ "$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )" = "$branch_working" ]] ; then

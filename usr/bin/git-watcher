@@ -1208,7 +1208,10 @@ do_count_commits(){
     counter=1
 
     # }}}
+    # sometimes is slow, so show debug
+    echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
     # pre-statistics a bit: show the amount of commits between branches
+    #foo="$( echo "${options_extra_git_before[@]}" )"
     while read -ru 3 line
     do
         # get commit line
@@ -1230,7 +1233,7 @@ do_count_commits(){
             echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
         fi
 
-    done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} )"
+    done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
     echo ""
 
 
@@ -1621,7 +1624,7 @@ options_main_interact(){
             fi
 
             # get the previous commit id
-            commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+            commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
 
             # mark our new position
             echo "$commit_id" > "$conf_commit_last_f"
@@ -1659,7 +1662,7 @@ options_main_interact(){
 
             if echo "$_n" | grep -v "[[:alpha:]]" | grep -qs "[[:digit:]]" ; then
 
-                commit_id="$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
+                commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
 
                 # mark our new position
                 echo "$commit_id" > "$conf_commit_last_f"
@@ -1883,7 +1886,7 @@ options_main_interact(){
 
             # first:  list around nearest
             el_explain 0 "(commits from oldest to newest)"
-            command git log --oneline --abbrev=12 ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | tac | grep --color -C 6 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | tac | grep --color -C 6 "${commit_id:0:12}"
 
             el_explain 0 "Give a list of spaces-separated commits to cherry-pick in earlier-order"
             el_explain 0 "Use the 'listing-nearest' feature to show more commits. Empty value will skip the action"
@@ -1997,8 +2000,8 @@ options_main_interact(){
         a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our working branch:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} \"$branch_working\"..\"$branch_watch\" ${options_extra_git_after[@]} | grep --color -C 20 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} "$branch_working".."$branch_watch" ${options_extra_git_after[@]} | grep --color -C 20 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_working\"..\"$branch_watch\" "${options_extra_git_after[@]}" | grep --color -C 20 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2009,9 +2012,9 @@ options_main_interact(){
         A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in the watching branch history:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} \"$branch_watch\" | grep --color -C 20 \"${commit_id:0:12}\""
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_watch\" | grep --color -C 20 \"${commit_id:0:12}\""
 
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[@]} "$branch_watch" | grep --color -C 20 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_watch" | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2091,9 +2094,11 @@ usage_show(){
 
     echo -e ""
     echo -e "Options:"
-    option_show "-b" "Branch that you want to track changes"
-    option_show "-w" "Branch working from (forced checkout on it)"
-    option_show "-k" "Keyword to search in the commit descriptions, listing only these ones, ex: 'fix'"
+    option_show "-b" "Branch from where you want to track changes"
+    option_show "-w" "Branch on which you are working to"
+    option_show "-c" "Commit descriptions, search for that keyword, for example 'fix'"
+    option_show "-k" "Keyword search in code differences"
+    option_show "-K" "Keyword search in code differences (case sensitive)"
     option_show "-a" "Author (committer) of commits to search, useful for track changes from somebody (name/email, one word)"
     option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
     echo -e ""
@@ -2131,7 +2136,7 @@ main(){
     # }}}
     # input parameters {{{
 
-    while getopts "b:w:k:a:f:g:" opt ; do
+    while getopts "b:w:c:k:K:a:f:g:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
@@ -2139,11 +2144,24 @@ main(){
             w)
                 branch_working="$OPTARG"
                 ;;
+            c)
+                keyword_search="$OPTARG"
+                el_array_member_add "-i" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-E" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "--grep" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "$keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                ;;
             k)
                 keyword_search="$OPTARG"
-                #options_extra_git_before="-i --grep $keyword_search $options_extra_git_before"
-                #el_array_member_add "-i --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
-                el_array_member_add "-i -E --grep $keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-G" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "$keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                #foo="-G $keyword_search"
+                ;;
+            K)
+                keyword_search="$OPTARG"
+                el_array_member_add "-i" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-G" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "$keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
                 ;;
             a)
                 # better to be case-insensitive
@@ -2154,28 +2172,25 @@ main(){
                 fi
                 author_search="${author_search%% *}"
                 #options_extra_git_before="--committer='$author_search' $options_extra_git_before"
-                el_array_member_add "-i --committer $author_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "-i" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "--committer" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
+                el_array_member_add "$author_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
                 ;;
             f)
                 files_search="$OPTARG"
-                # cleanups {{{
-                while read -ru 3 line
+                el_array_member_add "--" "${options_extra_git_after[@]}" ; options_extra_git_after=("${_out[@]}")
+
+                while read -ru 3 file
                 do
-                    if [[ -d "$line" ]] ; then
+                    if [[ -d "$file" ]] ; then
                         # append a / at the end of the entry, force it to not have wrongly duplicated sessions
-                        _files_search="${_files_search},${line%/}/"
+                        el_array_member_add "${file%/}/" "${options_extra_git_after[@]}" ; options_extra_git_after=("${_out[@]}")
                     else
-                        _files_search="${_files_search},${line}"
+                        el_array_member_add "${file}" "${options_extra_git_after[@]}" ; options_extra_git_after=("${_out[@]}")
                     fi
 
-                done 3<<< "$( echo "$files_search" | tr ',' '\n' )"
+                done 3<<< "$( echo "${files_search//,/ }" | tr ' ' '\n' )"
 
-                files_search="${_files_search#,}"
-                el_debug "$files_search"
-
-                # }}}
-                #options_extra_git_after="$options_extra_git_after -- ${files_search//,/ }"
-                el_array_member_add "-- ${files_search//,/ }" "${options_extra_git_after[@]}" ; options_extra_git_after=("${_out[@]}")
                 ;;
             g)
                 travel_commit_id="$OPTARG"
@@ -2222,7 +2237,7 @@ main(){
 
     # check if we have checkoutable the watching branch too
     # update: we may not need to checkoutable, just access (like when a branch is just fetched)
-    if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qs "$branch_watch" ; then
+    if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qsw "$branch_watch" ; then
         el_explain 0 "Pre-checking out: __${branch_working}__"
         #command git checkout "${branch_watch}"
         command git checkout "${branch_working}"
@@ -2406,14 +2421,13 @@ main(){
 
         # debug
         if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-            el_explain 2 "git log __${options_extra_git_before[@]} --reverse __${branch_working}__..__${branch_watch}__ __${options_extra_git_after}"
+            el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}""
             #sleep 2
         fi
 
     fi
 
     # FIXME: the option showing "commits not pushed yet" not works well, the comparison is wrong? it doesnt point to the correct remote maybe?
-
 
     # loop
     while true
@@ -2508,7 +2522,7 @@ main(){
 
             fi
 
-        done 3<<< "$( command git log ${options_extra_git_before[@]} --reverse "$branch_working".."$branch_watch" $options_extra_git_after )"
+        done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
         # if you search with -k without matches, infinite loop happens, avoid it with this check
         if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
             is_recount_position_needed=1

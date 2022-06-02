@@ -668,30 +668,30 @@ main(){
 
 
         # Fix for skype when we dont have a "Mic" control
-        if ! LC_ALL="$EL_LC_EN" amixer scontrols | sed -e 's|^.mixer control||g' | LC_ALL="$EL_LC_EN" grep -vi boost | LC_ALL="$EL_LC_EN" grep -q "Mic" ; then
-            if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
-                killall skype 2>/dev/null || killall -9 skype 2>/dev/null
-                sync
-                sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
+        #if ! LC_ALL="$EL_LC_EN" amixer scontrols | sed -e 's|^.mixer control||g' | LC_ALL="$EL_LC_EN" grep -vi boost | LC_ALL="$EL_LC_EN" grep -q "Mic" ; then
+            #if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
+                #killall skype 2>/dev/null || killall -9 skype 2>/dev/null
+                #sync
+                #sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
 
-                el_debug "added a fix for your skype: to not modify your volumes, your audio-card model needs this"
-            else
-                if [[ "$TERM" != linux ]] ; then
-                    el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
-                fi
-            fi
-        else
+                #el_debug "added a fix for your skype: to not modify your volumes, your audio-card model needs this"
+            #else
+                #if [[ "$TERM" != linux ]] ; then
+                    #el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
+                #fi
+            #fi
+        #else
 
-            if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
-                killall skype 2>/dev/null || killall -9 skype 2>/dev/null
-                sync
-                sed -i "s|<AGC>.</AGC>|<AGC>1</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
+            #if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
+                #killall skype 2>/dev/null || killall -9 skype 2>/dev/null
+                #sync
+                #sed -i "s|<AGC>.</AGC>|<AGC>1</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
 
-                el_debug "added a fix for your skype: to allow it modify your volumes, because your audio-card model needs this"
-            else
-                el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
-            fi
-        fi
+                #el_debug "added a fix for your skype: to allow it modify your volumes, because your audio-card model needs this"
+            #else
+                #el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
+            #fi
+        #fi
 
         # Master should be always set to 100 % in order to avoid distortions
         el_debug "Master set to 100%"

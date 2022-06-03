@@ -3,9 +3,10 @@ SOURCE="$0"
 source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 el_make_environment
-#set -x
 #set -v
 #set -T
+#set -e
+#set -x
 
 # TODO: alternative to bkp that should be faster, try git stage
 # TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list) -- or at least list all the commits that we cherry-picked, if they are matched when we enter on them, show a warning message saying that we already cherry-picked it to FOO (mark this too)
@@ -58,7 +59,7 @@ exit_cleanups(){
         command git checkout "$branch_working_prev"
     fi
 
-    rm -rf "$tmpdir"
+    rm -rf "$tmpdir" "$tmpdir_sources"
 }
 
 el_add_on_exit exit_cleanups
@@ -249,8 +250,8 @@ shared_messages_create(){
 
 
     # message type?
-    option_show "a" "Ask a question to ${_entity} (no importing required)"
-    option_show "i" "Importing request to backport this commit"
+    option_show "i" "Import request for this commit"
+    option_show "a" "Ask a question to ${_entity} (not importing required)"
     ###option_show "r" "Reply a question"
     option_show "q" "quit this menu"
 
@@ -298,15 +299,13 @@ shared_messages_create(){
             el_explain 0 "Sending email..."
 
             email-sender -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants to ask you:" <<EOF
-<p><strong>
-$_mark_message
-</strong></p>
+<p><strong> Message: ${_mark_message} </strong></p>
 
 To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
-<li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} ${tool_arguments} -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d})</i></li>
+<li>run the command:  <strong>$(basename $0) -w ${branch_working} ${tool_arguments} -g ${commit_id}</strong></li>
 </ul>
 EOF
 
@@ -316,19 +315,17 @@ EOF
 
             el_explain 0 "Sending email..."
 
-            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants you to consider backporting this commit into ${branch_working}" <<EOF
-<p><strong>
-$_mark_message
-</strong></p>
+            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants you to consider backporting this commit from '${branch_watch}' into '${branch_working}' " <<EOF
+<p><strong>Message: ${_mark_message} </strong></p>
 
 To take your <i>Time-Traveling Capsule</i> you should:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${working_directory_d//#//})</i></li>
-<li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it on ${working_directory_d})</i></li>
+<li>run the command:  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 
-Or without the -g option you can just read your capsules in any moment
+Or, without the -g option you can just read your capsules in any moment, if you have it shared
 EOF
             ;;
         q|Q)
@@ -750,6 +747,39 @@ run_dropbox(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  position_save
+#   DESCRIPTION:  mark our position
+#    PARAMETERS:  commit_id
+#       RETURNS:  -
+#===============================================================================
+position_save(){
+    # mark our new position
+    if [[ -n "$commit_id" ]] ; then
+        el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
+        echo "$commit_id" > "$conf_commit_last_f"
+        el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+    fi
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  notify_success
+#   DESCRIPTION:  notify that a step went successfully
+#===============================================================================
+notify_success(){
+    if ((NOSOUND)) || [[ ! -e "/usr/share/sounds/elive/1up.wav" ]] ; then
+        el_notify soft logo-elive "$(basename $0)" "Success"
+    else
+        if [[ -x "$( which paplay )" ]] ; then
+            paplay --volume=40000 /usr/share/sounds/elive/1up.wav &
+        else
+            if [[ -x "$( which aplay )" ]] ; then
+                aplay /usr/share/sounds/elive/1up.wav 1>/dev/null 2>&1 &
+            fi
+        fi
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  go_to_commit
 #   DESCRIPTION:  go to a commit position, and returns back on the normal history when finished
 #    PARAMETERS:  -
@@ -800,8 +830,7 @@ go_to_commit(){
     tycat "/usr/share/git-watcher/images/ttc.gif"
 
     # mark our new position
-    #el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-    #echo "$commit_id" > "$conf_commit_last_f"
+    #position_save
 
     # count our new position
     do_count_commits
@@ -843,7 +872,7 @@ $(cat "$dir/message.txt")
 To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d})</i></li>
 <li>copy and run the command:$  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
@@ -963,7 +992,7 @@ $(cat "$dir/message.txt")
 To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d//#//})</i></li>
+<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d})</i></li>
 <li>copy and run the command: $  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 EOF
@@ -1004,8 +1033,7 @@ EOF
     is_recount_position_needed=1
 
     # mark our back position
-    #el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-    echo "$commit_id" > "$conf_commit_last_f"
+    #position_save
 
     unset is_traveling
 }
@@ -1236,6 +1264,9 @@ do_count_commits(){
         fi
 
     done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
+    if [[ "$counter" -gt "$counter_total" ]] ; then
+        echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[???/$counter_total]   ${el_c_n}"
+    fi
     echo ""
 
 
@@ -1312,8 +1343,7 @@ do_cherry_pick_menu(){
             # TODO: check the options, we don't want to write a message probably, do we also want to use the option -x ?
             if command git cherry-pick --continue ; then
                 # store actual position for future calls of this tool
-                el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-                echo "$commit_id" > "$conf_commit_last_f"
+                position_save
 
                 # make a list of the commits that we have already imported
                 if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
@@ -1359,31 +1389,55 @@ do_cherry_pick_menu(){
 # by default let's use meld-auto, if you need manual use "git mergetool -t meld-manual"
 tool = meld-auto
 conflictstyle = diff3
+
 [mergetool "meld-auto"]
 # cmd reference to the meld version 1.6 syntax1
-cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE $MERGED
+#cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE $MERGED
 ;# howto use the meld on this way: http://blog.wuwon.id.au/2010/09/painless-merge-conflict-resolution-in.html
 ;# so you have in the first tab the differences between the base and the local work, in the second the base with the remote work, and in the last tab you have in the middle the state where you need to resolve and save the conflicts
-;# TIP: in meld run ^F for search the (??) expression, which is the conflict marks, and ^G for search the next one
-[mergetool "meld-manual"]
-cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $MERGED $REMOTE
 
-[mergetool "meld17"]
+;# new method:
+; Explanation:
+; 1. TAB: merge is smart / automatically made and we can put remaining things from one or other side, resulting file is written
+; 2. TAB: original content tried to be merged in the middle
+; 3. TAB: demo history of changes that should happen, left is original file and right is commit from
+; 4. TAB: demo of what lacks from our commit to import into our half-merged contents
+; 5. TAB: demo of what was tried to change (half-merged) in our local file
+cmd = meld \
+    $BASE $LOCAL $REMOTE --auto-merge  --output $MERGED  \
+    --diff $LOCAL $MERGED $REMOTE  \
+    --diff $LOCAL $BASE $REMOTE \
+    --diff $REMOTE $BASE  \
+    --diff $LOCAL $BASE  \
+
+;# TIP: in meld run ^F for search the (??) expression, which is the conflict marks, and ^G for search the next one
+
+[mergetool "meld-manual"]
+;#cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $MERGED $REMOTE
+;# new method:
+    ; Note: this version ensures that no auto merges has been made, and it shows demos of the other differences in the merge attempt, it is much more difficult than the auto and the auto should show enough information to not mix up things, but it ensures that all the differences are seen
+    ; Explanation:
+    ; 1. TAB: left is original file, right is changes to import, you should put them in the middle file
+    ; 2. TAB: original content tried to be merged in the middle
+    ; 3. TAB: demo history of changes that should happen, left is original file and right is commit from
+    ; 4. TAB: demo of what lacks from our commit to import into our half-merged contents
+    ; 5. TAB: demo of what was tried to change (half-merged) in our local file
+    cmd = meld \
+        $LOCAL $MERGED $REMOTE --output $MERGED  \
+        --diff $BASE $MERGED $REMOTE  \
+        --diff $LOCAL $BASE $REMOTE \
+        --diff $REMOTE $BASE  \
+        --diff $LOCAL $BASE  \
+
+#[mergetool "meld17"]
 # use this for Meld >=1.7
 # see http://stackoverflow.com/a/22911793/859591
 # second solution:
-cmd = meld $LOCAL $MERGED $REMOTE
+#cmd = meld $LOCAL $MERGED $REMOTE
 # first solution:
 #cmd = meld $LOCAL $BASE $REMOTE --auto-merge
 # see entries for 1.7 in the old commented code
-[mergetool "meld16"]
-# this one not works very good, at least on wheezy's version of meld
-;cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE --output $MERGED
-# old/previous
-cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE $MERGED
-;cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $MERGED $REMOTE
-# another attempt?
-#cmd = meld $LOCAL $BASE $REMOTE -o $MERGED --diff $BASE $LOCAL --diff $BASE $REMOTE
+
 EOF
 
             echo -e "\nPress Enter to continue..." 1>&2
@@ -1432,8 +1486,7 @@ do_cherry_pick(){
         #sleep 1
 
         # store actual position for future calls of this tool
-        el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-        echo "$commit_id" > "$conf_commit_last_f"
+        position_save
 
         # make a list of the commits that we have already imported
         if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
@@ -1444,11 +1497,14 @@ do_cherry_pick(){
         fi
 
         el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+
+        notify_success
     else
         el_error "Oops, cherry-pick failed! select an option now:"
 
         do_cherry_pick_menu
     fi
+
 
     show_history
 
@@ -1530,7 +1586,7 @@ options_main_interact(){
     echo -e ""
     #echo -e "${el_c_y} [$counter/$counter_total] ${el_c_g} Position in remaining commits  ${el_c_n}"
     if ((is_traveling)) ; then
-        echo -e "${el_c_b}------------------------------------${el_c_gr}(${el_c_m}parallel reality${el_c_gr})${el_c_b}----${el_c_y}[${el_c_g}$_counter_show${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
+        echo -e "${el_c_b}-----------------------${el_c_gr}(${el_c_m}parallel reality${el_c_gr})${el_c_b}--------${el_c_y}[${el_c_g}$_counter_show${el_c_y}/$counter_total]${el_c_b}-----${el_c_n}"
     else
         echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$_counter_show/$counter_total]${el_c_b}-----${el_c_n}"
     fi
@@ -1540,13 +1596,18 @@ options_main_interact(){
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit" # history-based now
     option_show "s"         "Show commit summary"
-    option_show "S"         "Show detailed info"
+    option_show "S"         "Show Status info"
     option_show "h"         "Show history"
     option_show "d"         "Show diff"
     option_show "a"         "list Around commits (from our working thread)"
     option_show "A"         "list Around commits (from the watching branch)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other or multiple commits (cherry-pick)"
+    if [[ -n "$user_input_backport_branches" ]] ; then
+        option_show "b"         " > Backport to: $user_input_backport_branches"
+    else
+        option_show "b"         "Backport to other branches too (define them as comma-separated)"
+    fi
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "E"         "Edit (visualize) how the contents would change if we import it"
     option_show "m"         "mark, adds a mark on this position, to review later"
@@ -1556,18 +1617,14 @@ options_main_interact(){
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
 
-    if [[ -n "$user_input_backport_branches" ]] ; then
-        option_show "b"         " > Backport to: $user_input_backport_branches"
-    else
-        option_show "b"         "Backport to other branches too (define them as comma-separated)"
-    fi
     option_show "z"         "Undo last commit in your working branch"
     option_show "c"         "compile (make), useful for check if new code is compatible"
-    option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart)"
-    ## not needed: we moved it to C
-    #if [[ -n "$user_input_command" ]] ; then
+    if [[ -n "$user_input_command" ]] ; then
         #option_show "r"     " > Run:  $user_input_command"
-    #fi
+        option_show "C"     " > Compile:  $user_input_command"
+    else
+        option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart)"
+    fi
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit & Save"
@@ -1613,8 +1670,7 @@ options_main_interact(){
 
         n)  # Next commit
             #el_explain 0 "Saving last commit watched"
-            el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-            echo "$commit_id" > "$conf_commit_last_f"
+            position_save
             return 0
 
             ;;
@@ -1629,18 +1685,22 @@ options_main_interact(){
                 return 0
             fi
 
-            # get the previous commit id
-            #commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
-            # update: optimized way using a history:
-            # delete our actual position in the history (so the last element in array is the previous position)
-            el_array_member_unset "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-            # set the commit to go as the previous one:
-            commit_id="${commits_history[$(( ${#commits_history[@]} - 1 ))]}"
+            # use history mode if available which is faster than recount log
+            if [[ "${#commits_history[@]}" -gt 1 ]] ; then
+                # delete our actual position in the history (so the last element in array is the previous position)
+                el_array_member_unset "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
+                # set the commit to go as the previous one:
+                commit_id="${commits_history[$(( ${#commits_history[@]} - 1 ))]}"
+                el_debug "history mode (${#commits_history[@]})"
+            else
+                if [[ "${#commits_history[@]}" -le 1 ]] ; then
+                    unset commits_history
+                fi
+                # get the previous commit id
+                commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+            fi
 
-            # mark our new position
-            el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-            echo "$commit_id" > "$conf_commit_last_f"
-            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+            position_save
 
             # set the counter to count another commit remaining
             counter="$(( $counter - 1 ))"
@@ -1677,20 +1737,19 @@ options_main_interact(){
                 commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
 
                 # mark our new position
-                el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-                echo "$commit_id" > "$conf_commit_last_f"
-                el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+                unset commits_history
+                position_save
 
                 # count to the actual jump
                 counter="$_n"
-                # always remove one, because we return 0
-                counter="$(( $counter + -1 ))"
-
                 # exit loop if no remaining commits
                 if [[ "$counter" -le 0 ]] ; then
                     el_explain 0 "You cannot go before the creation of the universe!"
                     sleep 3
                 fi
+
+                # always remove one, because we return 0
+                counter="$(( $counter + -1 ))"
 
                 # cleanup
                 clear_screen default
@@ -1726,6 +1785,7 @@ options_main_interact(){
             el_explain 0 "git pull --rebase \"$remote_fetching_working\" \"+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}\""
             #command git pull --rebase "$remote_fetching_working" "$branch_working"  # don't use this method, leads to diverged branches
             command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
+            sleep 2
             check_if_has_diverged
 
             # update total of commits
@@ -1761,6 +1821,7 @@ options_main_interact(){
             el_explain 0 "git pull --rebase \"$remote_fetching_watch\" \"+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}\""
             #command git pull --rebase "$remote_fetching_watch" "$branch_watch"  # buggy method
             command git pull --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
+            sleep 2
             check_if_has_diverged
 
             # go back to our working one
@@ -1857,29 +1918,43 @@ options_main_interact(){
         E)  # edit (visualize) how the contents would change if we import it
             mkdir -p "$tmpdir/sources-before" "$tmpdir/sources-after"
 
+            # update temporal code copy
+            rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
+
+            # get the before state
+            cd "$tmpdir_sources"
+            if [[ "${#commits_history[@]}" -gt 1 ]] ; then
+                _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 ))]}"
+            else
+                _commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+            fi
+            command git checkout "${_commit_id}" 1>/dev/null
+
             # save files before to apply the commit
             while read -ru 3 file
             do
-                printf "%s\n" "$file" | cpio -padu -- "$tmpdir/sources-before"
+                printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-before"
             done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
 
             # apply the commit
-            if ! command git cherry-pick -Xpatience -x -s "$commit_id" ; then
+            if ! command git cherry-pick -Xpatience -x -s "$commit_id" 1>/dev/null ; then
                 el_error 0 "failed using: git cherry-pick -Xpatience -x -s '$commit_id'"
             fi
 
             # save files after to apply the commit
             while read -ru 3 file
             do
-                printf "%s\n" "$file" | cpio -padu -- "$tmpdir/sources-after"
+                printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-after"
             done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
 
             # compare files
             meld "$tmpdir/sources-before" "$tmpdir/sources-after"
 
-            # remove temporally imported commit
+            # remove the temporally imported commit
             command git reset --hard HEAD~1
-            rm -rf "$tmpdir"
+            rm -rf "$tmpdir/sources-before" "$tmpdir/sources-after"
+
+            cd "$working_directory_d"
 
             # return back to main menu
             $FUNCNAME
@@ -1915,6 +1990,28 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
+        b)  # extra branches where to backport
+            if [[ -z "$user_input_backport_branches" ]] ; then
+                echo -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
+                read -e user_input_backport_branches
+            fi
+
+            if [[ -n "$user_input_backport_branches" ]] ; then
+                while read -ru 3 branch
+                do
+                    command git checkout "$branch"
+                    do_cherry_pick
+                    command git checkout "$branch_working"
+
+                done 3<<< "$( echo "$user_input_backport_branches" | tr ',' '\n' )"
+            else
+                el_explain 0 "Skipping..."
+                sleep 1
+            fi
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
         m)
             el_explain 0 "TODO / mark added"
 
@@ -1941,26 +2038,6 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
-        b)  # extra branches where to backport
-            if [[ -z "$user_input_backport_branches" ]] ; then
-                echo -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
-                read -e user_input_backport_branches
-            fi
-
-            if [[ -n "$user_input_backport_branches" ]] ; then
-
-                while read -ru 3 branch
-                do
-                    command git checkout "$branch"
-                    do_cherry_pick
-                    command git checkout "$branch_working"
-
-                done 3<<< "$( echo "$user_input_backport_branches" | tr ',' '\n' )"
-            fi
-
-            # return back to main menu
-            $FUNCNAME
-            ;;
         z)  # undo
 
             # show our actual commit
@@ -1972,9 +2049,12 @@ options_main_interact(){
                 command git reset --hard HEAD~1
                 # delete it from the list of the ones we have imported too
                 sed -i "s|$commit_id ${branch_working}||g" "$conf_imported_commits_list_f"
-                sed -i "s|${commit_id}.*$||g" "$conf_imported_commits_list_shared_f"
                 sed -i "/^$/d" "$conf_imported_commits_list_f"
-                sed -i "/^$/d" "$conf_imported_commits_list_shared_f"
+                # shared confs too
+                if [[ -s "$conf_imported_commits_list_shared_f" ]] ; then
+                    sed -i "s|${commit_id}.*$||g" "$conf_imported_commits_list_shared_f"
+                    sed -i "/^$/d" "$conf_imported_commits_list_shared_f"
+                fi
             fi
 
             # return back to main menu
@@ -2044,13 +2124,13 @@ options_main_interact(){
 
             ;;
         B)  # bkp
-            bkp save
+            bkp --quiet save
 
             # return back to main menu
             $FUNCNAME
             ;;
         R)  # bkp
-            bkp get
+            bkp --quiet get
 
             # return back to main menu
             $FUNCNAME
@@ -2116,6 +2196,8 @@ usage_show(){
     option_show "-f" "Files/dirs which to track changes only, comma-separated, ex: 'src/bin/e_border.c,src/bin/e_win.c'"
     echo -e ""
     option_show "-g" "Go to commit-id (temporally)"
+    echo -e ""
+    option_show "Notes: use -s to not play sound notifications"
 
 
     echo -e ""
@@ -2136,6 +2218,7 @@ main(){
     # get the working branch name
     branch_working="$( command git symbolic-ref HEAD )"
     branch_working="${branch_working#refs/heads/}"
+    working_directory_d="$( pwd )"
 
     if [[ -z "$branch_working" ]] ; then
         el_error "You are not in a git repository, this tool is meant to be used from a git repo"
@@ -2143,13 +2226,18 @@ main(){
     fi
 
     tmpdir="/tmp/.$(basename $0)-${USER}"
-    rm -rf "$tmpdir"
-    mkdir -p "$tmpdir"
+    tmpdir_sources="/tmp/.$(basename $0)-${USER}/sources"
+    rm -rf "$tmpdir" "$tmpdir_sources"
+    mkdir -p "$tmpdir" "$tmpdir_sources"
+
+    if ! el_dependencies_check "rsync|git|bkp|email-sender" ; then
+        exit 1
+    fi
 
     # }}}
     # input parameters {{{
 
-    while getopts "b:w:c:k:K:a:f:g:" opt ; do
+    while getopts "b:w:c:k:K:a:f:g:s:" opt ; do
         case "$opt" in
             b)
                 branch_watch="$OPTARG"
@@ -2168,7 +2256,6 @@ main(){
                 keyword_search="$OPTARG"
                 el_array_member_add "-G" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
                 el_array_member_add "$keyword_search" "${options_extra_git_before[@]}" ; options_extra_git_before=("${_out[@]}")
-                #foo="-G $keyword_search"
                 ;;
             K)
                 keyword_search="$OPTARG"
@@ -2209,6 +2296,9 @@ main(){
                 travel_commit_id="$OPTARG"
                 is_travel_wanted=1
                 ;;
+            s)
+                export NOSOUND=1
+                ;;
             \?|*)
                 echo ""
                 #echo "Invalid option" 1>&2
@@ -2223,6 +2313,12 @@ main(){
                 ;;
         esac
     done
+
+    # check if we are at night, note: we need a better way to configure this (from desktop)
+    hour="$(date +%k)"
+    if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
+        export NOSOUND=1
+    fi
 
     # - input parameters }}}
     # configurations saved {{{
@@ -2265,8 +2361,8 @@ main(){
     # }}}
 
     # append keyword in conf file if we have it
-    working_directory_d="$( pwd | sed -e 's|/|#|g' )"
-    repo_id="${working_directory_d}::${branch_watch}::${keyword_search}::${files_search_regexed}::${author_search}"
+    working_directory_identifier="$( pwd | sed -e 's|/|#|g' )"
+    repo_id="${working_directory_identifier}::${branch_watch}::${keyword_search}::${files_search_regexed}::${author_search}"
     repo_id_shared="${branch_watch}::${keyword_search}::${files_search_regexed}::${author_search}"
     conf_repo_d="${conf_d}/${repo_id}"
 
@@ -2285,11 +2381,9 @@ main(){
     # - configurations saved }}}
     # version tool {{{
     el_check_variables "tool_version"
-    tool_version_watcher="$( tail -1 "${conf_d}/version.txt" 2>/dev/null )" # old, for compatibility
-    tool_version_watcher="$( tail -1 "$tool_version_f" 2>/dev/null )"
-
-    # first time? add it
-    if [[ -z "$tool_version_watcher" ]] ; then
+    if [[ -s "$tool_version_f" ]] ; then
+        tool_version_watcher="$( tail -1 "$tool_version_f" 2>/dev/null )"
+    else
         tool_version_watcher="$tool_version"
         echo "$tool_version" > "${tool_version_f}"
     fi
@@ -2359,12 +2453,13 @@ main(){
 
 
     # }}}
-    # configurations get configurations {{{
+    # configurations get {{{
 
 
     # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
         commit_id="$( tail -1 "$conf_commit_last_f" )"
+        el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
     fi
 
 
@@ -2492,6 +2587,7 @@ main(){
 
                 # get the commit id of this loop
                 commit_id="${line#commit }"
+                el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
 
                 if ((is_travel_wanted)) && [[ -n "$travel_commit_id" ]] ; then
                     go_to_commit "$travel_commit_id"
@@ -2552,7 +2648,7 @@ main(){
 
 
     if ((is_commit_id_last_reached)) ; then
-        el_explain 0 "__No more commits found__, ow yeah baby!"
+        el_explain 0 "__No more commits found__"
     else
         if ((is_header_show)) ; then
             el_error "Something wrong happened? seems like we cannot found your last position, so where is this commit then? $commit_id"

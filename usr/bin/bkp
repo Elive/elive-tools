@@ -139,24 +139,26 @@ do_save(){
     mkdir -p "${bkpdir_backups}"
 
     # show old existing backups
-    others_list_num="$( ls -1 "${bkpdir_backups}" 2>/dev/null | grep "\.rdiff$" | wc -l )"
-    if [[ "$others_list_num" -gt 5 ]] ; then
-        echo -e "Warning: other backups found:"
-        while read -ru 3 line
-        do
-           ref="${line//%//}"
-           ref="${ref%.rdiff*}"
-           if [[ -d "${ref}" ]] ; then
-               echo -e " * ref: ${el_c_c}${ref}${el_c_n}"
-           else
-               echo -e " * ref: ${el_c_r2}${ref}${el_c_n}"
-           fi
+    if ! ((is_quiet)) ; then
+        others_list_num="$( ls -1 "${bkpdir_backups}" 2>/dev/null | grep "\.rdiff$" | wc -l )"
+        if [[ "$others_list_num" -gt 5 ]] ; then
+            echo -e "Warning: other backups found:"
+            while read -ru 3 line
+            do
+               ref="${line//%//}"
+               ref="${ref%.rdiff*}"
+               if [[ -d "${ref}" ]] ; then
+                   echo -e " * ref: ${el_c_c}${ref}${el_c_n}"
+               else
+                   echo -e " * ref: ${el_c_r2}${ref}${el_c_n}"
+               fi
 
-        done 3<<< "$( ls -1 "${bkpdir_backups}" | grep "\.rdiff$" )"
+            done 3<<< "$( ls -1 "${bkpdir_backups}" | grep "\.rdiff$" )"
 
-        echo -e ""
-        echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}remove${el_c_n}"
-        echo -e "You can remove ALL in one shot with: ${el_c_g}$(basename $0) ${el_c_y}purge${el_c_n}\n"
+            echo -e ""
+            echo -e "To remove single entry's just enter in the dir and run: ${el_c_g}$(basename $0) ${el_c_m}remove${el_c_n}"
+            echo -e "You can remove ALL in one shot with: ${el_c_g}$(basename $0) ${el_c_y}purge${el_c_n}\n"
+        fi
     fi
 
     if ! [[ -d "$bkpdir_id" ]] ; then
@@ -200,7 +202,13 @@ do_get(){
     #check_files_owner_compatibility "${1}" # we don't need to check a dir to restore, so we have checked it at saving
     do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
 
-    do_sudo rsync -av --delete "${1}.get/" "${2}/"
+    if ((is_quiet)) ; then
+        echo -ne "Recovering..."
+        do_sudo rsync -aq --delete "${1}.get/" "${2}/"
+        echo -e "Recovered      "
+    else
+        do_sudo rsync -av --delete "${1}.get/" "${2}/"
+    fi
 
     cd "${2}"
 

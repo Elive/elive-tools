@@ -51,7 +51,7 @@ main(){
     menu+=("$( eval_gettext "Reset audio configurations" )")
 
     menu+=("userconf")
-    menu+=("$( eval_gettext "User configuration manager" )")
+    menu+=("$( eval_gettext "Users manager" )")
 
     menu+=("bugreport")
     menu+=("$( eval_gettext "Report an issue to Elive" )")

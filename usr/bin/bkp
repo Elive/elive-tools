@@ -90,7 +90,7 @@ do_work(){
 
     cd "${tmpdir}"
 
-    echo -e "You are now in a safe place where modify your sources"
+    echo -e "You are now in a sandbox copy where you can modify safely these files"
     echo -e "Your modifications will be merged or erased after you finish"
     el_explain 0 "logout from the shell for finish your working state"
 

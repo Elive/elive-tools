@@ -318,7 +318,7 @@ abort_with_fallback_wm(){
     if ((is_elive_helper)) ; then
         case "$1" in
             virtual)
-                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers which don't work on virtual machines. Use Elive on a real computer to have them." )"
+                zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers which don't work on virtual machines. Use Elive on a real computer to have these features." )"
                 ;;
             traditional)
                 zenity --error --text="$( eval_gettext "These special features require 3D accelerated drivers. You are using a standard driver that is more compatible and can make your graphical interface work but is insufficient to enable the special effects. This can happen with very old computers or very recent ones, you can try a different version of Elive using different driver setups." )"

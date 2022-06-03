@@ -396,40 +396,68 @@ main(){
 
     # }}}
 
-    case $1 in
-        work|w|-w)
-            do_work
-            ;;
-        save|s|-s|--save)
-            do_save "${target}" "${bkpdir_id}"
-            ;;
-        get|g|-g|--get)
-            history_num="$2"
-            do_get "${bkpdir_id}" "${target}" "$history_num"
-            ;;
-        list|l|-l|--list)
-            do_list "${bkpdir_id}"
-            ;;
-        diff)
-            do_diff "${bkpdir_id}" "${target}" "${history_num}"
-            ;;
-        diff-reverse)
-            do_diff_reverse "${bkpdir_id}" "${target}" "${history_num}"
-            ;;
-        meld)
-            do_meld "${bkpdir_id}" "${target}" "${history_num}"
-            ;;
-        remove|-r)
-            do_remove "${bkpdir_id}"
-            ;;
-        forget)
-            el_error "did you mean remove?"
-            exit 1
-            ;;
-        purge)
-            do_purge_olds "${bkpdir_backups}"
-            ;;
-    esac
+    for arg in "$@"
+    do
+        case "$arg" in
+            --quiet|-q)
+                is_quiet=1
+                shift
+                ;;
+            work|w|-w)
+                do_work
+                shift
+                ;;
+            save|s|-s|--save)
+                do_save "${target}" "${bkpdir_id}"
+                shift
+                ;;
+            get|g|-g|--get)
+                do_get "${bkpdir_id}" "${target}" "$2"
+                if [[ -n "$2" ]] ; then
+                    shift
+                fi
+                shift
+                ;;
+            list|l|-l|--list)
+                do_list "${bkpdir_id}"
+                shift
+                ;;
+            diff)
+                do_diff "${bkpdir_id}" "${target}" "${2}"
+                if [[ -n "$2" ]] ; then
+                    shift
+                fi
+                shift
+                ;;
+            diff-reverse)
+                do_diff_reverse "${bkpdir_id}" "${target}" "${2}"
+                if [[ -n "$2" ]] ; then
+                    shift
+                fi
+                shift
+                ;;
+            meld)
+                do_meld "${bkpdir_id}" "${target}" "${2}"
+                if [[ -n "$2" ]] ; then
+                    shift
+                fi
+                shift
+                ;;
+            remove|-r)
+                do_remove "${bkpdir_id}"
+                shift
+                ;;
+            forget)
+                el_error "did you mean remove?"
+                shift
+                exit 1
+                ;;
+            purge)
+                do_purge_olds "${bkpdir_backups}"
+                shift
+                ;;
+        esac
+    done
 
 
 

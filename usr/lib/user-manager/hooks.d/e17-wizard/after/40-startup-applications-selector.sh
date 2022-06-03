@@ -325,7 +325,7 @@ main(){
     if ! ((is_live)) ; then
         if ! ((is_polkit_auth_included)) ; then
             if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
-                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent which is crucial for correct system functionality, it allows you to use media devices or mount hard disks. However, Elive can add a special configuration that allows you to still use the disks. Are you sure that you want to disable it?" )" ; then
+                if zenity --question --text="$( eval_gettext "You have not included Polkit authentication agent which is needed for correct system functionality, it allows you to use media devices or mount hard disks. However, Elive can add a special configuration that allows you to still use the disks. Are you sure that you want to disable it?" )" ; then
                     is_polkit_auth_disabled_wanted=1
                 else
                     # re-enable it
@@ -368,7 +368,7 @@ EOF
     # gdu
     if ! ((is_live)) ; then
         if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
-            if zenity --question --text="$( eval_gettext "You have not included Gdu Notification. This one is useful for alerting you in case errors are discovered on your hard disk. Are you sure you want to disable it?" )" ; then
+            if zenity --question --text="$( eval_gettext "You have not included GDU notifications. This one is useful for alerting you in case errors are found on your hard disk. Are you sure you want to disable it?" )" ; then
                 true
             else
                 # re-enable it
@@ -445,7 +445,7 @@ EOF
 
 
         local message_1
-        message_1="$( printf "$( eval_gettext "Select the desired features for your desktop. You can add more startup applications to your desktop by editing the file:" )" "" )"
+        message_1="$( printf "$( eval_gettext "Select the desired features for your desktop. You can add more startup applications for your desktop by editing the file:" )" "" )"
         local message_2
         message_2="$( printf "$( eval_gettext "Enable" )" "" )"
         local message_3

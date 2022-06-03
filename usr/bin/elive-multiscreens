@@ -163,10 +163,10 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. But if you want Elive to load it when starting the system you need to save its configuration." )"
+    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want Elive to load it when starting the system you need to save its configuration." )"
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before starting the window manager, this means that you don't have window buttons or other features yet - it can be confusing. Follow these instructions carefully: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application through the menu (or using the CTRL+Q keys)" )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before the window manager started, this means that you don't have window buttons or other features yet - it can be confusing. FOLLOW these instructions CAREFULLY: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application through the menu (or using the CTRL+Q keys)" )"
     fi
 
     # e16
@@ -180,7 +180,7 @@ configure_multiscreens(){
     el_debug "running gui configurator"
 
     # tell the user to save the conf
-    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution on every desktop startup, you need to save it with the 'Save As' option. Otherwise, your options will not be implemented and not be available on each startup." )"
+    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution on every desktop startup, you need to save it with the 'Save As' option. Otherwise, your settings will not be available on each startup." )"
 
     arandr
 
@@ -191,7 +191,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any saved configurations, so Elive cannot implement your screens setup. Do you want to try again? You need to select the option 'Save As' and type a desired name in the default location." )" ; then
+        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any saved configurations, so Elive cannot implement your screens settings. Do you want to try again? You need to select the option 'Save As'." )" ; then
 
             # configure
             arandr

@@ -12,7 +12,7 @@ main(){
         case "$arg" in
 
             "--ask")
-                if ! zenity --question --text="$( eval_gettext "Do you want to reset your desktop configurations? It will restart your desktop settings to a fresh one. Useful to restore your desktop if you messed up something and you don't know how to recover it." )" ; then
+                if ! zenity --question --text="$( eval_gettext "Do you want to reset your desktop configurations? It will restart your desktop settings to a new predefined one. Useful option to restore your desktop if you messed up something and you don't know how to recover it." )" ; then
                     exit
                 fi
 

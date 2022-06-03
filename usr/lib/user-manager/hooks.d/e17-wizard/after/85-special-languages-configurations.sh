@@ -17,7 +17,7 @@ suggest_emodule_flag_keyboard(){
     fi
 
     local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want fast switching between different language lay-outs, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
+    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want fast switching between different language layouts, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
 
     if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         zenity --info --text="$message_suggestion_flag"

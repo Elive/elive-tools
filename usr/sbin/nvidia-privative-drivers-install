@@ -431,7 +431,7 @@ interactive_ask_privative(){
             if [[ "${memory}" -lt "640000" ]] && ! ((is_mode_auto)) ; then
 
                 local message_low_memory
-                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM, the installation of some big packages in live mode can fail because of this. Try installing Elive to your hard disk and then try installing these packages again, to avoid running out of memory. After you have installed Elive you can boot with the boot parameter 'init 1' to avoid starting the graphical system and run this command '%s -a' to start the installation process again." )" "$(basename $0)" )"
+                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM, and the installation of some big packages in live mode can fail because of this. Try installing Elive to your hard disk and then try installing these packages. After you have installed Elive you can boot with the boot parameter 'init 1' to avoid starting the graphical system and run this command '%s -a' to start the installation process again." )" "$(basename $0)" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Low Memory Computer" \
@@ -446,7 +446,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphics Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install Nvidia's closed-source graphical drivers? Some computers need them, while others work better with the open driver. You should try both modes or each proprietary version to know which one is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install Nvidia's closed-source graphical drivers? Some computers need them, while others work better with the open driver. You should try both modes or each of the proprietary versions to know which one is more suitable for your computer." )" )"
                 local message_extra
                 message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open-source drivers." )" "" )"
 
@@ -474,7 +474,7 @@ interactive_ask_privative(){
                         local message_reboot_and_select_privative_1
                         local message_reboot_and_select_privative_2
                         message_reboot_and_select_privative_1="$( printf "$( eval_gettext "To install the proprietary drivers you must reboot and select the proprietary option from the boot menu." )" "" )"
-                        message_reboot_and_select_privative_2="$( printf "$( eval_gettext "Or you can boot with any option but you need to press the Tab key and append the boot parameter:" )\nmodprobe.blacklist=nouveau" "" )"
+                        message_reboot_and_select_privative_2="$( printf "$( eval_gettext "Or you can boot with any option but you need to press the TAB key (\"E\" if UEFI boot) to append the boot parameter:" )\nmodprobe.blacklist=nouveau" "" )"
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                             --title "$( eval_gettext "A reboot is needed using a different option" )" \
@@ -522,7 +522,7 @@ interactive_ask_privative(){
                         if ((is_wheezy)) ; then
                             message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. For compatibility reasons the nouveau module is blacklisted on boot, so either reboot in this mode or remove that parameter from the boot options." )" "" )"
                         else
-                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key. Due to compatibility reasons, booting without that driver is needed, this step is needed in order to continue." )" "modprobe.blacklist=nouveau" )"
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key (\"E\" on UEFI boot). Due to compatibility reasons, booting without that driver is needed, this step is needed in order to continue." )" "modprobe.blacklist=nouveau" )"
                         fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -921,7 +921,7 @@ install_driver(){
 
         if laptop-detect ; then
             local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use the Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
+            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
         else
             local message_multiple_cards
             message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable it from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
@@ -1416,7 +1416,7 @@ main(){
     case "$(uname -m)" in
         i*86)
             local message_unsupported_arch
-            message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly." )" "" )"
+            message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly in their full capabilities." )" "" )"
 
             dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Suggested Version" \

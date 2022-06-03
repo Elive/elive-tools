@@ -193,6 +193,10 @@ do_get(){
         history_num="1"
     fi
 
+    if ((is_quiet)) ; then
+        echo -ne "Recovering..."
+    fi
+
     version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
@@ -203,9 +207,8 @@ do_get(){
     do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
 
     if ((is_quiet)) ; then
-        echo -ne "Recovering..."
         do_sudo rsync -aq --delete "${1}.get/" "${2}/"
-        echo -e "Recovered      "
+        echo -e "\r\033[KRecovered      "
     else
         do_sudo rsync -av --delete "${1}.get/" "${2}/"
     fi

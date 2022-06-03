@@ -487,7 +487,7 @@ do_configure(){
                 ;;
             other)
                 # TODO: implement a questions asking about the stmp / imap / ports addresses, all of them needed, it should simply work
-                $guitool --info --text="$( eval_gettext "This tool only supports (for now) the listed services available, if you want to use a different one you can improve the tool to include the needed configuration for your service. Exiting..." )"
+                $guitool --info --text="$( eval_gettext "This tool only supports (for now) the listed services available, if you want to use a different one you can improve the tool on our Git to include the needed configuration for your service. Exiting..." )"
                 exit
                 ;;
             Gmail)
@@ -552,7 +552,7 @@ do_configure(){
             smtp_port="$( $guitool --entry --entry-text="587" --text="$message_ask_smtp_port" || echo "" )"
 
             local message_ask_imap_url
-            message_ask_imap_url="$( printf "$( eval_gettext "Insert the IMAP address to check your email with." )" "" )"
+            message_ask_imap_url="$( printf "$( eval_gettext "Insert the IMAP address to check your email." )" "" )"
             imap_url="$( $guitool --entry --entry-text="mail.yourdomain.com" --text="$message_ask_imap_url" || echo "" )"
 
             if [[ -z "$smtp_url" ]] || [[ -z "$smtp_port" ]] || [[ -z "$imap_url" ]] ; then

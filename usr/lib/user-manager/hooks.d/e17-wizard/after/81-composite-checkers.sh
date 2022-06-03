@@ -108,7 +108,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "Hardware-accelerated desktop not in use. This option is more stable but may result in a slower desktop, especially during video playback. If you haven't tried the accelerated mode yet, we recommend to try it. You will then see whether it is compatible with your graphics card." )" )"
+                message_gl="$( printf "$( eval_gettext "You are using software-based rendering for your desktop, which is very stable. You can try to switch to the hardware-accelerated option (GL mode) which will make your desktop faster and smoother, especially for video rendering. But is IMPORTANT TO KNOW that the hardware-accelerated can be unstable, it all depends on your graphic card and its drivers, the only way to know if works well for you is by trying it, but remember that if you have desktop errors can be due to it, so you can switch back to software mode then." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -122,7 +122,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feel smoother, it also improves video playback speed and usablity. If the drivers of your graphic card are not stable enough, which can cause a broken desktop and/or visual artifacts. Fixing this will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feels smoother, it also improves video playback speed and usability. If the drivers of your graphic card are not stable enough, can cause bugs in your desktop, visual artifacts, or a broken state. Fixing that will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 
@@ -131,7 +131,7 @@ main(){
                         true
                     else
                         local message_vsync_disabled
-                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for composite (vertical synchronization). This option allows you to play videos smoothly and without horizontal lines. Go to the options panel, and in the panel, go to the composite section." )" "vsync" )"
+                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for the compositor (vertical synchronization). This option allows you to play smoother videos and without horizontal lines. Go to the options panel, and in the panel, go to the compositor settings" )" "vsync" )"
                         zenity --info --text="$message_vsync_disabled" || true
                     fi
                 fi
@@ -166,7 +166,7 @@ main(){
             message_efiboot=""
         fi
         local message_broken_bios
-        message_broken_bios="$( printf "$( eval_gettext "A warning message has been found that your BIOS may be broken. If you experience any hardware issues we strongly recommend updating your BIOS. " )" "" )"
+        message_broken_bios="$( printf "$( eval_gettext "A warning message has been found that your BIOS may be broken. If you experience any hardware issues we strongly recommend updating your BIOS." )" "" )"
 
         $guitool --warning --text="${message_broken_bios} ${message_efiboot}" 1>/dev/null 2>&1 || true
     fi

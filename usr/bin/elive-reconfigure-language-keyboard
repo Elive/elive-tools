@@ -217,7 +217,7 @@ EOF
     else
         # just say ok
         if ! grep -qs "boot=live" /proc/cmdline ; then
-            zenity --info --text="$( eval_gettext "Changes have been saved, to use the new settings you must reboot your computer or re-login in your desktop." )"
+            zenity --info --text="$( eval_gettext "Changes have been saved, to use the new settings you must reboot your computer or re-login on your desktop." )"
         fi
     fi
 

@@ -5,12 +5,11 @@ EL_REPORTS="1"
 el_make_environment
 #set -v
 #set -T
-#set -e
 #set -x
+#set -e
 
 # TODO: alternative to bkp that should be faster, try git stage
 # TODO: create a list of commits already-imported, so when we run again a same git-watcher, they should be skipped (and removed from the counter list) -- or at least list all the commits that we cherry-picked, if they are matched when we enter on them, show a warning message saying that we already cherry-picked it to FOO (mark this too)
-# TODO: add el_package_*... like in the elive installer to check for newer version, note: the warning can be annoying if displayed multiple times
 
 #===  FUNCTION  ================================================================
 #          NAME:  exit_cleanups
@@ -80,12 +79,14 @@ shared_accounts_state_show(){
     # loop for each user found
     if ((is_shared)) ; then
         echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-        echo -e "  ${el_c_gr}${el_c_blink}Scanning paralel dimensions...${el_c_n}"
+        echo -e "  ${el_c_gr}${el_c_blink}Scanning paralel universes...${el_c_n}"
 
         for _dir in "$shared_d"/*
         do
-            _user="$( basename "$_dir" )"
-            _email="$( cat "$_dir/email.txt" )"
+            [[ ! -d "$_dir" ]] && continue
+
+            _email="$( basename "$_dir" )"
+            _user="$( cat "$_dir/username.txt" )"
             _commit_id="$( cat "$_dir/last_commit_tracked" )"
             _commits_step="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $1}' )"
             _commits_total="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $2}' )"
@@ -104,7 +105,6 @@ shared_accounts_state_show(){
             fi
 
             echo -e "..:: $_user ::.."
-            #echo -e ""
             echo -e "email:   $_email"
             echo -e "step:    ${el_c_n}[${el_c_g}${_commits_step}${el_c_n}/${el_c_y}${_commits_total}${el_c_n}]${el_c_n}  (${_commit_id:0:12})"
 
@@ -124,13 +124,13 @@ shared_accounts_state_show(){
                 fi
 
                 # show available time-traveling capsules
-                if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/review" 2>/dev/null ; then
-                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+                if el_check_dir_has_files "${_dir}/ttc/to_${git_email}/review" 2>/dev/null ; then
+                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_email}/review" | wc -l )"
                     el_explain 0 "__${_user}__ has __${_ttc_counter}__ XXTime-Traveling CapsulesXX for you!"
                 fi
 
-                if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/questions" 2>/dev/null ; then
-                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/questions" | wc -l )"
+                if el_check_dir_has_files "${_dir}/ttc/to_${git_email}/questions" 2>/dev/null ; then
+                    _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_email}/questions" | wc -l )"
                     el_explain 0 "__${_user}__ has __${_ttc_counter}__ XXQuestionsXX in Capsules for you!"
                 fi
 
@@ -176,13 +176,15 @@ shared_accounts_state_show(){
 
     # walk steps?
     if [[ "$_commits_step_biggest" -gt "$counter" ]] ; then
-        el_explain 0 "Seems like __${_commits_step_biggest_user}__ is ahead of you in steps"
+        el_explain 0 "Seems like __${_commits_step_biggest_user}__ is ahead of you"
 
         if el_confirm "Join its commit-id position?" ; then
             commit_id="$_commit_id_biggest"
 
             # update total of commits
             do_count_commits
+            unset commits_history
+            unset counter
             is_recount_position_needed=1
 
             _is_shared_scanned=1
@@ -190,10 +192,10 @@ shared_accounts_state_show(){
     fi
 
 
-    if ((_is_shared_scanned)) ; then
-        el_explain 0 "Finished to scan paralel worlds, press Enter to continue..."
-        read nothing
-    fi
+    #if ((_is_shared_scanned)) ; then
+        #el_explain 0 "Finished to scan paralel worlds, press Enter to continue..."
+        #read nothing
+    #fi
 }
 
 #===  FUNCTION  ================================================================
@@ -205,7 +207,7 @@ shared_accounts_state_show(){
 shared_messages_create(){
     # pre {{{
     el_debug
-    local _message_option _mark_message _entity
+    local _message_option _mark_message _entity _entity_email
 
     # }}}
 
@@ -216,42 +218,45 @@ shared_messages_create(){
     if [[ -z "$shared_d" ]] ; then
         # if we are not running on shared session, just insert an email
         echo -e "\n${el_c_g}Type a destination email:${el_c_n}"
-        read _entity_email
+        read -e _entity_email
 
     else
-        if [[ "$( ls -1 "${shared_d}" | grep -v "$git_username" | wc -l )" -gt 1 ]] ; then
-            ls -1 "${shared_d}" | grep -v "$git_username"
+        if [[ "$( ls -1 "${shared_d}" | grep -v "$git_email" | wc -l )" -gt 1 ]] ; then
+            ls -1 "${shared_d}" | grep -v "$git_email"
             echo -en "${el_c_n}"
 
-            echo -e "\nType an entity:"
-            read _entity
+            # FIXME: improve this: we are using email based now
+            echo -e "\nType an email entity:"
+            read -e _entity_email
         else
-            _entity="$( ls -1 "${shared_d}" | grep -v "$git_username" | tail -1 )"
-            el_explain 0 "Messaging to the XX${_entity}XX carbon-based life form"
+            _entity_email="$( ls -1 "${shared_d}" | grep -v "$git_email" | tail -1 )"
+            el_explain 0 "Messaging to the XX${_entity_email}XX carbon-based life form"
         fi
 
-        if ! [[ -d "${shared_d}/$_entity" ]] ; then
+        if ! [[ -d "${shared_d}/$_entity_email" ]] ; then
             el_error "Carbon-based life form doesn't exist, are you in the correct planet?"
             echo -e "\nType an entity:"
-            read _entity
+            read -e _entity_email
 
-            if ! [[ -d "${shared_d}/$_entity" ]] ; then
+            if ! [[ -d "${shared_d}/$_entity_email" ]] ; then
                 return 0
             fi
         fi
 
         # get email of entity
-        _entity_email="$( cat "${shared_d}/${_entity}/email.txt" | grep "@" )"
+        # FIXME: get nickname instead
+        _entity_email="$( cat "${shared_d}/${_entity_email}/email.txt" | grep "@" )"
     fi
 
+    # FIXME: what?
     if ! echo "$_entity_email" | grep -qs "$_entity_email" ; then
-        el_error "$_entity has not a valid email?: $_entity_email"
+        el_error "$_entity_email has not a valid email?: $_entity_email"
     fi
 
 
     # message type?
     option_show "i" "Import request for this commit"
-    option_show "a" "Ask a question to ${_entity} (not importing required)"
+    option_show "a" "Ask a question to ${_entity_email} (not importing required)"
     ###option_show "r" "Reply a question"
     option_show "q" "quit this menu"
 
@@ -289,6 +294,9 @@ shared_messages_create(){
 
         #echo "$remote_working" > "$conf_remote_work_from_f"
     fi
+
+    read -r remote_working <<< "$remote_working"
+    remote_working="$( echo "$remote_working" | sed -e 's|/|%|g' )"
     # }}}
 
     # send email and set specific values
@@ -298,13 +306,13 @@ shared_messages_create(){
 
             el_explain 0 "Sending email..."
 
-            email-sender -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants to ask you:" <<EOF
+            email-sender -q -t "$_entity_email" -s "$git_username has a question for you" -S "<i style=\"color: #FC61B3;\">${git_email}</i> wants to ask you:" <<EOF
 <p><strong> Message: ${_mark_message} </strong></p>
 
 To know more you need to take a <i>Time-Traveling Capsule</i> to join its universe, for that:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it at: ${working_directory_d})</i></li>
+<li>cd into your git copy of: '${remote_working//%/\/}' <i>(${git_username} has it at: ${working_directory_d})</i></li>
 <li>run the command:  <strong>$(basename $0) -w ${branch_working} ${tool_arguments} -g ${commit_id}</strong></li>
 </ul>
 EOF
@@ -315,13 +323,13 @@ EOF
 
             el_explain 0 "Sending email..."
 
-            email-sender -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #FC61B3;\">${git_username}</i> wants you to consider backporting this commit from '${branch_watch}' into '${branch_working}' " <<EOF
+            email-sender -q -t "$_entity_email" -s "$git_username wants to know if we should backport a commit" -S "<i style=\"color: #FC61B3;\">${git_email}</i> wants you to consider backporting this commit from '${branch_watch}' into '${branch_working}' " <<EOF
 <p><strong>Message: ${_mark_message} </strong></p>
 
 To take your <i>Time-Traveling Capsule</i> you should:
 
 <ul>
-<li>cd into your git copy of: '${remote_working}' <i>(${git_username} has it on ${working_directory_d})</i></li>
+<li>cd into your git copy of: '${remote_working//%/\/}' <i>(${git_username} has it on ${working_directory_d})</i></li>
 <li>run the command:  <strong>$(basename $0) -w ${branch_working} $tool_arguments -g ${commit_id}</strong></li>
 </ul>
 
@@ -339,14 +347,14 @@ EOF
 
     # create shared marks
     if ((is_shared)) ; then
-        mkdir -p "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}"
+        mkdir -p "${shared_personal_d}/ttc/to_$_entity_email/$_message_option/${commit_id}"
 
         if [[ -n "$_mark_message" ]] ; then
-            echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/message.txt"
+            echo "${git_email}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_entity_email/$_message_option/${commit_id}/message.txt"
         fi
 
         # mark position too
-        echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity/$_message_option/${commit_id}/position.txt"
+        echo -e "[$counter/$counter_total] " >> "${shared_personal_d}/ttc/to_$_entity_email/$_message_option/${commit_id}/position.txt"
     fi
 
 }
@@ -394,8 +402,10 @@ scan_travels(){
 
     for _dir in "$shared_d"/*
     do
-        _user="$( basename "$_dir" )"
-        _email="$( cat "$_dir/email.txt" )"
+        [[ ! -d "$_dir" ]] && continue
+
+        _email="$( basename "$_dir" )"
+        _user="$( cat "$_dir/username.txt" )"
         _commit_id="$( cat "$_dir/last_commit_tracked" )"
         _commits_step="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $1}' )"
         _commits_total="$( cat "$_dir/last_commit_tracked_progress" | awk '{print $2}' )"
@@ -406,11 +416,11 @@ scan_travels(){
         fi
 
         # show available time-traveling capsules
-        if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/review" 2>/dev/null ; then
+        if el_check_dir_has_files "${_dir}/ttc/to_${git_email}/review" 2>/dev/null ; then
             _ttc_review=1
         fi
 
-        if el_check_dir_has_files "${_dir}/ttc/to_${git_username}/questions" 2>/dev/null ; then
+        if el_check_dir_has_files "${_dir}/ttc/to_${git_email}/questions" 2>/dev/null ; then
             _ttc_question=1
         fi
 
@@ -431,7 +441,7 @@ scan_travels(){
         fi
 
         if ((_ttc_review)) ; then
-            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/review" | wc -l )"
+            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_email}/review" | wc -l )"
             #el_explain 0 "XX${_user}XX wants you to consider backporting XX${_ttc_counter}XX __commits__:"
             el_explain 0 "XX${el_c_underline}${_ttc_counter} Backporting requestsXX:"
 
@@ -454,11 +464,11 @@ scan_travels(){
                 fi
                 echo -e "${el_c_n}"
 
-            done 3<<< "$( find "${_dir}/ttc/to_${git_username}/review" -mindepth 1 -maxdepth 1 -type d )"
+            done 3<<< "$( find "${_dir}/ttc/to_${git_email}/review" -mindepth 1 -maxdepth 1 -type d )"
         fi
 
         if ((_ttc_question)) ; then
-            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_username}/questions" | wc -l )"
+            _ttc_counter="$( ls -1 "${_dir}/ttc/to_${git_email}/questions" | wc -l )"
             #el_explain 0 "XX${_user}XX wants you to ask you XX${_ttc_counter}XX things about specific commits:"
             el_explain 0 "XX${el_c_underline}${_ttc_counter} QuestionsXX:"
 
@@ -481,7 +491,7 @@ scan_travels(){
                 fi
                 echo -e "${el_c_n}"
 
-            done 3<<< "$( find "${_dir}/ttc/to_${git_username}/questions" -mindepth 1 -maxdepth 1 -type d )"
+            done 3<<< "$( find "${_dir}/ttc/to_${git_email}/questions" -mindepth 1 -maxdepth 1 -type d )"
         fi
 
 
@@ -584,7 +594,6 @@ conf_share_setup(){
     # TODO: INBOX: show by default message to "you"
 
 
-
     # setup new shared conf
     if ! [[ -L "$conf_repo_d/shared" ]] ; then
         if el_confirm "Enable sharing features?" ; then
@@ -593,132 +602,158 @@ conf_share_setup(){
 
             # dropbox shared dir
             local _dropbox_dir
-            if [[ -z "$shared_main_d" ]] ; then
+            if [[ -n "$shared_main_d" ]] ; then
+                _dropbox_dir="$shared_main_d"
+            else
                 _dropbox_dir="$( find-approximate-matching-homedir dropbox )"
                 if [[ -e "$_dropbox_dir" ]] ; then
-                    _dropbox_dir="$_dropbox_dir/git-watcher-eworks"
+                    _dropbox_dir="$_dropbox_dir/git-watcher-shared-work"
                 else
-                    _dropbox_dir="$HOME/Dropbox/git-watcher-eworks"
+                    _dropbox_dir="$HOME/Dropbox/git-watcher-shared-work"
                 fi
+            fi
+
+            # insert shared dir on dropbox, default name exist to ask for a new shared one (you don't want to share your main one with everybody)
+            if [[ -d "$_dropbox_dir" ]] ; then
+                echo -e "\nInsert a directory from your Dropbox folder to use it for the sharing features (insert a new one if you are creating a new share, or type an existing directory if you want to join a share. Use Tab to autocomplete paths)\nFor example: $_dropbox_dir"
+                read -e shared_main_d
+                if [[ -z "$shared_main_d" ]] ; then
+                    echo -e "\nYou must type the directory path previously said:"
+                    read -e shared_main_d
+                fi
+
+                # remove extra leading blank chars
+                read -r shared_main_d <<< "${shared_main_d%/}"
+
             else
-                _dropbox_dir="$shared_main_d"
+                shared_main_d="${_dropbox_dir%/}"
             fi
 
-            echo -e "\nTo be synced with others we use Dropbox, insert the path of your main shared dropbox directory\nfor example: $_dropbox_dir (TAB to autocomplete)"
-            read -e shared_main_d
-            # remove extra leading blank chars
-            read -r shared_main_d <<< "${shared_main_d%/}"
+            # join an existing share
+            #if [[ -d "$shared_main_d" ]] && [[ "$( find "$shared_main_d" -mindepth 2 -maxdepth 2 -type d | grep "::.*::" | wc -l )" -gt 0 ]] ; then
+            if [[ -d "$shared_main_d/$remote_working/$repo_id_shared" ]] ; then
+                #if [[ "$( find "$shared_main_d" -mindepth 2 -maxdepth 2 -type d | grep "::.*::" | wc -l )" -gt 1 ]] ; then
+                    #find "$shared_main_d" -mindepth 2 -maxdepth 2 -type d
+                    #echo -e "\nType the name ^ of the wanted shared to use"
+                    #read -e _link
+                #else
+                    #_link="$( find "$shared_main_d" -mindepth 2 -maxdepth 2 -type d | grep "::.*::" | tail -1 )"
+                #fi
+                _link="$shared_main_d/$remote_working/$repo_id_shared"
 
+                # if has files, its already shared:
+                if el_check_dir_has_files "$_link" ; then
+                    ln -s "$_link" "$conf_repo_d/shared"
+                    el_explain 0 "Your __shared environment__ is ready!"
+                    el_explain 0 "Run again the tool __to start using it__..."
+                fi
 
-            # check it
-            if [[ -d "$shared_main_d" ]] ; then
-                mkdir -p "$shared_main_d"
-                # add a small readme file
-                echo -e "This directory is used for share git-watcher projects, do not delete it, EVER! :) so it is used automagically by git-watcher tool, you don't need to do anything with it, but you can manually modify things if you know what are you doing!, there's no manual pages so use your intuition powers!" > "$shared_main_d/README.txt"
+            else
 
-                # save this conf as default
-                echo "$shared_main_d" > "$conf_d/shared_main_default_dir.txt"
-            fi
+                # create new share
+                if [[ ! -d "$shared_main_d" ]] ; then
+                    mkdir -p "$shared_main_d"
+                    # add a small readme file
+                    echo -e "This directory is used for share git-watcher projects, do not delete it, so it is used automagically by the git-watcher tool, you don't need to do anything with it, but you can manually modify things on it! There's no manual pages so use your intuition superpowers!" > "$shared_main_d/README.txt"
+                fi
 
-            # remote working place, needed for use as an identifier in the shares
-            if [[ -z "$remote_working" ]] ; then
-                if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
-                    echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
-                    command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+                # remote working place, needed for use as an identifier in the shares
+                if [[ -z "$remote_working" ]] ; then
+                    if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                        echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
+                        command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
-                    echo -e "\nInsert remote repo:"
-                    read -e remote_working
-
-                    # translate remote-id to url, which is what we need
-                    if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
-                        remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
-                        # remove extra leading blank chars
-                        read -r remote_working <<< "$remote_working"
-                    fi
-
-
-                    # small check, just in case
-                    if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
-                        el_error "Have you inserted the identifier instead of the remote URL? mmh... do it again:"
+                        echo -e "\nInsert remote repo:"
                         read -e remote_working
+
+                        # translate remote-id to url, which is what we need
+                        if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
+                            remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
+                        fi
+
+
+                        # small check, just in case
+                        if ! echo "$remote_working" | grep -qsE "(@|:|/)" ; then
+                            el_error "Have you inserted the identifier instead of the remote URL? mmh... do it again:"
+                            read -e remote_working
+                        fi
+                    else
+                        remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
                     fi
-                else
-                    remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
+
+                    echo "$remote_working" > "$conf_remote_work_from_f"
                 fi
 
-                echo "$remote_working" > "$conf_remote_work_from_f"
-            fi
+                read -r remote_working <<< "$remote_working"
+                remote_working="$( echo "$remote_working" | sed -e 's|/|%|g' )"
 
-            # send invitations (+ instructions) via email
-            echo -e "\nGive me a list of emails (comma-separated) to send invitations to this watcher with the needed instructions (can be empty):"
-            read _emails_invitations
-            _emails_invitations="$( echo "$_emails_invitations" | tr ',' ' ' | tr ';' ' ' | tr ' ' '\n' )"
-            while read -ru 3 _email
-            do
-                [[ -z "$_email" ]] && continue
 
-                el_explain 0 "Sending email to __${_email}__"
+                # send invitations (+ instructions) via email
+                echo -e "\nInsert a list of emails to send invitations to this watcher with the needed instructions (can be empty):"
+                read -e _emails_invitations
+                _emails_invitations="$( echo "$_emails_invitations" | tr ',' ' ' | tr ';' ' ' | tr ' ' '\n' | sort -u )"
+                while read -ru 3 _email
+                do
+                    [[ -z "$_email" ]] && continue
 
-                email-sender -t "$_email" -s "$git_username wants to share a $(basename $0) with you" -S "These are the needed instructions to join the watcher:" <<EOF
-This could be one of the most amazing tools that you may have never see!
-
-First you need to accept the dropbox directory shared with you (you should have an invitation in your email)
-
-After, go to your git repository that references to <i>'${remote_working}'</i>, and run from it:
-
-<ul>$ <strong>$(basename $0) $tool_arguments</strong></ul>
-
-After to have it loaded, exit from $(basename $0) and select the options:
-<li>Save the session</li>
-<li>Enable Share features</li>
-<li>Fill up the correct sharing information</li>
-
-Now just run <strong>$(basename $0) $tool_arguments</strong> again to start using it in shared mode!
-
+                    el_explain 0 "Sending email to __${_email}__"
+                    email-sender -q -t "$_email" -s "$git_username wants to share a $(basename $0) with you" -S "Instructions to join the git-watcher of <i style=\"color: #FC61B3;\">${git_email}</i>:" <<EOF
+    <i>This could be one of the most amazing tools that you may have never see!</i>
+    <ol>
+        <li>Open your email with the Dropbox Shared invitation, your friend needs to give you Edit access to this directory first</li>
+        <li>After, go to your git repository clone that references to <code>${remote_working//%/\/}</code>, and run from it the command: <strong>$(basename $0) $tool_arguments</strong> </li>
+        <li>Then exit from git-watcher, saving the Session with the Shared features, and follow the instructions</li>
+        <li>Now just run again '<strong>$(basename $0) $tool_arguments</strong>' to start using it in shared mode!</li>
+    </ol>
 EOF
+                done 3<<< "$( echo "$_emails_invitations" | grep "@" )"
 
-            done 3<<< "$( echo "$_emails_invitations" | grep "@" )"
 
+                # create location for this repository identifier
+                if ! [[ -d "$shared_main_d/$remote_working/$repo_id_shared" ]] ; then
+                    mkdir -p "$shared_main_d/$remote_working/$repo_id_shared"
+                    el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id_shared}__"
 
-            # create location for this repository identifier
-            if ! [[ -d "$shared_main_d/$remote_working/$repo_id_shared" ]] ; then
-                mkdir -p "$shared_main_d/$remote_working/$repo_id_shared"
-                el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id_shared}__"
-
-                # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
-                if el_confirm "You need to invite collaborators from Dropbox too to use this directory, open Dropbox Web now?" ; then
-                    { /etc/alternatives/x-www-browser "https://www.dropbox.com/home" & disown ; } 1>/dev/null 2>&1
+                    # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
+                    if el_confirm "If you don't have Shared yet the '${shared_main_d##*/}' directory from your Dropbox with your collaborators you need to do it now, allowing them to edit it. Open Dropbox Web settings now?" ; then
+                        { /etc/alternatives/x-www-browser "https://www.dropbox.com/home" & disown ; } 1>/dev/null 2>&1
+                        sleep 5
+                    fi
                 fi
+
+                # add the shared link
+                ln -s "$shared_main_d/$remote_working/$repo_id_shared" "$conf_repo_d/shared"
+
+                # instructions
+                el_explain 0 "You are now ready to work with others on this shared watcher!"
+                el_explain 0 "The next time that you work on this watcher, your collaborators will be __notified__ when using it too, and in the same way you __can continue__ from their updated steps"
+
             fi
 
-            ln -s "$shared_main_d/$remote_working/$repo_id_shared" "$conf_repo_d/shared"
-            el_explain 2 "linked shared location on __$conf_repo_d/shared__"
 
-
+            # include your user structured directory
             shared_d="$conf_repo_d/shared"
-            shared_personal_d="$shared_d/$git_username"
+            shared_personal_d="$shared_d/$git_email"
             mkdir -p "$shared_personal_d"
 
-            echo "$git_email" > "$shared_personal_d/email.txt" # and this is how we expect to be contacted
-            el_explain 2 "added your email reference in __$shared_personal_d/email.txt"
+            echo "$git_email" > "$shared_personal_d/email.txt"
+            echo "$git_username" > "$shared_personal_d/username.txt"
 
             # save gravatar too, w00t!
-            curl -s "http://www.gravatar.com/avatar/"$( echo -n "$git_email" | awk '{print tolower($0)}' | tr -d '\n ' | md5sum --text | tr -d '\- ' )"?s=48&d=404" > "$shared_personal_d/gravatar.png"
+            curl -s "http://www.gravatar.com/avatar/"$( echo -n "$git_email" | awk '{print tolower($0)}' | tr -d '\n ' | md5sum --text | tr -d '\- ' )"?s=64&d=404" > "$shared_personal_d/gravatar.png"
             if ! file "$shared_personal_d/gravatar.png" | grep -qsi "image" ; then
                 rm -f "$shared_personal_d/gravatar.png"
             fi
 
 
-
             # sync our changes
             run_dropbox
 
-            # done
-            el_explain 0 "You are now ready to work with others on this shared watcher! __enjoy__"
-            el_explain 0 "The next time that you will work on this watcher, your collaborators will be __notified__ and you __can walk__ on their steps"
-            el_explain 0 "Remote collaborators: just go to their git repo clone and run __$(basename $0) ${tool_arguments}__, then exit saving session and sharing"
+            # save this conf as default
+            echo "$shared_main_d" > "$conf_d/shared_main_default_dir.txt"
 
             # save shared confs at exit
+            rm -f "$conf_repo_d/no-shared"
             is_shared=1
 
         else
@@ -740,9 +775,10 @@ run_dropbox(){
     el_dependencies_check "dropbox"
 
     # }}}
-    if ! ps ux | grep -v grep | grep -qs "$HOME/\.dropbox-dist/" ; then
+    if ! ps ux | grep -v grep | grep -qs "$HOME/\.dropbox-dist/.*dropbox" ; then
         el_explain 0 "Starting dropbox..."
         dropbox start -i  2>/dev/null 1>&2
+        sleep 5
     fi
 }
 
@@ -836,7 +872,7 @@ go_to_commit(){
     do_count_commits
 
     # shared things here? {{{
-    for dir in "${shared_d}/"*"/ttc/to_${git_username}/questions"/*
+    for dir in "${shared_d}/"*"/ttc/to_${git_email}/questions"/*
     do
         [[ -d "$dir" ]] || continue
 
@@ -853,14 +889,14 @@ go_to_commit(){
             echo -en "${el_c_n}"
 
             echo -e "Reply to $_ttc_id_user ? (empty for cancel)"
-            read _mark_message
+            read -e _mark_message
 
             if [[ -n "$_mark_message" ]] ; then
                 mkdir -p "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}"
 
                 el_explain 0 "Sending email..."
 
-                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> thinks that:" <<EOF
+                email-sender -q -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_email}</i> thinks that:" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
@@ -879,7 +915,7 @@ EOF
 
 
                 cat "$dir/message.txt" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
-                echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+                echo "${git_email}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
 
                 rm -rf "$dir"
             else
@@ -890,7 +926,7 @@ EOF
         fi
     done
     # requests to deal with?
-    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    for dir in "${shared_d}/"*"/ttc/to_${git_email}/review"/*
     do
         [[ -d "$dir" ]] || continue
 
@@ -956,7 +992,7 @@ travel_restore(){
 
     # Questions to deal with?
     # should create a new question with the previous question pre-pended? sounds like the easiest way
-    for dir in "${shared_d}/"*"/ttc/to_${git_username}/questions"/*
+    for dir in "${shared_d}/"*"/ttc/to_${git_email}/questions"/*
     do
         [[ -d "$dir" ]] || continue
 
@@ -973,14 +1009,14 @@ travel_restore(){
             echo -en "${el_c_n}"
 
             echo -e "Reply to $_ttc_id_user ? (empty for cancel)"
-            read _mark_message
+            read -e _mark_message
 
             if [[ -n "$_mark_message" ]] ; then
                 mkdir -p "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}"
 
                 el_explain 0 "Sending email..."
 
-                email-sender -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_username}</i> thinks that:" <<EOF
+                email-sender -q -t "$_ttc_id_user_email" -s "$git_username has answered you" -S "<i style=\"color: #FC61B3;\">${git_email}</i> thinks that:" <<EOF
 <p><strong>
 $_mark_message
 </strong></p>
@@ -999,7 +1035,7 @@ EOF
 
 
                 cat "$dir/message.txt" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
-                echo "${git_username}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
+                echo "${git_email}: $_mark_message" >> "${shared_personal_d}/ttc/to_$_ttc_id_user/questions/${commit_id}/message.txt"
 
                 rm -rf "$dir"
             else
@@ -1010,7 +1046,7 @@ EOF
         fi
     done
     # requests to deal with?
-    for dir in "${shared_d}/"*"/ttc/to_${git_username}/review"/*
+    for dir in "${shared_d}/"*"/ttc/to_${git_email}/review"/*
     do
         [[ -d "$dir" ]] || continue
 
@@ -1090,7 +1126,7 @@ show_states(){
                 #echo '---------'
 
                 echo -e "${el_c_b}Watchers Tracking:${el_c_n}"
-                echo -e "on Branch: | only Keyword: | on Files: | Authored by: | Progress:"
+                echo -e "Progress: | From Branch: | To branch: | Options: | | Working Directory:"
                 echo -e "|"
 
                 is_header_show=1
@@ -1098,32 +1134,26 @@ show_states(){
 
             el_debug "entry is $line"
 
-            _dir_sources="$(    echo "$line" | awk -F "::" '{print $1}' )"
-            _branch_working="$( echo "$line" | awk -F "::" '{print $2}' )"
-            _keyword_search="$( echo "$line" | awk -F "::" '{print $3}' )"
-            _files_search="$(   echo "$line" | awk -F "::" '{print $4}' | sed -e 's|#|/|g' )"
-            _author_search="$(  echo "$line" | awk -F "::" '{print $5}' )"
+            _dir_sources="$(    echo "$line" | awk -F "::" '{print $1}' | sed -e 's|%|/|g' )"
+            _branch_watch="$(   echo "$line" | awk -F "::" '{print $2}' )"
+            _branch_working="$( echo "$line" | awk -F "::" '{print $3}' )"
+            _options_before="$( echo "$line" | awk -F "::" '{print $4}' )"
+            _options_after="$(  echo "$line" | awk -F "::" '{print $5}' )"
 
-            #_commits_total="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | awk '{print $2}' )" )"
-            # FIXME: is not remaining but actual progress?
             _commits_remaining="$( echo "$( cat "$conf_d/$line/last_commit_tracked_progress" 2>/dev/null | tr ' ' '/'  )" )"
-            #_commits_done="$( echo "$_commits_total - $_commits_remaining" | bc -l 2>/dev/null )"
-
-            #if [[ -n "$_commits_done" ]] ; then
-                #_progress="$( echo "${_commits_done}/${_commits_remaining}" )"
-            #fi
 
 
             if [[ "$_branch_working" = "$branch_working" ]] \
-                && [[ "$_keyword_search" = "$keyword_search" ]] \
-                && [[ "$_files_search" = "$files_search" ]] \
-                && [[ "$_author_search" = "$author_search" ]] ; then
-                echo -e "${el_c_g}$_branch_working | $_keyword_search | $_files_search | $_author_search | $_commits_remaining  ${el_c_y}${el_c_n}"
+                && [[ "$_branch_watch" = "$branch_watch" ]] \
+                && [[ "$_options_before" = "${options_extra_git_before[@]//\//%}" ]] \
+                && [[ "$_options_after" = "${options_extra_git_after[@]//\//%}" ]] \
+                ; then
+                echo -e "${el_c_g} $_commits_remaining | $_branch_watch | $_branch_working | $_options_before | $_options_after | $_dir_sources  ${el_c_y}${el_c_n}"
             else
 
                 if [[ -n "$_branch_working" ]] ; then
 
-                    echo -e "$_branch_working | $_keyword_search | $_files_search | $_author_search | $_commits_remaining "
+                    echo -e "$_commits_remaining | $_branch_watch | $_branch_working | $_options_before | $_options_after | $_dir_sources"
 
                 fi
             fi
@@ -1259,12 +1289,13 @@ do_count_commits(){
                 fi
             fi
 
-            #echo -en "\r\033[K${el_c_b}Calculating total commits and our position: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
             echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
         fi
 
     done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
-    if [[ "$counter" -gt "$counter_total" ]] ; then
+    if [[ "$counter" -le "$counter_total" ]] ; then
+        echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+    else
         echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[???/$counter_total]   ${el_c_n}"
     fi
     echo ""
@@ -1554,7 +1585,7 @@ option_show(){
 
     char="$1"
     description="$2"
-    el_check_variables "char|description"
+    el_check_variables "char"
 
     # }}}
 
@@ -1618,6 +1649,9 @@ options_main_interact(){
     option_show "U"         "Update watching branch (pull --rebase)"
 
     option_show "z"         "Undo last commit in your working branch"
+    #if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+        option_show "Z"         "Delete this watcher"
+    #fi
     option_show "c"         "compile (make), useful for check if new code is compatible"
     if [[ -n "$user_input_command" ]] ; then
         #option_show "r"     " > Run:  $user_input_command"
@@ -1627,8 +1661,10 @@ options_main_interact(){
     fi
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
-    option_show "q"         "Quit & Save"
-    option_show "Q"         "Quit!"
+    option_show "q"         "Quit"
+    if [[ ! -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+        option_show "Q"         "Quit & Save"
+    fi
     echo -e "${el_c_b}================================================================${el_c_n}"
 
     if grep -qs "^${commit_id}" "$conf_imported_commits_list_f" "${conf_imported_commits_list_shared_f}"  2>/dev/null ; then
@@ -2060,6 +2096,12 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
+        Z)  # delete this watcher
+            el_explain 0 "removing directory \"${conf_repo_d}\""
+            rm -rf "${conf_repo_d}"
+            el_explain 0 "Watcher removed, you can create it again as: __$(basename $0) ${tool_arguments}__"
+            exit 0
+            ;;
         c)  # make
             if make ; then
                 el_explain 0 "__Compiled Correctly__"
@@ -2135,17 +2177,15 @@ options_main_interact(){
             # return back to main menu
             $FUNCNAME
             ;;
-        q)  # quit
+        Q)  # quit
 
             # ask if save
             if ! [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-                if el_confirm "Do you want to save this session?" ; then
-                    # add a mark to know that this is a persistent watcher to save
-                    touch "$conf_repo_d/flags/persistent_watcher"
+                # add a mark to know that this is a persistent watcher to save
+                touch "$conf_repo_d/flags/persistent_watcher"
 
-                    # save some needed info
-                    echo "$branch_working" > "$conf_branch_working_f"
-                fi
+                # save some needed info
+                echo "$branch_working" > "$conf_branch_working_f"
             fi
 
             # ask if share, only if we are saving session
@@ -2159,7 +2199,7 @@ options_main_interact(){
             exit
 
             ;;
-        Q)
+        q) # quit
             exit
             ;;
 
@@ -2178,12 +2218,11 @@ options_main_interact(){
 #===============================================================================
 usage_show(){
     echo ""
-    echo -e "$(basename $0) is a tool to watch what recently happened to a git repository and gives you some handy features like cherry-picking." 1>&2
+    echo -e "$(basename $0) is an amazing GIT tool that gives you multiple features, being especially useful to maintain forks, track changes in source codes, backport features between branches, and investigate things in the history of changes" 1>&2
 
-    echo -e "Important notes: " 1>&2
-    echo -e " - you must be in the branch where you want to apply the work" 1>&2
-    echo -e " - watching states will be saved and shareable among remotes, check the .$(basename $0) dir" 1>&2
-    echo -e " - the last-commit ID is memorized, based on the directory-name/working-branch/keyword name" 1>&2
+    #echo -e "Important notes: " 1>&2
+    #echo -e " - watching states will be saved and can be shareable among collaborators, check the '${conf_d}' dir" 1>&2
+    #echo -e " - the last-commit ID is memorized, based on the directory-name/working-branch/keyword name" 1>&2
 
     echo -e ""
     echo -e "Options:"
@@ -2197,11 +2236,11 @@ usage_show(){
     echo -e ""
     option_show "-g" "Go to commit-id (temporally)"
     echo -e ""
-    option_show "Notes: use -s to not play sound notifications"
+    option_show "Notes: use -s to not playing sound notifications"
 
 
     echo -e ""
-    echo -e "Example of a new watcher: $(basename $0) -b master -k fix" 1>&2
+    echo -e "Example of a new watcher: $(basename $0) -b master -k backports" 1>&2
     echo -e "To delete an existing watcher just remove the dir reference in .git-watcher" 1>&2
 
     echo -e ""
@@ -2324,9 +2363,6 @@ main(){
     # configurations saved {{{
     conf_d="$HOME/.config/$(basename $0)"
 
-    # compatibility replacements
-    files_search_regexed="$( echo "$files_search" | sed -e 's|/|#|g' )"
-
     # checks {{{
 
     if ! el_check_dirs "$conf_d" 2>/dev/null ; then
@@ -2361,9 +2397,10 @@ main(){
     # }}}
 
     # append keyword in conf file if we have it
-    working_directory_identifier="$( pwd | sed -e 's|/|#|g' )"
-    repo_id="${working_directory_identifier}::${branch_watch}::${keyword_search}::${files_search_regexed}::${author_search}"
-    repo_id_shared="${branch_watch}::${keyword_search}::${files_search_regexed}::${author_search}"
+    working_directory_identifier="$( pwd | sed -e 's|/|%|g' )"
+    # XXX update show_states too if you change this:
+    repo_id="${working_directory_identifier}::${branch_watch}::${branch_working}::${options_extra_git_before[@]//\//%}::${options_extra_git_after[@]//\//%}"
+    repo_id_shared="${branch_watch}::${branch_working}::${options_extra_git_before[@]//\//%}::${options_extra_git_after[@]//\//%}"
     conf_repo_d="${conf_d}/${repo_id}"
 
     mkdir -p "$conf_repo_d/flags"
@@ -2489,8 +2526,31 @@ main(){
         fi
     fi
 
-    git_username="$( command git config user.name | tail -1 )"
+    # get username / email or assign them if they are not already added
     git_email="$( command git config user.email | tail -1 )"
+    if [[ -z "$git_email" ]] ; then
+        echo -e "Insert your email (to use with GIT)"
+        read -e git_email
+        read -r git_email <<< "$git_email"
+        if [[ -n "$git_email" ]] ; then
+            command git config --global user.email "$git_email"
+        else
+            el_error "You need to insert an email assigned with your GIT ID, aborting..."
+            exit 1
+        fi
+    fi
+    git_username="$( command git config user.name | tail -1 )"
+    if [[ -z "$git_username" ]] ; then
+        echo -e "Insert your GIT username / nickname"
+        read -e git_username
+        read -r git_username <<< "$git_username"
+        if [[ -n "$git_username" ]] ; then
+            command git config --global user.name "$git_username"
+        else
+            el_error "You need to insert an username assigned with your GIT ID, aborting..."
+            exit 1
+        fi
+    fi
 
     # do we are in a saved session?
     if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
@@ -2508,7 +2568,7 @@ main(){
         is_shared=1
 
         shared_d="$conf_repo_d/shared"
-        shared_personal_d="$shared_d/$git_username"
+        shared_personal_d="$shared_d/$git_email"
         conf_imported_commits_list_shared_f="${shared_d}/commits_imported_list"
 
         # start the share daemon

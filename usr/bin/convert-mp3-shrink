@@ -53,10 +53,10 @@ main(){
 
         if { [[ "$rate" -gt 160 ]] && [[ "$rate" -lt 350 ]] ; }  || [[ -z "$rate" ]] ; then
             #echo convert "$file"
-            el_explain 0 "converting $(basename "$file" )"
+            el_explain 0 "converting: $file"
 
             # v4 for a much more quality (flac converter)
-            precache "$file" 2>/dev/null
+            precache "$file" 1>/dev/null
 
             lame --vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"  1>"$logs" 2>&1
             returned="$?"
@@ -80,6 +80,8 @@ main(){
             # make it at least 200k smaller or ignore
             size_dest_extra="$(( $size_dest + 200 ))"
 
+            el_debug "orig ${size_orig} vs dest ${size_dest} (${size_dest_extra})"
+
             if [[ "$size_dest_extra" -lt "$size_orig" ]] \
                 && [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                 # add a visual mark (ls) to see that we have converted it
@@ -89,13 +91,13 @@ main(){
                 if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
                     el_explain 0 "Oops, resulting file was bigger, using copy instead"
                 else
-                    NOREPORTS=1 el_error "Less than 800 kb, maybe broken file, copying back the original one"
+                    NOREPORTS=1 el_warning "Less than 800 kb, maybe broken file, copying back the original one"
                 fi
                 cp -f "$file" "$dest"
             fi
 
         else
-            el_explain 0 "Using original file: copied back '$(basename "$file" )'"
+            el_explain 0 "Using original file (already good sized): copied back '$(basename "$file" )'"
             cp -f "$file" "$dest"
         fi
     done 3<<< "$( find "$from" -type f -iname '*'.mp3 | sed -e 's|^\./||g' )"

@@ -1063,7 +1063,7 @@ el_package_upgrade_fast(){
             TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i *deb 1>/dev/null
             TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
-            if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get -f install -q=2 -y ; then
+            if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
                 el_debug "updated packages successfully: $@"
                 failed=0
             else
@@ -1072,14 +1072,14 @@ el_package_upgrade_fast(){
                 el_aptget check 1>/dev/null
 
                 TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
-                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get -f install -q=2 -y
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y
 
 
                 # try to install again
                 TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i *deb 1>/dev/null
                 TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
-                if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get -f install -q=2 -y ; then
+                if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
                     el_debug "updated packages successfully: $@"
                     failed=0
                 else
@@ -1090,7 +1090,7 @@ el_package_upgrade_fast(){
             el_sudo dpkg -i *deb
             el_sudo dpkg --configure -a
 
-            if el_sudo apt-get -f install -q=2 -y ; then
+            if el_aptget -f install -q=2 -y ; then
                 el_debug "updated packages successfully: $@"
                 failed=0
             else
@@ -1100,7 +1100,7 @@ el_package_upgrade_fast(){
                 el_sudo dpkg -i *deb
                 el_sudo dpkg --configure -a
 
-                if el_sudo apt-get -f install -q=2 -y ; then
+                if el_aptget -f install -q=2 -y ; then
                     el_debug "updated packages successfully: $@"
                     failed=0
                 else

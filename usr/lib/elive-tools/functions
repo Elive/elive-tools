@@ -912,6 +912,9 @@ el_package_upgrade_fast(){
         return 1
     fi
 
+    # wait for unlock
+    el_aptget check 1>/dev/null
+
     # checks
     if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
         el_aptget_update force
@@ -3466,7 +3469,7 @@ el_get_machine_id(){
 #   apt-get wrapper with lock feature
 #-------------------------------------------------------------------------------
 el_aptget(){
-    local is_waiting i j
+    local is_waiting i j is_shown
     i=0
 
     tput sc
@@ -3478,7 +3481,14 @@ el_aptget(){
             3 ) j="/" ;;
         esac
         tput rc
-        echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
+        if ((is_interactive)) ; then
+            echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
+        else
+            if [[ -n "$DISPLAY" ]] && ! ((is_shown)) ; then
+                el_notify normal logo-elive "Waiting for other software managers to finish before to continue..."
+                is_shown=1
+            fi
+        fi
         is_waiting=1
 
         sleep 0.5

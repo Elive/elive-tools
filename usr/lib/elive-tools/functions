@@ -761,48 +761,6 @@ EOF
 }
 
 #-------------------------------------------------------------------------------
-#   apt-get wrapper with lock feature
-#-------------------------------------------------------------------------------
-el_aptget(){
-    local is_waiting i j
-    i=0
-
-    tput sc
-    while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
-        case $(($i % 4)) in
-            0 ) j="-" ;;
-            1 ) j="\\" ;;
-            2 ) j="|" ;;
-            3 ) j="/" ;;
-        esac
-        tput rc
-        echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
-        is_waiting=1
-
-        sleep 0.5
-        ((i=i+1))
-    done
-
-    # run what we want
-    if [[ "$UID" = 0 ]] ; then
-        TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
-    else
-        if el_check_sudo_automated ; then
-            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo apt-get "$@"
-        else
-            if [[ "${DISPLAY}" = ":0.0" ]] ; then
-                if ! el_dependencies_check gksu ; then
-                    el_dependencies_install "gksu"
-                fi
-                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get "$@"
-            else
-                #su -c "TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get $@" root
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $@' root"
-            fi
-        fi
-    fi
-}
-#-------------------------------------------------------------------------------
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){
@@ -3503,6 +3461,52 @@ el_get_machine_id(){
         el_error "no machine id found"
     fi
 }
+
+#-------------------------------------------------------------------------------
+#   apt-get wrapper with lock feature
+#-------------------------------------------------------------------------------
+el_aptget(){
+    local is_waiting i j
+    i=0
+
+    tput sc
+    while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+        case $(($i % 4)) in
+            0 ) j="-" ;;
+            1 ) j="\\" ;;
+            2 ) j="|" ;;
+            3 ) j="/" ;;
+        esac
+        tput rc
+        echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
+        is_waiting=1
+
+        sleep 0.5
+        ((i=i+1))
+    done
+
+    # run what we want
+    if [[ "$UID" = 0 ]] ; then
+        TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
+    else
+        if el_check_sudo_automated ; then
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo apt-get "$@"
+        else
+            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+                if ! el_dependencies_check gksu ; then
+                    el_dependencies_install "gksu"
+                fi
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get "$@"
+            else
+                #su -c "TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get $@" root
+                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $@' root"
+            fi
+        fi
+    fi
+}
+
+
+
 
 ###################################################################
 # DEPRECATED FUNCTIONS TO FALLBACK:

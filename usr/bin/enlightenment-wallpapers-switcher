@@ -8,9 +8,9 @@ main(){
     # pre {{{
     local file
 
-    if grep -qs "boot=live" /proc/cmdline ; then
-        is_live=1
-    fi
+    #if grep -qs "boot=live" /proc/cmdline ; then
+        #is_live=1
+    #fi
 
     for arg in "$@"
     do
@@ -19,6 +19,11 @@ main(){
                 time_switching_seconds="${arg##--delay=}"
                 shift
                 ;;
+            --wait-start=*)
+                time_wait_startup="${arg##--wait-start=}"
+                shift
+                ;;
+
         esac
     done
 
@@ -36,9 +41,11 @@ main(){
     #do
 
     # wait a bit before to start
-    if ((is_live)) ; then
-        sleep 40
+    if [[ -z "$time_wait_startup" ]] ; then
+        time_wait_startup=40
     fi
+
+    sleep $time_wait_startup
 
     el_debug "Starting demo switch between wallpapers"
 

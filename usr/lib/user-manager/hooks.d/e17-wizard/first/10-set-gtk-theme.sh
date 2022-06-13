@@ -9,6 +9,7 @@ e16_set_release_wallpaper(){
             eesh bg xset "$name" 0 0 0 "$wallpaper" 0 0 0 0 1024 1024 "" 0 0 0 0 0
             if eesh bg list | grep -qs "^${name}$" ; then
                 eesh bg use "$name" 0
+                eesh bg use "$name" 1
             else
                 el_warning "bg not correctly configured?\n$(eesh bg list)"
             fi

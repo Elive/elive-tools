@@ -3,7 +3,7 @@
 # set a specific wallpaper for the actual release if there's any
 e16_set_release_wallpaper(){
     if [ -n "$EROOT" ] && [ -d /etc/elive/wallpaper ] ; then
-        wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'png \) | tail -1 )"
+        wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
         if [ -s "$wallpaper" ] ; then
             name="$( echo "$wallpaper" | sed -e 's|^.*/||g' -e 's|\.*$||g' )"
             eesh bg xset "$name" 0 0 0 "$wallpaper" 0 0 0 0 1024 1024 "" 0 0 0 0 0

@@ -91,6 +91,11 @@ main(){
         command="(piped)"
     else
 
+        if [[ -z "$1" ]] || [[ ! -s "$1" ]] ; then
+            el_error "not file given"
+            exit 1
+        fi
+
         if [[ "${1}" = *"crashdump"* ]] ; then
             # Unfortunately at this time, pastebin.com doesn't works, says wrong api, so just notice the user with this:
             el_explain 0 "File is a crashdump, pastebin.com does a __very readable__ syntax if you use GDB, you should paste it manually if you want it"

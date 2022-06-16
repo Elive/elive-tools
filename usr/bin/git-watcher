@@ -1096,7 +1096,7 @@ show_history(){
 
         command git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
     else
-        el_explain 0 "Recent history in your working branch:"
+        el_explain 0 "Recent history in your working branch (newest to oldest):"
         command git --no-pager log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -12
         # seems like we miss a newline:
         echo
@@ -1508,7 +1508,7 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
     if command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" ; then
-        if [[ "$( command git diff --unified=0 | wc -l )" = 0 ]] ; then
+        if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" = 0 ]] ; then
             # last import shows an empty diff, like it was already included in the history or is a useless commit for our branch
             el_explain 0 "\nXXWarning:XX seems like this commit didn't changed anything, probably because the code was already imported, you can keep it for historical purposes or you can remove it to have a more clean history."
             if el_confirm "Remove it?" ; then
@@ -1518,6 +1518,7 @@ do_cherry_pick(){
             # correctly imported
 
             command git --no-pager show
+
             notify_success
             el_explain 0 "__Successfully applied!__"
             #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
@@ -1547,6 +1548,7 @@ do_cherry_pick(){
 
 
     show_history
+    LC_ALL=C sleep 0.4
 
 }
 

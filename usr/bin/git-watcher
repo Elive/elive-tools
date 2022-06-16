@@ -37,7 +37,7 @@ exit_cleanups(){
     fi
 
     # share session always when exiting
-    if ((is_shared)) ; then
+    if ((is_shared)) && [[ -d "$shared_personal_d" ]] ; then
         # store actual position for future calls of this tool
         if [[ "$commit_id" != "$( tail -1 "$shared_personal_d/last_commit_tracked" 2>/dev/null )" ]] ; then
             # store our commit-id
@@ -621,12 +621,23 @@ conf_share_setup(){
                     echo -e "\nYou must type the directory path previously said:"
                     read -e shared_main_d
                 fi
+                if [[ -z "$shared_main_d" ]] ; then
+                    echo -e "\nYou must insert the path of your dropbox shared directory for git-watcher, similar to the previous example"
+                    read -e shared_main_d
+                fi
 
                 # remove extra leading blank chars
                 read -r shared_main_d <<< "${shared_main_d%/}"
 
             else
                 shared_main_d="${_dropbox_dir%/}"
+            fi
+
+            # verify
+            if [[ "$shared_main_d" != /* ]] ; then
+                el_error "A directory to share must be specified like in the example, aborting..."
+                sleep 2
+                return 0
             fi
 
             # join an existing share
@@ -715,7 +726,7 @@ EOF
                     el_explain 2 "created watcher reference in __$shared_main_d/$remote_working/${repo_id_shared}__"
 
                     # invite friends! (on this step because we are the first ones to use this share, dir not existed before)
-                    if el_confirm "If you don't have Shared yet the '${shared_main_d##*/}' directory from your Dropbox with your collaborators you need to do it now, allowing them to edit it. Open Dropbox Web settings now?" ; then
+                    if el_confirm "If you don't have Shared yet the '${shared_main_d##*/}' directory from your Dropbox with your collaborators you need to do it now, allowing them to make changes on it. Open Dropbox Web settings now?" ; then
                         { /etc/alternatives/x-www-browser "https://www.dropbox.com/home" & disown ; } 1>/dev/null 2>&1
                         sleep 5
                     fi
@@ -753,12 +764,7 @@ EOF
             echo "$shared_main_d" > "$conf_d/shared_main_default_dir.txt"
 
             # save shared confs at exit
-            rm -f "$conf_repo_d/no-shared"
             is_shared=1
-
-        else
-            # we don't want to share, remember that
-            touch "$conf_repo_d/no-shared"
         fi
     fi
 }
@@ -1674,8 +1680,8 @@ options_main_interact(){
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
     option_show "q"         "Quit"
-    if [[ ! -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-        option_show "Q"         "Quit & Save"
+    if [[ ! -e "$conf_repo_d/flags/persistent_watcher" ]] || [[ ! -L "$conf_repo_d/shared" ]] ; then
+        option_show "Q"         "Quit & Save progress"
     fi
     echo -e "${el_c_b}================================================================${el_c_n}"
 
@@ -2202,7 +2208,7 @@ options_main_interact(){
 
             # ask if share, only if we are saving session
             if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-                if ! [[ -L "$conf_repo_d/shared" ]] && ! [[ -e "$conf_repo_d/no-shared" ]] ; then
+                if ! [[ -L "$conf_repo_d/shared" ]] ; then
                     # ask and conf about sharing session
                     conf_share_setup
                 fi

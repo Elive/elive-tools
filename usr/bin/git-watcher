@@ -1506,16 +1506,26 @@ do_cherry_pick(){
 
     # }}}
 
-    el_explain 0 "git cherry-pick -Xpatience -x -s '$commit_id'"
-    if command git cherry-pick -Xpatience -x -s "$commit_id" ; then
-        command git --no-pager show
-        el_explain 0 "__Successfully applied!__"
-        #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
+    el_explain 0 "git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
+    if command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" ; then
+        if [[ "$( command git diff --unified=0 | wc -l )" = 0 ]] ; then
+            # last import shows an empty diff, like it was already included in the history or is a useless commit for our branch
+            el_explain 0 "\nXXWarning:XX seems like this commit didn't changed anything, probably because the code was already imported, you can keep it for historical purposes or you can remove it to have a more clean history."
+            if el_confirm "Remove it?" ; then
+                command git reset --hard HEAD~1
+            fi
+        else
+            # correctly imported
 
-        #echo -e "Press Enter to continue"
-        #read nothing
-        #sleep 1
+            command git --no-pager show
+            notify_success
+            el_explain 0 "__Successfully applied!__"
+            #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
 
+            #echo -e "Press Enter to continue"
+            #read nothing
+            #sleep 1
+        fi
         # store actual position for future calls of this tool
         position_save
 
@@ -1529,7 +1539,6 @@ do_cherry_pick(){
 
         el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
-        notify_success
     else
         el_error "Oops, cherry-pick failed! select an option now:"
 
@@ -1558,10 +1567,11 @@ do_cherry_pick_multiple(){
     # }}}
 
     if [[ -n "$commits" ]] ; then
-        el_explain 0 "command git cherry-pick -x -s $commits"
+        el_explain 0 "command git cherry-pick --keep-redundant-commits -x -s $commits"
 
-        if command git cherry-pick -x -s $commits  ; then
-            el_explain 0 "__Successfully applied!__  Hit return to continue"
+        if command git cherry-pick --keep-redundant-commits -x -s $commits  ; then
+            notify_success
+            el_explain 0 "__Successfully applied!__  Press Enter to continue"
             read nothing
         else
             el_error "Oops, cherry-pick failed! select an option now:"
@@ -1630,7 +1640,7 @@ options_main_interact(){
     option_show "S"         "Show Status info"
     option_show "h"         "Show history"
     option_show "d"         "Show diff"
-    option_show "a"         "list Around commits (from our working thread)"
+    option_show "a"         "list Around commits (on our working progress)"
     option_show "A"         "list Around commits (from the watching branch)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other or multiple commits (cherry-pick)"
@@ -1964,7 +1974,7 @@ options_main_interact(){
             else
                 _commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
             fi
-            command git checkout "${_commit_id}" 1>/dev/null
+            command git checkout --quiet "${_commit_id}" 1>/dev/null
 
             # save files before to apply the commit
             while read -ru 3 file
@@ -1973,8 +1983,8 @@ options_main_interact(){
             done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
 
             # apply the commit
-            if ! command git cherry-pick -Xpatience -x -s "$commit_id" 1>/dev/null ; then
-                el_error 0 "failed using: git cherry-pick -Xpatience -x -s '$commit_id'"
+            if ! command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" 1>/dev/null ; then
+                el_error 0 "failed using: git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
             fi
 
             # save files after to apply the commit
@@ -2010,7 +2020,7 @@ options_main_interact(){
 
             # first:  list around nearest
             el_explain 0 "(commits from oldest to newest)"
-            command git log --oneline --abbrev=12 "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | tac | grep --color -C 6 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | tac | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "Give a list of spaces-separated commits to cherry-pick in earlier-order"
             el_explain 0 "Use the 'listing-nearest' feature to show more commits. Empty value will skip the action"
@@ -2028,7 +2038,7 @@ options_main_interact(){
             ;;
         b)  # extra branches where to backport
             if [[ -z "$user_input_backport_branches" ]] ; then
-                echo -e "Set the name of the branches which you want to backport too, ex. enlightenment-0.18"
+                echo -e "Set the name of the branches which you want to backport too, ex. ${branch_working}-dev"
                 read -e user_input_backport_branches
             fi
 

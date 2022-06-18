@@ -10,7 +10,6 @@ e16_set_release_wallpaper(){
             if eesh bg list | grep -qs "^${name}$" ; then
                 eesh bg use "$name" 0
                 eesh bg use "$name" 1
-                LC_ALL=C sleep 0.3
             else
                 el_warning "bg not correctly configured?\n$(eesh bg list)"
             fi

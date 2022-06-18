@@ -46,6 +46,38 @@ usage(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  rmmod_nvidia
+#   DESCRIPTION:  removes any nvidia module
+#===============================================================================
+rmmod_nvidia(){
+    local module nvidia_modules
+    if [[ -n "$_NVIDIA_VERSION" ]] ; then
+        nvidia_modules="nvidia-legacy-${_NVIDIA_VERSION} nvidia-tesla-${_NVIDIA_VERSION}"
+    fi
+    # unload
+    for module in nvidia nvidia-current ${_NVIDIA_MODULE} ${nvidia_modules} nvidia-drm nvidia-current-drm nvidia-modeset nvidia-current-modeset nvidia-uvm nvidia-current-uvm nvidia-peermem nvidia-current-peermem
+    do
+        rmmod "$module" 2>/dev/null || true
+    done
+
+    # force
+    if lsmod | grep -qs "^nvidia" ; then
+        if ((is_mode_force)) ; then
+            for module in nvidia nvidia-current ${_NVIDIA_MODULE} ${nvidia_modules} nvidia-drm nvidia-current-drm nvidia-modeset nvidia-current-modeset nvidia-uvm nvidia-current-uvm nvidia-peermem nvidia-current-peermem
+            do
+                rmmod -f "$module" 2>/dev/null || true
+            done
+        fi
+    fi
+
+    # check
+    if lsmod | grep -qs "^nvidia" ; then
+        el_info "unable to unload nvidia modules:\n$(lsmod | grep -i "^nvidia" )\n$( rmmod -f nvidia nvidia-drm nvidia-modeset 2>&1 )"
+        return 1
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  check_driver
 #   DESCRIPTION:  check if is already installed
 #    PARAMETERS:  -
@@ -981,13 +1013,8 @@ install_driver(){
     fi
 
     # just in case another one is used
-    rmmod nvidia_modeset 2>/dev/null
-    rmmod nvidia 2>/dev/null
-    rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
-    rmmod nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
-    rmmod ${_NVIDIA_MODULE} 2>/dev/null
-    if lsmod | grep -qs "^nvidia" ; then
-        el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option: $( lsmod | grep nvidia )"
+    if ! rmmod_nvidia ; then
+        el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case you can try to 'rmmod -f' these modules: $( lsmod | grep nvidia )"
     fi
 
     # - unload modules }}}
@@ -1278,26 +1305,9 @@ uninstall_driver(){
 
     # unload module {{{
     # unload module first
-    if lsmod | grep -qs "^nvidia" ; then
-        rmmod nvidia_modeset 2>/dev/null
-        rmmod nvidia 2>/dev/null
-        rmmod nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
-        rmmod nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
-        rmmod ${_NVIDIA_MODULE} 2>/dev/null
-
-        if lsmod | grep -qs "^nvidia" ; then
-            if ((is_mode_force)) ; then
-                rmmod -f nvidia_modeset 2>/dev/null
-                rmmod -f nvidia 2>/dev/null
-                rmmod -f nvidia-legacy-${_NVIDIA_VERSION} 2>/dev/null
-                rmmod -f nvidia-tesla-${_NVIDIA_VERSION} 2>/dev/null
-                rmmod -f ${_NVIDIA_MODULE} 2>/dev/null
-
-            else
-                el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case and you want to force to proceed use the -f option: $( lsmod | grep nvidia )"
-                exit 1
-            fi
-        fi
+    if ! rmmod_nvidia ; then
+        el_info "E: unable to unload the nvidia module, if you are running the graphical system you should exit from it first, and if is not the case you can try to 'rmmod -f' these modules: $( lsmod | grep nvidia )"
+        exit 1
     fi
 
 

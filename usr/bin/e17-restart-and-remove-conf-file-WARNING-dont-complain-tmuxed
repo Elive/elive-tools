@@ -41,6 +41,19 @@ main(){
         exit 1
     fi
 
+    # play "breaking" sound
+    if ! ((NOVOICE)) && ! ((SILENT)) && [[ -s "/usr/share/sounds/elive/glass-break.wav" ]] ; then
+        hour="$(date +%k)"
+        if [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] ; then
+            if [[ -x "$( which mpv )" ]] ; then
+                ( sleep 2 ; mpv --no-video /usr/share/sounds/elive/glass-break.wav & )
+            else
+                if [[ -x "$( which mplayer )" ]] ; then
+                    ( sleep 2 ; mplayer -cache-min 99 -cache-seek-min 99 -vc null -vo null -quiet -input nodefault-bindings -noconfig all  "/usr/share/sounds/elive/glass-break.wav" & )
+                fi
+            fi
+        fi
+    fi
 
     cd ~
     sync

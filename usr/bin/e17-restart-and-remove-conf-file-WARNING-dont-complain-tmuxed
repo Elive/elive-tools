@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Lock system (good one) {{{
+lockfile="/tmp/.$(basename $0)-${USER}.lock"
+
+exit_ok(){
+    rm -f "$lockfile"
+}
+exit_error(){
+    rm -f "$lockfile"
+}
+
+if [[ -r "$lockfile" ]] ; then
+    PROCCESS="$(cat $lockfile)"
+else
+    PROCCESS=" "
+fi
+if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+    el_error "$(basename $0) already running"
+    exit
+else
+    echo $$ > "$lockfile"
+fi
+
+# traps needs to be after the lock verification, in order to not remove it when we are already running
+trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 15 ERR TERM
+
+# SET the lock file
+echo "$$" > "$lockfile"
+
+
+# end lock system }}}
+
+main(){
+    local pid
+
+    cd ~
+    sync
+
+    case "$@" in
+        e16|E16)
+
+            killall -9 cairo-dock 2>/dev/null
+            killall -9 conky 2>/dev/null
+            # kill all startup-desktop processes
+            for i in ~/.e16/New/* ~/.e16/Init/*
+            do
+                pid="$( ps ux | grep -vw grep | grep "$i" | awk '{print $2}' )"
+                if [[ -n "$pid" ]] ; then
+                    kill -9 "$pid"
+                fi
+            done
+
+            killall -9 starte16 efreetd  2>/dev/null
+            killall -9 e16 2>/dev/null
+            sync
+            rm -fr ~/.xsession-errors
+            elive-skel upgrade .config/cairo-dock
+            elive-skel upgrade .conkyrc
+            elive-skel upgrade .e16
+            sync
+            sleep 40
+            ;;
+
+        e17|E17|*)
+            # E17+
+            killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+            rm -fr ~/.e ~/.xsession-errors
+            sync
+            killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+            ;;
+    esac
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

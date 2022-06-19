@@ -35,6 +35,13 @@ echo "$$" > "$lockfile"
 main(){
     local pid
 
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17"
+        exit 1
+    fi
+
+
     cd ~
     sync
 
@@ -64,12 +71,16 @@ main(){
             sync
             ;;
 
-        e17|E17|*)
+        e17|E17)
             # E17+
             killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
             rm -fr ~/.e ~/.xsession-errors
             sync
             killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+            ;;
+        *)
+            el_error "unknown desktop to restart conf, example: $(basename $0) e16|e17"
+            exit 1
             ;;
     esac
 

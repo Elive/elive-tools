@@ -27,6 +27,9 @@ if [[ "${group_session}" = "$win_name" ]] ; then
     exit 1
 fi
 
+# precache for less pause
+precache tmux 1>/dev/null 2>&1
+
 # note since there may be some missing env variables that will give us an empty result (if run from cronjobs for example), let's run this from a bash sub-wrapper
 tmux_nb="$(bash -c "tmux ls 2>/dev/null" | grep "^${group_session}: " | wc -l)"
 
@@ -35,8 +38,8 @@ if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."
 
     # create a new group with a temporal process to attach the first job on the existing group
-    tmux new-session -d -s $group_session -n "${win_name}" -x 400 -y 100 "sleep 20 ; exit"
-    sleep 1
+    tmux new-session -d -s $group_session -n "${win_name}" -x 400 -y 100 "sleep 10 ; exit"
+    LC_ALL=C sleep 0.5
 fi
 
 # Make sure we are not already in a tmux session

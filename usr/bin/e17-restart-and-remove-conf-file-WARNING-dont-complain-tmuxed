@@ -41,6 +41,8 @@ main(){
     case "$@" in
         e16|E16)
 
+            elive-autostart-applications stop
+
             killall -9 cairo-dock 2>/dev/null
             killall -9 conky 2>/dev/null
             # kill all startup-desktop processes
@@ -60,7 +62,6 @@ main(){
             elive-skel upgrade .conkyrc
             elive-skel upgrade .e16
             sync
-            sleep 40
             ;;
 
         e17|E17|*)

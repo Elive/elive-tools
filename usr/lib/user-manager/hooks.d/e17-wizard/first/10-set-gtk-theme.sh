@@ -1,5 +1,21 @@
 #!/bin/sh
 
+# make sure we have access to X11 or otherwise fail
+verify_x11_access(){
+    if ! xrdb -merge "$HOME/.Xdefaults" ; then
+        echo -e "E: unable to access to X11 DISPLAY '$DISPLAY', exiting from X..."
+        #if [ -n "$EROOT" ] ; then
+            #eesh logout
+        #else
+            #if [ -n "$E_START" ] ; then
+                #enlightenment_remote -logout
+            #fi
+        #fi
+        # update: since we don't have access to X11, we cannot logout, so let's just break entirely the desktop and configure a new one (we are already on this step so we lose nothing)
+        e17-restart-and-remove-conf-file-WARNING-dont-complain
+    fi
+}
+
 # set a specific wallpaper for the actual release if there's any
 e16_set_release_wallpaper(){
     if [ -n "$EROOT" ] && [ -d /etc/elive/wallpaper ] ; then
@@ -26,5 +42,6 @@ gtk_set_theme(){
     fi
 }
 
+verify_x11_access
 e16_set_release_wallpaper
 gtk_set_theme

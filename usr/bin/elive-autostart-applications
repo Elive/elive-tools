@@ -185,13 +185,16 @@ do_list(){
 fix_cairodock(){
     if [[ -n "$EROOT" ]] ; then
         if [[ "$mode" = "start" ]] ; then
-            if grep -qs "cairo-dock" "$order_file" 2>/dev/null ; then
-                sleep 2
-                if [[ "$( pidof cairo-dock | wc -w )" -ge 2 ]] ; then
-                    killall cairo-dock 1>/dev/null 2>&1
-                    killall -9 cairo-dock 1>/dev/null 2>&1
-                    bash -c "cairo-dock  & disown"
-                fi
+            LC_ALL=C sleep 0.2
+            if [[ "$( pidof cairo-dock | wc -w )" -ge 2 ]] ; then
+                killall cairo-dock 1>/dev/null 2>&1
+                killall -9 cairo-dock 1>/dev/null 2>&1
+                bash -c "cairo-dock  & disown"
+            fi
+            if [[ "$( pidof conky | wc -w )" -ge 2 ]] ; then
+                killall conky 1>/dev/null 2>&1
+                killall -9 conky 1>/dev/null 2>&1
+                bash -c "conky  & disown"
             fi
         fi
     fi

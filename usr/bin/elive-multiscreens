@@ -645,7 +645,7 @@ main(){
                 $guitool --error --text="$( eval_gettext "Your screen appears to be disconnected, turn it ON first and try again." )"
             else
                 # report
-                el_error "no screens connected? \n$( xrandr --query )"
+                el_error "no screens connected? \n$( xrandr --query 2>&1 )"
 
                 $guitool --error --text="$( eval_gettext "You don't have any screens connected" )"
             fi

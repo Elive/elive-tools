@@ -2554,10 +2554,12 @@ el_report_to_elive(){
 
     if ((is_interactive)) ; then
         if ((is_terminal)) ; then
-            messages_extra=" ||| terminal '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', blacklist all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
+            messages_extra=" ||| terminal mode YES:  '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', BLACKLIST all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
+        else
+            messages_extra=" ||| terminal mode NO: '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', BLACKLIST all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
         fi
-    else
-        messages_extra=" ||| is_interactive '${is_interactive}', is_terminal '${is_terminal}', (example of only-tools (no-interactive) report)"
+    #else
+        #messages_extra=" ||| is_interactive '${is_interactive}', is_terminal '${is_terminal}', (example of only-tools (no-interactive) report)"
     fi
 
 

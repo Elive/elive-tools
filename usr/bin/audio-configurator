@@ -175,7 +175,7 @@ main(){
             is_quiet_mode=1
             shift
         fi
-        if [[ "$arg" = "--nomessages" ]] ; then
+        if [[ "$arg" = "--no-messages" ]] ; then
             is_nomessages=1
             shift
         fi

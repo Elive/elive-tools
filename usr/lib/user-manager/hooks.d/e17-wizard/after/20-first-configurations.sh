@@ -29,7 +29,7 @@ main(){
         else
 
             el_explain 0 "Configuring audio cards..."
-            audio-configurator --quiet --auto --smart
+            audio-configurator --quiet --auto --smart --no-messages
 
             # we need to create the PCM channel! it doesn't exist until we do it
             timeout 5 aplay /dev/null 2>/dev/null

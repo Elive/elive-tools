@@ -912,11 +912,11 @@ el_package_upgrade_fast(){
         return 1
     fi
 
-    # wait for unlock
-    el_aptget check 1>/dev/null
-
     # checks
     if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then
+        # wait for unlock
+        el_aptget check 1>/dev/null
+
         el_aptget_update force
 
         if ! ls /var/lib/apt/lists/*Packages 1>/dev/null 2>&1 ; then

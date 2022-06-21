@@ -262,7 +262,7 @@ detect_driver_version(){
     # try to search for ID's {{{
     #
     # first on your system installed id's
-    for _NVIDIA_IDS in ./tmp-nvidia/usr/lib/nvidia/current/nvidia.ids $(ls ./tmp-nvidia/usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls ./tmp-nvidia/usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r )
+    for _NVIDIA_IDS in /usr/lib/nvidia/current/nvidia.ids $(ls /usr/lib/nvidia/legacy*/nvidia.ids 2>/dev/null | sort -V -r ) $(ls /usr/lib/nvidia/tesla*/nvidia.ids 2>/dev/null | sort -V -r )
     do
         if [ -e "${_NVIDIA_IDS}" ]
         then
@@ -291,8 +291,8 @@ detect_driver_version(){
                 # download from urls for scan
                 el_info "Not ID's found on installed packages, downloading them..."
                 if el_verify_internet fast ; then
-                    mkdir -p /var/tmp/nvidia-tmp
-                    cd /var/tmp/nvidia-tmp
+                    mkdir -p /var/tmp/tmp-nvidia
+                    cd /var/tmp/tmp-nvidia
 
                     for packagename in $( LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | tr '\n' ' ' )
                     do
@@ -331,19 +331,20 @@ detect_driver_version(){
             then
                 if grep -qs "${_DEVICE}" ${_NVIDIA_IDS}
                 then
-                    _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
-                    echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
-                    _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
-
-                    break
+                    el_info "Compatible with version: $(basename $(dirname ${_NVIDIA_IDS}))"
+                    if [[ -z "$_NVIDIA_VERSION" ]] ; then
+                        _NVIDIA_VERSION="$(basename $(dirname ${_NVIDIA_IDS}))"
+                        echo "$_NVIDIA_VERSION" > /tmp/.nvidia-version
+                        _NVIDIA_MODULE="$(echo nvidia-${_NVIDIA_VERSION} | sed -e 's|-current$||')"
+                    fi
                 fi
             fi
         done
-        rm -rf nvidia-tmp 2>/dev/null
+        rm -rf tmp-nvidia 2>/dev/null
 
         cd "$prev_dir"
-        rm -rf /var/cache/apt/archives/nvidia-tmp 2>/dev/nul
-        rm -rf /var/tmp/nvidia-tmp 2>/dev/null
+        rm -rf /var/cache/apt/archives/tmp-nvidia 2>/dev/nul
+        rm -rf /var/tmp/tmp-nvidia 2>/dev/null
     fi
 
     # }}}
@@ -438,18 +439,6 @@ interactive_ask_privative(){
 
 
     # }}}
-    # more than one type of card found {{{
-    if [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$(lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
-        local message_multiple_cards
-        message_multiple_cards="$( printf "$( eval_gettext "We have found more than one graphic card on your computer, if you select to install the proprietary drivers we will proceed by using your Nvidia graphic card." )" "" )"
-
-
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-            --title "Multiple Graphic Cards found" \
-            --msgbox "$message_multiple_cards" \
-            0 0
-    fi
-    # - more than one card }}}
     # ask if want to install the privative one or the free {{{
     if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "onlyfree" ; then
         echo -e "Using free-drivers only because 'onlyfree' is set in your boot parameters" 1>&2
@@ -947,24 +936,27 @@ install_driver(){
     fi
 
     # - }}}
-    # Optimus inform to user {{{
+    # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] && ! ((is_mode_auto)) ; then
+    if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] ; then
+        is_optimus=1
 
-        if laptop-detect ; then
-            local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
-        else
-            local message_multiple_cards
-            message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable it from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+        if ! ((is_mode_auto)) ; then
+            if laptop-detect ; then
+                local message_multiple_cards
+                message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
+            else
+                local message_multiple_cards
+                message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable it from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
+            fi
+
+            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Multiple Graphic Cards found" \
+                --msgbox "$message_multiple_cards" \
+                0 0
         fi
-
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-            --title "Multiple Graphic Cards found" \
-            --msgbox "$message_multiple_cards" \
-            0 0
     fi
-    # - Optimus inform to user }}}
+    # - Optimus }}}
 
     # unload modules {{{
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
@@ -1251,9 +1243,13 @@ try_again(){
     local message_option_4
     message_option_4="$( printf "$( eval_gettext "Reboot your computer to select another kernel or boot options" )" "" )"
 
+    local message_option_5
+    message_option_5="$( printf "$( eval_gettext "Open a console terminal" )" "" )"
+
+
     # }}}
 
-    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; echo "'reboot' '$message_option_4'" ; } \
+    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; echo "'reboot' '$message_option_4'" ; echo "'console' '$message_option_5'" ; } \
         | xargs dialog --timeout 380 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
 
@@ -1282,6 +1278,18 @@ try_again(){
         reboot)
             ( sleep 1 ; reboot & )
             exit
+            ;;
+        console)
+            reset
+            if [[ -n "$SHELL" ]] ; then
+                $SHELL
+            else
+                if [[ -x "$( which zsh )" ]] ; then
+                    zsh -l
+                else
+                    bash -l
+                fi
+            fi
             ;;
         exit)
             exit

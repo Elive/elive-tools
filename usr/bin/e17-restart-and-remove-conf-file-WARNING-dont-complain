@@ -22,6 +22,7 @@ main(){
         esac
     done
 
+    sync
     if [[ -n "$EROOT" ]] ; then
         tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
     else

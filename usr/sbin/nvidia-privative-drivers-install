@@ -212,8 +212,11 @@ check_hardware(){
     # - detect if we have the hardware with nvidia }}}
     # detect optimus cards {{{
     if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] ; then
-        is_optimus=1
-        unset is_xorg_template_wanted
+        is_multiple_cards=1
+        if laptop-detect ; then
+            is_optimus=1
+            unset is_xorg_template_wanted
+        fi
     fi
     # }}}
 }
@@ -944,10 +947,10 @@ install_driver(){
     # - }}}
     # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if ((is_optimus)) ; then
+    if ((is_multiple_cards)) ; then
 
         if ! ((is_mode_auto)) ; then
-            if laptop-detect ; then
+            if ((is_optimus)) ; then
                 local message_multiple_cards
                 message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
             else

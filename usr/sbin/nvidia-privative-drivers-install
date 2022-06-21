@@ -210,6 +210,12 @@ check_hardware(){
     fi
 
     # - detect if we have the hardware with nvidia }}}
+    # detect optimus cards {{{
+    if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] ; then
+        is_optimus=1
+        unset is_xorg_template_wanted
+    fi
+    # }}}
 }
 #===  FUNCTION  ================================================================
 #          NAME:  detect_driver_version
@@ -938,8 +944,7 @@ install_driver(){
     # - }}}
     # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
-    if [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | wc -l )" -gt "1" ]] && ! [[ "$( lspci | grep -E "\W+(VGA|3D|2D|Display)\W+" | grep -iE "\W+(VGA|3D|2D|Display)\W+.*\W+nvidia\W+" | wc -l )" -gt "1" ]] ; then
-        is_optimus=1
+    if ((is_optimus)) ; then
 
         if ! ((is_mode_auto)) ; then
             if laptop-detect ; then

@@ -281,9 +281,10 @@ main(){
                 el_debug "we selected the card '$selected' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
             fi
 
-            if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] && ! ((is_nomessages)) ; then
-                $guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use. You can also reconfigure it manually from the applications menus of Elive." )"
-            fi
+            # update: this message became useless especially after using pulseaudio
+            #if [[ "$( echo "${array_cards}" | sort -g | grep -vE "^(1|2|3|4) ::" | sed '/^$/d' | wc -l )" -gt 1 ]] && ! ((is_nomessages)) ; then
+                #$guitool --warning --text="$( eval_gettext "Seems like you have multiple audio cards, Elive has a smart way to detect the correct one to use. You can also reconfigure it manually from the applications menus of Elive." )"
+            #fi
 
         else
             if select_card_multiple ; then

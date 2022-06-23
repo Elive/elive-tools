@@ -92,7 +92,7 @@ main(){
             if pidof pulseaudio 1>/dev/null 2>&1 ; then
                 systemctl --user stop pulseaudio.service pulseaudio.socket
                 killall -9 pulseaudio
-                rm -f /home/*/.config/pulse/cookie /home/*/.pulse/*
+                rm -rf /home/*/.config/pulse/cookie /home/*/.pulse/* 2>/dev/null || true
                 audio-configurator  --quiet --auto --smart
                 systemctl --user start pulseaudio.service pulseaudio.socket
             else

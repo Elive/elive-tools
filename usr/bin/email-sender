@@ -325,7 +325,7 @@ do_validate_sending(){
         *@gmail*|Gmail)
             for i in 1 2 3 4 5 6 7
             do
-                result="$( curl -u "${email_account}:${email_password}" --silent "https://mail.google.com/mail/feed/atom" | sed -e 's|<entry>|\n\n<entry>|g' | grep "<entry>" | sed -e 's|^.*<title>||g' -e 's|</title>.*$||g' | head -3 )"
+                result="$( curl -u "${email_account}:${email_password}" --silent "https://mail.google.com/mail/u/0/feed/atom" | sed -e 's|<entry>|\n\n<entry>|g' | grep "<entry>" | sed -e 's|^.*<title>||g' -e 's|</title>.*$||g' | head -3 )"
 
                 if echo "$result" | grep -qs "testing elive email ($random)" ; then
                     # succeed
@@ -390,23 +390,24 @@ do_validate_sending(){
     local message_popimap
     message_popimap="$( printf "$( eval_gettext "Do you want to configure the POP and IMAP options in your Gmail account now? You need to enable them." )" )"
     if $guitool --question --text="$message_popimap" ; then
-        /etc/alternatives/x-www-browser "https://mail.google.com/mail/#settings/fwdandpop" &
+        /etc/alternatives/x-www-browser "https://mail.google.com/mail/u/0/#settings/fwdandpop" &
         sleep 25
     fi
 
     # configure less-secure apps
+    /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/signinoptions/two-step-verification/enroll-welcome" &
+    sleep 3
     local message_lesssecure
     message_lesssecure="$( printf "$( eval_gettext "You need 2-step verification enabled in your Google account first" )" )"
     $guitool --info --text="$message_lesssecure"
-    /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/signinoptions/two-step-verification/enroll-welcome" &
-    sleep 20
 
     # configure less-secure apps (more)
-    local message_app_password
-    message_app_password="$( printf "$( eval_gettext "Now you need to create an app password. Select Email for the App and Other for the Device, then give a name. Save the given password, which is the one to use with this tool." )" )"
-    $guitool --info --text="$message_app_password"
     /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/apppasswords" &
-    sleep 20
+    sleep 3
+    local message_app_password
+    message_app_password="$( printf "$( eval_gettext "Now you need to create a special password in Gmail to use with this tool. Where it says to select an App, pick the 'Email' option. And then where it says to select a device, pick the 'Other' option. Save the given password, which is the one to use with this tool." )" )"
+
+    $guitool --info --text="$message_app_password"
 
 
     local message_try_again

@@ -1646,7 +1646,7 @@ el_check_is_shell(){
 #===============================================================================
 el_explain(){
     # pre {{{
-    if ! ((is_interactive)) ; then
+    if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
         return 0
     fi
 
@@ -1826,7 +1826,7 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    if ! ((is_interactive)) ; then
+    if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
         return 0
     fi
 

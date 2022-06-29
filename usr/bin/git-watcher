@@ -167,7 +167,7 @@ shared_accounts_state_show(){
             check_if_has_diverged
 
             # update total of commits
-            do_count_commits
+            do_count_commits "force"
             is_recount_position_needed=1
 
             _is_shared_scanned=1
@@ -182,7 +182,7 @@ shared_accounts_state_show(){
             commit_id="$_commit_id_biggest"
 
             # update total of commits
-            do_count_commits
+            do_count_commits "force"
             unset commits_history
             unset counter
             is_recount_position_needed=1
@@ -1274,20 +1274,28 @@ do_count_commits(){
     counter_total=0
     counter=1
 
+    if [[ "$1" = "force" ]] ; then
+        unset commits_list
+    fi
     # }}}
     # sometimes is slow, so show debug
-    echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
-    # pre-statistics a bit: show the amount of commits between branches
-    while read -ru 3 line
-    do
-        # get commit line
-        if [[ "$line" = "commit "* ]] ; then
+    if [[ -z "$commits_list" ]] ; then
+        echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
 
+        # precache the full commits list in a variable
+        commits_list="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" --format=format:'%H' )"
+        if [[ "${EL_DEBUG}" -ge "2" ]] ; then
+            el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}" --format=format:'%H'"
+        fi
+
+        # pre-statistics a bit: show the amount of commits between branches
+        while read -ru 3 line
+        do
             counter_total="$(( $counter_total + 1 ))"
 
             # skip until last commit
             if [[ -n "$commit_id" ]] && ! ((_is_commit_id_last_reached)) ; then
-                if [[ "$line" = "commit "$commit_id ]] ; then
+                if [[ "$line" = "$commit_id" ]] ; then
                     _is_commit_id_last_reached=1
                 else
                     # loop until we reach the desired commit
@@ -1296,15 +1304,17 @@ do_count_commits(){
             fi
 
             echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
-        fi
 
-    done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
-    if [[ "$counter" -le "$counter_total" ]] ; then
-        echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
-    else
-        echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[???/$counter_total]   ${el_c_n}"
+        done 3<<< "$( echo "$commits_list" )"
+
+
+        if [[ "$counter" -le "$counter_total" ]] ; then
+            echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[$counter/$counter_total]   ${el_c_n}"
+        else
+            echo -en "\r\033[K${el_c_b}Computing space time coordinates: \t${el_c_y}[???/$counter_total]   ${el_c_n}"
+        fi
+        echo ""
     fi
-    echo ""
 
 
     # do we have found new commits?
@@ -1751,7 +1761,7 @@ options_main_interact(){
                     unset commits_history
                 fi
                 # get the previous commit id
-                commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+                commit_id="$( echo "$commits_list" | grep -B 1 "$commit_id" | head -1 )"
             fi
 
             position_save
@@ -1788,7 +1798,7 @@ options_main_interact(){
 
             if echo "$_n" | grep -v "[[:alpha:]]" | grep -qs "[[:digit:]]" ; then
 
-                commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit " | head -n "$_n" | awk '{print $2}' | tail -1 )"
+                commit_id="$( echo "$commits_list" | head -n "$_n" | tail -1 )"
 
                 # mark our new position
                 unset commits_history
@@ -1843,7 +1853,7 @@ options_main_interact(){
             check_if_has_diverged
 
             # update total of commits
-            do_count_commits
+            do_count_commits "force"
             is_recount_position_needed=1
 
             # return back to main menu
@@ -1885,7 +1895,7 @@ options_main_interact(){
 
 
             # update total of commits
-            do_count_commits
+            do_count_commits "force"
             is_recount_position_needed=1
 
             # return back to main menu
@@ -1980,7 +1990,7 @@ options_main_interact(){
             if [[ "${#commits_history[@]}" -gt 1 ]] ; then
                 _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 ))]}"
             else
-                _commit_id="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep "^commit" | grep -B 1 "$commit_id" | awk '{print $2}' | head -1 )"
+                _commit_id="$( echo "$commits_list" | grep -B 1 "$commit_id" | head -1 )"
             fi
             command git checkout --quiet "${_commit_id}" 1>/dev/null
 
@@ -2184,13 +2194,13 @@ options_main_interact(){
 
             ;;
         B)  # bkp
-            bkp --quiet save
+            EL_DEBUG=1 bkp --quiet save
 
             # return back to main menu
             $FUNCNAME
             ;;
         R)  # bkp
-            bkp --quiet get
+            EL_DEBUG=1 bkp --quiet get
 
             # return back to main menu
             $FUNCNAME
@@ -2605,12 +2615,6 @@ main(){
 
         echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
-        # debug
-        if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-            el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}""
-            #sleep 2
-        fi
-
     fi
 
     # FIXME: the option showing "commits not pushed yet" not works well, the comparison is wrong? it doesnt point to the correct remote maybe?
@@ -2628,88 +2632,83 @@ main(){
                 counter=1
             fi
 
-            # get commit
-            if [[ "$line" = "commit "* ]] ; then
-
-                # recount our position against our commit-id
-                if ((is_recount_position_needed)) ; then
-                    #echo -en "\r${el_c_b}--- Traveling back in time: ${el_c_y}($counter/$counter_total)${el_c_b} ---${el_c_n}"
-                    #el_debug "recounting position needed"
-                    if [[ -n "$commit_id" ]] && [[ "$line" = "commit "$commit_id ]] ; then
-                        is_commit_id_last_reached=1
-                        unset is_recount_position_needed
-                        #echo -e "" # append a newline because the counter entered on itself
-                    else
-                        # loop until we reach the desired commit
-                        #el_debug "skipping commit because is not $commit_id : $line"
-                        counter="$(( $counter + 1 ))"
-
-                        continue
-                    fi
-                fi
-
-                # skip until last commit, this only runs when starting back a watcher
-                if ! ((is_commit_id_last_reached)) && ((is_session_saved)) ; then
-                    if [[ -n "$commit_id" ]] && [[ "$line" = "commit "$commit_id ]] ; then
-                        is_commit_id_last_reached=1
-                    else
-                        # loop until we reach the desired commit
-                        el_debug "skipping commit because is not $commit_id : $line"
-                        continue
-                    fi
-                else
-                    # we are in a new session, simulate that we have reached the last needed position
+            # recount our position against our commit-id
+            if ((is_recount_position_needed)) ; then
+                #echo -en "\r${el_c_b}--- Traveling back in time: ${el_c_y}($counter/$counter_total)${el_c_b} ---${el_c_n}"
+                #el_debug "recounting position needed"
+                if [[ -n "$commit_id" ]] && [[ "$line" = "$commit_id" ]] ; then
                     is_commit_id_last_reached=1
+                    unset is_recount_position_needed
+                    #echo -e "" # append a newline because the counter entered on itself
+                else
+                    # loop until we reach the desired commit
+                    #el_debug "skipping commit because is not $commit_id : $line"
+                    counter="$(( $counter + 1 ))"
+
+                    continue
                 fi
-
-
-                # get the commit id of this loop
-                commit_id="${line#commit }"
-                el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
-
-                if ((is_travel_wanted)) && [[ -n "$travel_commit_id" ]] ; then
-                    go_to_commit "$travel_commit_id"
-                fi
-
-                # show actual commit
-                show_commit_stat --no-pager
-
-                # store actual position for future calls of this tool
-                echo "$commit_id" > "$conf_commit_last_f"
-                el_debug "stored '$commit_id' to '$conf_commit_last_f'"
-
-                echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
-                el_debug "stored counter at '$counter' with '$counter_total' total in '$conf_commit_last_progress_f'"
-
-
-                #
-                # show main options
-                options_main_interact
-
-                if ((is_recount_position_needed)) ; then
-                    break 1
-                fi
-
-                el_debug "going to next loop"
-                #
-                #
-
-                # exit loop if no remaining commits
-                if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
-                    is_recount_position_needed=1
-                    break 1
-                fi
-
-                # count another commit because we go to next loop
-                counter="$(( $counter + 1 ))"
-
-
-                # clear screen, but after that we did everything before to start
-                clear_screen default
-
             fi
 
-        done 3<<< "$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
+            # skip until last commit, this only runs when starting back a watcher
+            if ! ((is_commit_id_last_reached)) && ((is_session_saved)) ; then
+                if [[ -n "$commit_id" ]] && [[ "$line" = "$commit_id" ]] ; then
+                    is_commit_id_last_reached=1
+                else
+                    # loop until we reach the desired commit
+                    el_debug "skipping commit because is not $commit_id : $line"
+                    continue
+                fi
+            else
+                # we are in a new session, simulate that we have reached the last needed position
+                is_commit_id_last_reached=1
+            fi
+
+
+            # get the commit id of this loop
+            commit_id="${line}"
+            el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
+
+            if ((is_travel_wanted)) && [[ -n "$travel_commit_id" ]] ; then
+                go_to_commit "$travel_commit_id"
+            fi
+
+            # show actual commit
+            show_commit_stat --no-pager
+
+            # store actual position for future calls of this tool
+            echo "$commit_id" > "$conf_commit_last_f"
+            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+
+            echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
+            el_debug "stored counter at '$counter' with '$counter_total' total in '$conf_commit_last_progress_f'"
+
+
+            #
+            # show main options
+            options_main_interact
+
+            if ((is_recount_position_needed)) ; then
+                break 1
+            fi
+
+            el_debug "going to next loop"
+            #
+            #
+
+            # exit loop if no remaining commits
+            if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
+                is_recount_position_needed=1
+                break 1
+            fi
+
+            # count another commit because we go to next loop
+            counter="$(( $counter + 1 ))"
+
+
+            # clear screen, but after that we did everything before to start
+            clear_screen default
+
+        done 3<<< "$( echo "$commits_list" )"
         # if you search with -k without matches, infinite loop happens, avoid it with this check
         if [[ "$counter" -ge "$counter_total" ]] || [[ "$counter" -le "0" ]] || [[ "$counter_total" -le "0" ]] ; then
             is_recount_position_needed=1

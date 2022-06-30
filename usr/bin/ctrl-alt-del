@@ -90,7 +90,7 @@ main(){
             ;;
         "resetaudio")
             # note: same code exists in elive-audio-fixes tool
-            if pidof pulseaudio 1>/dev/null 2>&1 ; then
+            if [[ -e /var/lib/dpkg/info/pulseaudio.list ]] ; then
                 systemctl --user stop pulseaudio.service pulseaudio.socket
                 killall -9 pulseaudio
                 rm -rf /home/*/.config/pulse/cookie /home/*/.pulse/* 2>/dev/null || true

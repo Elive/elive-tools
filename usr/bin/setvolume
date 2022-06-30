@@ -559,7 +559,6 @@ main(){
     # pre {{{
     local list action actualvalue is_failed
 
-    #if [[ -n "$(pidof pulseaudio)" ]] && ! [[ -n "$( grep -E "^(7\.|wheezy)" /etc/debian_version 2>/dev/null )" ]] ; then
     if [[ -n "$(pidof pulseaudio)" ]] ; then
         is_pulseaudio=1
 

@@ -89,6 +89,7 @@ main(){
             exit
             ;;
         "resetaudio")
+            # note: same code exists in elive-audio-fixes tool
             if pidof pulseaudio 1>/dev/null 2>&1 ; then
                 systemctl --user stop pulseaudio.service pulseaudio.socket
                 killall -9 pulseaudio

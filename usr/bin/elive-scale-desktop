@@ -417,7 +417,7 @@ main(){
         if ((is_restart_needed_cairodock)) ; then
             if pidof cairo-dock 1>/dev/null ; then
                 killall cairo-dock 1>/dev/null 2>&1
-                killall cairo-dock 1>/dev/null 2>&1
+                killall -9 cairo-dock 1>/dev/null 2>&1
                 el_debug "restarting cairo-dock"
                 ( cairo-dock 1>/dev/null 2>&1 & disown )
             fi

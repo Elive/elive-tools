@@ -87,9 +87,10 @@ main(){
         e17|E17)
             # E17+
             killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-            rm -fr ~/.e ~/.xsession-errors
+            rm -fr ~/.e ~/.xsession-errors 1>/dev/null 2>&1
+            rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
             sync
-            killall -9 enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+            killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd 2>/dev/null
             ;;
         *)
             el_error "unknown desktop to restart conf, example: $(basename $0) e16|e17"

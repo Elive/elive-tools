@@ -1204,18 +1204,19 @@ el_mount(){
             echo "$dev mounted in: $( get_mountpoint "$dev" )"
             return 0
         else
-            el_error "Unable to mount ${dev}:\n$(file -s ${dev} ; lsblk ${dev} ; )"
 
             # try to clean FS:
             if [[ "$mode" = "recursive" ]] ; then
                 return 1
             else
                 if tune2fs -l "$dev" | grep -iqs "^Filesystem state:.*errors" ; then
+                    el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
                     fsck -yf "$dev"
                     $FUNCNAME "$dev" "recursive"
                     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
                         return 0
                     else
+                        el_error "Unable to mount ${dev}:\n$(file -s ${dev} ; lsblk ${dev} ; )"
                         return 1
                     fi
                 fi

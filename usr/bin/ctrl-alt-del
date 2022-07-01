@@ -93,7 +93,7 @@ main(){
             if [[ -e /var/lib/dpkg/info/pulseaudio.list ]] ; then
                 systemctl --user stop pulseaudio.service pulseaudio.socket
                 killall -9 pulseaudio
-                rm -rf /home/*/.config/pulse/cookie /home/*/.pulse/* 2>/dev/null || true
+                rm -rf ~/.config/pulse/cookie ~/.pulse/* ~/.asoundrc 2>/dev/null || true
                 audio-configurator  --quiet --auto --smart
                 systemctl --user start pulseaudio.service pulseaudio.socket
             else

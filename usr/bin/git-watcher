@@ -1096,7 +1096,7 @@ show_history(){
     lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
 
     if [[ -n "$lines" ]] ; then
-        lines="$(( $lines + 1 ))"
+        #lines="$(( $lines + 1 ))"
         el_explain 0 "Your __not pushed__ changes:"
 
 
@@ -1283,10 +1283,7 @@ do_count_commits(){
         echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
 
         # precache the full commits list in a variable
-        commits_list="$( command git log "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" --format=format:'%H' )"
-        if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-            el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}" --format=format:'%H'"
-        fi
+        commits_list="$( command git log --format=format:'%H' "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
 
         # pre-statistics a bit: show the amount of commits between branches
         while read -ru 3 line
@@ -1651,15 +1648,14 @@ options_main_interact(){
     fi
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
     #option_show "h"         "Help: how this tool works" # TODO add
-    option_show "r"         "Read Capsules"
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit" # history-based now
     option_show "s"         "Show commit summary"
     option_show "S"         "Show Status info"
     option_show "h"         "Show history"
     option_show "d"         "Show diff"
-    option_show "a"         "list Around commits (on our working progress)"
-    option_show "A"         "list Around commits (from the watching branch)"
+    option_show "a"         "list Around nearest commits (on our working progress)"
+    option_show "A"         "list Around nearest commits (from the watching branch)"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import other or multiple commits (cherry-pick)"
     if [[ -n "$user_input_backport_branches" ]] ; then
@@ -1669,26 +1665,28 @@ options_main_interact(){
     fi
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "E"         "Edit (visualize) how the contents would change if we import it"
-    option_show "m"         "mark, adds a mark on this position, to review later"
+    option_show "m"         "Mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
+    option_show "r"         "Read Capsules"
     option_show "g"         "Go to commit id (space-time travel)"
     option_show "G"         "Go to a counter position"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
 
-    option_show "z"         "Undo last commit in your working branch"
-    #if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
-        option_show "Z"         "Delete this watcher"
-    #fi
     option_show "c"         "compile (make), useful for check if new code is compatible"
     if [[ -n "$user_input_command" ]] ; then
         #option_show "r"     " > Run:  $user_input_command"
         option_show "C"     " > Compile:  $user_input_command"
     else
-        option_show "C"         "use your own Command to run (ex: make && sudo make install && enlightenment_remote -restart)"
+        option_show "C"         "own Command to run (ex: make && sudo make install && enlightenment_remote -restart)"
     fi
     option_show "l"         "Login Shell (to do things manually)"
     option_show "B/R"       "Backup / Restore directory state (bkp tool)" # bkp is the best option for not mess up things, can be slow but it has also incrememental saving states too
+
+    option_show "z"         "Undo last commit in your working branch"
+    #if [[ -e "$conf_repo_d/flags/persistent_watcher" ]] ; then
+        option_show "Z"         "Delete this watcher"
+    #fi
     option_show "q"         "Quit"
     if [[ ! -e "$conf_repo_d/flags/persistent_watcher" ]] || [[ ! -L "$conf_repo_d/shared" ]] ; then
         option_show "Q"         "Quit & Save progress"
@@ -2163,8 +2161,8 @@ options_main_interact(){
         a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our working branch:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_working\"..\"$branch_watch\" "${options_extra_git_after[@]}" | grep --color -C 20 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 20 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_working\"..\"$branch_watch\" "${options_extra_git_after[@]}" | grep --color -C 25 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 25 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2175,9 +2173,9 @@ options_main_interact(){
         A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in the watching branch history:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_watch\" | grep --color -C 20 \"${commit_id:0:12}\""
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_watch\" | grep --color -C 25 \"${commit_id:0:12}\""
 
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_watch" | grep --color -C 20 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_watch" | grep --color -C 25 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2606,6 +2604,11 @@ main(){
     # get the total of commits list
     do_count_commits
 
+    # debug
+    if [[ "${EL_DEBUG}" -ge "2" ]] ; then
+        el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}""
+    fi
+
     if ! ((is_travel_wanted)) ; then
         # scan your own to-do marks:
         scan_marked_states
@@ -2677,10 +2680,10 @@ main(){
 
             # store actual position for future calls of this tool
             echo "$commit_id" > "$conf_commit_last_f"
-            el_debug "stored '$commit_id' to '$conf_commit_last_f'"
+            #el_debug "stored '$commit_id' to '$conf_commit_last_f'"
 
             echo -e "$counter $counter_total" > "$conf_commit_last_progress_f"
-            el_debug "stored counter at '$counter' with '$counter_total' total in '$conf_commit_last_progress_f'"
+            #el_debug "stored counter at '$counter' with '$counter_total' total in '$conf_commit_last_progress_f'"
 
 
             #

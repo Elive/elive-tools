@@ -855,12 +855,8 @@ el_package_newer_check(){
         return 2
     fi
 
-    installed="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' | head -1 | LC_ALL=C grep -E "^[[:digit:]]*" )"
-    read -r installed <<< "$installed"
-
-    candidate="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | head -1 | LC_ALL=C grep -E "^[[:digit:]]*" )"
-    read -r candidate <<< "$candidate"
-
+    installed="$( el_apt_package_version_get "$package" installed full )"
+    candidate="$( el_apt_package_version_get "$package" candidate full )"
 
     if [[ -n "$installed" ]] && [[ -n "$candidate" ]] ; then
         if dpkg --compare-versions "${candidate}" gt "${installed}" ; then
@@ -930,8 +926,7 @@ el_package_upgrade_fast(){
         [[ -z "$package" ]] && continue
 
         # example:  3.8.9+0.0.1+git3118fc936-6buster11
-        installed="$( LC_ALL=C apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' )"
-        read -r installed <<< "$installed"
+        installed="$( el_apt_package_version_get "$package" installed full )"
         if [[ -z "$installed" ]] ; then
             el_error "unable to get the version of installed package '${package}': $installed:\n$( LC_ALL=C apt-cache policy $package )"
             continue
@@ -3466,6 +3461,54 @@ el_get_machine_id(){
         el_error "no machine id found"
     fi
 }
+
+#-------------------------------------------------------------------------------
+#   get the version of an installed package or a candidate, in a faster way
+#   $1 = packagename , $2 installed | candidate , $3 full | clean
+#-------------------------------------------------------------------------------
+el_apt_package_version_get(){
+    local package state mode version
+    package="$1"
+    shift
+    state="$1"
+    shift
+    mode="$1"
+    shift
+
+    case "$state" in
+        "installed")
+            version="$( awk -v FS="\n" -v RS="" -v package="$package" '{ if ( ($1 == "Package: "package ) && ($2 == "Status: install ok installed" || $2 == "Status: hold ok installed") ) print $0}' /var/lib/dpkg/status | LC_ALL=C grep "^Version: " | sed -e 's|^Version: ||g' )"
+            if [[ -z "$version" ]] ; then
+                version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
+            fi
+            ;;
+
+        "candidate")
+            version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
+            ;;
+    esac
+
+    read -r version <<< "$version"
+
+    # check
+    if [[ -z "$version" ]] ; then
+        return 1
+    fi
+
+    case "$mode" in
+        clean)
+            # clean version values
+            version="${version#*:}"
+            version="${version%-*}"
+            ;;
+        full)
+            version="${version}"
+            ;;
+    esac
+
+    echo "$version"
+}
+
 
 #-------------------------------------------------------------------------------
 #   apt-get wrapper with lock feature

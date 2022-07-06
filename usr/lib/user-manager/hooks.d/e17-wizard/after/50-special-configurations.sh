@@ -65,48 +65,51 @@ main(){
 
 
     # change conky network configuration
-    if [[ -e "$HOME/.conkyrc" ]] ; then
-        if pidof conky 1>/dev/null ; then
-            killall conky
-            is_restart_needed_conky=1
-        fi
-
-        if el_verify_internet ; then
-            iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
-            if [[ -n "$iface" ]] ; then
-                case "$iface" in
-                    eth*|enp*)
-                        # ETH lan cable networks, disable wifi features
-                        sed -i -e "s|^\(ESSID.*\)$|#\1|gI" "$HOME/.conkyrc"
-                        sed -i -e "s|^\(Connection quality.*\)$|#\1|gI" "$HOME/.conkyrc"
-                        sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
-                        ;;
-                    lo)
-                        true
-                        ;;
-                    *)
-                        # change iface to our used one
-                        # update: this is not needed, but we need to have the network already set up from wlan before to run this, so it will probably run only when the system is installed
-                        #iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
-                        #if [[ -z "$iface" ]] ; then
-                            #iface="wlan0"
-                        #fi
-                        sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
-                        ;;
-                esac
+    if ! grep -qs "boot=live" /proc/cmdline ; then
+    # in Live mode we configure it too but from deliver, in delayed_actions
+        if [[ -e "$HOME/.conkyrc" ]] ; then
+            if pidof conky 1>/dev/null ; then
+                killall conky
+                is_restart_needed_conky=1
             fi
-        fi
 
-        # change interval if computer is slow
-        if [[ "$RAM_TOTAL_SIZE_mb" -lt 2300 ]] ; then
-            # reduce time interval
-            #sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
-            sed -i -e "s|^.*update_interval.*$|\tupdate_interval = 4.0,|gI" "$HOME/.conkyrc"
-        fi
+            if el_verify_internet ; then
+                iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
+                if [[ -n "$iface" ]] ; then
+                    case "$iface" in
+                        eth*|enp*)
+                            # ETH lan cable networks, disable wifi features
+                            sed -i -e "s|^\(ESSID.*\)$|#\1|gI" "$HOME/.conkyrc"
+                            sed -i -e "s|^\(Connection quality.*\)$|#\1|gI" "$HOME/.conkyrc"
+                            sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
+                            ;;
+                        lo)
+                            true
+                            ;;
+                        *)
+                            # change iface to our used one
+                            # update: this is not needed, but we need to have the network already set up from wlan before to run this, so it will probably run only when the system is installed
+                            #iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
+                            #if [[ -z "$iface" ]] ; then
+                                #iface="wlan0"
+                            #fi
+                            sed -i -e "s|wlan0|$iface|g" "$HOME/.conkyrc"
+                            ;;
+                    esac
+                fi
+            fi
 
-        if ((is_restart_needed_conky)) ; then
-            el_debug "restarting conky"
-            ( conky 1>/dev/null 2>&1 & disown )
+            # change interval if computer is slow
+            if [[ "$RAM_TOTAL_SIZE_mb" -lt 2300 ]] ; then
+                # reduce time interval
+                #sed -i -e "s|^update_interval.*$|update_interval 4.0|gI" "$HOME/.conkyrc"
+                sed -i -e "s|^.*update_interval.*$|\tupdate_interval = 4.0,|gI" "$HOME/.conkyrc"
+            fi
+
+            if ((is_restart_needed_conky)) ; then
+                el_debug "restarting conky"
+                ( conky 1>/dev/null 2>&1 & disown )
+            fi
         fi
     fi
 

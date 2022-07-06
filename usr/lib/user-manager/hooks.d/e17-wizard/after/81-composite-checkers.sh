@@ -61,8 +61,7 @@ main(){
 
 
         # ask for specific resolution in virtual machines
-        if [[ "$MACHINE_VIRTUAL" = "yes" ]] && ! grep -qs "boot=live" /proc/cmdline && ! [[ "$( find -type f "$HOME/.screenlayout/" 2>/dev/null | wc -l )" -gt 0 ]] ; then
-
+        if [[ "$MACHINE_VIRTUAL" = "yes" ]] &&  ! grep -qs "boot=live" /proc/cmdline &&  ! el_check_dir_has_files "$HOME/.screenlayout/" ; then
             if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to set for it a specific resolution?" )"  ; then
                 elive-multiscreens -c
             fi

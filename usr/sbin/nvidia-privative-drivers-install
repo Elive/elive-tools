@@ -945,6 +945,29 @@ install_driver(){
     fi
 
     # - }}}
+    # know arch and report {{{
+    case "$(uname -m)" in
+        i*86)
+            local message_unsupported_arch
+            message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly in their full capabilities." )" "" )"
+
+            dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Suggested Version" \
+                --msgbox "$message_unsupported_arch" \
+                0 0
+
+            is_i386=1
+            ;;
+        *64)
+            is_amd64=1
+            ;;
+        *)
+            el_error "unknown architecture on $SOURCE"
+            is_amd64=1
+            ;;
+    esac
+
+    # }}}
     # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
     if ((is_multiple_cards)) ; then
@@ -1437,28 +1460,6 @@ main(){
     is_xorg_template_wanted=1
 
     args="$@"
-
-    # know arch
-    case "$(uname -m)" in
-        i*86)
-            local message_unsupported_arch
-            message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly in their full capabilities." )" "" )"
-
-            dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                --title "Suggested Version" \
-                --msgbox "$message_unsupported_arch" \
-                0 0
-
-            is_i386=1
-            ;;
-        *64)
-            is_amd64=1
-            ;;
-        *)
-            el_error "unknown architecture on $SOURCE"
-            is_amd64=1
-            ;;
-    esac
 
     # }}}
 

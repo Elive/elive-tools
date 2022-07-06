@@ -1444,7 +1444,7 @@ main(){
             local message_unsupported_arch
             message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly in their full capabilities." )" "" )"
 
-            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Suggested Version" \
                 --msgbox "$message_unsupported_arch" \
                 0 0

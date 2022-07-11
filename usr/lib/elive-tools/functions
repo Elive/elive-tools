@@ -3530,7 +3530,7 @@ el_aptget(){
             echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
         else
             if [[ -n "$DISPLAY" ]] && ! ((is_shown)) ; then
-                el_notify normal logo-elive "Waiting for other software managers to finish before to continue..."
+                el_notify normal "packages-gdebi" "Package Tasks Running" "Waiting for other software managers to finish before to continue..."
                 is_shown=1
             fi
         fi

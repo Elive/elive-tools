@@ -10,14 +10,6 @@ main(){
     mountpoint="$3"
     filesystem="$4"
 
-    case "$( cat /etc/debian_version )" in
-        10.*|"buster"*)
-            is_buster=1
-            ;;
-        7.*|"wheezy"*)
-            is_wheezy=1
-            ;;
-    esac
     # }}}
 
     # kill sucky process that doesn't allow us to umount devices

@@ -8,9 +8,6 @@ set +E
 
 # distro version
 case "$( cat /etc/debian_version )" in
-    10.*|"buster"*)
-        is_buster=1
-        ;;
     7.*|"wheezy"*)
         is_wheezy=1
         ;;

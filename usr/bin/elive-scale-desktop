@@ -401,6 +401,7 @@ main(){
 
         if ((is_restart_needed_hexchat)) ; then
             if pidof hexchat 1>/dev/null ; then
+                killall hexchat
                 el_debug "restarting hexchat"
                 ( hexchat 1>/dev/null 2>&1 & disown )
             fi

@@ -54,6 +54,7 @@ main(){
             fi
             if ((is_restart_needed_conky)) ; then
                 el_debug "restarting conky"
+                killall conky
                 LC_ALL=C sleep 1
                 ( conky 1>/dev/null 2>&1 & disown )
             fi

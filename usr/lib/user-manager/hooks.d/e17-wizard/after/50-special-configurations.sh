@@ -108,6 +108,7 @@ main(){
 
             if ((is_restart_needed_conky)) ; then
                 el_debug "restarting conky"
+                killall conky
                 ( conky 1>/dev/null 2>&1 & disown )
             fi
         fi

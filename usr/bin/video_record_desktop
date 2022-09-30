@@ -43,7 +43,8 @@ main(){
         fi
     fi
 
-    tempfile="$(tempfile -p "video-" -s ".avi")"
+    #tempfile="$(tempfile -p "video-" -s ".avi")"
+    tempfile="$(mktemp --suffix=".avi" )"
     rm -f "$tempfile" # it will be created later, but we have the name
 
     echo -e "Going to record, press 'q' for finish, starting in:"

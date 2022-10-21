@@ -46,7 +46,7 @@ main(){
                 is_restart_needed_conky=1
             fi
             sync
-            if eesh "compmgr ?" | grep -qs "on=1" ; then
+            if eesh compmgr ? | grep -qs "on=1" ; then
                 #sed -i -e "s|^.*own_window_argb_visual.*$|own_window_argb_visual yes|gI" "$HOME/.conkyrc"
                 sed -i -e "s|^.*own_window_argb_visual.*$|\town_window_argb_visual = true,|gI" "$HOME/.conkyrc"
             else

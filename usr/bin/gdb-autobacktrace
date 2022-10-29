@@ -1,0 +1,58 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+#EL_REPORTS="1"
+#el_make_environment
+#. gettext.sh
+#TEXTDOMAIN=""
+#export TEXTDOMAIN
+
+
+main(){
+    # pre {{{
+    local logfile
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) debug-logfile.txt executable [or gdb args]"
+        echo -e "example: $(basename $BASH_SOURCE) /tmp/debug.txt /usr/bin/e16 --args something"
+        exit 1
+    fi
+
+
+    logfile="$1"
+    shift
+
+    # }}}
+
+
+    ex=(
+        -ex "run"
+        -ex "set logging overwrite on"
+        -ex "set logging file "$logfile""
+        -ex "set logging on"
+        -ex "set pagination off"
+        -ex "handle SIG33 pass nostop noprint"
+        -ex "echo backtrace:\n"
+        -ex "backtrace full"
+        -ex "echo \n\nregisters:\n"
+        -ex "info registers"
+        -ex "echo \n\ncurrent instructions:\n"
+        -ex "x/16i \$pc"
+        -ex "echo \n\nthreads backtrace:\n"
+        -ex "thread apply all backtrace"
+        -ex "set logging off"
+        -ex "quit"
+    )
+    echo 0 | gdb -batch-silent "${ex[@]}" --args "$@"
+
+    el_info "GDB Logs saved on: $logfile"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

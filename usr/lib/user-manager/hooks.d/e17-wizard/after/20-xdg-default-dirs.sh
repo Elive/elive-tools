@@ -356,7 +356,7 @@ main(){
                                     # exclude these ones, unreliable
                                     true
                                     ;;
-                                *text*)
+                                *text*|JSON*)
                                     migrate_conf_file "$file"
                                     ;;
                                 data)
@@ -390,7 +390,7 @@ main(){
                                 # exclude these ones, unreliable
                                 true
                                 ;;
-                            *text*)
+                            *text*|JSON*)
                                 migrate_conf_file "$file"
                                 ;;
                             *)

@@ -88,7 +88,8 @@ main(){
                 #chmod +x "$dest/$( basename "$file" )"
                 #el_explain 0 "  compressed from '${size_orig}' KB to '${size_dest}' KB "
                 reduced_percent="$( echo "( $size_dest / $size_orig ) * 100" | bc -l | sed -e 's|\..*$||g' )"
-                el_explain 0 "  reduced at ${reduced_percent} %, from '${size_orig}' KB to '${size_dest}' KB "
+                #el_explain 0 "  reduced at ${reduced_percent} %, from '${size_orig}' KB to '${size_dest}' KB "
+                el_explain 0 "  reduced "$(( 100 - ${reduced_percent} ))" %, from '${size_orig}' KB to '${size_dest}' KB "
                 continue
             else
                 if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then

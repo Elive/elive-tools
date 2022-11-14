@@ -426,7 +426,7 @@ EOF
             menu+=("cairo-dock: A multiple feature dock for your desktop")
 
             # add the installer icon in live mode
-            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+            if ((is_live)) ; then
                 cp -f "$HOME/.config/cairo-dock/current_theme/launchers/01launcher.desktop" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^Exec=.*$|Exec=eliveinstaller-wrapper|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^Order=.*$|Order=101.25|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
@@ -520,6 +520,14 @@ EOF
                 fi
             done 3<<< "$( cat "${order_file}" | sort -u )"
         fi
+    fi
+
+    # free some ram so the system is more clean after setting up the main desktop
+    if ((is_live)) ; then
+        wait
+        sync
+        LC_ALL=C sleep 0.3
+        sudo bash -c "echo 3 > /proc/sys/vm/drop_caches"
     fi
 
     # if we are debugging give it a little pause to see what is going on

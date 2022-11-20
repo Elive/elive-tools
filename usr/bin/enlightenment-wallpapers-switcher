@@ -29,6 +29,10 @@ main(){
 
     # }}}
 
+    if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
+        exit
+    fi
+
     # minutes
     #time_switching_seconds="$(( 5 * 60 ))"
     # seconds

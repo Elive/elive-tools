@@ -10,7 +10,7 @@ main(){
     # }}}
 
     # This is needed for the (next) composite wizard page 150 modifications:
-    if [ "$MACHINE_VIRTUAL" = "yes" ] && [ -z "$EROOT" ] ; then
+    if [ "$MACHINE_VIRTUAL" = "yes" ] ; then
         touch "/tmp/.virtualmachine-detected"
         chmod a+rw "/tmp/.virtualmachine-detected" 2>/dev/null
     fi

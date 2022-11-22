@@ -148,13 +148,13 @@ shared_accounts_state_show(){
 
             # which remote to fetch from?
             if [[ -z "$remote_fetching_working" ]] ; then
-                if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                if [[ "$( command git remote -v | grep -F "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
                     echo -e "\nWhich remote ID you want to track the changes on '$branch_working' from? (empty cancels)\n"
-                    command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+                    command git remote -v | grep -F "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                     read -e remote_fetching_working
                 else
-                    remote_fetching_working="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
+                    remote_fetching_working="$(command git remote -v | grep -F "(fetch)" | awk '{print $1}' | head -1 )"
                 fi
 
                 echo "$remote_fetching_working" > "$conf_remote_fetch_working_from_f"
@@ -221,15 +221,15 @@ shared_messages_create(){
         read -e _entity_email
 
     else
-        if [[ "$( ls -1 "${shared_d}" | grep -v "$git_email" | wc -l )" -gt 1 ]] ; then
-            ls -1 "${shared_d}" | grep -v "$git_email"
+        if [[ "$( ls -1 "${shared_d}" | grep -Fv "$git_email" | wc -l )" -gt 1 ]] ; then
+            ls -1 "${shared_d}" | grep -Fv "$git_email"
             echo -en "${el_c_n}"
 
             # FIXME: improve this: we are using email based now
             echo -e "\nType an email entity:"
             read -e _entity_email
         else
-            _entity_email="$( ls -1 "${shared_d}" | grep -v "$git_email" | tail -1 )"
+            _entity_email="$( ls -1 "${shared_d}" | grep -Fv "$git_email" | tail -1 )"
             el_explain 0 "Messaging to the XX${_entity_email}XX carbon-based life form"
         fi
 
@@ -245,11 +245,11 @@ shared_messages_create(){
 
         # get email of entity
         # FIXME: get nickname instead
-        _entity_email="$( cat "${shared_d}/${_entity_email}/email.txt" | grep "@" )"
+        _entity_email="$( cat "${shared_d}/${_entity_email}/email.txt" | grep -F "@" )"
     fi
 
     # FIXME: what?
-    if ! echo "$_entity_email" | grep -qs "$_entity_email" ; then
+    if ! echo "$_entity_email" | grep -Fqs "$_entity_email" ; then
         el_error "$_entity_email has not a valid email?: $_entity_email"
     fi
 
@@ -268,16 +268,16 @@ shared_messages_create(){
 
     # get the remote working repo url to include in the email {{{
     if [[ -z "$remote_working" ]] ; then
-        if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+        if [[ "$( command git remote -v | grep -F "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
             echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
-            command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+            command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
             echo -e "\nInsert remote repo:"
             read -e remote_working
 
             # translate remote-id to url, which is what we need
-            if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
-                remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
+            if command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
+                remote_working="$( command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
                 # remove extra leading blank chars
                 read -r remote_working <<< "$remote_working"
             fi
@@ -289,7 +289,7 @@ shared_messages_create(){
                 read -e remote_working
             fi
         else
-            remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
+            remote_working="$( command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
         fi
 
         #echo "$remote_working" > "$conf_remote_work_from_f"
@@ -670,16 +670,16 @@ conf_share_setup(){
 
                 # remote working place, needed for use as an identifier in the shares
                 if [[ -z "$remote_working" ]] ; then
-                    if [[ "$( command git remote -v | grep "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                    if [[ "$( command git remote -v | grep -F "(push)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
                         echo -e "\nWhich one is the remote repo where you normally push your work that is shared with your collaborators?\n"
-                        command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+                        command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
 
                         echo -e "\nInsert remote repo:"
                         read -e remote_working
 
                         # translate remote-id to url, which is what we need
-                        if command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
-                            remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
+                        if command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | awk '{print $1}' | grep -qs "^$remote_working" ; then
+                            remote_working="$( command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | grep "^$remote_working" | head -1 | awk '{$1 = ""; print $0}' )"
                         fi
 
 
@@ -689,7 +689,7 @@ conf_share_setup(){
                             read -e remote_working
                         fi
                     else
-                        remote_working="$( command git remote -v | grep "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
+                        remote_working="$( command git remote -v | grep -F "(push)" | sed -e 's|(push).*$||g' | head -1 | awk '{$1 = ""; print $0}' )"
                     fi
 
                     echo "$remote_working" > "$conf_remote_work_from_f"
@@ -717,7 +717,7 @@ conf_share_setup(){
         <li>Now just run again '<strong>$(basename $0) $tool_arguments</strong>' to start using it in shared mode!</li>
     </ol>
 EOF
-                done 3<<< "$( echo "$_emails_invitations" | grep "@" )"
+                done 3<<< "$( echo "$_emails_invitations" | grep -F "@" )"
 
 
                 # create location for this repository identifier
@@ -781,7 +781,7 @@ run_dropbox(){
     el_dependencies_check "dropbox"
 
     # }}}
-    if ! ps ux | grep -v grep | grep -qs "$HOME/\.dropbox-dist/.*dropbox" ; then
+    if ! ps ux | grep -Fv grep | grep -qs "$HOME/\.dropbox-dist/.*dropbox" ; then
         el_explain 0 "Starting dropbox..."
         dropbox start -i  2>/dev/null 1>&2
         sleep 5

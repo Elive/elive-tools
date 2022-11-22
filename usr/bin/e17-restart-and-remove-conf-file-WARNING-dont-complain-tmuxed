@@ -68,7 +68,7 @@ main(){
             # kill all startup-desktop processes
             for i in ~/.e16/New/* ~/.e16/Init/*
             do
-                pid="$( ps ux | grep -vw grep | grep "$i" | awk '{print $2}' )"
+                pid="$( ps ux | grep -Fv grep | grep -F "$i" | awk '{print $2}' )"
                 if [[ -n "$pid" ]] ; then
                     kill -9 "$pid"
                 fi

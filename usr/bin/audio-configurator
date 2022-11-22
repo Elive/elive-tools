@@ -267,7 +267,7 @@ main(){
             selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
 
             # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-            selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
 
             if [[ "$preferenced" = "DAC" ]] ; then
                 # bullseye and up works with ID instead of name
@@ -345,7 +345,7 @@ main(){
                     # add this card only if has a mic available
                     if LC_ALL=C amixer | grep -qsi "Simple mixer control.*'.*Mic" ; then
                         el_debug "the card $line is a good candidate for the extra microphone configuration"
-                        array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $line"
+                        array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -Fi "Simple mixer control" | wc -l ) :: $line"
                     fi
 
                 done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
@@ -358,7 +358,7 @@ main(){
                 selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
 
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-                selection="$( echo "${array_cards}" | sort -g | grep "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
 
                 mic="$selection"
             fi

@@ -277,7 +277,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     # Test for network carrier first, and exit if we don't have it at all
     # we should have "something" connected somewhere
     unset OnLine
-    #for interface in $(ls /sys/class/net/ | grep -v lo);
+    #for interface in $(ls /sys/class/net/ | grep -Fv lo);
     for interface in /sys/class/net/*
     do
         interface="${interface##*/}"
@@ -304,7 +304,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 
                 # if anything tell us that we are connected and we was before, we should still be
                 el_dependencies_check "route"
-                if /sbin/route -n | LC_ALL=C grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | LC_ALL=C grep -qs "default via" ; then
+                if /sbin/route -n | LC_ALL=C grep -qsE "0\.0\.0\.0.*\s+UG\s+" || ip route | LC_ALL=C grep -Fqs "default via" ; then
                     if [[ "${EL_DEBUG}" -gt "3" ]] ; then
                         el_debug "seems like we still online, using cache + small checks"
                     fi
@@ -319,7 +319,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     rm -f "$stamp_hour_prev"
 
     # do we have booted the computer recently? (and so no internet yet), needed for things like geolocation in live
-    if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+    if ! LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
         if [[ "$( cat "/proc/uptime" | awk '{print $1}' | sed -e 's|\..*$||g' )" -lt 300 ]] ; then
 
             # we just booted the system, wait for real 40 secons
@@ -451,7 +451,7 @@ el_resolution_get(){ # show our actual resolution
     # xrandr: more reliable based on the primary screen:
     if [[ -z "$resolution" ]] ; then
         if [[ -x "$( which xrandr )" ]] ; then
-            buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
+            buf="$( LC_ALL=C xrandr -q | grep -F connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
 
             resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
             read -r resolution_h <<< "$resolution_h"
@@ -486,7 +486,7 @@ el_dpi_get(){
 
     if el_dependencies_check "xrandr" ; then
 
-        buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
+        buf="$( LC_ALL=C xrandr -q | grep -F connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
 
         resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
         read -r resolution_h <<< "$resolution_h"
@@ -588,7 +588,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     local check found found_no dir
 
     # TODO: delete this deprecated code in the future and only keep the new one (after we verified that we are not using them anymore)
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         el_warning "the ',' comma separator is deprecated, use '|' pipe instead: from function $FUNCNAME in $SOURCE"
         while read -ru 3 check
         do
@@ -645,7 +645,7 @@ el_dependencies_install(){
     local depends temp is_password_ok
     # TODO deleteme this deprecated code and all other comma substitution occurencies when the code is updated
         # originall made before 3.8.12
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         depends="$( echo "$@" | tr ',' ' ' )"
     else
         depends="$( echo "$@" | tr '|' ' ' )"
@@ -1126,7 +1126,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
     # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
     local found_no _var
 
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         el_warning "the ',' comma separator is deprecated, use '|' pipe instead: from function $FUNCNAME in $SOURCE"
         while read -ru 3 _var
         do
@@ -1180,7 +1180,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
         return 1
     fi
 
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         el_warning "the ',' comma separator is deprecated, use '|' pipe instead: from function $FUNCNAME in $SOURCE"
         while read -ru 3 _var
         do
@@ -1221,7 +1221,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
         return 1
     fi
 
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         el_warning "the ',' comma separator is deprecated, use '|' pipe instead: from function $FUNCNAME in $SOURCE"
         while read -ru 3 line
         do
@@ -1260,7 +1260,7 @@ el_check_dir_has_files(){
     fi
 
     # FIXME: sometimes dirs includes , like for music directories, this function bugs when a , is found, needs improvement (move to | instead?)
-    if echo "$@" | grep -qs "," ; then
+    if echo "$@" | grep -Fqs "," ; then
         el_warning "the ',' comma separator is deprecated, use '|' pipe instead: from function $FUNCNAME in $SOURCE"
         while read -ru 3 dir
         do
@@ -1396,7 +1396,7 @@ el_check_translations_required(){
         stat="/var/cache/elive-translations/statistics/${LANG%%_*}/${TEXTDOMAIN}.txt"
 
         if [[ -s "${stat}" ]] ; then
-            percentage_untranslated="$(cat "${stat}" | LC_ALL=C grep "messages_untranslated_percentage" | awk '{print $2}' | tail -1 )"
+            percentage_untranslated="$(cat "${stat}" | LC_ALL=C grep -F "messages_untranslated_percentage" | awk '{print $2}' | tail -1 )"
 
             if [[ -n "${percentage_untranslated}" ]] && [[ "${percentage_untranslated}" -gt 6 ]] ; then
                 is_translation_required=1
@@ -2506,13 +2506,13 @@ el_report_to_elive(){
             return 0
         fi
         # make sure its not a modified version of Elive, so we don't want to receive reports from other things
-        if grep -qs "machine-id: " /etc/elive-version && grep -qs "fingerprint: " /etc/elive-version ; then
-            fingerprint="$( echo "DFF8D7C2+$( grep "^machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
-            if ! grep -qs "fingerprint: $fingerprint" /etc/elive-version ; then
+        if grep -Fqs "machine-id: " /etc/elive-version && grep -Fqs "fingerprint: " /etc/elive-version ; then
+            fingerprint="$( echo "DFF8D7C2+$( grep -F "machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
+            if ! grep -Fqs "fingerprint: $fingerprint" /etc/elive-version ; then
                 return 0
             fi
         else
-            if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline && ! LC_ALL=C grep -qs "elive-codename: eliveserver" /etc/elive-version ; then
+            if ! LC_ALL=C grep -Fqs "boot=live" /proc/cmdline && ! LC_ALL=C grep -Fqs "elive-codename: eliveserver" /etc/elive-version ; then
                 return 0
             fi
         fi
@@ -2573,7 +2573,7 @@ el_report_to_elive(){
         if el_check_version_development 1>/dev/null 2>&1 ; then
             # ignore reports for more than X days old
             # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
-            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+            if LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
                 if ! el_check_version_development_is_days_recent 7 ; then
                     return 0
                 fi
@@ -2584,7 +2584,7 @@ el_report_to_elive(){
             fi
         else
             # stable versions will need more time
-            if LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+            if LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
                 if ! el_check_version_is_days_recent 14 ; then
                     return 0
                 fi
@@ -2638,7 +2638,7 @@ el_report_to_elive(){
     if [[ -z "$conf_send_debug_reports" ]] ; then
 
         # ask for reports
-        if ! LC_ALL=C grep -qs "boot=live" /proc/cmdline ; then
+        if ! LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
             if [[ "${DISPLAY}" = ":0.0" ]] ; then
                 local message_ask_email
                 # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
@@ -2688,7 +2688,7 @@ el_report_to_elive(){
     esac
 
     if [[ -z "$id" ]] ; then
-        id="$( cat /etc/elive-version | grep "^machine-id: " | awk '{print $2}' )"
+        id="$( cat /etc/elive-version | grep -F "machine-id: " | awk '{print $2}' )"
     fi
     # create an unique identifier to differentiate betweem same-reports
     if [[ -z "$id" ]] ; then
@@ -3084,11 +3084,11 @@ el_user_email_get(){
     # }}}
 
     # user has configured it for elive
-    user_email="$( grep "^email_acount=" "$HOME/.config/email-sender" 2>/dev/null | sed -e 's|^.*="||g' -e 's|".*$||g' | grep "@" | tail -1 )"
+    user_email="$( grep "^email_acount=" "$HOME/.config/email-sender" 2>/dev/null | sed -e 's|^.*="||g' -e 's|".*$||g' | grep -F "@" | tail -1 )"
 
     # get the email from his git/github account
     if ! echo "$user_email" | grep -qs "[[:alpha:]]" ; then
-        user_email="$( git config --get user.email 2>/dev/null | grep "@" | tail -1 )"
+        user_email="$( git config --get user.email 2>/dev/null | grep -F "@" | tail -1 )"
     fi
 
     if echo "$user_email" | grep -qs "[[:alpha:]]" ; then
@@ -3479,12 +3479,12 @@ el_apt_package_version_get(){
         "installed")
             version="$( awk -v FS="\n" -v RS="" -v package="$package" '{ if ( ($1 == "Package: "package ) && ($2 == "Status: install ok installed" || $2 == "Status: hold ok installed") ) print $0}' /var/lib/dpkg/status | LC_ALL=C grep "^Version: " | sed -e 's|^Version: ||g' )"
             if [[ -z "$version" ]] ; then
-                version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Installed:" | sed -e 's|^.*Installed: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
+                version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep -F "Installed:" | sed -e 's|^.*Installed: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
             fi
             ;;
 
         "candidate")
-            version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep "Candidate:" | sed -e 's|^.*Candidate: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
+            version="$( LC_ALL="$EL_LC_EN" apt-cache policy "$package" | LC_ALL=C grep -F "Candidate:" | sed -e 's|^.*Candidate: ||g' | LC_ALL=C grep -E "^[[:digit:]]*" | head -1 )"
             ;;
     esac
 
@@ -3713,7 +3713,7 @@ fi
 # - 3 : + debug
 # - 4 : + very debug
 # - 5 : + very very debug
-#if grep -qs thanatest /proc/cmdline ; then
+#if grep -Fqs thanatest /proc/cmdline ; then
     #EL_DEBUG=${EL_DEBUG:-"3"}
 #else
     EL_DEBUG=${EL_DEBUG:-"2"}

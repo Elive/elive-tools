@@ -15,8 +15,8 @@ main(){
     fi
 
     # }}}
-    input="$( sudo iptables -L -n -x -v | grep INPUT | awk '{print $7}')"
-    output="$( sudo iptables -L -n -x -v | grep OUTPUT | awk '{print $7}')"
+    input="$( sudo iptables -L -n -x -v | grep -F INPUT | awk '{print $7}')"
+    output="$( sudo iptables -L -n -x -v | grep -F OUTPUT | awk '{print $7}')"
 
     Bi="$( expr $input / 1048576 )"
     Bo="$( expr $output / 1048576 )"

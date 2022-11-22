@@ -51,11 +51,11 @@ restart_daemons(){
     sync
     sleep 1
 
-    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
         sleep 1
-        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
             sleep 2
-            if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+            if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
                 sleep 5
             fi
         fi
@@ -353,7 +353,7 @@ chroot_layers_umount(){
         fi
     else
         if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
-            if grep -qs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
+            if grep -Fqs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
                 umount "$dir/dev/pts"
             else
                 #umount -f "$dir/dev/pts" 2>/dev/null 1>&2 || true
@@ -549,7 +549,7 @@ get_mountpoint(){
     fi
 
     # redirect to the correct device if we found it easly
-    if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+    if file -s "$dev" | grep -Fqs "sticky LUKS encrypted" ; then
         dev="${dev##*/}"
 
         if [[ -b "/dev/mapper/${dev}" ]] ; then
@@ -562,19 +562,19 @@ get_mountpoint(){
     fi
 
 
-    #mountpoint="$( udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+    #mountpoint="$( udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     # we should never use LC_ALL because UTF-8 mountpoint names will break, but we need to grep for "mount paths:" so just use this option if we don't have other choice
     # update: EL_LC_EN points to en_US.UTF-8
     #if [[ -z "$mountpoint" ]] ; then
-        #mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+        #mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     #fi
     if ((is_wheezy)) ; then
-        mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+        mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     else
         mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
         # dev state test
         if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-            el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep MountPoints: ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+            el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
         fi
     fi
 
@@ -592,12 +592,12 @@ get_mountpoint(){
 
             # get data again
             if ((is_wheezy)) ; then
-                mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+                mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
             else
                 mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
                 # dev state test
                 if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep MountPoints: ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
                 fi
             fi
 
@@ -617,7 +617,7 @@ get_mountpoint(){
         # get the uuid
         #uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #fi
 
         if [[ -z "$uuid" ]] ; then
@@ -626,9 +626,9 @@ get_mountpoint(){
         fi
 
         # get FS
-        #filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #filesystem="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #fi
 
         # ignore unmountable partitions:
@@ -683,7 +683,7 @@ check_is_mounted(){
             return 1
         fi
         # redirect to the correct device if we found it easly
-        if file -s "$device" | grep -qs "sticky LUKS encrypted" ; then
+        if file -s "$device" | grep -Fqs "sticky LUKS encrypted" ; then
             device="${device##*/}"
 
             if [[ -b "/dev/mapper/${device}" ]] ; then
@@ -710,7 +710,7 @@ check_is_mounted(){
 
         #if LC_ALL="$EL_LC_EN" grep -qs " ${mountpoint} " /proc/mounts ; then
         # this should be a more reliable way, more regex
-        if LC_ALL="$EL_LC_EN" mount | grep -qs " on ${mountpoint} type " ; then
+        if LC_ALL="$EL_LC_EN" mount | grep -Fqs " on ${mountpoint} type " ; then
 
             el_debug "Mountpoint $mountpoint mounted"
             echo "Mounted"
@@ -749,7 +749,7 @@ check_is_mounted(){
             mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
             # dev state test
             if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$device" | grep MountPoints: ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
+                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$device" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
             fi
 
             if [[ -n "$mountpoint" ]] ; then
@@ -792,7 +792,7 @@ el_umount(){
                 return 1
             fi
             # redirect to the correct device if we found it easly
-            if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+            if file -s "$dev" | grep -Fqs "sticky LUKS encrypted" ; then
                 dev="${dev##*/}"
 
                 if [[ -b "/dev/mapper/${dev}" ]] ; then
@@ -816,7 +816,7 @@ el_umount(){
 
         if ((is_device)) ; then
             # is a wap what we try to umount ?
-            if LC_ALL="$EL_LC_EN" file -s "$device" | grep -qs "swap file" ; then
+            if LC_ALL="$EL_LC_EN" file -s "$device" | grep -Fqs "swap file" ; then
                 swapoff "$device" 2>/dev/null
                 el_debug "Umounted (swap): $@"
                 return 0
@@ -1049,7 +1049,7 @@ el_mount(){
         return 1
     fi
     # redirect to the correct device if we found it easly
-    if file -s "$dev" | grep -qs "sticky LUKS encrypted" ; then
+    if file -s "$dev" | grep -Fqs "sticky LUKS encrypted" ; then
         dev="${dev##*/}"
 
         if [[ -b "/dev/mapper/${dev}" ]] ; then
@@ -1061,18 +1061,18 @@ el_mount(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
         restart_daemons
     fi
 
 
     # ignore unmountable partitions:
-    if LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -qs "DEVNAME=" ; then
+    if LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -Fqs "DEVNAME=" ; then
 
         # get FS
-        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
         if echo "$filesystem" | grep -qsE "^(swap|extended|crypto_LUKS|hfs|hfsplus)$" ; then
             el_debug "Unable to mount $dev because is not a mountable partition"
@@ -1080,9 +1080,9 @@ el_mount(){
         fi
 
         # get uuid
-        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
         if [[ -z "$uuid" ]] ; then
             el_debug "Unable to mount $dev because has not an uuid"
@@ -1091,7 +1091,7 @@ el_mount(){
 
         # get type
         # UPDATE: do not enable, LVM2 devices shows as "disk" but they are mountable, so we should refer them by their uuid or fs
-        #devtype="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        #devtype="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #if [[ "$devtype" = "disk" ]] ; then
             #el_debug "Unable to mount $dev because is a disk type"
             #return 1
@@ -1156,14 +1156,14 @@ el_mount(){
         refresh_partition_table "$dev"
 
         # get UUID
-        uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        uuid="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
-        filesystem="$( udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        filesystem="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
-            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+            filesystem="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         fi
 
         # this is not reliable, we SHOULD get the uuid (it is the most reliable way to know that the FS is mountable)
@@ -1280,7 +1280,7 @@ check_device(){
     device="$1"
 
     if ((is_wheezy)) ; then
-        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" 2>&1 | grep -qs "Cannot find device with major:minor" ; then
+        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" 2>&1 | grep -Fqs "Cannot find device with major:minor" ; then
             restart_daemons
         fi
     else
@@ -1329,9 +1329,9 @@ main(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
         restart_daemons
-        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -qs "Couldn't enumerate devices" ; then
+        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
             el_array_member_add "Function 'udisks_dump' doesn't shows any valid info, perhaps a reboot may fix the problem?" "${errors_found[@]}" ; errors_found=("${_out[@]}")
         fi
     fi

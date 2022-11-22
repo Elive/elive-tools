@@ -195,7 +195,7 @@ run_script(){
         if [[ -x "$( which urxvt )" ]] ; then
             $precmd urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
         else
-            if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+            if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
                 $precmd terminology -hold -e "${file} ; apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         fi
@@ -210,7 +210,7 @@ run_script(){
                     $precmd urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                 fi
             else
-                if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
                     if ((is_root_wanted)) ; then
                         $precmd terminology -hold -e "gksu ${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
                     else
@@ -227,7 +227,7 @@ run_script(){
                     $precmd urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
                 fi
             else
-                if readlink -f /etc/altenatives/x-terminal-emulator | grep -qs "terminology" ; then
+                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
                     if ((is_root_wanted)) ; then
                         $precmd terminology -hold -e "gksu ${file} ; echo ; echo ; echo ${message_done}"
                     else

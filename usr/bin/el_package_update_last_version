@@ -57,7 +57,7 @@ main(){
     done
 
     el_debug "looking for updates for the package '${packagename}' "
-    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep -F http | head -1 )"
 
     # check if exist or apt-get update
     if [[ -z "$url_repository" ]] ; then
@@ -74,7 +74,7 @@ main(){
         fi
     fi
 
-    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep http | head -1 )"
+    url_repository="$( apt-cache madison ${packagename} | tr ' ' '\n' | grep -F http | head -1 )"
     if [[ -z "$url_repository" ]] ; then
         NOREPORTS=1 el_warning "Package $packagename not found in the repos, ignoring it..."
         exit 1
@@ -118,9 +118,9 @@ main(){
             if dpkg --compare-versions "${version}" gt "${package_version_installed}" 2>/dev/null ; then
                 package_version_newer_found_maybe=1
             fi
-        done 3<<< "$( curl -s "${url_package_dir}" | grep href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep '\.deb$' | cut -d'_' -f2 | sort -u )"
+        done 3<<< "$( curl -s "${url_package_dir}" | grep -F href | sed -e 's|^.*href="||g' -e 's|".*$||g' | grep '\.deb$' | cut -d'_' -f2 | sort -u )"
 
-    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+    done 3<<< "$( apt-cache show "${packagename}" 2>/dev/null | grep -F "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
 
 
 

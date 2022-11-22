@@ -214,7 +214,7 @@ get_meter(){
         else
             export is_already_configured=1
 
-            if grep -qs "boot=live" /proc/cmdline ; then
+            if grep -Fqs "boot=live" /proc/cmdline ; then
                 audio-configurator --quiet --smart --auto --no-messages
             else
                 audio-configurator
@@ -255,10 +255,10 @@ get_volume(){
     #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        volume="$( LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
+        volume="$( LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -F "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
     else
         # mono
-        volume="$( LC_ALL="$EL_LC_EN" amixer get "${meter}" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
+        volume="$( LC_ALL="$EL_LC_EN" amixer get "${meter}" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -F "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
     fi
 
     if [[ -n "$volume" ]] ; then

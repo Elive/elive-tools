@@ -79,7 +79,7 @@ special_screens(){
         fi
 
         # get the optimal font name
-        if enlightenment_remote -font-list | grep -qs "DejaVu Sans:" ; then
+        if enlightenment_remote -font-list | grep -Fqs "DejaVu Sans:" ; then
             font="DejaVu Sans"
         else
             font="Sans"
@@ -110,7 +110,7 @@ special_screens(){
         for i in "$HOME/.config/google-chrome/Default/Preferences" "$HOME/.config/chromium/Default/Preferences" "/etc/chromium/master_preferences" "/etc/google-chrome/master_preferences" "/etc/skel/.config/google-chrome/Default/Preferences" "/etc/skel/.config/chromium/Default/Preferences"
         do
             el_debug "setting 'show_on_all_tabs' to 'false' for: '$i'"
-            if grep -qs "boot=live" /proc/cmdline ; then
+            if grep -Fqs "boot=live" /proc/cmdline ; then
                 sudo -H sed -i -e "s|^.*\"show_on_all_tabs\":.*$|\"show_on_all_tabs\":false|g" "$i" 2>/dev/null
                 sudo -H sed -i -e "s|^.*\"show_on_all_tabs\" :.*$|\"show_on_all_tabs\" : false|g" "$i" 2>/dev/null
             else

@@ -182,7 +182,7 @@ main(){
         url="$( echo "${buffer}" | pastebinit -b "$urldefault" -a "$user" -f "${syntax}" 2>/dev/null | head -1 )"
 
         # checks
-        if ! echo "${url}" | grep -q "http://" || [[ "${url}" = "$urldefault" ]] ; then
+        if ! echo "${url}" | grep -Fq "http://" || [[ "${url}" = "$urldefault" ]] ; then
             el_error "URL not get correctly: $url"
             exit 1
         fi
@@ -190,7 +190,7 @@ main(){
     fi
 
     # send to channel
-    if ((is_irc_paste)) && ps ux | grep -v grep | grep -q hexchat && el_dependencies_check hexchat 1>/dev/null 2>/dev/null ; then
+    if ((is_irc_paste)) && ps ux | grep -Fv grep | grep -Fqs "hexchat" && el_dependencies_check hexchat 1>/dev/null 2>/dev/null ; then
         # send first a message
         if [[ -n "$message" ]] ; then
             hexchat -e -c "msg #$channel $message"

@@ -32,7 +32,7 @@ get_all_partitions_list(){
     # LVM support {{{
     if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay 2>/dev/null | grep -q "logical volume.*active" ) ; then
         # loop between the partitions that are used for a LVM (physical volume)
-        for pvname in $( LC_ALL="$EL_LC_EN" pvdisplay 2>/dev/null | grep "PV Name" | sed 's|^.*/dev/|/dev/|g')
+        for pvname in $( LC_ALL="$EL_LC_EN" pvdisplay 2>/dev/null | grep -F "PV Name" | sed 's|^.*/dev/|/dev/|g')
         do
             # remove extra leading blank chars
             read -r pvname <<< "$pvname"
@@ -43,7 +43,7 @@ get_all_partitions_list(){
         done
 
         # any logical volume (real partition inside lvm2 setup) to add?
-        #for lvname in $( LC_ALL="$EL_LC_EN" lvdisplay 2>/dev/null | grep "LV Path" | sort -u | sed 's|^.*LV Path||g' )
+        #for lvname in $( LC_ALL="$EL_LC_EN" lvdisplay 2>/dev/null | grep -F "LV Path" | sort -u | sed 's|^.*LV Path||g' )
         #do
             ## remove extra leading blank chars
             #read -r lvname <<< "$lvname"
@@ -147,7 +147,7 @@ get_all_partitions_list(){
                             done
                             [[ ! "$mounted" = "yes" ]] && break
                             listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove}||g" )"
-                            if ! echo -e "${listpartitions}" | grep -q "${bios_raid_partition_add}"
+                            if ! echo -e "${listpartitions}" | grep -Fqs "${bios_raid_partition_add}"
                             then
                                 listpartitions="${listpartitions} ${bios_raid_partition_add}"
                             fi
@@ -527,20 +527,20 @@ main(){
                 item_is_usable=0
             fi
             # reiser 4
-            if echo "$item_filesystem" | grep -qsiE "^(reiser4)$" ; then
-                if ! grep -qs "reiser4" /proc/filesystems ; then
+            if echo "$item_filesystem" | grep -Fqs "reiser4" ; then
+                if ! grep -Fqs "reiser4" /proc/filesystems ; then
                     modprobe reiser4 2>/dev/null
-                    if ! grep -qs "reiser4" /proc/filesystems ; then
+                    if ! grep -Fqs "reiser4" /proc/filesystems ; then
                         item_is_usable=0
                     fi
                 fi
             fi
             # btrfs
-            if echo "$item_filesystem" | grep -qsiE "^(btrfs)$" ; then
+            if echo "$item_filesystem" | grep -Fqs "btrfs" ; then
                 #if ! grep -qs "btrfs" /proc/filesystems ; then
                 #modprobe btrfs 2>/dev/null
 
-                if ! grep -qs "btrfs" /proc/filesystems ; then
+                if ! grep -Fqs "btrfs" /proc/filesystems ; then
                     item_is_usable=0
                 fi
                 #fi

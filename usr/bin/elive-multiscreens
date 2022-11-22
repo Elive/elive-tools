@@ -48,7 +48,7 @@ do
 
     screen="$( LC_ALL=C xrandr -q | grep -E "^$line\s+connected\s+" | sed -e 's|^.*connected ||g' -e 's|+.*$||g' )"
     [[ -z "$screen" ]] && screen="Screen"
-    if ! echo "$screen" | grep -qs "x" ; then
+    if ! echo "$screen" | grep -Fqs "x" ; then
         screen="unknown"
     fi
 
@@ -81,7 +81,7 @@ module_ecomorph_unload(){
     module="ecomorph"
     el_check_variables "module"
 
-    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep -F " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
     if [[ -n "$screens_connected_names" ]] ; then
         screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
     else
@@ -227,7 +227,7 @@ configure_multiscreens(){
         sed -i -e "s| --primary||g" "$file" 2>/dev/null || true
 
 
-        screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+        screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep -F " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
         if [[ -n "$screens_connected_names" ]] ; then
             screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
         else
@@ -431,7 +431,7 @@ load_multiscreens_configuration(){
                             fi
 
                             # get info from xrandr
-                            screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+                            screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep -F " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
                             if [[ -n "$screens_connected_names" ]] ; then
                                 screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
                             else
@@ -595,7 +595,7 @@ main(){
             p)
                 is_mode_previous_desktop=1
                 # set default language to english if we didn't started the desktop yet
-                if grep -qs "boot=live" /proc/cmdline ; then
+                if grep -Fqs "boot=live" /proc/cmdline ; then
                     export LC_ALL=C
                 fi
                 ;;
@@ -625,7 +625,7 @@ main(){
 
 
     # get info from xrandr
-    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
+    screens_connected_names="$( LC_ALL="$EL_LC_EN" xrandr --query | grep -F " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/" )"
     #activeOutput="$( LC_ALL="$EL_LC_EN" xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")" # im not sure what this does but dont looks to work, not always the screen is set as primary, hum
     if [[ -n "$screens_connected_names" ]] ; then
         screens_connected_number="$( echo "$screens_connected_names" | wc -l )"
@@ -641,7 +641,7 @@ main(){
             fi
 
             # inform
-            if xrandr --query | grep -qs " disconnected" ; then
+            if xrandr --query | grep -Fqs " disconnected" ; then
                 $guitool --error --text="$( eval_gettext "Your screen appears to be disconnected, turn it ON first and try again." )"
             else
                 # report

@@ -11,7 +11,7 @@ export TEXTDOMAIN
 main(){
     # pre {{{
 
-    if grep -qs "thanatests" /proc/cmdline ; then
+    if grep -Fqs "thanatests" /proc/cmdline ; then
         exit
     fi
 
@@ -42,7 +42,7 @@ main(){
     language="${language%%.*}"
 
     if ((is_basic_mode)) ; then
-        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
+        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
 
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
             result="${result}.UTF-8"
@@ -106,7 +106,7 @@ EOF
     if [[ "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($1)}' )" = "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($2)}' )" ]] ; then
         kbmap="$( echo "${LANG%.*}" | awk -v FS="_" '{print $1}' )"
     else
-        kbmap="$( setxkbmap -print -verbose 10 | grep "layout:" | awk '{print $2}' )"
+        kbmap="$( setxkbmap -print -verbose 10 | grep -F "layout:" | awk '{print $2}' )"
     fi
 
 
@@ -216,7 +216,7 @@ EOF
         zenity --info --text="$( eval_gettext "You have configured your system to use the selected language and keyboard. But to enable them, you need to select them on your desktop configurations." )"
     else
         # just say ok
-        if ! grep -qs "boot=live" /proc/cmdline ; then
+        if ! grep -Fqs "boot=live" /proc/cmdline ; then
             zenity --info --text="$( eval_gettext "Changes have been saved, to use the new settings you must reboot your computer or re-login on your desktop." )"
         fi
     fi

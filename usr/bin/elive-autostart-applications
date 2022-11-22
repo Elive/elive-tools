@@ -129,9 +129,9 @@ do_list(){
                         ;;
 
                     stop)
-                        pid="$( ps kstart_time uxf | grep -v "grep .*$cmd" | grep "$cmd" | awk '{print $2}' | tail -1 )"
+                        pid="$( ps kstart_time uxf | grep -v "grep .*$cmd" | grep -F "$cmd" | awk '{print $2}' | tail -1 )"
                         if [[ -z "$pid" ]] ; then
-                            pid="$( ps kstart_time uxf | grep -v "grep .*$executable" | grep "$executable" | awk '{print $2}' | tail -1 )"
+                            pid="$( ps kstart_time uxf | grep -v "grep .*$executable" | grep -F "$executable" | awk '{print $2}' | tail -1 )"
                         fi
 
                         if [[ -z "$pid" ]] ; then

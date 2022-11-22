@@ -43,21 +43,21 @@ main(){
 
     if ((is_push)) || el_confirm "Push now?" ; then
 
-        result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
+        result="$( LC_ALL=C command git push 2>&1 | grep -Fv "Warning: Permanently added" )"
         echo "$result"
         echo ""
 
         # bad connection, try again
-        if echo "$result" | grep -qs "Could not resolve hostname" ; then
+        if echo "$result" | grep -Fqs "Could not resolve hostname" ; then
             sleep 2
-            result="$( LC_ALL=C command git push 2>&1 | grep -v "Warning: Permanently added" )"
+            result="$( LC_ALL=C command git push 2>&1 | grep -Fv "Warning: Permanently added" )"
             echo "$result"
             echo ""
             el_error "failed connection, try again?"
         fi
 
         # nothing added?
-        if echo "$result" | grep -qs "Everything up-to-date" ; then
+        if echo "$result" | grep -Fqs "Everything up-to-date" ; then
             el_error "nothing pushed"
         fi
 
@@ -66,7 +66,7 @@ main(){
             el_info "pushed"
         fi
 
-        if LC_ALL=C command git status 2>&1 | grep -qs "Untracked files" ; then
+        if LC_ALL=C command git status 2>&1 | grep -Fqs "Untracked files" ; then
             command git status
             echo ""
             el_warning "Untracked files remaining"

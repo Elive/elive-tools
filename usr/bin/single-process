@@ -42,7 +42,7 @@ main(){
             ;;
 
         *)
-            while ps ux | grep "$command" | grep -v "grep $command" | grep -v "$(basename $0)" | grep -v "vi.* .*$command" 1>/dev/null
+            while ps ux | grep -F "$command" | grep -Fv "grep $command" | grep -Fv "$(basename $0)" | grep -v "vi.* .*$command" 1>/dev/null
             do
                 if ! ((flag_busy)) ; then
                     echo -e "$command busy, waiting..."

@@ -332,7 +332,7 @@ convert_timezone()
 
 main(){
 
-    timezone="$( showmylocation | grep "timezone" | awk -v FS="::" '{print $2}' )"
+    timezone="$( showmylocation | grep -F "timezone" | awk -v FS="::" '{print $2}' )"
 
     # validate and parse
     if [[ -n "$timezone" ]] ; then

@@ -89,7 +89,7 @@ verbose()
 check_npot_texture()
 {
     verbose "Checking for non power of two support: "
-    if glxinfo 2> /dev/null | egrep -q '(GL_ARB_texture_non_power_of_two|GL_NV_texture_rectangle|GL_EXT_texture_rectangle|GL_ARB_texture_rectangle)' ; then
+    if glxinfo 2> /dev/null | grep -qsE '(GL_ARB_texture_non_power_of_two|GL_NV_texture_rectangle|GL_EXT_texture_rectangle|GL_ARB_texture_rectangle)' ; then
         verbose "present. \n";
         return 0;
     else
@@ -104,10 +104,10 @@ check_fbconfig()
 {
     verbose "Checking for FBConfig: "
     if [ "$INDIRECT" = "yes" ]; then
-        $GLXINFO -i | grep -q GLX.*fbconfig
+        $GLXINFO -i | grep -q "GLX.*fbconfig"
         FB=$?
     else
-        $GLXINFO | grep -q GLX.*fbconfig
+        $GLXINFO | grep -q "GLX.*fbconfig"
         FB=$?
     fi
 
@@ -127,7 +127,7 @@ check_fbconfig()
 check_tfp()
 {
     verbose "Checking for texture_from_pixmap: "
-    if [ $($GLXINFO 2>/dev/null | grep GLX_EXT_texture_from_pixmap -c) -gt 2 ] ; then
+    if [ $($GLXINFO 2>/dev/null | grep -F GLX_EXT_texture_from_pixmap -c) -gt 2 ] ; then
         verbose "present. \n"
         return 0;
     else
@@ -150,7 +150,7 @@ check_tfp()
 check_composite()
 {
     verbose "Checking for Composite extension: "
-    if xdpyinfo -queryExtensions | grep -q Composite ; then
+    if xdpyinfo -queryExtensions | grep -Fq Composite ; then
         verbose "present. \n";
         return 0;
     else
@@ -163,7 +163,7 @@ check_composite()
 check_xgl()
 {
     verbose "Checking for Xgl: "
-    if xvinfo | grep -q Xgl ; then
+    if xvinfo | grep -Fq Xgl ; then
         verbose "present. \n"
         return 0;
     else

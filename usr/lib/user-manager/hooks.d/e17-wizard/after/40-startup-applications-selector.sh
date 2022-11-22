@@ -529,7 +529,7 @@ EOF
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
         sleep 5
 
-        result="$( yad --width=400 --center --title="Elive Retro" \
+        result="$( yad --width=400 --center --title="Elive Retro menu" \
             --form \
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
@@ -558,7 +558,7 @@ EOF
         if [[ "$retro_play" = "TRUE" ]] ; then
             case "$retro_play_type" in
                 *"window"*)
-                    mpv --no-config --profile=pseudo-gui --autofit=40% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    mpv --no-config --profile=pseudo-gui --autofit=45% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
                     ;;
                 *"YouTube"*)
                     web-launcher --app="https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
@@ -583,7 +583,6 @@ EOF
 
     # free some ram so the system is more clean after setting up the main desktop
     if ((is_live)) ; then
-        wait
         sync
         LC_ALL=C sleep 0.3
         sudo bash -c "echo 3 > /proc/sys/vm/drop_caches"

@@ -539,7 +539,7 @@ EOF
             --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
             --field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
             --button="gtk-ok" || true )"
-        ret="$?"
+        #ret="$?"
         if [[ -n "$result" ]] ; then
             retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
             retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"

@@ -17,11 +17,11 @@ main(){
     # pre {{{
     local file menu menu_auto menu_auto_live message_gui buf
 
-    RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
+    RAM_TOTAL_SIZE_bytes="$(grep -F MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
     RAM_TOTAL_SIZE_mb="${RAM_TOTAL_SIZE_mb%.*}"
 
-    if grep -qs "boot=live" /proc/cmdline ; then
+    if grep -Fqs "boot=live" /proc/cmdline ; then
         is_live=1
     else
         if ! el_dependencies_check "zenity" ; then
@@ -102,7 +102,7 @@ main(){
         case "$filename" in
             # do we need a touch-screen keyboard?
             "onboard-autostart.desktop")
-                if grep -qs "keyboard: not found" /etc/elive-version ; then
+                if grep -Fqs "keyboard: not found" /etc/elive-version ; then
                     menu+=("TRUE")
                     menu_auto+=("$file")
                     menu_auto_live+=("$file")
@@ -287,7 +287,7 @@ main(){
 
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
-        if ! LC_ALL=C grep -qs "elxstrt.desktop" "${order_file}" ; then
+        if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file}" ; then
             echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
         fi
     fi
@@ -324,7 +324,7 @@ main(){
                     # re-enable it
                     file="$( echo "$answer" | tr '|' '\n' | grep "/polkit.*authentication" | head -1 )"
                     if [[ -s "$file" ]] ; then
-                        if ! LC_ALL=C grep -qs "$file" "${order_file}" ; then
+                        if ! LC_ALL=C grep -Fqs "$file" "${order_file}" ; then
                             echo "$file" >> "${order_file}"
                         fi
                     else
@@ -367,7 +367,7 @@ EOF
                 # re-enable it
                 file="$( echo "$answer" | tr '|' '\n' | grep "/gdu.*notification" | head -1 )"
                 if [[ -s "$file" ]] ; then
-                    if ! LC_ALL=C grep -qs "$file" "${order_file}" ; then
+                    if ! LC_ALL=C grep -Fqs "$file" "${order_file}" ; then
                         echo "$file" >> "${order_file}"
                     fi
                 else
@@ -395,7 +395,7 @@ EOF
         fi
 
         # include composite, only if the video card has enough power
-        video_memory="$( glxinfo | grep "Video memory:" | sed -e 's|^.*memory: ||g' -e 's|MB.*$||g' )"
+        video_memory="$( glxinfo | grep -F "Video memory:" | sed -e 's|^.*memory: ||g' -e 's|MB.*$||g' )"
         if [[ "$video_memory" -ge 128 ]] || [[ -e "/tmp/.virtualmachine-detected" ]] ; then
             menu+=("TRUE")
         else
@@ -447,7 +447,7 @@ EOF
 
 
         if [[ -n "${menu[@]}" ]] ; then
-            if grep -qs "thanatests" /proc/cmdline ; then
+            if grep -Fqs "thanatests" /proc/cmdline ; then
                 result="compositor|conky|cairo-dock"
             else
                 result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
@@ -582,7 +582,7 @@ EOF
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2
         #sleep 4
     #fi

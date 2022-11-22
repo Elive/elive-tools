@@ -42,7 +42,7 @@ migrate_conf_file(){
 
     # replacements {{{
     if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
-        if grep -qs "$HOME/Desktop" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_debug "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -50,7 +50,7 @@ migrate_conf_file(){
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
     if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
-        if grep -qs "$HOME/Downloads" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
             el_debug "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -58,7 +58,7 @@ migrate_conf_file(){
     fi
 
     if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
-        if grep -qs "$HOME/Documents" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
             el_debug "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -66,7 +66,7 @@ migrate_conf_file(){
     fi
 
     if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
-        if grep -qs "$HOME/Images" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
             el_debug "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -74,7 +74,7 @@ migrate_conf_file(){
     fi
 
     if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
-        if grep -qs "$HOME/Music" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
             el_debug "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -82,7 +82,7 @@ migrate_conf_file(){
     fi
 
     if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
-        if grep -qs "$HOME/Videos" "$file" 2>/dev/null ; then
+        if grep -Fqs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
             el_debug "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
@@ -129,13 +129,13 @@ main(){
     echo 1 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
 
     # only show a gui if we are not in live mode!
-    if ! grep -qs "boot=live" /proc/cmdline ; then
+    if ! grep -Fqs "boot=live" /proc/cmdline ; then
         { ( while test -f "$TMP_PROGRESS_CONFIGURING_f" ; do cat "$TMP_PROGRESS_CONFIGURING_f" || true ; sleep 1 ; done | $guitool --progress --pulsate --text="$( eval_gettext "Migrating directories and configurations to the selected language... This operation can be very slow if you have many files. Please be patient." )" --auto-close ) & disown ; } 2>/dev/null
     fi
 
 
     # progress
-    echo 10 > "$TMP_PROGRESS_CONFIGURING_f" > "$TMP_PROGRESS_CONFIGURING_f"
+    echo 10 > "$TMP_PROGRESS_CONFIGURING_f"
 
     # update language to the user's selected one first
     if [[ -n "$E_START" ]] ; then
@@ -360,7 +360,7 @@ main(){
                                     migrate_conf_file "$file"
                                     ;;
                                 data)
-                                    if echo "$file" | grep -qs "config/transmission/" ; then
+                                    if echo "$file" | grep -Fqs "config/transmission/" ; then
                                         migrate_conf_file "$file"
                                     else
                                         NOREPORTS=1 el_warning "Unknown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
@@ -379,7 +379,7 @@ main(){
                                     ;;
                             esac
                         fi
-                    done 3<<< "$( find "$entry" -type f | grep -v "$cachedir" )"
+                    done 3<<< "$( find "$entry" -type f | grep -Fv "$cachedir" )"
                 fi
 
                 # is a file
@@ -435,16 +435,16 @@ main(){
     # create symlinks for thunar panel
     rm -f "$HOME/.gtk-bookmarks"
 
-    if ! grep -qs "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
+    if ! grep -Fqs "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
         echo -e "file://$( xdg-user-dir DOCUMENTS | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file://$( xdg-user-dir VIDEOS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
+    if ! grep -Fqs "file://$( xdg-user-dir VIDEOS | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
         echo -e "file://$( xdg-user-dir VIDEOS | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
+    if ! grep -Fqs "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" "$HOME/.gtk-bookmarks" ; then
         echo -e "file://$( xdg-user-dir DOWNLOAD | uri-gtk-encode )" >> "$HOME/.gtk-bookmarks"
     fi
-    if ! grep -qs "file:///tmp" "$HOME/.gtk-bookmarks" ; then
+    if ! grep -Fqs "file:///tmp" "$HOME/.gtk-bookmarks" ; then
         echo -e "file:///tmp Temporal" >> "$HOME/.gtk-bookmarks"
     fi
 
@@ -477,7 +477,7 @@ main(){
     rm -f "$TMP_PROGRESS_CONFIGURING_f"
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
+    if grep -Fqs "debug" /proc/cmdline ; then
         echo -e "debug: sleep 4" 1>&2
         sleep 4
     fi

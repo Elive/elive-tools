@@ -522,6 +522,10 @@ EOF
         fi
     fi
 
+
+    #
+    # Elive Retro (retrowave) version {{{
+    #
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
         sleep 5
 
@@ -535,9 +539,47 @@ EOF
             --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
             --field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
             --button="gtk-ok" || true )"
-        echo "$result"
+        ret="$?"
+        if [[ -n "$result" ]] ; then
+            retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+            retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
+            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
+            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+        else
+            retro_play="TRUE"
+            retro_play_type="Play in a window"
+            retro_forum="FALSE"
+            retro_music_composer="FALSE"
+            retro_demo_mode="FALSE"
+        fi
+
+        # music retrowave
+        if [[ "$retro_play" = "TRUE" ]] ; then
+            case "$retro_play_type" in
+                *"window"*)
+                    mpv --no-config --profile=pseudo-gui --autofit=40% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    ;;
+                *"YouTube"*)
+                    web-launcher --app="https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    ;;
+                *"Radio"*)
+                    audacious -p &
+                    ;;
+            esac
+        fi
+
+        # forum
+        if [[ "$retro_forum" = "TRUE" ]] ; then
+            web-launcher "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
+        fi
+
 
     fi
+
+
+    # }}}
+
 
     # free some ram so the system is more clean after setting up the main desktop
     if ((is_live)) ; then

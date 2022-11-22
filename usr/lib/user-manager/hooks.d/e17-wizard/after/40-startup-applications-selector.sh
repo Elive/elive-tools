@@ -533,7 +533,7 @@ EOF
             --form \
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
-            --field="$( eval_gettext "Type mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
+            --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
             --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
             --field="Candies::lbl" \
             --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
@@ -558,20 +558,20 @@ EOF
         if [[ "$retro_play" = "TRUE" ]] ; then
             case "$retro_play_type" in
                 *"window"*)
-                    mpv --no-config --profile=pseudo-gui --autofit=45% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    ( mpv --no-config --profile=pseudo-gui --autofit=45% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                     ;;
                 *"YouTube"*)
-                    web-launcher --app="https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    ( web-launcher --app="https://youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                     ;;
                 *"Radio"*)
-                    audacious -p &
+                    ( audacious -p & )
                     ;;
             esac
         fi
 
         # forum
         if [[ "$retro_forum" = "TRUE" ]] ; then
-            web-launcher "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
+            ( web-launcher "https://forum.elivelinux.org/c/special-versions/eliveretro/70" & )
         fi
 
 

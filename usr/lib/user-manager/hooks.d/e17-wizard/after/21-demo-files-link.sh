@@ -96,7 +96,7 @@ main(){
     fi
 
     # check
-    if [[ "$LANG" != *UTF* ]] && ! grep -qs "^${LANG} UTF-8" /etc/locale.gen ; then
+    if [[ "$LANG" != *UTF* ]] && ! LC_ALL=C grep -qs "^${LANG} UTF-8" /etc/locale.gen ; then
         el_warning "wrong language set? LANG is '$LANG', and /etc/default/locale set to '$(cat /etc/default/locale)' "
     fi
 
@@ -174,7 +174,7 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    if grep -qs "debug" /proc/cmdline ; then
+    if grep -Fqs "debug" /proc/cmdline ; then
         echo -e "debug: sleep 4" 1>&2
         sleep 4
     fi

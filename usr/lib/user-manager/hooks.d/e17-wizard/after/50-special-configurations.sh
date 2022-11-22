@@ -19,13 +19,13 @@ main(){
 
     # }}}
 
-    RAM_TOTAL_SIZE_bytes="$(grep MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
+    RAM_TOTAL_SIZE_bytes="$( grep -F MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
     RAM_TOTAL_SIZE_mb="${RAM_TOTAL_SIZE_mb%.*}"
 
     # disable XV rendering if we cannot use it
     if [[ -x "$(which xvinfo)" ]] ; then
-        if xvinfo | grep -qs "screen #" && xvinfo | grep -qs "no adaptors present" ; then
+        if xvinfo | grep -Fqs "screen #" && xvinfo | grep -Fqs "no adaptors present" ; then
             touch "$HOME/.mplayer/gui.conf" "$HOME/.mplayer/config"
 
             if grep -qs "^vo_driver =" "$HOME/.mplayer/gui.conf" ; then
@@ -65,7 +65,7 @@ main(){
 
 
     # change conky network configuration
-    if ! grep -qs "boot=live" /proc/cmdline ; then
+    if ! grep -Fqs "boot=live" /proc/cmdline ; then
     # in Live mode we configure it too but from deliver, in delayed_actions
         if [[ -e "$HOME/.conkyrc" ]] ; then
             if pidof conky 1>/dev/null ; then
@@ -74,7 +74,7 @@ main(){
             fi
 
             if el_verify_internet ; then
-                iface="$( grep "1" /sys/class/net/*/carrier 2>/dev/null | grep -v "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
+                iface="$( grep -F "1" /sys/class/net/*/carrier 2>/dev/null | grep -Fv "/net/lo/" | sed -e 's|/carrier.*$||g' -e 's|^.*/||g' | head -1 )"
                 if [[ -n "$iface" ]] ; then
                     case "$iface" in
                         eth*|enp*)
@@ -89,7 +89,7 @@ main(){
                         *)
                             # change iface to our used one
                             # update: this is not needed, but we need to have the network already set up from wlan before to run this, so it will probably run only when the system is installed
-                            #iface="$( iwconfig 2>/dev/null | grep IEEE | awk '{print $1}' | head -1 )"
+                            #iface="$( iwconfig 2>/dev/null | grep -F IEEE | awk '{print $1}' | head -1 )"
                             #if [[ -z "$iface" ]] ; then
                                 #iface="wlan0"
                             #fi
@@ -115,7 +115,7 @@ main(){
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 2" 1>&2
     #fi
 }

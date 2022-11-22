@@ -341,16 +341,24 @@ main(){
             if [[ "$entry" = .* ]] ; then
                 entry="$HOME/$entry"
 
+                # ignore these unneeded ones for speed reasons
+                case "$entry" in
+                    *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|".ccache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*)
+                        continue ; ;;
+                esac
+
                 # is a dir, scan all subfiles from it
                 if [[ -d "$entry" ]] ; then
-                    # ignore these unneeded ones for speed reasons
-                    if echo "$entry" | grep -qsE "$HOME/\.(gimp-|kde$|vim$|cargo$|ccache$|themes$|e$|java$|smc$|config/GIMP)" ; then
-                        continue
-                    fi
 
                     while read -ru 3 file
                     do
-                        if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
+                        # ignore these unneeded ones for speed reasons
+                        case "$file" in
+                            *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|".ccache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*)
+                                continue ; ;;
+                        esac
+
+                        if grep -qsEa "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
                             case "$(file -b "$file" )" in
                                 *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
                                     # exclude these ones, unreliable

@@ -44,10 +44,14 @@ main(){
     # - Audio configurations }}}
     # add elive gpg key {{{
 
+    if grep -qs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
+
     # import gnupg keys
     el_explain 0 "Importing Elive gpg key..."
 
-    if [[ -d "/usr/share/elive-security" ]] && ! grep -qs "boot=live" /proc/cmdline ; then
+    if [[ -d "/usr/share/elive-security" ]] && ! ((is_live)) ; then
         if el_dependencies_check gpg ; then
             gpg --import /usr/share/elive-security/*.asc
         fi
@@ -56,12 +60,12 @@ main(){
     # }}}
 
     # tell the user that many popups are coming...
-    if ! grep -qs "boot=live" /proc/cmdline ; then
+    if ! ((is_live)) ; then
         $guitool --info --text="$( eval_gettext "Before you start using your new desktop, we need to configure a few things to improve your user experience..." )"
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2
         #sleep 4
     #fi

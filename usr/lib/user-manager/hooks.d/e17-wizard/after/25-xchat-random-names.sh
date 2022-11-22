@@ -8,6 +8,10 @@ main(){
     # pre {{{
     local ip number md5ip NUMBERRANDOM
 
+    if grep -Fqs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
+
     # }}}
 
     # set hexchat random names {{{
@@ -31,19 +35,19 @@ main(){
 
         NUMBERRANDOM="${randomized:0:2}"
         sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if ((is_live)) ; then
             sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:2:2}"
         sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if ((is_live)) ; then
             sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:4:2}"
         sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if ((is_live)) ; then
             sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
     fi
@@ -52,7 +56,7 @@ main(){
     # }}}
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2
         #sleep 4
     #fi

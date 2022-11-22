@@ -15,7 +15,7 @@ main(){
             # or we have no numeric values with % at all
             acpi_result="$( LC_ALL=C acpi 2>&1 )"
             if echo "$acpi_result" | grep -qsE "\s+(0|1|2)%" \
-                || echo "$acpi_result" | grep -qsE "No support for.*power_supply" \
+                || echo "$acpi_result" | grep -qs "No support for.*power_supply" \
                 || ! echo "$acpi_result" | grep -qsE "\s+[[:digit:]]*%" ; then
 
                 enlightenment_remote -module-disable battery
@@ -29,7 +29,7 @@ main(){
             # always load screen configurations
             if [ -e "/usr/share/xdgeldsk/applications/arandr-load-conf.desktop" ] ; then
                 mkdir -p "$HOME/.e/e17/applications/restart"
-                if ! grep -qs "arandr-load-conf.desktop" "$HOME/.e/e17/applications/restart/.order" ; then
+                if ! grep -Fqs "arandr-load-conf.desktop" "$HOME/.e/e17/applications/restart/.order" ; then
                     echo "arandr-load-conf.desktop" >> "$HOME/.e/e17/applications/restart/.order"
                 fi
             fi

@@ -12,7 +12,7 @@ export TEXTDOMAIN
 
 suggest_emodule_flag_keyboard(){
     # do not annoy with suggestions in live mode
-    if grep -qs "boot=live" /proc/cmdline ; then
+    if grep -Fqs "boot=live" /proc/cmdline ; then
         return 0
     fi
 
@@ -106,7 +106,7 @@ main(){
         fi
 
         # add package in installed system
-        if grep -qs "boot=live" /proc/cmdline ; then
+        if grep -Fqs "boot=live" /proc/cmdline ; then
             while read -ru 3 line
             do
                 echo "$line" >> /tmp/.packages-to-install
@@ -115,7 +115,7 @@ main(){
     fi
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2
         #sleep 4
     #fi

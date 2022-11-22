@@ -9,7 +9,7 @@ main(){
     local lang amount percent dir total
 
     # ignore if we are in live, users are not so interested yet into collaborate with translations
-    if grep -qs "boot=live" /proc/cmdline ; then
+    if grep -Fqs "boot=live" /proc/cmdline ; then
         exit
     fi
     # }}}
@@ -26,7 +26,7 @@ main(){
 
     if [[ -n "$LANG" ]] && [[ "$LANG" != en* ]] ; then
         if [[ -d "$dir" ]] ; then
-            amount="$( ls -1 "$dir" | grep txt | wc -l )"
+            amount="$( ls -1 "$dir" | grep -F txt | wc -l )"
             total="$( echo "$( cat "$dir"/* | sed -e 's|^.*: ||g' -e 's|.*|& +|g' | tr '\n' ' ' | sed -e 's|+ $||g' )" | bc -l )"
 
             percent="$(( $total / $amount ))"
@@ -47,7 +47,7 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 4" 1>&2
         #sleep 4
     #fi

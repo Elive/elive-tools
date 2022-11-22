@@ -46,7 +46,7 @@ main(){
                 is_restart_needed_conky=1
             fi
             sync
-            if eesh compmgr '?' | grep -qs "on=1" ; then
+            if eesh compmgr '?' | grep -Fqs "on=1" ; then
                 #sed -i -e "s|^.*own_window_argb_visual.*$|own_window_argb_visual yes|gI" "$HOME/.conkyrc"
                 sed -i -e "s|^.*own_window_argb_visual.*$|\town_window_argb_visual = true,|gI" "$HOME/.conkyrc"
             else
@@ -62,7 +62,7 @@ main(){
 
 
         # ask for specific resolution in virtual machines
-        if [[ "$MACHINE_VIRTUAL" = "yes" ]] &&  ! grep -qs "boot=live" /proc/cmdline &&  ! el_check_dir_has_files "$HOME/.screenlayout/" ; then
+        if [[ "$MACHINE_VIRTUAL" = "yes" ]] &&  ! grep -Fqs "boot=live" /proc/cmdline &&  ! el_check_dir_has_files "$HOME/.screenlayout/" ; then
             if $guitool --question --text="$( eval_gettext "Elive can remember a specific desired resolution for your virtual machine screen. Do you want to set for it a specific resolution?" )"  ; then
                 elive-multiscreens -c
             fi
@@ -72,7 +72,7 @@ main(){
     # }}}
 
     # show a tip suggestion about resizing windows, needed for big-windows that appears out of hte borders (e16), but also useful for e17:
-    if ! grep -qs "thanatests" /proc/cmdline ; then
+    if ! grep -Fqs "thanatests" /proc/cmdline ; then
         notify-send -u low -t 15000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
     fi
 
@@ -104,7 +104,7 @@ main(){
 
 
         # show some info to the users
-        value="$( grep 'value "engine"' "$temp" | sed -e 's|^.*: ||g' -e 's|;.*$||g' | tail -1 )"
+        value="$( grep -F 'value "engine"' "$temp" | sed -e 's|^.*: ||g' -e 's|;.*$||g' | tail -1 )"
         case "$value" in
             1)
                 local message_gl
@@ -127,7 +127,7 @@ main(){
                     zenity --info --text="$message_gl" || true
 
                     # vsync ?
-                    if grep 'value "vsync"' "$temp" | sed -e 's|^.*: ||g' -e 's|;.*$||g' | tail -1 | grep -qs "1" ; then
+                    if grep -F 'value "vsync"' "$temp" | sed -e 's|^.*: ||g' -e 's|;.*$||g' | tail -1 | grep -Fqs "1" ; then
                         true
                     else
                         local message_vsync_disabled
@@ -138,8 +138,8 @@ main(){
 
                 # intel card for wheezy?
                 # update: not needed anymore
-                #if lspci | grep VGA | grep -qs "Intel" ; then
-                #if grep debian_version /etc/elive-version | grep -i wheXXXXezy ; then
+                #if lspci | grep -F VGA | grep -Fqs "Intel" ; then
+                #if grep -F debian_version /etc/elive-version | grep -i wheXXXXezy ; then
                 #local message_intel_buggy
                 #message_intel_buggy="$( printf "$( eval_g
                 #ettext "Note Intel cards: There's a known problem with the blanking (screensaver) powersavign feature on this version of the Intel drivers, which turns your desktop unrensponsive, if you really want automatic screen blanking you should use instead the software-mode of composite, but if you don't need it, just don't turn it on and everything else is fine." )" )"
@@ -158,7 +158,7 @@ main(){
     # end e17 }}}
 
     # hardware check: broken bios? {{{
-    if dmesg | grep -qsi "you might be running a broken BIOS" ; then
+    if dmesg | grep -Fqsi "you might be running a broken BIOS" ; then
         local message_efiboot
         if el_check_dir_has_files "/sys/firmware/efi/" 1>/dev/null 2>&1 ; then
             message_efiboot="$( printf "$( eval_gettext "Note: Elive has a feature to install BIOS updates but for that, you need to reinstall Elive using the EFI boot mode in your BIOS." )" "" )"
@@ -175,7 +175,7 @@ main(){
 
 
     # if we are debugging give it a little pause to see what is going on
-    #if grep -qs "debug" /proc/cmdline ; then
+    #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 2" 1>&2
         #sleep 2
     #fi

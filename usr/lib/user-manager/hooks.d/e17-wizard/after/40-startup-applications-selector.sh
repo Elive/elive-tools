@@ -522,6 +522,23 @@ EOF
         fi
     fi
 
+    if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
+        sleep 5
+
+        result="$( yad --width=400 --center --title="Elive Retro" \
+            --form \
+            --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
+            --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
+            --field="$( eval_gettext "Type mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
+            --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
+            --field="Candies::lbl" \
+            --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
+            --field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
+            --button="gtk-ok" || true )"
+        echo "$result"
+
+    fi
+
     # free some ram so the system is more clean after setting up the main desktop
     if ((is_live)) ; then
         wait

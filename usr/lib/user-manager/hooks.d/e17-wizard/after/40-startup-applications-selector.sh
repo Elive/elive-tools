@@ -558,10 +558,10 @@ EOF
         if [[ "$retro_play" = "TRUE" ]] ; then
             case "$retro_play_type" in
                 *"window"*|*"Window"*)
-                    ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
+                    ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                     ;;
                 *"YouTube"*|*"Youtube"*|*"youtube"*)
-                    ( web-launcher --app="https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
+                    ( web-launcher --delay=2 --app="https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                     ;;
                 *"Radio"*|*"radio"*)
                     ( audacious -p & )
@@ -571,7 +571,7 @@ EOF
 
         # forum
         if [[ "$retro_forum" = "TRUE" ]] ; then
-            ( web-launcher "https://forum.elivelinux.org/c/special-versions/eliveretro/70" & )
+            ( web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" & )
         fi
 
 

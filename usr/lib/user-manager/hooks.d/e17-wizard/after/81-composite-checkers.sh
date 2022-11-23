@@ -67,6 +67,11 @@ main(){
                 elive-multiscreens -c
             fi
         fi
+
+        # re-place pagers to align them
+        if [[ -x "/usr/share/e16/misc/place-pagers.pl" ]] ; then
+            "/usr/share/e16/misc/place-pagers.pl"
+        fi
     fi
 
     # }}}

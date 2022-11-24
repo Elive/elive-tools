@@ -1,0 +1,84 @@
+#!/bin/sh
+SOURCE="$(basename $0)"
+#set -x
+
+main(){
+    tmp_lock="/tmp/.${SOURCE}-${USER}-killing.lock"
+    # run
+    if [ -x "/usr/bin/ulauncher" ] ; then
+        if ps ux | LC_ALL=C grep -qs "python3.*ulauncher$" ; then
+            if [ "$1" = "force" ] ; then
+                ulauncher-toggle
+            else
+                # do not do anything because is already running, so the trigger will automatically open it
+                true
+            fi
+        else
+            ( ulauncher & )
+            sleep 2
+        fi
+        is_launcher_used=1
+    else
+        # use kupfer instead
+        if [ -x "/usr/bin/kupfer" ] ; then
+            if pidof -q kupfer ; then
+                #if [ "$1" = "force" ] ; then
+                    ( kupfer & )
+                #else
+                    ## do not do anything because is already running, so the trigger will automatically open it
+                    #true
+                #fi
+            fi
+            is_launcher_used=1
+        fi
+    fi
+
+    if ! [ -n "$is_launcher_used" ] ; then
+        #echo -E "Please install first a launcher, like 'ulauncher' or 'kupfer'" 1>&2
+        notify-send -t 10000 -i error "Dependencies missing" "Please install first a launcher,\nlike 'ulauncher' or 'kupfer'"
+        exit 1
+    fi
+
+    # free some ram
+    ram_used="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}' )"
+    ram_total="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $2}' )"
+    ram_used_percent="$( echo "( $ram_used / $ram_total ) * 100" | bc -l | sed -e 's|\..*$||g' )"
+
+    if [ "$ram_used_percent" -gt 70 ] ; then
+        killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1
+        is_killed=1
+        rm -f "$tmp_lock"
+    fi
+
+    # if this process is already running, consider it killed (it will kill it anyways), so we can exit from the tool
+    #if [ "$( ps ux | grep -qsv "grep .*${SOURCE}" | grep -Fqs "$SOURCE" )" -gt 1 ] ; then
+    #if [ -e "$tmp_lock" ] ; then
+        #is_killed=1
+        #rm -f "$tmp_lock"
+    #fi
+
+
+    # keep system light if not used for a while
+    if [ -n "$is_killed" ] ; then
+        exit 0
+    else
+        if ! [ -e "$tmp_lock" ] ; then
+            if grep -Fqs "boot=live" /proc/cmdline ; then
+                time_wait="2m"
+            else
+                time_wait="10s" # FIXME
+            fi
+            ( sleep $time_wait ; killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ; rm -f "$tmp_lock" ) &
+            # set the flag
+            echo $$ > "$tmp_lock"
+        fi
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

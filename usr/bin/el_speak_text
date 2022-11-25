@@ -69,7 +69,13 @@ main(){
 
     # cleanup space
     cd "$HOME/.cache/el_speak"
-    ls -1tr | head -n "-40" | xargs rm -f
+    # update: the next command not works with some characters, so the next is the alternative:
+    #ls -1tr | head -n "-40" | xargs rm -f
+    count=0
+    while IFS= read -r -d ' ' && IFS= read -r -d '' filename; do
+        (( ++count > 40 )) && printf '%s\0' "$filename"
+    done < <(find . -maxdepth 1 -type f -iname '*'wav -printf '%T@ %P\0' | sort -g -z) \
+        | xargs -0 rm -f --
 
     #echo "$text" >> /tmp/.$(basename $0)-${USER}-log.txt
 

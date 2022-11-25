@@ -7,12 +7,12 @@ main(){
     # run
     if [ -x "/usr/bin/ulauncher" ] ; then
         if ps ux | LC_ALL=C grep -qs "python3.*ulauncher$" ; then
-            if [ "$1" = "force" ] ; then
+            #if [ "$1" = "force" ] ; then
                 ulauncher-toggle
-            else
-                # do not do anything because is already running, so the trigger will automatically open it
-                true
-            fi
+            #else
+                ## do not do anything because is already running, so the trigger will automatically open it
+                #true
+            #fi
         else
             ( ulauncher & )
             sleep 2

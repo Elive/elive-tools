@@ -70,6 +70,9 @@ main(){
                 else
                     if [ "$ram_used_percent" -gt 20 ] ; then
                         if [ -n "$is_live" ] ; then time_wait="3m" ; else time_wait="30m" ; fi
+                    else
+                        # default
+                        if [ -n "$is_live" ] ; then time_wait="3m" ; else time_wait="40m" ; fi
                     fi
                 fi
             fi

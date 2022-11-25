@@ -1,0 +1,64 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+#EL_REPORTS="1"
+el_make_environment
+
+main(){
+    # dependencies {{{
+    if ! el_dependencies_check "yt-dlp" ; then
+        el_dependencies_install "yt-dlp"
+    fi
+    if ! el_dependencies_check "ffmpeg" ; then
+        el_dependencies_install "ffmpeg"
+    fi
+    if ! el_dependencies_check "urxvt" ; then
+        el_dependencies_install "rxvt-unicode"
+    fi
+
+    # }}}
+
+    download_dir="$( xdg-user-dir DOWNLOAD )/Music"
+    mkdir -p "$download_dir"
+    cd "$download_dir"
+
+    ( urxvt -e bash -c "
+    #!/bin/bash
+    source /usr/lib/elive-tools/functions
+    rm -rf \"${download_dir}/tmp\" ; mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+
+    if test -n \"$1\" ; then
+        if yt-dlp \
+            -x --audio-quality 5 --audio-format mp3 --embed-metadata \
+            \"$@\" ; then
+            is_downloaded=1
+        else
+            if yt-dlp \
+                -i -x --embed-metadata \
+                \"$@\" ; then
+                is_downloaded=1
+            fi
+        fi
+    fi
+
+    if ((is_downloaded)) ; then
+        cd \"${download_dir}\"
+        mv -f \"${download_dir}/tmp/\"* \"${download_dir}/\"
+        rm -rf \"${download_dir}/tmp\"
+        el_notify normal emblem-downloads 'Download Finished' 'Your Video download has been completed in:\n${download_dir}'
+    else
+        rm -rf \"${download_dir}/tmp\"
+        el_notify normal dialog-error 'Download Failed' 'Your Video download has failed, try to download manually using the command yt-dlp '
+    fi
+
+    sleep 10
+    " & )
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

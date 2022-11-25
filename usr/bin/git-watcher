@@ -2657,9 +2657,11 @@ main(){
                 if [[ -n "$commit_id" ]] && [[ "$line" = "$commit_id" ]] ; then
                     is_commit_id_last_reached=1
                 else
-                    # loop until we reach the desired commit
-                    el_debug "skipping commit because is not $commit_id : $line"
-                    continue
+                    if [[ -n "$commit_id" ]] ; then
+                        # loop until we reach the desired commit
+                        el_debug "skipping commit because is not $commit_id : $line"
+                        continue
+                    fi
                 fi
             else
                 # we are in a new session, simulate that we have reached the last needed position

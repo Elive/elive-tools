@@ -55,7 +55,7 @@ exit_cleanups(){
 
     # do we had another branch outside git-watcher? restore it
     if [[ -n "$branch_working_prev" ]] ; then
-        command git checkout "$branch_working_prev"
+        command git checkout --quiet "$branch_working_prev"
     fi
 
     rm -rf "$tmpdir" "$tmpdir_sources"
@@ -162,7 +162,7 @@ shared_accounts_state_show(){
 
             # pull remote
             #command git pull --rebase "$remote_fetching_working" "$branch_working" # don't use this method, leads to diverged branches
-            command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
+            command git pull --quiet --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
 
             check_if_has_diverged
 
@@ -1271,6 +1271,11 @@ do_count_commits(){
     _counter_total="$counter_total"
     _counter="$counter"
 
+    # 1 means no commit, so calculate it correctly
+    if [[ "$_counter_total" = 1 ]] ; then
+        _counter_total=0
+    fi
+
     counter_total=0
     counter=1
 
@@ -1846,7 +1851,7 @@ options_main_interact(){
             #el_explain 0 "git pull --rebase $remote_fetching_working $branch_working"
             el_explain 0 "git pull --rebase \"$remote_fetching_working\" \"+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}\""
             #command git pull --rebase "$remote_fetching_working" "$branch_working"  # don't use this method, leads to diverged branches
-            command git pull --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
+            command git pull --quiet --rebase "$remote_fetching_working" "+${branch_working}:refs/remotes/${remote_fetching_working}/${branch_working}"
             sleep 2
             check_if_has_diverged
 
@@ -1877,7 +1882,7 @@ options_main_interact(){
 
 
             el_explain 0 "git checkout $branch_watch"
-            command git checkout "$branch_watch"
+            command git checkout --quiet "$branch_watch"
 
             #el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
             el_explain 0 "git pull --rebase \"$remote_fetching_watch\" \"+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}\""
@@ -1888,7 +1893,7 @@ options_main_interact(){
 
             # go back to our working one
             el_explain 0 "git checkout $branch_working"
-            command git checkout "$branch_working"
+            command git checkout --quiet "$branch_working"
             check_if_has_diverged
 
 
@@ -2061,9 +2066,9 @@ options_main_interact(){
             if [[ -n "$user_input_backport_branches" ]] ; then
                 while read -ru 3 branch
                 do
-                    command git checkout "$branch"
+                    command git checkout --quiet "$branch"
                     do_cherry_pick
-                    command git checkout "$branch_working"
+                    command git checkout --quiet "$branch_working"
 
                 done 3<<< "$( echo "$user_input_backport_branches" | tr ',' '\n' )"
             else
@@ -2410,14 +2415,14 @@ main(){
     # update: we may not need to checkoutable, just access (like when a branch is just fetched)
     if ! command git branch -va | awk '{print $1}' | grep -v "remotes/" | grep -qsw "$branch_watch" ; then
         el_explain 0 "Pre-checking out: __${branch_working}__"
-        #command git checkout "${branch_watch}"
-        command git checkout "${branch_working}"
+        #command git checkout --quiet "${branch_watch}"
+        command git checkout --quiet "${branch_working}"
     fi
     # force checkout in the working branch
     if ! [[ "$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )" = "$branch_working" ]] ; then
         branch_working_prev="$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )"
         el_explain 0 "checking on: __${branch_working}__"
-        command git checkout "${branch_working}"
+        command git checkout --quiet "${branch_working}"
     fi
 
     # }}}
@@ -2546,7 +2551,7 @@ main(){
             el_explain 0 "XXWarningXX: you have already a watcher like this, but your actual working branch is __${branch_working}__ and not __${_branch_working}__"
             if el_confirm "Want to switch to $_branch_working ?" ; then
                 branch_working="${_branch_working}"
-                command git checkout "$branch_working"
+                command git checkout --quiet "$branch_working"
                 check_if_has_diverged
             fi
         fi
@@ -2629,6 +2634,50 @@ main(){
         # loop!
         while read -ru 3 line
         do
+            # update watching branch if needed {{{
+            if [[ -z "$line" ]] ; then
+                if el_confirm "Nothing found. Update your git watching branch now? (git pull --rebase)" ; then
+                    # which remote to fetch from?
+                    if [[ -z "$remote_fetching_watch" ]] ; then
+                        if [[ "$( command git remote -v | grep "(fetch)" | awk '{print $1}' | wc -l )" -gt 1 ]] ; then
+                            echo -e "\nWhich remote ID you want to track the changes on '$branch_watch' from ?\n"
+                            #command git remote -v | grep "(fetch)" | awk '{print $1}'
+                            command git remote -v | grep "(fetch)" | sed -e 's|(fetch).*$||g' | column -t | awk '{$1 = "(id: "$1") "; print $0}'
+
+                            read -e remote_fetching_watch
+                        else
+                            remote_fetching_watch="$(command git remote -v | grep "(fetch)" | awk '{print $1}' | head -1 )"
+                        fi
+
+                        echo "$remote_fetching_watch" > "$conf_remote_fetch_watch_from_f"
+                    fi
+
+                    el_explain 0 "git checkout $branch_watch"
+                    command git checkout --quiet "$branch_watch"
+
+                    #el_explain 0 "git pull --rebase $remote_fetching_watch $branch_watch"
+                    el_explain 0 "git pull --rebase \"$remote_fetching_watch\" \"+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}\""
+                    #command git pull --rebase "$remote_fetching_watch" "$branch_watch"  # buggy method
+                    command git pull --quiet --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
+                    check_if_has_diverged
+
+                    # go back to our working one
+                    el_explain 0 "git checkout $branch_working"
+                    command git checkout --quiet "$branch_working"
+                    check_if_has_diverged
+
+
+                    # update total of commits
+                    #is_recount_position_needed=1
+                    counter=1
+                    do_count_commits "force"
+                    break 1
+                else
+                    exit
+                fi
+            fi
+
+            # }}}
             # nothing found at all, exiting
             if [[ "$counter" -gt "$counter_total" ]] || [[ "$counter" -le 0 ]] ; then
                 is_recount_position_needed=1

@@ -39,23 +39,42 @@ main(){
         exit 1
     fi
 
+    if LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
+        is_live=1
+    fi
+
+
+    #
     # free some ram
+    #
+    sleep 5
     ram_used="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}' )"
     ram_total="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $2}' )"
     ram_used_percent="$( echo "( $ram_used / $ram_total ) * 100" | bc -l | sed -e 's|\..*$||g' )"
 
+
     if [ "$ram_used_percent" -gt 70 ] ; then
+        sleep 30
         killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1
         is_killed=1
         rm -f "$tmp_lock"
+    else
+        if [ "$ram_used_percent" -gt 50 ] ; then
+            if [ -n "$is_live" ] ; then time_wait="1m" ; else time_wait="5m" ; fi
+        else
+            if [ "$ram_used_percent" -gt 40 ] ; then
+                if [ -n "$is_live" ] ; then time_wait="2m" ; else time_wait="10m" ; fi
+            else
+                if [ "$ram_used_percent" -gt 30 ] ; then
+                    if [ -n "$is_live" ] ; then time_wait="2m" ; else time_wait="20m" ; fi
+                else
+                    if [ "$ram_used_percent" -gt 20 ] ; then
+                        if [ -n "$is_live" ] ; then time_wait="3m" ; else time_wait="30m" ; fi
+                    fi
+                fi
+            fi
+        fi
     fi
-
-    # if this process is already running, consider it killed (it will kill it anyways), so we can exit from the tool
-    #if [ "$( ps ux | grep -qsv "grep .*${SOURCE}" | grep -Fqs "$SOURCE" )" -gt 1 ] ; then
-    #if [ -e "$tmp_lock" ] ; then
-        #is_killed=1
-        #rm -f "$tmp_lock"
-    #fi
 
 
     # keep system light if not used for a while
@@ -63,11 +82,6 @@ main(){
         exit 0
     else
         if ! [ -e "$tmp_lock" ] ; then
-            if grep -Fqs "boot=live" /proc/cmdline ; then
-                time_wait="2m"
-            else
-                time_wait="10m"
-            fi
             ( sleep $time_wait ; killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ; rm -f "$tmp_lock" ) &
             # set the flag
             echo $$ > "$tmp_lock"

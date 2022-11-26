@@ -29,11 +29,11 @@ main(){
     local message_finished
     message_finished="$( printf "$( eval_gettext "Download Finished" )" "" )"
     local message_download_where
-    message_download_where="$( printf "$( eval_gettext "Your Video download has been completed in:" )" "" ):\n${download_dir}"
+    message_download_where="$( printf "$( eval_gettext "Your download has been completed in:" )" "" ):\n${download_dir}"
     local message_failed
     message_failed="$( printf "$( eval_gettext "Download Failed" )" "" )"
     local message_failed_where
-    message_failed_where="$( printf "$( eval_gettext "Your Video download has failed, try to download manually using the command yt-dlp" )" "" )"
+    message_failed_where="$( printf "$( eval_gettext "Your download has failed, try to download manually using the command yt-dlp" )" "" )"
     local message_delete
     message_delete="$( printf "$( eval_gettext "Delete" )" "" )"
     local message_keep
@@ -69,12 +69,13 @@ main(){
         rm -rf \"${download_dir}/tmp\"
         el_notify normal emblem-downloads '${message_finished}' '${message_download_where}'
     else
+        el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
+
         if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
             exo-open '${download_dir}/tmp'
         else
             rm -rf \"${download_dir}/tmp\"
         fi
-        el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
     fi
 
     sleep 10

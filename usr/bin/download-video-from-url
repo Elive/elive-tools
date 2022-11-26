@@ -22,6 +22,25 @@ main(){
     mkdir -p "$download_dir"
     cd "$download_dir"
 
+    # messages {{{
+    local message_finished
+    message_finished="$( printf "$( eval_gettext "Download Finished" )" "" )"
+    local message_download_where
+    message_download_where="$( printf "$( eval_gettext "Your download has been completed in:" )" "" ):\n${download_dir}"
+    local message_failed
+    message_failed="$( printf "$( eval_gettext "Download Failed" )" "" )"
+    local message_failed_where
+    message_failed_where="$( printf "$( eval_gettext "Your download has failed, try to download manually using the command yt-dlp" )" "" )"
+    local message_delete
+    message_delete="$( printf "$( eval_gettext "Delete" )" "" )"
+    local message_keep
+    message_keep="$( printf "$( eval_gettext "Keep" )" "" )"
+    local message_what_to_do
+    message_what_to_do="$( printf "$( eval_gettext "Download failed, what you want to do with the half-downloaded files?" )" "" )"
+
+
+    # - messages }}}
+
     ( urxvt -e bash -c "
     #!/bin/bash
     source /usr/lib/elive-tools/functions
@@ -44,10 +63,15 @@ main(){
         cd \"${download_dir}\"
         mv -f \"${download_dir}/tmp/\"* \"${download_dir}/\"
         rm -rf \"${download_dir}/tmp\"
-        el_notify normal emblem-downloads 'Download Finished' 'Your Video download has been completed in:\n${download_dir}'
+        el_notify normal emblem-downloads '${message_finished}' '${message_download_where}'
     else
-        rm -rf \"${download_dir}/tmp\"
-        el_notify normal dialog-error 'Download Failed' 'Your Video download has failed, try to download manually using the command yt-dlp '
+        el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
+
+        if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
+            exo-open '${download_dir}/tmp'
+        else
+            rm -rf \"${download_dir}/tmp\"
+        fi
     fi
 
     sleep 10

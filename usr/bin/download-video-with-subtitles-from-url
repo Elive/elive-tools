@@ -23,11 +23,11 @@ main(){
 
     lang_local="$( echo "$LANG" | sed -e 's|_.*$||g' )"
     # set a dummy extra language in case is english in order to not have duplicates
-    if [[ "$lang_local" = "da" ]] ; then
-        lang_local="sa"
+    if [[ "$lang_local" = "de" ]] ; then
+        lang_local="ja"
     fi
-    if [[ -z "$lang_local" ]] || echo "$lang_local" | grep -qsE "^(en|fr|it|de|pt|ru|es)$" ; then
-        lang_local="da"
+    if [[ -z "$lang_local" ]] || echo "$lang_local" | grep -qsE "^(en|fr|es)$" ; then
+        lang_local="de"
     fi
 
     download_dir="$( xdg-user-dir DOWNLOAD )/Videos"
@@ -61,12 +61,12 @@ main(){
     if test -n \"$1\" ; then
         if yt-dlp \
             -f mp4 \
-            --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,it,de,pt,ru,ja,es,${lang_local}-en,fr-en,it-en,de-en,pt-en,ru-en,ja-en,es-en  --sleep-subtitles=1 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
+            --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
             \"$@\" ; then
             is_downloaded=1
         else
             if yt-dlp \
-                -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,it,de,pt,ru,ja,es,${lang_local}-en,fr-en,it-en,de-en,pt-en,ru-en,ja-en,es-en--sleep-subtitles=1 --compat-options no-keep-subs --embed-metadata --embed-chapters \
+                -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
             fi

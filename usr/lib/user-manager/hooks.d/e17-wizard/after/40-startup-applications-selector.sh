@@ -412,6 +412,17 @@ EOF
             menu+=("Conky: resources visualizer gadget for desktop")
         fi
 
+        # desktop sound effects
+        hour="$(date +%k)"
+        if [[ -s "/etc/elive-tools/geolocation/livemode-location-fetched.txt" ]] && [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] && ! ((is_thanatests)) ; then
+            menu+=("TRUE")
+        else
+            menu+=("FALSE")
+        fi
+        menu+=("soundeffects")
+        menu+=("$( eval_gettext "Desktop sound effects" )")
+
+
         # cairo-dock
         if [[ -x "$(which 'cairo-dock' )" ]] ; then
             menu+=("TRUE")
@@ -465,15 +476,20 @@ EOF
             if [[ -n "$result" ]] ; then
                 while read -ru 3 line
                 do
-                    # run composite
-                    if [[ "$line" = "compositor" ]] ; then
-                        # we must enable compositor for it first:
-                        eesh compmgr start
-                        # wait that its started before to run other things:
-                        sleep 3
-                        # do not add to list, just continue
-                        continue
-                    fi
+                    case "$line" in
+                        "soundeffects")
+                            eesh -e sound on
+                            continue
+                            ;;
+                        "compositor")
+                            # we must enable compositor for it first:
+                            eesh compmgr start
+                            # wait that its started before to run other things:
+                            sleep 3
+                            # do not add to list, just continue
+                            continue
+                            ;;
+                    esac
 
                     if [[ -x "$(which "$line" )" ]] ; then
                         # add to known list
@@ -520,17 +536,6 @@ EOF
     # Elive Retro (retrowave) version {{{
     #
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
-        # sound effects?
-        $_sound_effects="FALSE"
-        if [[ -n "$EROOT" ]] ; then
-            hour="$(date +%k)"
-            if [[ -s "/etc/elive-tools/geolocation/livemode-location-fetched.txt" ]] && [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] && ! ((is_thanatests)) ; then
-                $_sound_effects="TRUE"
-            else
-                $_sound_effects="FALSE"
-            fi
-        fi
-
         sleep 5
 
         result="$( yad --width=400 --center --title="Elive Retro menu" \
@@ -538,7 +543,6 @@ EOF
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
             --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
-            --field="$( eval_gettext "Turn ON desktop sound effects" ):chk" $_sound_effects \
             --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
             --field="Candies::lbl" \
             --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
@@ -548,14 +552,12 @@ EOF
         if [[ -n "$result" ]] ; then
             retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
             retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
-            _sound_effects="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
-            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $6}' )"
+            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
+            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
         else
             retro_play="TRUE"
             retro_play_type="Play in a window"
-            #_sound_effects="FALSE"
             retro_forum="FALSE"
             retro_music_composer="FALSE"
             retro_demo_mode="FALSE"
@@ -579,13 +581,6 @@ EOF
         # forum
         if [[ "$retro_forum" = "TRUE" ]] ; then
             ( web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" & )
-        fi
-
-        # sound effects
-        if [[ "$_sound_effects" = "TRUE" ]] ; then
-            eesh -e sound on
-        else
-            eesh -e sound off
         fi
 
     fi

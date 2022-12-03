@@ -520,6 +520,17 @@ EOF
     # Elive Retro (retrowave) version {{{
     #
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
+        # sound effects?
+        $_sound_effects="FALSE"
+        if [[ -n "$EROOT" ]] ; then
+            hour="$(date +%k)"
+            if [[ -s "/etc/elive-tools/geolocation/livemode-location-fetched.txt" ]] && [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] && ! ((is_thanatests)) ; then
+                $_sound_effects="TRUE"
+            else
+                $_sound_effects="FALSE"
+            fi
+        fi
+
         sleep 5
 
         result="$( yad --width=400 --center --title="Elive Retro menu" \
@@ -527,6 +538,7 @@ EOF
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
             --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
+            --field="$( eval_gettext "Turn ON desktop sound effects" ):chk" $_sound_effects \
             --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
             --field="Candies::lbl" \
             --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
@@ -536,12 +548,14 @@ EOF
         if [[ -n "$result" ]] ; then
             retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
             retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
-            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+            _sound_effects="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
+            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $6}' )"
         else
             retro_play="TRUE"
             retro_play_type="Play in a window"
+            #_sound_effects="FALSE"
             retro_forum="FALSE"
             retro_music_composer="FALSE"
             retro_demo_mode="FALSE"
@@ -567,6 +581,12 @@ EOF
             ( web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" & )
         fi
 
+        # sound effects
+        if [[ "$_sound_effects" = "TRUE" ]] ; then
+            eesh -e sound on
+        else
+            eesh -e sound off
+        fi
 
     fi
 

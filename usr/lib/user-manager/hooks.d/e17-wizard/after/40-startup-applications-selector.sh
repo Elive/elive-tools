@@ -29,6 +29,10 @@ main(){
         fi
     fi
 
+    if grep -Fqs "thanatests" /proc/cmdline ; then
+        is_thanatests=1
+    fi
+
     # }}}
 
     if [[ -n "$EROOT" ]] ; then
@@ -420,7 +424,7 @@ EOF
             menu+=("FALSE")
         fi
         menu+=("soundeffects")
-        menu+=("$( eval_gettext "Desktop sound effects" )")
+        menu+=("$( eval_gettext "Activate desktop sound effects" )")
 
 
         # cairo-dock
@@ -458,10 +462,10 @@ EOF
 
 
         if [[ -n "${menu[@]}" ]] ; then
-            if grep -Fqs "thanatests" /proc/cmdline ; then
+            if ((is_thanatests)) ; then
                 result="compositor|conky|cairo-dock"
             else
-                result="$( zenity --width="540" --list --checklist --text="${message_1}\n\n  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+                result="$( zenity --width="540" --list --checklist --text="${message_1}  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
             fi
         fi
 

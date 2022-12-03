@@ -81,6 +81,8 @@ main(){
             elive-skel upgrade .config/cairo-dock
             elive-skel upgrade .conkyrc
             elive-skel upgrade .e16
+            elive-skel upgrade .config/ulauncher
+            elive-skel upgrade .local/share/ulauncher
             sync
             ;;
 

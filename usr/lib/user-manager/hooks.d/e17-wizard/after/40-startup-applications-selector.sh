@@ -539,7 +539,7 @@ EOF
     #
     # Elive Retro (retrowave) version {{{
     #
-    if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
+    if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] && ! ((is_thanatests)) ; then
         sleep 5
 
         result="$( yad --width=400 --center --title="Elive Retro menu" \

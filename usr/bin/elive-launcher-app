@@ -8,7 +8,7 @@ main(){
     if [ -x "/usr/bin/ulauncher" ] ; then
         if ps ux | LC_ALL=C grep -qs "python3.*ulauncher$" ; then
             #if [ "$1" = "force" ] ; then
-                ulauncher-toggle
+                ulauncher-toggle || ( ulauncher & )
             #else
                 ## do not do anything because is already running, so the trigger will automatically open it
                 #true
@@ -21,14 +21,14 @@ main(){
     else
         # use kupfer instead
         if [ -x "/usr/bin/kupfer" ] ; then
-            if pidof -q kupfer ; then
+            #if pidof -q kupfer ; then
                 #if [ "$1" = "force" ] ; then
                     ( kupfer & )
                 #else
                     ## do not do anything because is already running, so the trigger will automatically open it
                     #true
                 #fi
-            fi
+            #fi
             is_launcher_used=1
         fi
     fi

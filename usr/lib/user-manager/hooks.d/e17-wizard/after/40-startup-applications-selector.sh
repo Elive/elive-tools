@@ -465,7 +465,7 @@ EOF
             if ((is_thanatests)) ; then
                 result="compositor|conky|cairo-dock"
             else
-                result="$( zenity --width="540" --list --checklist --text="${message_1}  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
+                result="$( zenity --width="540" --height="290" --list --checklist --text="${message_1}  ~/.e16/startup-applications.list\n" --column="$message_2" --column="command" --column="$message_3" --hide-column=2 "${menu[@]}"  || echo cancel )"
             fi
         fi
 

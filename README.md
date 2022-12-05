@@ -44,7 +44,7 @@ The tool to create users in Elive, it is meant to include all the user-creation 
 
 </details>
 
-<details><summary>el_ commands</summary>
+<details><summary>el_ functions</summary>
 
 In your terminal, enter `el_` and press TAB. You now have a list of commands that can **power up your shell, especially your scripts**! Elive uses them for most of its shell scripts. It can be very helpful.
 

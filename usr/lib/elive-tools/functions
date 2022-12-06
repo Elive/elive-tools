@@ -1300,11 +1300,11 @@ el_check_dir_has_files(){
 #   check if we have automatic sudo
 #-------------------------------------------------------------------------------
 el_check_sudo_automated(){
-    if ! sudo -H -n echo 2>/dev/null 1>/dev/null ; then
+    if sudo -H -n echo 2>/dev/null 1>/dev/null ; then
+        return 0
+    else
         el_debug "Automated sudo is required: Your sudo requires a password, we need it to be configured for not request it, func: ${FUNCNAME[1]}"
         return 1
-    else
-        return 0
     fi
 }
 #===  FUNCTION  ================================================================
@@ -1325,10 +1325,10 @@ el_sudo(){
 
     # }}}
     if el_check_sudo_automated 2>/dev/null 1>&2 ; then
-        sudo -H "$@"
+        sudo -H -n "$@"
     else
         # check if we have direct access to this sudo command without prompt:
-        if ! sudo -H -n "$@" ; then
+        if ! sudo -H "$@" ; then
 
             if [[ "${DISPLAY}" = ":0.0" ]] ; then
                 if ! el_dependencies_check gksu ; then

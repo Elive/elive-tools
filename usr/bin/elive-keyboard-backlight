@@ -1,0 +1,164 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+get_keyboard_device(){
+    # Notes:
+    #   extra devices you can control:
+    #       tpacpi::lid_logo_dot    as the thinkpad dot in the logo of the machine
+    device="$( el_sudo brightnessctl -m -l | sed -e 's|,.*$||g' | grep -iE "(kbd|keyboard|keyb)" | psort -- -p "kbd_backlight" -p "keyboard_backlight" -p "k.*backlight" -p "kbd" -p "keyboard" | head -1 )"
+
+    if [[ -z "$device" ]] ; then
+        el_error "no keyboard backlight features has been found on this machine?\n$( el_sudo brightnessctl -m -l )"
+        exit 1
+    fi
+}
+
+main(){
+    # pre {{{
+    local mode value
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) up|down|toggle|toggle_full|get|set|info|max [value|steps]"
+        echo -e "examples:"
+        echo -e "$(basename $SOURCE) get"
+        echo -e "$(basename $SOURCE) set 50%"
+        echo -e "$(basename $SOURCE) toggle 4 (toggle the light in steps of 4)"
+        echo -e "$(basename $SOURCE) toggle_full"
+        exit 1
+    fi
+
+    mode="$1"
+    shift
+    value="$1"
+    shift
+
+    # dependencies
+    if ! el_dependencies_check "brightnessctl" ; then
+        el_dependencies_install "brightnessctl"
+    fi
+
+    # }}}
+
+    get_keyboard_device
+
+    # get values
+    value_max="$( el_sudo brightnessctl -d "${device}" -m | awk -v FS="," '{print $5}' )"
+    el_debug "value max: $value_max"
+
+    # number based:
+    #value_prev="$( el_sudo brightnessctl -d "${device}" -m | awk -v FS="," '{print $3}' )"
+    # percent based:
+    value_prev="$( el_sudo brightnessctl -d "${device}" -m | awk -v FS="," '{print $4}' | sed -e 's|%||g' )"
+
+    el_debug "value actual: $value_prev"
+
+    # TODO: calculate the "steps" per machine
+
+    case "$mode" in
+        #get)
+            #el_sudo brightnessctl -d "${device}" get
+            #;;
+        #set)
+            #get_keyboard_device
+            #;;
+        #info)
+            #get_keyboard_device
+            #el_sudo brightnessctl -d "${device}" info
+            #;;
+        toggle_full)
+            if [[ "$value_prev" -ge 50 ]] ; then
+                el_sudo brightnessctl -q -d "${device}" set "0%"
+            else
+                el_sudo brightnessctl -q -d "${device}" set "100%"
+            fi
+            ;;
+        toggle)
+            value_steps="$value"
+            if [[ -z "$value_steps" ]] ; then
+                NOREPORTS=1 el_error "You need to give a max value of steps to use in the light switching"
+                exit 1
+            fi
+            ;;&
+        toggle|up|down)
+            value_steps="$value"
+            #if [[ -z "$value_steps" ]] ; then
+                #NOREPORTS=1 el_error "You need to give a max value of steps to use in the light switching"
+                #exit 1
+            #fi
+
+            # only allow the max value per hardware
+            if [[ -z "$value_steps" ]] || [[ "$value_max" -lt "$value_steps" ]] ; then
+                value_steps="$value_max"
+            fi
+
+            el_debug "value steps: $value_steps"
+            value_steps_percent="$( echo "100 / $value_steps" | LC_ALL=C bc -l | sed -e 's|\..*||g' )"
+            el_debug "value steps percent: $value_steps_percent"
+
+
+            case "$mode" in
+                up|toggle)  value_next="$(( $value_prev + $value_steps_percent ))" ; ;;
+                down)       value_next="$(( $value_prev - $value_steps_percent ))" ; ;;
+            esac
+
+            # fix min/max values
+            if [[ "$value_next" -gt 100 ]] ; then
+                value_next=100
+            else
+                if [[ "$value_next" -le 0 ]] ; then
+                    value_next=0
+                fi
+            fi
+            el_debug "value next: $value_next"
+
+
+            case "$mode" in
+                toggle)
+                    if [[ "$value_prev" -gt 100 ]] ; then
+                        value_next=100
+                    fi
+                    # if calculation is bigger than 100, set it to the max light (100)
+                    if [[ "${value_prev}" -gt 100 ]] ; then
+                        el_sudo brightnessctl -q -d "${device}" set "100%"
+                    else
+                        # if calculation is 100 (already or set before), set it back to 0
+                        if [[ "${value_prev}" -eq 100 ]] ; then
+                            el_sudo brightnessctl -q -d "${device}" set "0%"
+                        else
+                            # otherwise just set the calculated value
+                            el_sudo brightnessctl -q -d "${device}" set "${value_next}%"
+                        fi
+                    fi
+                    ;;
+                up|down)
+                    el_sudo brightnessctl -q -d "${device}" set "${value_next}%"
+                    ;;
+            esac
+
+            ;;
+        *)
+            el_sudo brightnessctl -d "${device}" "${mode}" "${value}"
+    esac
+
+}
+
+
+# this is a dbus alternative that seems to work too:
+#set_keyboard_backlight_dbus(){
+    #dbus-send --system --type=method_call  --dest="org.freedesktop.UPower" "/org/freedesktop/UPower/KbdBacklight" "org.freedesktop.UPower.KbdBacklight.SetBrightness" int32:$1
+#}
+
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -78,9 +78,9 @@ main(){
         cd \"${download_dir}\"
         mv -f \"${download_dir}/tmp/\"* \"${download_dir}/\"
         rm -rf \"${download_dir}/tmp\"
-        result=\"\$( el_notify normal emblem-downloads '${message_finished}' '${message_download_where}' -w --action=open='${message_open_directory}' )\"
+        result=\"\$( el_notify wait emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
         if [[ \"\$result\" = \"open\" ]] ; then
-            thunar \"$download_dir\"
+            exo-open \"$download_dir\"
         fi
     else
         el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
@@ -95,7 +95,7 @@ main(){
     echo
     echo done
 
-    sleep 10
+    sleep 6
     " & )
 
 }

@@ -141,29 +141,43 @@ el_notify(){
     time="$(( $words / 3 ))"
     time="$(( $time + 3 ))"
 
+    # add extra time if we require an action
+    if echo "$@" | grep -qsE -- "(-w|--action|-A)" ; then
+        time="$(( $time + 10 ))"
+    fi
+
+
     case "$mode" in
         soft)
             time="$(( $time - 1 ))"
-            extra_args="$extra_args -u normal"
+            extra_args="$extra_args -u low"
             ;;
         nor*)
-            time="$(( $time + 2 ))"
+            time="$(( $time + 4 ))"
             extra_args="$extra_args -u normal"
             ;;
         imp*)
-            # 1 minute
+            # 1 minute more
             time="$(( $time + 60 ))"
             extra_args="$extra_args -u critical"
             ;;
         crit*)
-            # 15 minutes
+            # 15 minutes more
             time="$(( $time + 900 ))"
             extra_args="$extra_args -u critical"
+            ;;
+        wait)
+            # wait 30 minutes more for user input
+            time="$(( $time + 1800 ))"
+            extra_args="$extra_args -u normal"
             ;;
     esac
 
     # convert time to milliseconds
     time="$(( $time * 1000 ))"
+
+    # always make it transient mode, because is so annoying to have notifications kept in a widget
+    extra_args="${extra_args} -e"
 
     # }}}
 
@@ -182,7 +196,7 @@ el_notify(){
             fi
         fi
 
-        notify-send -t "$time" -i "$icon" "$title" "$message" "$@"
+        notify-send ${extra_args} -t "$time" -i "$icon" "$title" "$message" "$@"
     else
         el_info "${title}: ${message}"
     fi

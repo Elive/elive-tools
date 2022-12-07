@@ -182,7 +182,7 @@ el_notify(){
             fi
         fi
 
-        notify-send -t "$time" -i "$icon" "$title" "$message"
+        notify-send -t "$time" -i "$icon" "$title" "$message" "$@"
     else
         el_info "${title}: ${message}"
     fi

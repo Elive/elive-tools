@@ -14,7 +14,7 @@ get_keyboard_device(){
     device="$( el_sudo brightnessctl -m -l | sed -e 's|,.*$||g' | grep -iE "(kbd|keyboard|keyb)" | psort -- -p "kbd_backlight" -p "keyboard_backlight" -p "k.*backlight" -p "kbd" -p "keyboard" | head -1 )"
 
     if [[ -z "$device" ]] ; then
-        el_error "no keyboard backlight features has been found on this machine?\n$( el_sudo brightnessctl -m -l )"
+        el_error "No KEYBOARD backlight features has been found on this machine?\n$( el_sudo brightnessctl -m -l )"
         exit 1
     fi
 }

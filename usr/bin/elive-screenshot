@@ -127,7 +127,7 @@ take_screenshot(){
         if ((is_interactive)) ; then
             el_info "$message_drag_range"
         else
-            notify-send -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_drag_range}\n\n${message_hotkeys}"
+            notify-send -e -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_drag_range}\n\n${message_hotkeys}"
             conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
             el_config_save "conf_notifications_amount"
             sync
@@ -139,7 +139,7 @@ take_screenshot(){
         #if ((is_interactive)) ; then
             #el_info "$message_window_delayed"
         #else
-            #notify-send -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
+            #notify-send -e -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
             #conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
             #el_config_save "conf_notifications_amount"
             #sync
@@ -202,7 +202,7 @@ take_screenshot(){
     if ((is_interactive)) ; then
         el_info "$message_result"
     else
-        notify-send -t 7000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"
+        notify-send -e -t 7000 -i geeqie "$( eval_gettext "Elive Screenshot" )" "$message_result"
     fi
 }
 

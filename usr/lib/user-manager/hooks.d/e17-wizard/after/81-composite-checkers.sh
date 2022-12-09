@@ -78,7 +78,7 @@ main(){
 
     # show a tip suggestion about resizing windows, needed for big-windows that appears out of hte borders (e16), but also useful for e17:
     if ! grep -Fqs "thanatests" /proc/cmdline ; then
-        notify-send -u low -t 15000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
+        notify-send -e -u low -t 15000 -i "gtk-help" "$( eval_gettext "Suggestion" )" "$( eval_gettext "To move and resize a window, use the combination 'ctrl+alt' and click with the different mouse buttons while moving it." )"
     fi
 
     # e17 {{{

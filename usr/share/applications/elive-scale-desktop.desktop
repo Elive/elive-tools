@@ -83,4 +83,4 @@ Icon=preferences-desktop-display
 Exec=elive-scale-desktop
 Terminal=false
 Categories=System;Settings;
-OnlyShowIn=E16
+#OnlyShowIn=E16

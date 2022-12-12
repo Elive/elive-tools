@@ -66,8 +66,10 @@ do_list(){
             # parse and get info
             case "$line" in
                 *.desktop|*.DESKTOP)
-                    cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' -e 's|%.*$||g' | tail -1 )"
-                    executable="$( echo "$cmd" | awk '{print $1}' )"
+                    if [[ -s "$line" ]] ; then
+                        cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' -e 's|%.*$||g' | tail -1 )"
+                        executable="$( echo "$cmd" | awk '{print $1}' )"
+                    fi
 
                     ;;
                 *)
@@ -92,6 +94,7 @@ do_list(){
                     done
                     ;;
                 *)
+                    ;;
             esac
 
             # check and report to user

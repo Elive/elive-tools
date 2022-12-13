@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 el_c_n="\033[0;39m" # Normal color  (orig: normal)
 el_c_r="\033[1;31m" # Red color  (orig: red)
 el_c_r2="\033[0;31m" # Red2 color  (orig: red)
@@ -23,6 +22,7 @@ el_c_bold="\033[1m" # Bold 'color' effect
 
 : ${EL_DEBUG:="0"} # debug default level
 
+set -e
 
 
 # if we have the original and updated functions, use them (so: we are in elive)

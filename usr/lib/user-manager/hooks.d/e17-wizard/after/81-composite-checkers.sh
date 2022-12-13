@@ -163,7 +163,7 @@ main(){
     # end e17 }}}
 
     # hardware check: broken bios? {{{
-    if dmesg | grep -Fqsi "you might be running a broken BIOS" ; then
+    if dmesg | grep -qsi "you might be running a broken BIOS" ; then
         local message_efiboot
         if el_check_dir_has_files "/sys/firmware/efi/" 1>/dev/null 2>&1 ; then
             message_efiboot="$( printf "$( eval_gettext "Note: Elive has a feature to install BIOS updates but for that, you need to reinstall Elive using the EFI boot mode in your BIOS." )" "" )"

@@ -313,7 +313,7 @@ detect_driver_version(){
                                 el_debug "downloading: ${line##*/}"
                                 wget -q "${url_repository%/}/${line}"
                             fi
-                        done 3<<< "$( LC_ALL=C apt-cache show "${packagename}" 2>/dev/null | grep "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
+                        done 3<<< "$( LC_ALL=C apt-cache show "${packagename}" 2>/dev/null | grep -F "Filename:" | sed -e 's|^Filename: ||g' | sort -u )"
                     done
                 else
                     NOREPORTS=1 el_error "no connection to internet found"

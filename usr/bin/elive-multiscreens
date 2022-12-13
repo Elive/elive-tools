@@ -63,6 +63,14 @@ done 3<<< "$( echo "$screens_connected_names" | psort -- -p "^LVDS" -p "^HDMI"  
 echo "$menu"
 }
 
+reload_desktop_gadgets(){
+    # reload conky
+    if pidof -q conky ; then
+        killall conky
+        ( conky & )
+    fi
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  module_ecomorph_unload
 #   DESCRIPTION:  disables the ecomorph emodule before to load multiscreens because it bugs
@@ -205,6 +213,8 @@ configure_multiscreens(){
             fi
         fi
     fi
+
+    reload_desktop_gadgets
 
     if [[ -z "$conf" ]] ; then
         el_debug "user don't wanted to save any configuration, so forget our state and exit"
@@ -372,6 +382,11 @@ load_multiscreens_configuration(){
                         # wait that the desktop is loaded to not break something first
                         # update: seems like if we restart enlightenment, the multiscreens setup is broken (no idea why this happens), setting the screens to be like mirror mode (jfbourdeau machine)
                         true
+                        # reload conky
+                        if pidof -q conky ; then
+                            killall conky
+                            conky &
+                        fi
                     else
                         if ! (($is_mode_previous_desktop)) ; then
                             $guitool --warning --text="$( eval_gettext "Failed to load the configuration of your screen. You can try to reconfigure your screens or with different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"

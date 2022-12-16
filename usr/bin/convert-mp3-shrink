@@ -4,6 +4,14 @@ source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 #el_make_environment
 
+#trap "exit_ok" 0
+trap "exit_error" 1 2 3 5 6 9 14 15 ERR TERM
+
+exit_error(){
+    rm -f "$dest/$( basename "$file" )"
+    exit 0
+}
+
 
 main(){
     # pre {{{
@@ -76,11 +84,13 @@ main(){
             # file is bigger than original AND file is bigger than 800 kb (which should be broken in conversion) --> copy back the original one
             size_dest="$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )"
             size_orig="$( du -s "$file" | awk '{print $1}' )"
+            size_dest_mb="$( du -hs "$dest/$( basename "$file" )" | awk '{print $1}' )"
+            size_orig_mb="$( du -hs "$file" | awk '{print $1}' )"
 
             # make it at least 200k smaller or ignore
             size_dest_extra="$(( $size_dest + 200 ))"
 
-            el_debug "orig ${size_orig} vs dest ${size_dest} (${size_dest_extra})"
+            el_debug "orig ${size_orig_mb} vs dest ${size_dest_mb} (${size_dest_extra})"
 
             if [[ "$size_dest_extra" -lt "$size_orig" ]] \
                 && [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
@@ -89,7 +99,7 @@ main(){
                 #el_explain 0 "  compressed from '${size_orig}' KB to '${size_dest}' KB "
                 reduced_percent="$( echo "( $size_dest / $size_orig ) * 100" | bc -l | sed -e 's|\..*$||g' )"
                 #el_explain 0 "  reduced at ${reduced_percent} %, from '${size_orig}' KB to '${size_dest}' KB "
-                el_explain 0 "  reduced "$(( 100 - ${reduced_percent} ))" %, from '${size_orig}' KB to '${size_dest}' KB "
+                el_explain 0 "  reduced "$(( 100 - ${reduced_percent} ))" %, from '${size_orig_mb}' to '${size_dest_mb}' "
                 continue
             else
                 if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then

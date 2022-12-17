@@ -71,8 +71,21 @@ main(){
                     if [ "$ram_used_percent" -gt 20 ] ; then
                         if [ -n "$is_live" ] ; then time_wait="3m" ; else time_wait="30m" ; fi
                     else
-                        # default
-                        if [ -n "$is_live" ] ; then time_wait="3m" ; else time_wait="40m" ; fi
+                        # ram amount based values:
+                        if [ "$ram_total" -lt 3000 ] ; then
+                            if [ -n "$is_live" ] ; then time_wait="5m" ; else time_wait="30m" ; fi
+                        else
+                            if [ "$ram_total" -lt 6000 ] ; then
+                                if [ -n "$is_live" ] ; then time_wait="10m" ; else time_wait="65m" ; fi
+                            else
+                                if [ "$ram_total" -lt 9000 ] ; then
+                                    if [ -n "$is_live" ] ; then time_wait="20m" ; else time_wait="2h" ; fi
+                                else
+                                    # note: keeping the launcher running is needed for the "timer" extension to run, so allow it it on machines that has enough ram to not be annoyed
+                                    unset time_wait
+                                fi
+                            fi
+                        fi
                     fi
                 fi
             fi
@@ -85,9 +98,13 @@ main(){
         exit 0
     else
         if ! [ -e "$tmp_lock" ] ; then
-            ( sleep $time_wait ; killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ; rm -f "$tmp_lock" ) &
-            # set the flag
-            echo $$ > "$tmp_lock"
+            if [ -n "$time_wait" ] ; then
+                ( sleep $time_wait ; killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ; rm -f "$tmp_lock" ) &
+                # set the flag
+                echo $$ > "$tmp_lock"
+            else
+                rm -f "$tmp_lock"
+            fi
         fi
     fi
 

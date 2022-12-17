@@ -54,10 +54,13 @@ main(){
     do
         case "$mode" in
             link|ln)
-                ln -s "$file" "$where"
+                ln -fs "$file" "$where"
                 ;;
             copy|cp)
-                cp "$file" "$where"
+                cp -f "$file" "$where"
+                ;;
+            move|mv)
+                mv -f "$file" "$where"
                 ;;
         esac
     done

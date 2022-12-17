@@ -13,11 +13,12 @@ main(){
         case "$arg" in
 
             "--ask")
+                zenity --info --text="$( eval_gettext "Make sure to close all your running applications correctly before to restore to a new desktop settings." )"
+
                 if ! zenity --question --text="$( eval_gettext "Do you want to reset your desktop configurations? It will restart your desktop settings to a new predefined one. Useful option to restore your desktop if you messed up something and you don't know how to recover it." )" ; then
                     exit
                 fi
 
-                zenity --info --text="$( eval_gettext "Make sure to close all your running applications correctly before continuing." )"
                 ;;
         esac
     done

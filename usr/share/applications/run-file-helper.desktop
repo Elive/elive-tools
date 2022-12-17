@@ -4,6 +4,7 @@ Version=1.0
 Type=Application
 Terminal=false
 Name=Elive Run File helper
+Name[zh]=Live 运行文件助手
 Name[az]=Elive Run Fayl köməkçisi
 Name[bg]=Помощник на Elive Run File
 Name[bn]=এলাইভ রান ফাইল হেলপার

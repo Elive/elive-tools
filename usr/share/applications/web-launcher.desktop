@@ -4,6 +4,7 @@ Version=1.0
 Type=Application
 Terminal=false
 Name=Elive Web launcher
+Name[zh]=Live 网络启动器
 Name[az]=Elive Web başlatma cihazı
 Name[bg]=Elive Web стартер
 Name[bn]=এলিভ ওয়েব লঞ্চার

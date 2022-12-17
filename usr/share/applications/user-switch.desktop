@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=User switch
+Name[zh]=用户切换
 Name[az]=İstifadəçi keçidi
 Name[bg]=Превключване на потребителя
 Name[bn]=ব্যবহারকারী সুইচ
@@ -41,6 +42,7 @@ Name[tr]=Kullanıcı anahtarı
 Name[uk]=Перемикач користувача
 Name[vi]=Chuyển đổi người dùng
 GenericName=Switch to a different user maintaining your session
+GenericName[zh]=切换到其他用户维护您的会话
 GenericName[bg]=Превключете към друг потребител, който поддържа вашата сесия
 GenericName[bn]=আপনার সেশন বজায় রাখার জন্য অন্য ব্যবহারকারীর দিকে যান
 GenericName[el]=Μεταβείτε σε διαφορετικό χρήστη που διατηρεί τη συνεδρία σας

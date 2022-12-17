@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Audio Configurator
+Name[zh]=音频配置器
 Name[az]=Audio Konfiquratoru
 Name[bg]=Аудио конфигуратор
 Name[bn]=অডিও কনফিগারার
@@ -41,6 +42,7 @@ Name[tr]=Ses Yapılandırıcısı
 Name[uk]=Audio Configurator
 Name[vi]=Trình cấu hình âm thanh
 GenericName=multiple audio cards
+GenericName[zh]=多个声卡
 GenericName[az]=birdən çox səs kartı
 GenericName[bg]=множество аудио карти
 GenericName[bn]=একাধিক অডিও কার্ড

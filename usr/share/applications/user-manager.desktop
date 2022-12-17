@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Users configurator
+Name[zh]=用户配置器
 Name[az]=İstifadəçi konfiquratoru
 Name[bg]=Потребителски конфигуратор
 Name[bn]=ব্যবহারকারীর কনফিগারর

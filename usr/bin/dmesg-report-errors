@@ -50,7 +50,8 @@ main(){
             exit 0
         fi
 
-        $guitool --warning --text="$( eval_gettext "Error messages detected in your system:" )\n\n$message" &
+        #$guitool --warning --text="$( eval_gettext "Error messages detected in your system:" )\n\n$message" &
+        el_error "FIXME / TODO: this tool is not yet enabled because first is needed to know if is not going to be very verbose. This is a demo content:"
         el_error "$message"
 
         save_and_exit

@@ -149,6 +149,11 @@ main(){
         exit 0
     fi
 
+    #if [[ "$UID" = 0 ]] ; then
+        #el_debug "this tool is meant to be run from user, ignoring..."
+        #exit 0
+    #fi
+
     # type
     case "${launcher,,}" in
         "/etc/xdg/autostart/"*".desktop")

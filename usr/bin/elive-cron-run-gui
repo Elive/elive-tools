@@ -138,7 +138,18 @@ main(){
     # needed: in order to be able to run things on your graphical system
     el_make_environment
 
+    # exit if we don't have access to the graphical system, so this tool is meant to be run only when the user is logged on the graphical mode
+    if [[ -z "$DISPLAY" ]] || [[ -z "$XAUTHORITY" ]] || [[ ! -e "$XAUTHORITY" ]] || [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        el_debug "we don't have full access to the graphical system, ignoring..."
+        exit 0
+    fi
+    # ignore for remote connections
+    if [[ -n "$SSH_CONNECTION" ]] ; then
+        el_debug "we are on a remote connection, ignoring..."
+        exit 0
+    fi
 
+    # type
     case "${launcher,,}" in
         "/etc/xdg/autostart/"*".desktop")
             run_desktop_autostart "$@"

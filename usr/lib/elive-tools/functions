@@ -2765,10 +2765,6 @@ el_report_to_elive(){
 #===============================================================================
 el_mark_state(){
     # pre {{{
-    # exit if not wanted
-    if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
-        return 0
-    fi
 
     local id state category action
     if [[ -n "$2" ]] ; then
@@ -2796,6 +2792,10 @@ el_mark_state(){
         source "$HOME/.config/elive/settings"
     fi
 
+    # exit if user doesn't want to participate
+    if [[ "${conf_send_debug_reports}" != "yes" ]] ; then
+        return 0
+    fi
     # }}}
     # parse ids {{{
     # always run in background to not slow down anything from the tools

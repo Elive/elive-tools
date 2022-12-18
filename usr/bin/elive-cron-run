@@ -1,5 +1,11 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+#. gettext.sh
+#TEXTDOMAIN="elive-tools"
+#export TEXTDOMAIN
 
 run(){
     # note: re-used code from /usr/bin/elive-autostart-applications
@@ -67,7 +73,11 @@ run(){
     killall "$(basename "$executable" )"  2>/dev/null || true
     killall -9 "$(basename "$executable" )"  2>/dev/null || true
 
-    el_debug "running: $cmd"
+    if [[ "$cmd" != "$executable" ]] ; then
+        el_debug "running '$executable' as: $cmd"
+    else
+        el_debug "running: $cmd"
+    fi
     bash -c "$cmd  & disown"
 
 }
@@ -75,11 +85,12 @@ run(){
 
 run_desktop_autostart(){
     local list is_run
+    el_check_variables "HOME|@"
 
     if [[ -s "$1" ]] ; then
         # e16
         if [[ "$EROOT" ]] ; then
-            list="~/.e16/startup-applications.list"
+            list="$HOME/.e16/startup-applications.list"
             if grep -qs "^${1}$" "$list" ; then
                 # run it
                 run "$@"
@@ -91,7 +102,7 @@ run_desktop_autostart(){
                 if [[ "$E_HOME_DIR" ]] ; then
                     list="${E_HOME_DIR}/applications/startup/.order"
                 else
-                    list="~/.e/e/applications/startup/.order"
+                    list="$HOME/.e/e/applications/startup/.order"
                 fi
 
                 if grep -qs "^${1}$" "$list" ; then
@@ -107,8 +118,8 @@ run_desktop_autostart(){
     fi
 
     # reports
-    if ((is_run)) ; then
-        el_warning "autostart desktop is not enabled in your startups list '$list': $1\n$( cat "$list" )"
+    if ! ((is_run)) ; then
+        el_warning "autostart desktop '$1' is not enabled in your startups list '$list':\n$( cat "$list" )"
     fi
 }
 

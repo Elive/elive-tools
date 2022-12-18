@@ -1,0 +1,68 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN=""
+export TEXTDOMAIN
+
+save_and_exit(){
+    if [[ -n "$message" ]] ; then
+        mkdir -p "$HOME/.elive/dmesg-report-errors"
+        echo "$message" > "$HOME/.elive/dmesg-report-errors/message"
+    fi
+    exit 0
+}
+
+main(){
+    dmesg_result="$( dmesg 2>/dev/null | grep -vE "(,errors=|errors=remount)" | grep -qiE "(error|EHASHCOLLISION)" )"
+
+    # enable if you want a demo content:
+    # Note: segfaults can be found in kern.log, messages, syslog
+    #dmesg_result="
+#[ 1226.529857] Buffer I/O error on device sr0, logical block 0
+#2669:Nov 21 03:59:41 Zeus kernel: [480466.868169] Buffer I/O error on device sda3, logical block 84095693
+#Dec 14 17:49:50 localhost kernel: [1187353.821580] thunar[3978759]: segfault at 18 ip 000055a425b7fdb5 sp 00007ffe146d1720 error 4 in thunar[55a425b23000+7e000]
+#Dec 15 02:27:05 localhost kernel: [1218388.964475] retroarch[1759138]: segfault at 7fffbefc ip 00007f074d35003f sp 00007ffed8a1bae0 error 6
+#"
+
+    if [[ -n "$dmesg_result" ]] ; then
+
+        message="$( echo "$dmesg_result" | tail -n 14 )"
+
+        # ignore if errors are by a cdrom
+        if echo -e "$message" | grep -i error | tail -n 4 | grep -iq "buffer.*I/O.*error.*on.*device.*logical.*block" ; then
+           # maybe we are a cdrom ?
+           device="$( echo -e $message | grep -i error | tail -4 | grep device | sed -e 's|^.*device ||g' -e 's|,.*$||g' | awk '{print $1}' | tail -1 )"
+           for dev in $( ls /dev/cdrom* /dev/dvd* 2>/dev/null )
+           do
+               [[ -n "$dev" ]] || continue
+               if [[ -L "$dev" ]] && [[ "$( readlink -f "$dev" )" = "$device" ]] ; then
+                   # yes, we are a cdrom
+                   save_and_exit
+               fi
+           done
+        fi
+
+        # ignore if last time we had the same message, so its not a new one
+        if [[ "$( cat "$HOME/.elive/dmesg-report-errors/message" 2>/dev/null )" = "$message" ]] ; then
+            exit 0
+        fi
+
+        $guitool --warning --text="$( eval_gettext "Error messages detected in your system:" )\n\n$message" &
+        el_error "$message"
+
+        save_and_exit
+
+        wait
+    fi
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
+

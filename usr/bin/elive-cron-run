@@ -1,0 +1,152 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+run(){
+    # note: re-used code from /usr/bin/elive-autostart-applications
+    local line cmd executable
+    line="$@"
+
+    # parse and get info
+    case "${line,,}" in
+        *".desktop")
+            if [[ -s "$line" ]] ; then
+                cmd="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' -e 's|%.*$||g' | tail -1 )"
+                executable="$( echo "$cmd" | awk '{print $1}' )"
+            fi
+
+            ;;
+        *)
+            cmd="$line"
+            executable="$( echo "$line" | awk '{print $1}')"
+            ;;
+    esac
+
+    # get the correct name of the command to use:
+    case "$executable" in
+        sudo|*bash|*zsh*|*perl*|*ruby*|*sh)
+            # note: in the case of the sudo commands, we cannot get the pid because it doesn't belongs to us, in any case, is simply wrong to run things on sudo so there's no issues with this
+            for arg in $cmd
+            do
+                if ! echo "$arg" | grep -qsiE "^(sudo|*bash|*zsh*|*perl*|*ruby*|*sh|\-.*)$" ; then
+                    if [[ -x "$( which "$arg" )" ]] ; then
+                        el_debug "fix: executable set to '$arg' instead of '$executable' "
+                        executable="$arg"
+                        break
+                    fi
+                fi
+            done
+            ;;
+        *)
+            ;;
+    esac
+
+    # check and report to user
+    if ! [[ -x "$( which "$executable" )" ]] && ! [[ -x "$executable" ]] ; then
+        unable_executable="$executable"
+        if [[ -z "$unable_executable" ]] ; then
+            unable_executable="$cmd"
+        fi
+        if [[ -z "$unable_executable" ]] ; then
+            unable_executable="$line"
+        fi
+
+        #local message_unable_title
+        #message_unable_title="$( printf "$( eval_gettext "Unable to run an autostart application" )" "" )"
+        #local message_unable_description
+        #message_unable_description="$( printf "$( eval_gettext "You have an autostart application that could not be run. You must install this application or remove it from your list:" )" "" )"
+
+        #notify-send -e -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list\n\nFAILED: ${unable_executable}"
+        el_warning "unable to run '${unable_executable}' from '${line}'"
+
+        # next!
+        return 1
+    fi
+
+    # run it
+    # close other instances, just in case
+    killall "$(basename "$executable" )"  2>/dev/null || true
+    killall -9 "$(basename "$executable" )"  2>/dev/null || true
+
+    el_debug "running: $cmd"
+    bash -c "$cmd  & disown"
+
+}
+
+
+run_desktop_autostart(){
+    local list is_run
+
+    if [[ -s "$1" ]] ; then
+        # e16
+        if [[ "$EROOT" ]] ; then
+            list="~/.e16/startup-applications.list"
+            if grep -qs "^${1}$" "$list" ; then
+                # run it
+                run "$@"
+                is_run=1
+            fi
+        else
+            # E25+
+            if [[ "$E_START" ]] ; then
+                if [[ "$E_HOME_DIR" ]] ; then
+                    list="${E_HOME_DIR}/applications/startup/.order"
+                else
+                    list="~/.e/e/applications/startup/.order"
+                fi
+
+                if grep -qs "^${1}$" "$list" ; then
+                    # run it
+                    run "$@"
+                    is_run=1
+                fi
+            fi
+        fi
+    else
+        el_warning "autostart desktop doesn't exist: $1\n$( ls -1 /etc/xdg/autostart/ )"
+        return 1
+    fi
+
+    # reports
+    if ((is_run)) ; then
+        el_warning "autostart desktop is not enabled in your startups list '$list': $1\n$( cat "$list" )"
+    fi
+}
+
+main(){
+    local launcher
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) ( /etc/xdg/autostart/*.desktop | command | tool )"
+        echo -e "This tool is a simple helper to run commands or .desktop autostart files from your ~/.crontab file, making sure it has access to your graphical system or that you have that .desktop file enabled in your autolaunchers (otherwise it will be ignored)"
+        exit 1
+    fi
+
+    launcher="$1"
+
+    # needed: in order to be able to run things on your graphical system
+    el_make_environment
+
+
+    case "${launcher,,}" in
+        "/etc/xdg/autostart/"*".desktop")
+            run_desktop_autostart "$@"
+            ;;
+        *".desktop")
+            run "$@"
+            ;;
+        *)
+            run "$@"
+            ;;
+    esac
+
+
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

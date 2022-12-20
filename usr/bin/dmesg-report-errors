@@ -32,14 +32,14 @@ main(){
         message="$( echo "$dmesg_result" | tail -n 14 )"
 
         # ignore if errors are by a cdrom
-        if echo -e "$message" | grep -i error | tail -n 4 | grep -iq "buffer.*I/O.*error.*on.*device.*logical.*block" ; then
+        if echo -e "$message" | grep -i error | tail -n 4 | grep -iqE "(buffer.*I/O.*error.*on.*device.*logical.*block|critical target error, dev.*sector)" ; then
            # maybe we are a cdrom ?
-           device="$( echo -e $message | grep -i error | tail -4 | grep device | sed -e 's|^.*device ||g' -e 's|,.*$||g' | awk '{print $1}' | tail -1 )"
+           device="$( echo -e "$message" | grep -i error | tail -4 | grep dev | sed -e 's|^.*device ||g' -e 's|^.*, dev ||g' -e 's|,.*$||g' | awk '{print $1}' | tail -1 )"
            for dev in $( ls /dev/cdrom* /dev/dvd* 2>/dev/null )
            do
                [[ -n "$dev" ]] || continue
                if [[ -L "$dev" ]] && [[ "$( readlink -f "$dev" )" = "$device" ]] ; then
-                   # yes, we are a cdrom
+                   # yes, we are a cdrom, ignore
                    save_and_exit
                fi
            done

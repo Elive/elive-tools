@@ -11,6 +11,14 @@ if [[ "$PATH" != *"/usr/sbin"* ]] ; then
 fi
 
 
+# sync wrapper to avoid syncing if wanted
+sync(){
+    if ((NO_SYNC)) ; then
+        el_debug "ignoring sync..."
+    else
+        command sync
+    fi
+}
 
 #===  FUNCTION  ================================================================
 #          NAME:  restart_daemons

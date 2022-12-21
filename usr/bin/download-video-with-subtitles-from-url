@@ -90,13 +90,13 @@ main(){
         rm -rf \"${download_dir}/tmp\"
         result=\"\$( el_notify wait emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
         if [[ \"\$result\" = \"open\" ]] ; then
-            exo-open \"$download_dir\"
+            ( exo-open \"$download_dir\" & )
         fi
     else
         el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
 
         if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
-            exo-open '${download_dir}/tmp'
+            ( exo-open '${download_dir}/tmp' & )
         else
             rm -rf \"${download_dir}/tmp\"
         fi

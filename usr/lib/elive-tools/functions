@@ -196,6 +196,11 @@ el_notify(){
             fi
         fi
 
+        # check that it working otherwise restart daemon, this is needed otherwise "action" based notifications will block the application being stuck
+        if ! notify-send -t 1 "." ; then
+            notification-daemon-restarter
+        fi
+
         notify-send ${extra_args} -t "$time" -i "$icon" "$title" "$message" "$@"
     else
         el_info "${title}: ${message}"

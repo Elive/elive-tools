@@ -86,9 +86,9 @@ main(){
 
     if ((is_downloaded)) ; then
         cd \"${download_dir}\"
-        mv -f \"${download_dir}/tmp/\"* \"${download_dir}/\"
+        find \"${download_dir}/tmp/\" -type f \( ! -iname '*.part' -a ! -iname '*.ytdl' \) -exec mv {} \"${download_dir}/\" \;
         rmdir \"${download_dir}/tmp\" 2>/dev/null || true
-        result=\"\$( el_notify wait emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
+        result=\"\$( el_notify important emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
         if [[ \"\$result\" = \"open\" ]] ; then
             ( exo-open \"$download_dir\" & )
         fi

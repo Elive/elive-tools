@@ -66,10 +66,19 @@ main(){
             \"$@\" ; then
             is_downloaded=1
         else
+            sleep 1
+            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
             if yt-dlp \
-                -i -x --embed-metadata \
+                -x --audio-quality 5 --audio-format mp3 --embed-metadata \
                 \"$@\" ; then
                 is_downloaded=1
+            else
+                mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                if yt-dlp \
+                    -i -x --embed-metadata \
+                    \"$@\" ; then
+                    is_downloaded=1
+                fi
             fi
         fi
     fi

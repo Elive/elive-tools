@@ -63,9 +63,18 @@ main(){
             \"$@\" ; then
             is_downloaded=1
         else
+            sleep 1
+            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
             if yt-dlp \
-                -i \"$@\" ; then
+                -f mp4 --embed-metadata --embed-chapters \
+                \"$@\" ; then
                 is_downloaded=1
+            else
+                mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                if yt-dlp \
+                    -i \"$@\" ; then
+                    is_downloaded=1
+                fi
             fi
         fi
     fi

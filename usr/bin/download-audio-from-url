@@ -89,13 +89,13 @@ main(){
         rmdir \"${download_dir}/tmp\" 2>/dev/null || true
         result=\"\$( el_notify important emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
         if [[ \"\$result\" = \"open\" ]] ; then
-            ( exo-open \"$download_dir\" & )
+            thunar \"$download_dir\"
         fi
     else
         el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
 
         if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
-            ( exo-open '${download_dir}/tmp' & )
+            thunar '${download_dir}/tmp'
         else
             rm -rf \"${download_dir}/tmp\"
         fi

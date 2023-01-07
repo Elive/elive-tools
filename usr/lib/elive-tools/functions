@@ -16,8 +16,15 @@ fi
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
+    local is_debug
+    if [[ "$1" = "debug" ]] ; then
+        is_debug=1
+    fi
     # if we are in console (out of X) we should always exit
     if ((is_console)) ; then
+        if ((is_debug)) ; then
+            echo -e "we are NOT in console, exiting '$FUNCNAME' ..." 1>&2
+        fi
         return 0
     fi
 
@@ -104,6 +111,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # END xauthority }}}
+
+    if ((is_debug)) ; then
+        echo -e "DISPLAY '$DISPLAY' DBUS_SESSION_BUS_ADDRESS '$DBUS_SESSION_BUS_ADDRESS' E_IPC_SOCKET '$E_IPC_SOCKET' XAUTHORITY '$XAUTHORITY' UID '$UID' USER '$USER' " 1>&2
+    fi
+
 }
 
 #===  FUNCTION  ================================================================
@@ -396,6 +408,11 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
 #   Make ready the user's environment (bash variables, extra functions, etc)
 #-------------------------------------------------------------------------------
 el_make_environment(){ # make ready our environment (source variables and functions)
+    local is_debug
+    if [[ "$1" = "debug" ]] ; then
+        is_debug=1
+    fi
+
     if [[ -f "/etc/adduser.conf" ]] ; then
         source /etc/adduser.conf
     fi
@@ -418,7 +435,7 @@ el_make_environment(){ # make ready our environment (source variables and functi
     fi
 
     # give display access
-    el_set_display_variables
+    el_set_display_variables $1
 
     #if [[ "$PATH" != *"$HOME/bin"* ]] ; then
         #PATH="$HOME/bin:$PATH"
@@ -445,8 +462,9 @@ el_make_environment(){ # make ready our environment (source variables and functi
         fi
     fi
 
-
-
+    if ((is_debug)) ; then
+        echo -e "USER '$USER' UID '$UID' HOME '$HOME' TERM '$TERM' XDG_CACHE_HOME '$XDG_CACHE_HOME' XDG_CONFIG_HOME '$XDG_CONFIG_HOME'" 1>&2
+    fi
 }
 
 #-------------------------------------------------------------------------------
@@ -3548,10 +3566,28 @@ fi
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
 if [[ -n "$TERM" ]] ; then
-    if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = "terminology" ]] || [[ "$TERM" = *gnome* ]] || [[ "$TERM" = *screen* ]] || [[ "$TERM" = *tmux* ]] ; then
-        is_terminal=1
-        is_console=0
+    # this can be from a cronjob
+    if [[ "$TERM" = "dumb" ]] ; then
+        # know which desktop we are running, if we are
+        if [[ -z "$E_START" ]] && [[ -z "$EROOT" ]] ; then
+            if pgrep -U "$UID" e16 1>/dev/null ; then
+                if [[ -d "/usr/share/e16" ]] ; then
+                    export EROOT=/usr/share/e16
+                else
+                    el_warning "$FUNCNAME - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/share/e16 directory"
+                fi
+            else
+                if pgrep -U "$UID" enlightenment_start 1>/dev/null ; then
+                    if [[ -e "/usr/bin/enlightenment_start" ]] ; then
+                        export E_START="/usr/bin/enlightenment_start"
+                    else
+                        el_warning "$FUNCNAME - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/bin/enlightenment_start executable"
+                    fi
+                fi
+            fi
+        fi
     fi
+
     # note: TTY variable not shows in bash login aparently
     if [[ "$TERM" = "linux" ]] ; then
         # note: if you want to enable colors in an application run from E (.desktop file), you must set the TERM variable, and LS_COLORS too
@@ -3564,6 +3600,11 @@ if [[ -n "$TERM" ]] ; then
             is_terminal=0
             is_console=1
         fi
+    fi
+
+    if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = "terminology" ]] || [[ "$TERM" = *gnome* ]] || [[ "$TERM" = *screen* ]] || [[ "$TERM" = *tmux* ]] ; then
+        is_terminal=1
+        is_console=0
     fi
 else
     is_terminal=0

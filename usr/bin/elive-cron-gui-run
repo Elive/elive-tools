@@ -70,8 +70,10 @@ run(){
 
     # run it
     # close other instances, just in case
-    killall "$(basename "$executable" )"  2>/dev/null || true
-    killall -9 "$(basename "$executable" )"  2>/dev/null || true
+    if ((is_replace)) ; then
+        killall "$(basename "$executable" )"  2>/dev/null || true
+        killall -9 "$(basename "$executable" )"  2>/dev/null || true
+    fi
 
     if [[ "$cmd" != "$executable" ]] ; then
         el_debug "running '$executable' as: $cmd"
@@ -124,16 +126,26 @@ run_desktop_autostart(){
 }
 
 main(){
-    local launcher
+    local launcher arg
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) ( /etc/xdg/autostart/*.desktop | command | tool )"
+        echo -e "Usage: $(basename $BASH_SOURCE) [--replace]  ( /etc/xdg/autostart/*.desktop | command | tool )"
         echo -e "This tool is a simple helper to run commands or .desktop autostart files from your ~/.crontab file, making sure it has access to your graphical system or that you have that .desktop file enabled in your autolaunchers (otherwise it will be ignored)"
         exit 1
     fi
 
-    launcher="$1"
+    for arg in "$@"
+    do
+        case "$arg" in
+            "--replace"|"-r")
+                is_replace=1
+                ;;
+            *)
+                launcher="$arg $launcher"
+                ;;
+        esac
+    done
 
     # needed: in order to be able to run things on your graphical system
     el_make_environment

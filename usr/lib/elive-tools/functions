@@ -3334,6 +3334,15 @@ el_get_machine_id(){
     #el_debug
     #el_security_function_loop || return 0
 
+    # use the cached / saved ID
+    if grep -qsF "machine-id: " "/etc/elive-version" 2>/dev/null ; then
+        machine_id="$( cat /etc/elive-version | grep "^machine-id: " | sed -e 's|^machine-id: ||g' | tail -1 )"
+        if [[ -n "$machine_id" ]] ; then
+            echo "$machine_id"
+            return
+        fi
+    fi
+
     if ! [[ "$UID" = 0 ]] ; then
         el_error "$FUNCNAME must be run with privileges"
         return 1

@@ -4,13 +4,17 @@ source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 #el_make_environment
 
+if [[ ! -t 0 ]] ; then
+    is_stdin=1
+    text="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"
+fi
+
 #-------------------------------------------------------------------------------
 #   Speak something
 #-------------------------------------------------------------------------------
 main(){
     # pre {{{
-
-    local text process hour is_force
+    local process hour is_force
 
     if [[ "$1" = -f ]] || [[ "$1" = --force ]] ; then
         is_force=1
@@ -18,10 +22,15 @@ main(){
     fi
 
 
-    text="$@"
-    if [[ -z "$text" ]] ; then
+
+    if [[ -z "$1" ]] && ! ((is_stdin)) ; then
         return 0
     fi
+
+    if [[ -z "$text" ]] ; then
+        text="$@"
+    fi
+
     if ((NOVOICE)) || ((SILENT)) ; then
         #el_explain 2 "ignoring reproduction of voice because of an environment variable"
         exit

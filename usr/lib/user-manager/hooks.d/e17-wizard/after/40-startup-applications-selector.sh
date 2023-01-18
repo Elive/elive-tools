@@ -542,29 +542,30 @@ EOF
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] && ! ((is_thanatests)) ; then
         sleep 5
 
+            #--field="Candies::lbl" \
+            #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
+            #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
+
         result="$( yad --width=400 --center --title="Elive Retro menu" \
             --form \
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
             --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
             --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
-            --field="Candies::lbl" \
-            --field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
-            --field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
             --button="gtk-ok" || true )"
         #ret="$?"
         if [[ -n "$result" ]] ; then
             retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
             retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
             retro_forum="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-            retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-            retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+            #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
         else
             retro_play="TRUE"
             retro_play_type="Play in a window"
             retro_forum="FALSE"
-            retro_music_composer="FALSE"
-            retro_demo_mode="FALSE"
+            #retro_music_composer="FALSE"
+            #retro_demo_mode="FALSE"
         fi
 
         # run this in a subshell waiting for internet because we depend on it

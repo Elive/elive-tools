@@ -40,6 +40,10 @@ main(){
     for arg in "$@"
     do
         case "$arg" in
+            "-w"|"--wait")
+                is_wait=1
+                shift
+                ;;
             http*|file://*|www.*)
                 el_array_member_add "$arg" "${urls[@]}" ; urls=("${_out[@]}")
                 el_debug "added url '${arg}' "
@@ -257,7 +261,9 @@ main(){
 
     # wait that all the browsers are finished? useful for wait the process, but:
     # note: it would be useful to wait the process that has finished, but if we are opening to a tab (like in chrome), the process is just run in BG, not waiting for it, so this is not so reliable...
-    wait
+    if ((is_wait)) ; then
+        wait
+    fi
 }
 
 #

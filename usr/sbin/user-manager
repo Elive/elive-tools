@@ -381,7 +381,7 @@ user_add(){
         --field="$( eval_gettext "Configure a new user" ):LBL" "" \
         --field=":LBL" "" \
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
-        --field="$( eval_gettext "User's real name" )" "$username_real" \
+        --field="$( eval_gettext "User's real name (for UX)" )" "$username_real" \
         --field="$( eval_gettext "Email (for Gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password to use" ):H" "$password" \
         --field="$( eval_gettext "Password confirmation" ):H" "$password" \

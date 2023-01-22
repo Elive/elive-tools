@@ -253,7 +253,7 @@ main(){
             LC_ALL=C sleep $delayed_seconds
         fi
 
-        ${browser} ${browser_options[@]} ${preurl}"${url}" &
+        ${browser} ${browser_options[@]} ${preurl}"${url}" 1>/dev/null 2>&1 &
 
         # don't bottleneck opening tabs
         LC_ALL=C sleep 2

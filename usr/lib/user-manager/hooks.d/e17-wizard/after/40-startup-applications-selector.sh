@@ -255,6 +255,9 @@ main(){
 
     done 3<<< "$( find /etc/xdg/autostart/ "$HOME/.config/autostart/" -type f -iname '*'.desktop | sort -u )"
 
+    # remove un-needed ones for live mode
+    menu_auto_live=( "${menu_auto_live[@]/elive-ai}" )
+
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then
         message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled for your desktop. Note that you don't have much RAM memory and services will use it. Elive has already pre-selected the best options for you." )" )"

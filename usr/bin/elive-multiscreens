@@ -487,7 +487,7 @@ load_multiscreens_configuration(){
                 )
 
                 # ask for confirmation
-                if timeout 180 $guitool --question --text="$( eval_gettext "Move your mouse among your screens to verify its positions. Do you want to always load this configuration when starting Elive?" )" ; then
+                if timeout 180 $guitool --question --text="$( eval_gettext "Move your mouse across your screens to verify its positions. Do you want to always load this configuration when starting Elive?" )" ; then
                     el_debug "user wants to re-use the conf"
                     conf_multiscreens_last_autoload_wanted="yes"
                 else

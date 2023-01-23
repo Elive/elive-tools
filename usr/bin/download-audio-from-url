@@ -39,7 +39,7 @@ main(){
     local message_keep
     message_keep="$( printf "$( eval_gettext "Keep" )" "" )"
     local message_what_to_do
-    message_what_to_do="$( printf "$( eval_gettext "Download failed, what you want to do with the half-downloaded files?" )" "" )"
+    message_what_to_do="$( printf "$( eval_gettext "Download failed, what do you want to do with the partially downloaded files?" )" "" )"
     local message_open_directory
     message_open_directory="$( printf "$( eval_gettext "Open" )" "" )"
     local message_nothing_title

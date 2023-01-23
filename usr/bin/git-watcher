@@ -1524,13 +1524,19 @@ do_cherry_pick(){
 
     # }}}
 
+    if ! do_compare_before_after "$commit_id" ; then
+        if ! el_confirm "Import anyways?" ; then
+            return 0
+        fi
+    fi
+
     el_explain 0 "git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
     if command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" ; then
         if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" = 0 ]] ; then
             # last import shows an empty diff, like it was already included in the history or is a useless commit for our branch
             el_explain 0 "\nXXWarning:XX seems like this commit didn't changed anything, probably because the code was already imported, you can keep it for historical purposes or you can remove it to have a more clean history."
             if el_confirm "Remove it?" ; then
-                command git reset --hard HEAD~1
+                command git reset --quiet --hard HEAD~1
             fi
         else
             # correctly imported
@@ -1602,6 +1608,87 @@ do_cherry_pick_multiple(){
         show_history
     fi
 }
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_compare_before_after
+#   DESCRIPTION:  create two directories with only the modified files
+#                 after and before to import a commit, useful to see differences
+#    PARAMETERS:  $1 = commit_id (or commits, with comma)  to import
+#       RETURNS:  true if there's differences, false if not
+#===============================================================================
+do_compare_before_after(){
+    # pre {{{
+    local commits _commit_id commit_id commits_amount
+    el_debug
+
+    commits="$@"
+    commits="${commits//,/ }"
+
+    commits_amount="$( echo "$commits" | wc -w )"
+    commit_first="${commits%% }"
+
+    # }}}
+
+    # remove the previously modified files
+    rm -rf "$tmpdir/sources-before" "$tmpdir/sources-after"
+    mkdir -p "$tmpdir/sources-before" "$tmpdir/sources-after"
+
+    # update temporal code copy
+    el_explain 0 "Updating temporal copy on '${tmpdir_sources}'..."
+    rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
+
+    # get the before state
+    cd "$tmpdir_sources"
+    if [[ "${#commits_history[@]}" -gt $commits_amount ]] ; then
+        _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 - $commits_amount ))]}"
+    else
+        _commit_id="$( echo "$commits_list" | grep -B 1 "${commit_first}" | head -1 )"
+
+        command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 8 "${commit_first:0:12}"
+        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}' , is this correct?" ; then
+            return 1
+        fi
+    fi
+
+    el_explain 0 "Fetching previous state '${_commit_id}'"
+    command git checkout --quiet "${_commit_id}" 1>/dev/null
+
+    # save files before to apply the commit
+    for commit_id in ${commits} ; do
+        while read -ru 3 file
+        do
+            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-before"
+        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+    done
+
+    # apply the commits
+    if ! command git cherry-pick --keep-redundant-commits -Xpatience -x -s $commits 1>/dev/null ; then
+        el_error 0 "failed using: git cherry-pick --keep-redundant-commits -Xpatience -x -s $commits"
+    fi
+
+    # save files after to apply the commit
+    for commit_id in ${commits} ; do
+        while read -ru 3 file
+        do
+            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-after"
+        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+    done
+
+    # remove the temporally imported commit
+    command git reset --quiet --hard HEAD~${commits_amount}
+
+    # go back to original directory
+    cd "$working_directory_d"
+
+    # return result
+    if [[ "$( diff --color=never -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | lsdiff | wc -l )" -ge 1 ]] ; then
+        return 0
+    else
+        echo -e "${el_c_b}No differences found${el_c_n}"
+        return 1
+    fi
+
+}
 #===  FUNCTION  ================================================================
 #          NAME:  option_show
 #   DESCRIPTION:  show an option to pick in a nice-colored way
@@ -1670,6 +1757,8 @@ options_main_interact(){
     fi
     option_show "e"         "Edit the files affected by this commit (good to read all code)"
     option_show "E"         "Edit (visualize) how the contents would change if we import it"
+    option_show "f"         "Fix (edit) our last commit description (--amend)"
+    option_show "F"         "Fix the history of last commits (rebase interactive)"
     option_show "m"         "Mark, adds a mark on this position, to review later"
     option_show "M"         "Message, questions and requests to others"
     option_show "r"         "Read Capsules"
@@ -1962,7 +2051,7 @@ options_main_interact(){
         e)  # edit files
             # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
-                echo -e "Set the editor (command) that you want to use"
+                echo -e "Type the editor (command) that you want to use:"
                 read -e EDITOR
             fi
 
@@ -1983,49 +2072,26 @@ options_main_interact(){
             ;;
 
         E)  # edit (visualize) how the contents would change if we import it
-            mkdir -p "$tmpdir/sources-before" "$tmpdir/sources-after"
-
-            # update temporal code copy
-            rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
-
-            # get the before state
-            cd "$tmpdir_sources"
-            if [[ "${#commits_history[@]}" -gt 1 ]] ; then
-                _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 ))]}"
-            else
-                _commit_id="$( echo "$commits_list" | grep -B 1 "$commit_id" | head -1 )"
-            fi
-            command git checkout --quiet "${_commit_id}" 1>/dev/null
-
-            # save files before to apply the commit
-            while read -ru 3 file
-            do
-                printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-before"
-            done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
-
-            # apply the commit
-            if ! command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" 1>/dev/null ; then
-                el_error 0 "failed using: git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
+            if do_compare_before_after "$commit_id" ; then
+                # compare files
+                diff -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | colordiff
+                meld "$tmpdir/sources-before" "$tmpdir/sources-after"
             fi
 
-            # save files after to apply the commit
-            while read -ru 3 file
-            do
-                printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-after"
-            done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
-
-            # compare files
-            meld "$tmpdir/sources-before" "$tmpdir/sources-after"
-
-            # remove the temporally imported commit
-            command git reset --hard HEAD~1
-            rm -rf "$tmpdir/sources-before" "$tmpdir/sources-after"
-
-            cd "$working_directory_d"
 
             # return back to main menu
             $FUNCNAME
 
+            ;;
+        f)  # edit the last commit description
+            command git commit --amend
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        F)  # edit the last history
+            command git rebase --interactive "${branch_parent}"
+            # return back to main menu
+            $FUNCNAME
             ;;
         i)  # cherry-pick
             do_cherry_pick
@@ -2066,11 +2132,14 @@ options_main_interact(){
             if [[ -n "$user_input_backport_branches" ]] ; then
                 while read -ru 3 branch
                 do
-                    command git checkout --quiet "$branch"
+                    if ! command git checkout --quiet "$branch" ; then
+                        el_error "branch '$branch' doesn't exist, create it first"
+                        break
+                    fi
                     do_cherry_pick
-                    command git checkout --quiet "$branch_working"
-
                 done 3<<< "$( echo "$user_input_backport_branches" | tr ',' '\n' )"
+
+                command git checkout --quiet "$branch_working"
             else
                 el_explain 0 "Skipping..."
                 sleep 1
@@ -2111,16 +2180,16 @@ options_main_interact(){
             show_history
             echo ""
 
-            if el_confirm "Do you want to permanently remove the last commit?" ; then
+            if el_confirm "Do you want to permanently remove the last (first line) commit?" ; then
                 el_explain 0 "$ git reset --hard HEAD~1"
-                command git reset --hard HEAD~1
+                command git reset --quiet --hard HEAD~1
                 # delete it from the list of the ones we have imported too
-                sed -i "s|$commit_id ${branch_working}||g" "$conf_imported_commits_list_f"
-                sed -i "/^$/d" "$conf_imported_commits_list_f"
+                sed -i "s|$commit_id ${branch_working}||g" "$conf_imported_commits_list_f" 2>/dev/null
+                sed -i "/^$/d" "$conf_imported_commits_list_f" 2>/dev/null
                 # shared confs too
                 if [[ -s "$conf_imported_commits_list_shared_f" ]] ; then
-                    sed -i "s|${commit_id}.*$||g" "$conf_imported_commits_list_shared_f"
-                    sed -i "/^$/d" "$conf_imported_commits_list_shared_f"
+                    sed -i "s|${commit_id}.*$||g" "$conf_imported_commits_list_shared_f" 2>/dev/null
+                    sed -i "/^$/d" "$conf_imported_commits_list_shared_f" 2>/dev/null
                 fi
             fi
 
@@ -2295,7 +2364,7 @@ main(){
         exit 1
     fi
 
-    tmpdir="/tmp/.$(basename $0)-${USER}"
+    tmpdir="/tmp/.$(basename $0)-$( basename $(pwd) )-${USER}"
     tmpdir_sources="/tmp/.$(basename $0)-${USER}/sources"
     rm -rf "$tmpdir" "$tmpdir_sources"
     mkdir -p "$tmpdir" "$tmpdir_sources"
@@ -2388,6 +2457,12 @@ main(){
     hour="$(date +%k)"
     if [[ "${hour}" -ge "21" ]] || [[ "$hour" -lt "8" ]] ; then
         export NOSOUND=1
+    fi
+
+    branch_parent="$( command git show-branch | sed "s/].*//" | grep "\*" | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed "s/^.*\[//" )"
+    # get the first commit from the working branch
+    if [[ -z "$branch_parent" ]] ; then
+        branch_parent="$( command git rev-list --first-parent ${branch_working} | tail -1 )"
     fi
 
     # - input parameters }}}

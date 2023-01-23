@@ -3612,9 +3612,14 @@ if [[ -n "$TERM" ]] ; then
     fi
 
     # note: do not use [[ "$TERM_PROGRAM" = "tmux" ]] because we may run things from non-interactive using tmux-attach-jobs
-    if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = "terminology" ]] || [[ "$TERM" = *gnome* ]] || [[ "$TERM" = "screen-256color-bce" ]] || [[ "$TERM" = *tmux* ]] ; then
+    if [[ "$TERM" = *rxvt* ]] || [[ "$TERM" = *xterm* ]] || [[ "$TERM" = "terminology" ]] || [[ "$TERM" = *gnome* ]] || [[ "$TERM" = "screen-256color"* ]] || [[ "$TERM" = *tmux* ]] ; then
         is_terminal=1
         is_console=0
+    fi
+
+    # cronjobs must never be interactives
+    if [[ "$TERM" = "dumb" ]] ; then
+        is_terminal=0
     fi
 else
     is_terminal=0
@@ -3626,6 +3631,13 @@ fi
 
 if ((is_terminal)) || ((is_console)) ; then
     is_interactive=1
+fi
+
+if [[ -n "$FORCE_INTERACTIVE" ]] ; then
+    case "$FORCE_INTERACTIVE" in
+        "yes")      is_interactive=1  ; ;;
+        "no")       unset is_interactive  ; ;;
+    esac
 fi
 
 

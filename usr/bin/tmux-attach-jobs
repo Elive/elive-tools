@@ -30,6 +30,13 @@ fi
 # precache for less pause
 precache tmux 1>/dev/null 2>&1
 
+# force to not running is_interactive when we are not (for example, run from a cronjob)
+if ((is_interactive)) ; then
+    FORCE_INTERACTIVE=yes
+else
+    FORCE_INTERACTIVE=no
+fi
+
 # note since there may be some missing env variables that will give us an empty result (if run from cronjobs for example), let's run this from a bash sub-wrapper
 tmux_nb="$(bash -c "tmux ls 2>/dev/null" | grep "^${group_session}: " | wc -l)"
 
@@ -38,7 +45,7 @@ if [[ "$tmux_nb" == "0" ]]; then
     echo "Launching new tmux group session $group_session ..."
 
     # create a new group with a temporal process to attach the first job on the existing group
-    tmux new-session -d -s $group_session -n "${win_name}" -x 400 -y 100 "sleep 10 ; exit"
+    tmux new-session -d -s $group_session -n "${win_name}" -x 400 -y 100 "sleep 10 ; exit" \; setenv FORCE_INTERACTIVE "$FORCE_INTERACTIVE"
     LC_ALL=C sleep 0.5
 fi
 
@@ -55,7 +62,7 @@ else
 
     # run things in a new window
     #tmux new-window -t "${group_session}:+" -n "$win_name" "$@"
-    tmux new-window -t "${group_session}" -n "$win_name" "$@"
+    tmux new-window -t "${group_session}" -n "$win_name" "$@" \; setenv FORCE_INTERACTIVE "$FORCE_INTERACTIVE"
 
     echo "Jobs run in a background tmux"
     echo "Tip: run 'tmux ls' to list tmux sessions or go to it with 'tmux attach -t $group_session'"

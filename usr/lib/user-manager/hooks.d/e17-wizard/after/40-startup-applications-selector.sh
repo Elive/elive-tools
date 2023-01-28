@@ -421,7 +421,7 @@ EOF
 
         # desktop sound effects
         hour="$(date +%k)"
-        if [[ -s "/etc/elive-tools/geolocation/livemode-location-fetched.txt" ]] && [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] && ! ((is_thanatests)) ; then
+        if [[ -s "/etc/elive-tools/geolocation/livemode-location-fetched.txt" ]] && [[ "${hour}" -lt "21" ]] && [[ "$hour" -gt "8" ]] && ! ((is_thanatests)) && ! ((is_live)) ; then
             menu+=("TRUE")
         else
             menu+=("FALSE")

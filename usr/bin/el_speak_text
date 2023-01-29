@@ -97,8 +97,11 @@ main(){
 #
 el_dependencies_check "text2wave|play|sox|iconv"
 
-{ main "$@" & disown ; } 2>/dev/null
-#main "$@"
+if ((is_stdin)) ; then
+    main "$@"
+else
+    { main "$@" & disown ; } 2>/dev/null
+fi
 
 # vim: set foldmethod=marker :
 

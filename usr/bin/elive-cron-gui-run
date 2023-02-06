@@ -140,6 +140,7 @@ main(){
         case "$arg" in
             "--replace"|"-r")
                 is_replace=1
+                shift
                 ;;
             *)
                 launcher="$arg $launcher"

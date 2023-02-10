@@ -593,7 +593,7 @@ EOF
         if [[ "$retro_play" = "TRUE" ]] ; then
             case "$retro_play_type" in
                 *"window"*|*"Window"*)
-                    mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                    ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                     ;;
                 *"YouTube"*|*"Youtube"*|*"youtube"*)
                     web-launcher --delay=2 --app="https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &

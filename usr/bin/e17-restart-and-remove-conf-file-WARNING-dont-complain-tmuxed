@@ -78,11 +78,18 @@ main(){
             killall -9 e16 2>/dev/null
             sync
             rm -fr ~/.xsession-errors
+
+            elive-skel upgrade .config/audacious/playlists/1000.audpl
             elive-skel upgrade .config/cairo-dock
+            elive-skel upgrade .config/gtk-3.0/settings.ini
+            elive-skel upgrade .config/ulauncher
             elive-skel upgrade .conkyrc
             elive-skel upgrade .e16
-            elive-skel upgrade .config/ulauncher
+            elive-skel upgrade .gtkrc-2.0.mine
             elive-skel upgrade .local/share/ulauncher
+            elive-skel upgrade .xsettingsd
+            elive-skel upgrade .Xdefaults
+
             sync
             ;;
 

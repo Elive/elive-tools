@@ -87,7 +87,7 @@ select_card_multiple(){
             menu+=("$( echo "$_name" )")
             menu+=("$( echo "$_description" )")
         fi
-    done 3<<< "$( cat "$asound_cards" | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" | grep -v "at 0x.*irq" )"
+    done 3<<< "$( cat "$asound_cards" | psort -- -p "EWX" -p "PCH" -p "USB" -p "DAC" -p "Intel" -p "SB16" -p "CS4236" -p "Generic$" | grep -v "at 0x.*irq" )"
     # note: this psort is not very important since it's only going to be used for menu
 
     # set auto mode unless we have an USB/DAC audio card, also because we may want the mic from elsewhere
@@ -107,7 +107,7 @@ select_card_multiple(){
     if ((is_buster)) || ((is_wheezy)) ; then
         selection="$selection"
     else
-        selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+        selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | awk '{print $1}' | head -1 )"
     fi
 
     if [[ "${selection}" = "cancel" ]] ; then
@@ -241,6 +241,7 @@ main(){
 
                 id="$( echo "$line" | awk '{print $1}' )"
                 name="$( echo "$line" | sed -e 's|\].*$||g' -e 's|^.*\[||g')"
+                read -r name <<< "$name"
 
                 # note: this is needed to configure the amixer next command, based on the while loop psort
                 if ((is_buster)) || ((is_wheezy)) ; then
@@ -258,27 +259,31 @@ main(){
                     preferenced="DAC"
                 fi
 
-                array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -i "Simple mixer control" | wc -l ) :: $name"
+                # make an array of the number of tracks :: name card
+                array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" | wc -l ) :: $name"
 
-            done 3<<< "$( echo "$list_cards" | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+            done 3<<< "$( echo "$list_cards" | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
             # select the card that has most tracks
             # first detect the max number of tracks
-            selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+            selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
 
             # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | head -1 | sed -e 's|^.* :: ||g' )"
+            #selection_id="${selection%% :: *}"
+            #selection_name="${selection##* :: }"
+            #
 
             if [[ "$preferenced" = "DAC" ]] ; then
                 # bullseye and up works with ID instead of name
                 if ((is_buster)) || ((is_wheezy)) ; then
                     selection="DAC"
                 else
-                    selection="$( grep -E "\[\s*DAC\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+                    selection="$( grep -E "\[\s*DAC\s*\]" "$asound_cards" | awk '{print $1}' | head -1 )"
                 fi
                 #fi
             else
-                el_debug "we selected the card '$selected' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
+                el_debug "we selected the card '$selection' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
             fi
 
             # update: this message became useless especially after using pulseaudio
@@ -309,18 +314,39 @@ main(){
     # user's conf
     if [[ -e "$DHOME/.shared-home" ]] ; then
         if $guitool --question --text="$( eval_gettext "Your user-home directory is shared with another system, if you try to configure your audio card it may not work in the other system. In that case, you will need to remove the '.asoundrc' file later. Do you want to continue?" )" ; then
-            echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
-            echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+            if ((is_buster)) || ((is_wheezy)) ; then
+                echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+                echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+            else
+                id="$( echo "$list_cards" | grep -Ew "$selection" | sed -e 's|\[.*$||g' )"
+                read -r id <<< "$id"
+                echo "defaults.ctl.card ${id}" >> "${HOME}/.asoundrc"
+                echo "defaults.pcm.card ${id}" >> "${HOME}/.asoundrc"
+            fi
         fi
     else
-        echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
-        echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+        if ((is_buster)) || ((is_wheezy)) ; then
+            echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
+            echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+        else
+            id="$( echo "$list_cards" | grep -Ew "$selection" | sed -e 's|\[.*$||g' )"
+            read -r id <<< "$id"
+            echo "defaults.ctl.card ${id}" >> "${HOME}/.asoundrc"
+            echo "defaults.pcm.card ${id}" >> "${HOME}/.asoundrc"
+        fi
     fi
 
     # reconfigure alsa.conf to our audio card
     if [[ "$UID" = 0 ]] && ! echo "$selection" | grep -qs "^[[:digit:]]*$" ; then
-        sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
-        sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
+        if ((is_buster)) || ((is_wheezy)) ; then
+            sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
+            sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
+        else
+            id="$( echo "$list_cards" | grep -Ew "$selection" | sed -e 's|\[.*$||g' )"
+            read -r id <<< "$id"
+            sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${id}|g" /usr/share/alsa/alsa.conf
+            sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${id}|g" /usr/share/alsa/alsa.conf
+        fi
     fi
 
 
@@ -343,22 +369,22 @@ main(){
                     echo "defaults.pcm.card ${line}" >> "${HOME}/.asoundrc"
 
                     # add this card only if has a mic available
-                    if LC_ALL=C amixer | grep -qsi "Simple mixer control.*'.*Mic" ; then
+                    if LC_ALL=C amixer 2>/dev/null | grep -qsi "Simple mixer control.*'.*Mic" ; then
                         el_debug "the card $line is a good candidate for the extra microphone configuration"
-                        array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer | grep -Fi "Simple mixer control" | wc -l ) :: $line"
+                        array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer 2>/dev/null | grep -Fi "Simple mixer control" | wc -l ) :: $line"
                     fi
 
-                done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+                done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
                 # restore
                 mv -f "$HOME/.asoundrc.bak" "$HOME/.asoundrc"
 
                 # select the card that has most tracks
                 # first detect the max number of tracks
-                selection_number="$( echo "${array_cards}" | sort -g | tail -1 | sed -e 's| :: .*$||g' )"
+                selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
 
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1  )"
+                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | head -1  )"
 
                 mic="$selection"
             fi

@@ -22,6 +22,11 @@ main(){
 
     logfile="$1"
     shift
+    executable="$1"
+    shift
+    if ! [[ -x "$executable" ]] && [[ -x "$( which "$executable" )" ]] ; then
+        executable="$( which "$executable" )"
+    fi
 
     # }}}
 
@@ -44,7 +49,7 @@ main(){
         -ex "set logging off"
         -ex "quit"
     )
-    echo 0 | gdb -batch-silent "${ex[@]}" --args "$@"
+    echo 0 | gdb -batch-silent "${ex[@]}" --args "$executable" "$@"
 
     el_info "GDB Logs saved on: $logfile"
 

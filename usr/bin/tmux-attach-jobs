@@ -31,7 +31,7 @@ fi
 precache tmux 1>/dev/null 2>&1
 
 # force to not running is_interactive when we are not (for example, run from a cronjob)
-if ((is_interactive)) ; then
+if ((is_interactive)) || ((FORCE_INTERACTIVE)) ; then
     _FORCE_INTERACTIVE=yes
 else
     _FORCE_INTERACTIVE=no

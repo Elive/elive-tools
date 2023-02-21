@@ -62,14 +62,14 @@ main(){
 
     if test -n \"$1\" ; then
         if yt-dlp \
-            -x --audio-quality 5 --audio-format mp3 --embed-metadata \
+            -f 'ba' -x --audio-quality 5 --audio-format mp3 --embed-metadata \
             \"$@\" ; then
             is_downloaded=1
         else
             sleep 1
             mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
             if yt-dlp \
-                -x --audio-quality 5 --audio-format mp3 --embed-metadata \
+                -f 'ba' -x --audio-quality 5 --audio-format mp3 --embed-metadata \
                 \"$@\" ; then
                 is_downloaded=1
             else

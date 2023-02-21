@@ -548,13 +548,12 @@ EOF
             #--field="Candies::lbl" \
             #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
             #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
-            #--field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
 
         result="$( yad --width=400 --center --title="Elive Retro menu" \
             --form \
             --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
             --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
-            --field="$( eval_gettext "Mode" ):CB" "Play in YouTube!""Play in a window!""Radio SynthWave" \
+            --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
             --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
             --button="gtk-ok" || true )"
         #ret="$?"
@@ -566,8 +565,7 @@ EOF
             #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
         else
             retro_play="TRUE"
-            #retro_play_type="Play in a window"
-            retro_play_type="Play in YouTube"
+            retro_play_type="Play in a window"
             retro_forum="FALSE"
             #retro_music_composer="FALSE"
             #retro_demo_mode="FALSE"

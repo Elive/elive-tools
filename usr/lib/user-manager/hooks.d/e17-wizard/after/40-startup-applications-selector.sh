@@ -516,6 +516,12 @@ EOF
     buf="$( cat "$HOME/.e16/startup-applications.list" )"
     echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" > "$HOME/.e16/startup-applications.list"
 
+    # configure cairo-dock
+    if ! laptop-detect ; then
+        sed -i -e '/^modules=/s|PowerManager;||g' "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
+        sed -i -e '/^modules=/s|PowerManager||g' "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
+    fi
+
 
     # run them all (and wait for next hooks!)
     if [[ -x "$( which 'elive-autostart-applications' )" ]] ; then

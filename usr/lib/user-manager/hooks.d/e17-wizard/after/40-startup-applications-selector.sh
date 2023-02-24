@@ -517,7 +517,8 @@ EOF
     echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" > "$HOME/.e16/startup-applications.list"
 
     # configure cairo-dock
-    if ! laptop-detect ; then
+    source /etc/elive/machine-profile 2>/dev/null || true
+    if ! laptop-detect || [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         sed -i -e '/^modules=/s|PowerManager;||g' "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
         sed -i -e '/^modules=/s|PowerManager||g' "$HOME/.config/cairo-dock/current_theme/cairo-dock.conf"
     fi

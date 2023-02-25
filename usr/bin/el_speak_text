@@ -30,6 +30,8 @@ main(){
     if [[ -z "$text" ]] ; then
         text="$@"
     fi
+    text_filename="${text//\//%}"
+    el_debug "Text to speak: $text"
 
     if ((NOVOICE)) || ((SILENT)) ; then
         #el_explain 2 "ignoring reproduction of voice because of an environment variable"
@@ -69,11 +71,11 @@ main(){
 
     # save a copy of the voice
     if ! [[ -s "$HOME/.cache/el_speak/${text}.wav" ]] ; then
-        echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text}.wav"
+        echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
     fi
     # if we have the voice, play it, with effects
-    if [[ -s "$HOME/.cache/el_speak/${text}.wav" ]] ; then
-        play -q -t wav "$HOME/.cache/el_speak/${text}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+    if [[ -s "$HOME/.cache/el_speak/${text_filename}.wav" ]] ; then
+        play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
     fi
 
     # cleanup space

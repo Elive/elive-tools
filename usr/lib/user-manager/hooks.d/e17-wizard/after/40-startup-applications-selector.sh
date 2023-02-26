@@ -571,7 +571,7 @@ EOF
             #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
             #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
         else
-            retro_play="TRUE"
+            retro_play="FALSE"
             retro_play_type="Play in a window"
             retro_forum="FALSE"
             #retro_music_composer="FALSE"

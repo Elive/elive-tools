@@ -30,6 +30,11 @@ main(){
     if [[ -z "$text" ]] ; then
         text="$@"
     fi
+
+    if [[ "$( echo "$text" | wc -w )" -gt 30 ]] ; then
+        el_notify soft stock_volume "Elive Speaking: Text too long" "This text is too long to be spoken, ignoring it..."
+    fi
+
     #text_filename="${text//\//%}"
     text_filename="$( echo "$text" | sha1sum | awk '{print $1}' )"
     el_debug "Text to speak: $text"

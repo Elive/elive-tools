@@ -336,6 +336,17 @@ configure_multiscreens(){
         conf_multiscreens_last_autoload_wanted=""
         el_config_save "conf_multiscreens_last"
         el_config_save "conf_multiscreens_last_autoload_wanted"
+
+        # when the device is a tablet, with orientation set vertically, always rotate it to the right (like Lenovo Tablet 2)
+        if ((is_mode_previous_desktop)) ; then
+            resolution="$( el_resolution_get )"
+            resolution_h="${resolution%x*}"
+            resolution_v="${resolution#*x}"
+            if [[ "$resolution_v" -gt "$resolution_h" ]] ; then
+                ( xrandr -o right & )
+                LC_ALL=C sleep 0.2
+            fi
+        fi
     fi
 
     # - use and ask if save }}}

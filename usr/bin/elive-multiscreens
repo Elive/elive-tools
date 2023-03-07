@@ -171,7 +171,14 @@ configure_multiscreens(){
 
     # explain {{{
     # explain the user how to configure it
-    timeout 120 $guitool --info --text="$( eval_gettext "Use the next tool to configure your screens. If you want Elive to load it when starting the system you need to save its configuration." )"
+
+    local message_title_resolutions
+    message_title_resolutions="$( printf "$( eval_gettext "Displays and resolutions" )" "" )"
+    #local message_welcome
+    #message_welcome="$( printf "$( eval_gettext "Use this tool to configure your screens and resolutions. If you want that Elive autoload your configuration when starting the desktop you need to select the option to save its configuration." )" "" )"
+
+    #el_notify normal display "$message_title_resolutions" "$message_welcome"
+
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
         timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before the window manager started, this means that you don't have window buttons or other features yet - it can be confusing. FOLLOW these instructions CAREFULLY: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application through the menu (or using the CTRL+Q keys)" )"
@@ -179,7 +186,10 @@ configure_multiscreens(){
 
     # e16
     if [[ -n "$EROOT" ]] ; then
-        $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens as well as newer versions of Enlightenment. It is possible that some gadgets or windows will move to unexpected positions on the desktop." )"
+        if ! el_flag check multiscreens-e16-welcome ; then
+            $guitool --info --text="$( eval_gettext "The E16 desktop seems to not manage multiple screens as well as newer versions of Enlightenment. It is possible that some gadgets or windows will move to unexpected positions on the desktop." )"
+            el_flag add multiscreens-e16-welcome
+        fi
     fi
 
     # - explain }}}
@@ -188,7 +198,10 @@ configure_multiscreens(){
     el_debug "running gui configurator"
 
     # tell the user to save the conf
-    $guitool --info --text="$( eval_gettext "Important: if you want to load your custom resolution on every desktop startup, you need to save it with the 'Save As' option. Otherwise, your settings will not be available on each startup." )"
+    local message_save_required_to_autostart
+    message_save_required_to_autostart="$( printf "$( eval_gettext "Important: if you want to load your custom resolution on every desktop startup, you need to save it with the 'Save As' option. Otherwise, your settings will not be available on each startup." )" "" )"
+
+    el_notify normal display "$message_title_resolutions" "$message_save_required_to_autostart"
 
     arandr
 

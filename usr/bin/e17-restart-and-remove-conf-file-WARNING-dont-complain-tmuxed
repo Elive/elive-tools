@@ -52,6 +52,7 @@ main(){
                     ( mplayer -cache-min 99 -cache-seek-min 99 -vc null -vo null -quiet -input nodefault-bindings -noconfig all  "/usr/share/sounds/elive/glass-break.wav" & )
                 fi
             fi
+            LC_ALL=C sleep 0.3
         fi
     fi
 

@@ -515,7 +515,13 @@ EOF
 
     # sort the resulting list to satisfy dependencies (like notification-daemon should be run first
     buf="$( cat "$HOME/.e16/startup-applications.list" )"
-    echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" > "$HOME/.e16/startup-applications.list"
+
+    # add an info header
+    rm -f "$HOME/.e16/startup-applications.list"
+    echo "# NOTE: if you want to disable a specific autolauncher, do it by commenting the line (like this one) so it will be ignored, instead if you simply remove the line Elive could suggest you to add it again in the future." >> "$HOME/.e16/startup-applications.list"
+
+    # sort the launchers
+    echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$HOME/.e16/startup-applications.list"
 
     # configure cairo-dock
     source /etc/elive/machine-profile 2>/dev/null || true

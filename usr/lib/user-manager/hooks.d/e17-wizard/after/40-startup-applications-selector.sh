@@ -74,7 +74,7 @@ main(){
         # un-needed / blacklisted ones {{{
         if [[ -n "$EROOT" ]] ; then
             # E16 requires different ones
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-ai-inspirateme|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store|pulseaudio)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store|pulseaudio)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 #       e16 doesn't has a module or anything so keep it running from the trayer
@@ -90,7 +90,7 @@ main(){
 
         else
             # E17 / E22
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-ai-inspirateme|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 # wicd-: deprecated and not needed for elive
@@ -136,52 +136,54 @@ main(){
                 fi
                 ;;
 
-            *)
+            "gnome-keyring"*|"update-notifier"*)
+                # in installed, but not in low RAM
                 if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
-                    # E16 requires different ones
-                    if [[ -n "$EROOT" ]] ; then
-                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
-                            menu+=("TRUE")
-                            menu_auto+=("$file")
-                            el_debug "state: TRUE"
-                        else
-                            menu+=("FALSE")
-                            el_debug "state: FALSE"
-                        fi
-                    else
-                        if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|gnome-keyring|user-dirs-update|update-notifier|pulseaudio|elive-)" ; then
-                            menu+=("TRUE")
-                            menu_auto+=("$file")
-                            el_debug "state: TRUE"
-                        else
-                            menu+=("FALSE")
-                            el_debug "state: FALSE"
-                        fi
-                    fi
-                else
-                    if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|gdu-notif|user-dirs-update|pulseaudio|elive-)" ; then
-                        menu+=("TRUE")
-                        menu_auto+=("$file")
-                        el_debug "state: TRUE"
-                    else
-                        menu+=("FALSE")
-                        el_debug "state: FALSE"
-                    fi
+                    menu+=("TRUE")
+                    menu_auto+=("$file")
+                    #menu_auto_live+=("$file")
+                    el_debug "state: TRUE"
                 fi
+                ;;
+            "polkit"*|"pulseaudio"*)
+                # always needed these
+                menu+=("TRUE")
+                menu_auto+=("$file")
+                menu_auto_live+=("$file")
+                el_debug "state: TRUE"
+                ;;
+            "gdu-notif"*|"user-dirs-update"*|"update-notifier"*)
+                # only for installed system
+                menu+=("TRUE")
+                menu_auto+=("$file")
+                el_debug "state: TRUE"
+                ;;
+            "elive-ai-inspirateme"*)
+                # do not auto-enable
+                menu+=("FALSE")
+                el_debug "state: FALSE"
+                ;;
+            "elive-"*)
+                # always enable
+                menu+=("TRUE")
+                menu_auto+=("$file")
+                menu_auto_live+=("$file")
+                el_debug "state: TRUE"
+                ;;
+
+            "nm-applet"*|*"DejaDup.Monitor"*)
+                menu+=("FALSE")
+                el_debug "state: FALSE"
+                ;;
+
+            *)
+                NOREPORTS=1 el_warning "unlisted / unknown autolauncher: $filename"
+                menu+=("FALSE")
+                el_debug "state: FALSE"
                 ;;
         esac
 
 
-        # auto menu for live mode
-        if [[ -n "$EROOT" ]] ; then
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
-                menu_auto_live+=("$file")
-            fi
-        else
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(polkit|elive-|gnome-keyring|pulseaudio)" ; then
-                menu_auto_live+=("$file")
-            fi
-        fi
         # - default to enabled/disabled }}}
 
         # include file

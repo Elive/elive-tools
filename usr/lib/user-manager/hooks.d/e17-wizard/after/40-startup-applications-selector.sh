@@ -74,7 +74,7 @@ main(){
         # un-needed / blacklisted ones {{{
         if [[ -n "$EROOT" ]] ; then
             # E16 requires different ones
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store|pulseaudio)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|print-applet|notification-daemon|user-dirs-update-gtk|elive-ai-inspirateme|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store|pulseaudio)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 #       e16 doesn't has a module or anything so keep it running from the trayer
@@ -82,6 +82,7 @@ main(){
                 # print-applet: useless
                 # notification-daemon: dont include it if we are going to use e17's one
                 # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
+                # elive-ai-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
                 # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
                 # pulseaudio*: starte16 already starts it, and its needed to start it before the desktop starts otherwise we could have an error in desktop
                 continue
@@ -89,13 +90,14 @@ main(){
 
         else
             # E17 / E22
-            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
+            if echo "$filename" | LC_ALL=C grep -qsEi "^(kde|glipper-|nm-applet|wicd-|print-applet|notification-daemon|user-dirs-update-gtk|elive-ai-inspirateme|elive-support-donations|org.gnome.SettingsDaemon|gnome-software-service|tracker-store)" ; then
                 # glipper: we want to enable it in a different way: if ctrl+alt+c si pressed, run it for 8 hours long and close/kill it to save mem
                 # nm-applet: already integrated in elive correctly and saving mem
                 # wicd-: deprecated and not needed for elive
                 # print-applet: useless
                 # notification-daemon: dont include it if we are going to use e17's one
                 # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
+                # elive-ai-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
                 # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
                 continue
             fi
@@ -254,9 +256,6 @@ main(){
         # }}}
 
     done 3<<< "$( find /etc/xdg/autostart/ "$HOME/.config/autostart/" -type f -iname '*'.desktop | sort -u )"
-
-    # remove un-needed ones for live mode
-    menu_auto_live=( "${menu_auto_live[@]/elive-ai}" )
 
 
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then

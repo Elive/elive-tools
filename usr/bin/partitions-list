@@ -327,7 +327,7 @@ main(){
             fi
             if [[ "${line}" = *"DEVTYPE=disk" ]] ; then
                 ## betatest with Ventoy EFI partition while running in Live mode
-                if [[ -n "$( LC_ALL="$EL_LC_EN" lsblk -rino NAME,TYPE,FSTYPE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm)/ ) ) print $1}' )" ]] ; then
+                if [[ -n "$( LC_ALL="$EL_LC_EN" lsblk -rino PATH,TYPE,FSTYPE | awk -v item="${item}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm)/ ) ) print $1}' )" ]] ; then
                     item_filesystem="$( get_filesystem "$item" )"
                     if [[ -n "$item_filesystem" ]] ; then
                         item_is_usable=1
@@ -454,7 +454,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL="$EL_LC_EN" lsblk -b -rino NAME,TYPE,SIZE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk)/ ) ) print $3}' )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -b -rino PATH,TYPE,SIZE | awk -v item="${item}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk|md|raid)/ ) ) print $3}' )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 
@@ -661,7 +661,7 @@ get_filesystem_lsblk(){
     local fs item
     item="$1"
 
-    fs="$( LC_ALL="$EL_LC_EN" lsblk -rino NAME,TYPE,FSTYPE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk)/ ) ) print $3}' | sort -ug | tail -1 )"
+    fs="$( LC_ALL="$EL_LC_EN" lsblk -rino PATH,TYPE,FSTYPE | awk -v item="${item}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk|md|raid)/ ) ) print $3}' | sort -ug | tail -1 )"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
     fi

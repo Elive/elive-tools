@@ -208,7 +208,11 @@ main(){
         is_wheezy=1
         sfdisk_print_id="--print-id"
     else
-        sfdisk_print_id="--part-id"
+        if grep -qsE "(^10\.|buster)" /etc/debian_version ; then
+            sfdisk_print_id="--part-id"
+        else
+            sfdisk_print_id="--part-type"
+        fi
     fi
 
     # }}}
@@ -279,9 +283,11 @@ main(){
     fi
 
     # get extra data for each partition {{{
+    el_debug "items: \"${partitions_raw[@]}\" \"${partitions_lvm2_lv[@]}\" \"${partitions_soft_raid[@]}\" \"${partitions_fake_raid[@]}\""
     for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}" "${partitions_fake_raid[@]}"
         #for item in "${partitions_raw[@]}"
     do
+        [[ ! -b "$item" ]] && continue
         # debug
         #echo -e "D: $item"
 
@@ -302,10 +308,19 @@ main(){
                 item_is_usable=1
             fi
             if [[ "${line}" = *"DEVTYPE=disk" ]] ; then
-                item_filesystem="disk"
-                item_human_label="(entire disk)"
-                if ((is_show_disks)) ; then
-                    item_is_usable=1
+                ## betatest with Ventoy EFI partition while running in Live mode
+                if [[ -n "$( LC_ALL="$EL_LC_EN" lsblk -rino NAME,TYPE,FSTYPE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm)/ ) ) print $1}' )" ]] ; then
+                    item_filesystem="$( get_filesystem "$item" )"
+                    if [[ -n "$item_filesystem" ]] ; then
+                        item_is_usable=1
+                        item_type="filesystem"
+                    fi
+                else
+                    item_filesystem="disk"
+                    item_human_label="(entire disk)"
+                    if ((is_show_disks)) ; then
+                        item_is_usable=1
+                    fi
                 fi
             fi
             # swap partitions
@@ -421,7 +436,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL="$EL_LC_EN" lsblk -nbrino KNAME,SIZE "${item}" 2>/dev/null | awk '{print $2}' | sort -ug | tail -1 )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -b -rino NAME,TYPE,SIZE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk)/ ) ) print $3}' )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 
@@ -594,10 +609,11 @@ get_filesystem(){
         #return 0
     #fi
 
-    # use hal
-    fs="$(get_filesystem_lsblk "$dev" 2>/dev/null )"
+    # lsblk
+    fs="$(get_filesystem_lsblk "$dev" )"
     read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
+        el_debug "FS found for '$dev' as '$fs' in mode lsblk"
         echo "$fs"
         return 0
     fi
@@ -606,14 +622,16 @@ get_filesystem(){
     fs="$(get_filesystem_file "$dev" )"
     read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
+        el_debug "FS found for '$dev' as '$fs' in mode file"
         echo "$fs"
         return 0
     fi
 
-    # use "id"
-    fs="$(get_filesystem_id "$dev" )"
+    # use "sfdisk"
+    fs="$(get_filesystem_sfdisk "$dev" )"
     read -r fs <<< "$fs"
     if [[ -n "$fs" ]] ; then
+        el_debug "FS found for '$dev' as '$fs' in mode sfdisk"
         echo "$fs"
         return 0
     fi
@@ -622,9 +640,10 @@ get_filesystem(){
     return 1
 }
 get_filesystem_lsblk(){
-    local fs
+    local fs item
+    item="$1"
 
-    fs="$( lsblk -d -rino FSTYPE "$1" 2>/dev/null )"
+    fs="$( LC_ALL="$EL_LC_EN" lsblk -rino NAME,TYPE,FSTYPE | awk -v item="${item##*/}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk)/ ) ) print $3}' | sort -ug | tail -1 )"
     if [[ -n "$fs" ]] ; then
         echo "$fs"
     fi
@@ -696,7 +715,7 @@ get_filesystem_file(){
     esac
 }
 
-get_filesystem_id(){
+get_filesystem_sfdisk(){
     local ret
     if [[ "$1" = /dev/nvme* ]] ; then
         ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
@@ -739,7 +758,7 @@ get_filesystem_id(){
     #      fi
 
     case "$ret" in
-        1|4|6|b|c|e|14|16|1b|1c|1e)
+        1|4|6|b|c|e|14|16|1b|1c|1e|ef)
             echo "vfat"
             ;;
         7|17|86|87)
@@ -747,6 +766,9 @@ get_filesystem_id(){
             ;;
         #5|f|85|ee|ef|fd)
             #echo "blacklisted"
+            #;;
+        #ef)
+            #echo "efi"
             #;;
         af)
             echo "hfsplus"

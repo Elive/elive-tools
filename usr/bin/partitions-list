@@ -170,6 +170,12 @@ get_all_partitions_list(){
 
         fi
     fi
+
+    for item in $( lsblk -rino PATH )
+    do
+        [[ -b "$item" ]] && el_array_member_add "${item}" "${partitions_all_lsblk[@]}" ; partitions_all_lsblk=("${_out[@]}")
+    done
+
     # put the original list on our array list
     for item in ${listpartitions}
     do
@@ -283,8 +289,20 @@ main(){
     fi
 
     # get extra data for each partition {{{
-    el_debug "items: \"${partitions_raw[@]}\" \"${partitions_lvm2_lv[@]}\" \"${partitions_soft_raid[@]}\" \"${partitions_fake_raid[@]}\""
-    for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}" "${partitions_fake_raid[@]}"
+    for item in "${partitions_raw[@]}" "${partitions_lvm2_lv[@]}" "${partitions_soft_raid[@]}" "${partitions_fake_raid[@]}" "${partitions_all_lsblk[@]}"
+    do
+        if [[ -b "$item" ]] ; then
+            if [[ "$EL_DEBUG" -gt 2 ]] ; then
+                if ! el_array_member_check "$item" "${partitions_raw[@]}" && ! el_array_member_check "$item" "${partitions_lvm2_lv[@]}" && ! el_array_member_check "$item" "${partitions_soft_raid[@]}" && ! el_array_member_check "$item" "${partitions_fake_raid[@]}" ; then
+                    el_warning "partition '$item' was not detected in the original way but only from lsblk"
+                fi
+            fi
+            el_array_member_add "${item}" "${partitions_all[@]}" ; partitions_all=("${_out[@]}")
+        fi
+    done
+
+    el_debug "items: \"${partitions_all[@]}\""
+    for item in "${partitions_all[@]}"
         #for item in "${partitions_raw[@]}"
     do
         [[ ! -b "$item" ]] && continue

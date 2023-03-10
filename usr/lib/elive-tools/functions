@@ -2144,7 +2144,7 @@ el_confirm(){
         if [[ -n $ZSH_VERSION ]] ; then
             read reply
         else
-            read -e reply
+            read -e -N1 reply
         fi
 
         case $reply in

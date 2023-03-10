@@ -82,7 +82,7 @@ main(){
                 # print-applet: useless
                 # notification-daemon: dont include it if we are going to use e17's one
                 # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
-                # elive-ai-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
+                # elive-assistant-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
                 # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
                 # pulseaudio*: starte16 already starts it, and its needed to start it before the desktop starts otherwise we could have an error in desktop
                 continue
@@ -97,7 +97,7 @@ main(){
                 # print-applet: useless
                 # notification-daemon: dont include it if we are going to use e17's one
                 # user-dirs-update-gtk: we dont want to run the "directories renamer", becuase: 1) it doesnt move files to the new dirs, 2) its async and can conflict with our renamer, 3) our renamer (e17 restart conf hooks) already does it, it mess up and fucks the users! they should be NEVER renamed after the system is set up, no matter what! even scripts can point to them not-dynamically
-                # elive-ai-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
+                # elive-assistant-inspirateme: very nice but we don't want to popup this from the start, so just suggest to enable it after a successfull configuration (by user)
                 # elive-support-donations: this is simply annoying to have, even monthly showing (lol), but since we have upgrades with changelogs asking for possible donations that does the same (better) job, so disable this one by default
                 continue
             fi
@@ -158,7 +158,7 @@ main(){
                 menu_auto+=("$file")
                 el_debug "state: TRUE"
                 ;;
-            "elive-ai-inspirateme"*)
+            "elive-assistant-inspirateme"*)
                 # do not auto-enable
                 menu+=("FALSE")
                 el_debug "state: FALSE"

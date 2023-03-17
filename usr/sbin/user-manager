@@ -769,6 +769,11 @@ autologin_conf(){
 main(){
     local selection arg
 
+    if [[ "$UID" != 0 ]] ; then
+        $guitool --error --text="$( eval_gettext "This tool needs to be run from administrator privileges." )"
+        exit
+    fi
+
     for arg in "$@"
     do
         case "$arg" in

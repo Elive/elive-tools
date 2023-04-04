@@ -182,7 +182,7 @@ get_all_partitions_list(){
     # lsblk listing {{{
     for item in $( lsblk -rino PATH )
     do
-        [[ "$item" = "loop"* ]] && continue
+        [[ "$item" = "/dev/loop"* ]] && continue
         [[ -b "$item" ]] && el_array_member_add "${item}" "${partitions_all_lsblk[@]}" ; partitions_all_lsblk=("${_out[@]}")
     done
 

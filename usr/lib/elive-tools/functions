@@ -3460,7 +3460,7 @@ el_json_append_file(){
 
     # append extra file to original one
     if cat "$file" | jq -S ". |= . + ${extra}" 1>/dev/null 2>&1 ; then
-        cat "$file" | jq -S ". |= . + ${extra}" > "${file}.new" && mv "${file}.new" "$file"
+        cat "$file" | jq -S ". |= . + ${extra}" > "${file}.new" && mv -f "${file}.new" "$file"
     fi
 }
 
@@ -3495,8 +3495,8 @@ el_json_delete_ids_regex(){
 
     # }}}
     # delete matches
-    #cat "$file" | jq "delpaths([paths | select(.[-1] | strings | startswith(\"${match}\"))])" > "${file}.new" && mv "${file}.new" "$file"
-    cat "$file" | jq "delpaths([paths | select(.[-1] | strings | test(\"${match}\"; \"ix\"))])" > "${file}.new" && mv "${file}.new" "$file"
+    #cat "$file" | jq "delpaths([paths | select(.[-1] | strings | startswith(\"${match}\"))])" > "${file}.new" && mv -f "${file}.new" "$file"
+    cat "$file" | jq "delpaths([paths | select(.[-1] | strings | test(\"${match}\"; \"ix\"))])" > "${file}.new" && mv -f "${file}.new" "$file"
 }
 
 #-------------------------------------------------------------------------------

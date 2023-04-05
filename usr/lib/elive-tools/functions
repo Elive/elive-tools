@@ -3422,6 +3422,82 @@ el_get_machine_id(){
         el_error "no machine id found"
     fi
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_json_append_file
+#   DESCRIPTION:  appends a json file to an existing one
+#    PARAMETERS:  $1 = file, $2 = extra-file-contents
+#===============================================================================
+el_json_append_file(){
+    # pre {{{
+    local file extra extrafile
+    el_debug
+    el_security_function_loop || return
+
+    file="$1"
+    extrafile="$2"
+
+    el_check_variables "file|extrafile"
+
+    if [[ ! -s "$file" ]] ; then
+        el_error "file given is empty: $file"
+        return 1
+    fi
+    if [[ ! -s "$extrafile" ]] ; then
+        el_error "file extra given is empty: $extrafile"
+        return 1
+    fi
+
+    if ! el_dependencies_check jq ; then
+        el_dependencies_install "jq"
+    fi
+
+    # }}}
+    # fixes
+    extra="$( cat "$extrafile" )"
+    if ! cat "$file" | jq -S ". |= . + ${extra}" 1>/dev/null 2>&1 ; then
+        extra="$( echo "{ $extra }" )"
+    fi
+
+    # append extra file to original one
+    if cat "$file" | jq -S ". |= . + ${extra}" 1>/dev/null 2>&1 ; then
+        cat "$file" | jq -S ". |= . + ${extra}" > "${file}.new" && mv "${file}.new" "$file"
+    fi
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_json_delete_ids_regex
+#   DESCRIPTION:  delete IDs (named entries) from a regex string
+#    PARAMETERS:  $1 = file, $2 = regex
+#===============================================================================
+el_json_delete_ids_regex(){
+    # pre {{{
+    local file match
+    el_debug
+    el_security_function_loop || return
+
+    file="$1"
+    match="$2"
+
+    el_check_variables "file|match"
+
+    if [[ ! -s "$file" ]] ; then
+        el_error "file given is empty: $file"
+        return 1
+    fi
+    if [[ -z "$match" ]] ; then
+        el_error "nothing to match '$match' for given file '$file'"
+        return 1
+    fi
+
+    if ! el_dependencies_check jq ; then
+        el_dependencies_install "jq"
+    fi
+
+    # }}}
+    # delete matches
+    #cat "$file" | jq "delpaths([paths | select(.[-1] | strings | startswith(\"${match}\"))])" > "${file}.new" && mv "${file}.new" "$file"
+    cat "$file" | jq "delpaths([paths | select(.[-1] | strings | test(\"${match}\"; \"ix\"))])" > "${file}.new" && mv "${file}.new" "$file"
+}
 
 #-------------------------------------------------------------------------------
 #   get the version of an installed package or a candidate, in a faster way

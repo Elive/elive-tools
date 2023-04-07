@@ -1,0 +1,126 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+main(){
+    # dependencies {{{
+    if ! el_dependencies_check "yt-dlp" ; then
+        el_dependencies_install "yt-dlp"
+    fi
+    if ! el_dependencies_check "ffmpeg" ; then
+        el_dependencies_install "ffmpeg"
+    fi
+    if ! el_dependencies_check "urxvt" ; then
+        el_dependencies_install "rxvt-unicode"
+    fi
+
+    # }}}
+
+    lang_local="$( echo "$LANG" | sed -e 's|_.*$||g' )"
+    # set a dummy extra language in case is english in order to not have duplicates
+    if [[ "$lang_local" = "de" ]] ; then
+        lang_local="ja"
+    fi
+    if [[ -z "$lang_local" ]] || echo "$lang_local" | grep -qsE "^(en|fr|es)$" ; then
+        lang_local="de"
+    fi
+
+    download_dir="$( xdg-user-dir DOWNLOAD )/Videos"
+    mkdir -p "$download_dir"
+    cd "$download_dir"
+
+    # messages {{{
+    local message_finished
+    message_finished="$( printf "$( eval_gettext "Download Finished" )" "" )"
+    local message_download_where
+    message_download_where="$( printf "$( eval_gettext "Your download has been completed in:" )" "" )\n${download_dir}"
+    local message_failed
+    message_failed="$( printf "$( eval_gettext "Download Failed" )" "" )"
+    local message_failed_where
+    message_failed_where="$( printf "$( eval_gettext "Your download has failed, try to download manually using the command yt-dlp" )" "" )"
+    local message_delete
+    message_delete="$( printf "$( eval_gettext "Delete" )" "" )"
+    local message_keep
+    message_keep="$( printf "$( eval_gettext "Keep" )" "" )"
+    local message_what_to_do
+    message_what_to_do="$( printf "$( eval_gettext "Download failed, what do you want to do with the partially downloaded files?" )" "" )"
+    local message_open_directory
+    message_open_directory="$( printf "$( eval_gettext "Open" )" "" )"
+    local message_nothing_title
+    message_nothing_title="$( printf "$( eval_gettext "Nothing to download" )" "" )"
+    local message_nothing_message
+    message_nothing_message="$( printf "$( eval_gettext "Nothing given to download, you should use this tool with a URL argument." )" "" )"
+
+
+    # - messages }}}
+
+    if [[ -z "$1" ]] ; then
+        el_notify normal dialog-error "${message_nothing_title}" "${message_nothing_message}"
+        exit
+    fi
+
+    ( urxvt -e bash -c "
+    #!/bin/bash
+    source /usr/lib/elive-tools/functions
+    mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+
+    if test -n \"$1\" ; then
+        if yt-dlp \
+            --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
+            \"$@\" ; then
+            is_downloaded=1
+        else
+            sleep 1
+            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+            if yt-dlp \
+                --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
+                \"$@\" ; then
+                is_downloaded=1
+            else
+                mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                if yt-dlp \
+                    -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --embed-metadata --embed-chapters \
+                    \"$@\" ; then
+                    is_downloaded=1
+                fi
+            fi
+        fi
+    fi
+
+    if ((is_downloaded)) ; then
+        cd \"${download_dir}\"
+        find \"${download_dir}/tmp/\" -type f \( ! -iname '*.part' -a ! -iname '*.ytdl' \) -exec mv {} \"${download_dir}/\" \;
+        rmdir \"${download_dir}/tmp\" 2>/dev/null || true
+        result=\"\$( el_notify important emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
+        if [[ \"\$result\" = \"open\" ]] ; then
+            thunar \"$download_dir\"
+        fi
+    else
+        el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
+
+        if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
+            thunar '${download_dir}/tmp'
+        else
+            rm -rf \"${download_dir}/tmp\"
+        fi
+    fi
+
+    echo
+    echo done
+
+    sleep 6
+    " & )
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

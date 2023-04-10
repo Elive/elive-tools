@@ -209,7 +209,7 @@ el_notify(){
         fi
 
         # check that it working otherwise restart daemon, this is needed otherwise "action" based notifications will block the application being stuck
-        if ! timeout 5 notify-send -t 1 "." 2>/dev/null ; then
+        if ! timeout 5 notify-send -e -t 1 "." 2>/dev/null ; then
             notification-daemon-restarter
         fi
 

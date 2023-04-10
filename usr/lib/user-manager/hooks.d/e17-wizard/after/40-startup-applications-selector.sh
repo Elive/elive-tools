@@ -445,7 +445,7 @@ EOF
                 sed -i "s|^StartupWMClass=.*$|StartupWMClass=|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^prevent inhibate=.*$|prevent inhibate=true|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
                 sed -i "s|^Name=.*$|Name=Elive Installer|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
-                sed -i "s|^Icon=.*$|Icon=document-save|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
+                sed -i "s|^Icon=.*$|Icon=system-os-install|g" "$HOME/.config/cairo-dock/current_theme/launchers/101launcher.desktop"
             fi
 
         fi

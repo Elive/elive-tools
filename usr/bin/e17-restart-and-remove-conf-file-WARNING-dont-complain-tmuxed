@@ -75,38 +75,51 @@ main(){
                 fi
             done
 
-            killall -9 starte16 efreetd  2>/dev/null
-            killall -9 e16 2>/dev/null
+            killall -s STOP e16 starte16 efreetd 2>/dev/null
             sync
-            rm -fr ~/.xsession-errors
 
-            elive-skel upgrade .config/audacious/playlists/1000.audpl
-            elive-skel upgrade .config/cairo-dock
-            elive-skel upgrade .config/gtk-3.0/settings.ini
-            elive-skel upgrade .config/ulauncher
-            elive-skel upgrade .conkyrc
+            # upgrade confs
             elive-skel upgrade .e16
-            elive-skel upgrade .gtkrc-2.0.mine
-            elive-skel upgrade .local/share/ulauncher
-            elive-skel upgrade .xsettingsd
-            elive-skel upgrade .Xdefaults
 
-            sync
             ;;
 
         e17|E17)
             # E17+
             killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-            rm -fr ~/.e ~/.xsession-errors 1>/dev/null 2>&1
-            rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
-            sync
-            killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd 2>/dev/null
+
+            # upgrade confs
+            rm -fr ~/.e
             ;;
         *)
             el_error "unknown desktop to restart conf, example: $(basename $0) e16|e17"
             exit 1
             ;;
     esac
+
+
+    # generic upgrades for any desktop
+    elive-skel upgrade .config/audacious/playlists/1000.audpl
+    elive-skel upgrade .config/cairo-dock
+    elive-skel upgrade .config/gtk-3.0/settings.ini
+    elive-skel upgrade .config/ulauncher
+    elive-skel upgrade .config/mimeapps.list
+    elive-skel upgrade .conkyrc
+    elive-skel upgrade .gtkrc-2.0.mine
+    elive-skel upgrade .local/share/ulauncher
+    elive-skel upgrade .local/share/applications/defaults.list
+    elive-skel upgrade .local/share/applications/mimeapps.list
+    elive-skel upgrade .xsettingsd
+    elive-skel upgrade .Xdefaults
+
+    # cleanups
+    rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
+    rm -rf ~/.xsession-errors 1>/dev/null 2>&1
+
+    sync
+
+    # finish the kill process
+    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd 2>/dev/null
+    sync
 
 }
 

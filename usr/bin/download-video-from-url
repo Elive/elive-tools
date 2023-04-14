@@ -58,25 +58,31 @@ main(){
     mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
 
     if test -n \"$1\" ; then
-        if yt-dlp \
-            -f mp4 --embed-metadata --embed-chapters \
-            \"$@\" ; then
-            is_downloaded=1
-        else
-            sleep 1
-            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+        for try in \$(seq 6)
+        do
             if yt-dlp \
                 -f mp4 --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
+                break
             else
+                sleep 1
                 mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
                 if yt-dlp \
-                    -i \"$@\" ; then
+                    -f mp4 --embed-metadata --embed-chapters \
+                    \"$@\" ; then
                     is_downloaded=1
+                    break
+                else
+                    mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                    if yt-dlp \
+                        -i \"$@\" ; then
+                        is_downloaded=1
+                        break
+                    fi
                 fi
             fi
-        fi
+        done
     fi
 
     if ((is_downloaded)) ; then

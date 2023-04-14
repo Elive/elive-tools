@@ -70,26 +70,32 @@ main(){
     mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
 
     if test -n \"$1\" ; then
-        if yt-dlp \
-            --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
-            \"$@\" ; then
-            is_downloaded=1
-        else
-            sleep 1
-            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+        for try in \$(seq 6)
+        do
             if yt-dlp \
                 --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
+                    break
             else
+                sleep 1
                 mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
                 if yt-dlp \
-                    -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --embed-metadata --embed-chapters \
+                    --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
                     \"$@\" ; then
                     is_downloaded=1
+                        break
+                else
+                    mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                    if yt-dlp \
+                        -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --embed-metadata --embed-chapters \
+                        \"$@\" ; then
+                        is_downloaded=1
+                            break
+                    fi
                 fi
             fi
-        fi
+        done
     fi
 
     if ((is_downloaded)) ; then

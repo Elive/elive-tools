@@ -150,8 +150,8 @@ el_notify(){
 
     # count amount of seconds
     words="$( echo "$title $message" | wc -w )"
-    LC_NUMERIC=C time="$(( $words / 2.6 ))"
-    LC_NUMERIC=C time="${time%.*}"
+    time="$( echo "$words / 2.6" | LC_NUMERIC=C bc -l | sed -e 's|\..*$||g' )"
+    time="${time%.*}"
     time="$(( $time + 3 ))"
 
     # add extra time if we require an action

@@ -559,7 +559,7 @@ main(){
     # pre {{{
     local list action actualvalue is_failed
 
-    if [[ -n "$(pidof pulseaudio)" ]] ; then
+    if [[ -e "/var/lib/dpkg/info/pulseaudio.list" ]] && [[ -n "$(pidof pulseaudio)" ]] ; then
         is_pulseaudio=1
 
         # checks and dependencies

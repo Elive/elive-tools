@@ -79,7 +79,7 @@ do_work(){
     # everything is erased after the logout
     local dir tmpdir
 
-    dir="$(pwd)"
+    dir="$( pwd )"
     tmpdir="${bkpdir_works}/${namedir}"
 
     do_sudo rm -rf "${tmpdir}"
@@ -349,6 +349,8 @@ do_diff_reverse(){
 
 
 do_remove(){
+    cd "$2"
+
     if [[ -d "${1}" ]] ; then
         do_sudo rm -rf "${1}"
         do_sudo rm -rf "${1}."*
@@ -366,7 +368,8 @@ main(){
     local tool namedir bkpdir_id target history_num
 
     tool="$(basename $0)"
-    namedir="${PWD//\//%}"
+    namedir="$( pwd )"
+    namedir="${namedir//\//%}"
     if [[ -n $XDG_CACHE_HOME ]] ; then
         bkpdir_main="${XDG_CACHE_HOME}/${tool}"
     else
@@ -375,7 +378,7 @@ main(){
     bkpdir_backups="${bkpdir_main}/backups"
     bkpdir_works="${bkpdir_main}/working"
     bkpdir_id="${bkpdir_backups}/${namedir}.rdiff"
-    target="$PWD"
+    target="$( pwd )"
 
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
@@ -456,7 +459,7 @@ main(){
                 shift
                 ;;
             remove|-r)
-                do_remove "${bkpdir_id}"
+                do_remove "${bkpdir_id}" "${target}"
                 shift
                 ;;
             forget)

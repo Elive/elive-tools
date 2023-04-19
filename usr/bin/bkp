@@ -181,6 +181,7 @@ do_save(){
 
 do_get(){
     local version history_num
+    cd "${2}"
 
     if ! [[ -d "$bkpdir_id" ]] ; then
         echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"

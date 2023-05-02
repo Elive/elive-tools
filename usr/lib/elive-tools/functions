@@ -67,8 +67,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     if [[ -z "${DISPLAY}" ]] ; then
         display="$( ps -u $(id -u) -o pid= | \
             while read pid; do
-                cat /proc/$pid/environ 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep '^DISPLAY=:'
-            done | LC_ALL=C grep -o ':[0-9]*' | sort -u | tail -1 )"
+                cat /proc/$pid/environ 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+            done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
 
         DISPLAY="${display}"
         export DISPLAY
@@ -196,7 +196,7 @@ el_notify(){
 
     el_set_display_variables
 
-    if [[ "${DISPLAY}" = ":0.0" ]] ; then
+    if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
         if ! el_dependencies_check notify-send ; then
             el_dependencies_install "libnotify-bin"
         fi
@@ -762,7 +762,7 @@ EOF
         fi
     fi
 
-    #if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+    #if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
         #timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
     #fi
 
@@ -812,20 +812,20 @@ el_aptget_update(){
         el_aptget check 1>/dev/null
 
         if [[ "$UID" = 0 ]] ; then
-            if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]]  ; then
+            if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]]  ; then
                 { apt-get update || apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
             else
                 el_aptget update || el_aptget update
             fi
         else
             if el_check_sudo_automated ; then
-                if [[ "${DISPLAY}" = ":0.0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]] ; then
+                if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]] ; then
                     { sudo apt-get update || sudo apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
                     sudo apt-get update || sudo apt-get update
                 fi
             else
-                if [[ "${DISPLAY}" = ":0.0" ]] ; then
+                if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]]  ; then
                     if ! el_dependencies_check gksu ; then
                         el_dependencies_install "gksu"
                     fi
@@ -841,7 +841,7 @@ el_aptget_update(){
                         fi
                     done
 
-                    if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+                    if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                         timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
                     fi
 
@@ -1283,7 +1283,7 @@ el_sudo(){
         # check if we have direct access to this sudo command without prompt:
         if ! sudo -H "$@" ; then
 
-            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+            if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 if ! el_dependencies_check gksu ; then
                     el_dependencies_install "gksu"
                 fi
@@ -1297,7 +1297,7 @@ el_sudo(){
                     fi
                 done
 
-                if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+                if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                     timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
                 fi
             else
@@ -1993,7 +1993,7 @@ el_error(){
                 echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
             fi
         #else
-            #if [[ "$DISPLAY" = ":0.0" ]] && el_check_version_development ; then
+            #if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] && el_check_version_development ; then
                 #timeout 120 $guitool --error --text="${SOURCE}: $message"
             #fi
         fi
@@ -2077,7 +2077,7 @@ el_group_add(){
             fi
         done
 
-        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             local message_wrong_password
             message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
 
@@ -2099,7 +2099,7 @@ el_group_add(){
                 fi
             done
 
-            if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" ]] ; then
+            if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 local message_wrong_password
                 message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
 
@@ -2167,7 +2167,7 @@ el_confirm(){
     else
         el_set_display_variables
 
-        if [[ "${DISPLAY}" = ":0.0" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             if $guitool --question --text="$question" ; then
                 return 0
             else
@@ -2418,7 +2418,7 @@ el_step_requires_fixme(){
         el_set_display_variables
         local _dummy
         _dummy="$( eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you deem it necessary. Exiting..." )"
-        if [[ "${DISPLAY}" = ":0.0" ]] ; then
+        if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you deem it necessary. Exiting..." )"
         fi
         exit 1
@@ -2592,7 +2592,7 @@ el_report_to_elive(){
 
         # ask for reports
         if ! LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
-            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+            if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 local message_ask_email
                 # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
                 message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform Elive about it, so we can fix the bugs automatically. We will only contact you in case it is an important problem or if we need more details." )" "$(basename $0)" )"
@@ -2925,7 +2925,7 @@ el_request_report_bug(){
     ## TODO: set 10 only for now, change it to 30 when migrating from NOREPORTS to EL_REPORTS=yes
     #if el_check_version_development_is_days_recent 15 ; then
 
-        #if [[ "${DISPLAY}" = ":0.0" ]] ; then
+        #if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             #local _dummy
             #_dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
 
@@ -3061,7 +3061,7 @@ el_request_donation(){
     # pre {{{
     local arg
 
-    if ! [[ "${DISPLAY}" = ":0.0" ]] ; then
+    if ! [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
         return 0
     fi
 
@@ -3585,7 +3585,7 @@ el_aptget(){
         if el_check_sudo_automated ; then
             TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo apt-get "$@"
         else
-            if [[ "${DISPLAY}" = ":0.0" ]] ; then
+            if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 if ! el_dependencies_check gksu ; then
                     el_dependencies_install "gksu"
                 fi

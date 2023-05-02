@@ -975,7 +975,7 @@ el_package_upgrade_fast(){
 
         # example:  file:///home/thana/packages/mirror-elive/elive/
         # example:  http://repo.buster.elive.elivecd.org/
-        url="$( grep -hE "^deb (http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | tail -1 )"
+        url="$( grep -hE "^deb\s+(http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $2}' | tail -1 )"
         if [[ -n "$url" ]] ; then
             #make sure we end on slash
             url="${url%/}/"
@@ -985,7 +985,7 @@ el_package_upgrade_fast(){
         fi
 
         # example:  buster
-        distro="$( grep -hE "^deb (http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | tail -1 )"
+        distro="$( grep -hE "^deb\s+(http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | tail -1 )"
         if [[ -z "$distro" ]] ; then
             el_error "unable to get the 'distro' for package '${package}': $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
             continue

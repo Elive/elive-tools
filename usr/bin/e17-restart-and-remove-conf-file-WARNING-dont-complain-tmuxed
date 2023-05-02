@@ -75,7 +75,7 @@ main(){
 
             killall -9 cairo-dock 2>/dev/null
             killall -9 conky 2>/dev/null
-            sync
+
             killall -s STOP e16 starte16 efreetd 2>/dev/null
             sync
 
@@ -87,6 +87,7 @@ main(){
         e17|E17)
             # E17+
             killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
+            sync
 
             # upgrade confs
             rm -fr ~/.e
@@ -116,11 +117,15 @@ main(){
     rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
     rm -fr ~/.xsession-errors 1>/dev/null 2>&1
 
-    sync
+    # sync
 
     # finish the kill process
     killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd 2>/dev/null
-    sync
+    # sync
+    #
+
+    # just in case something is remaining
+    wait
 
 }
 

@@ -76,7 +76,10 @@ main(){
             continue
         fi
 
-        filename="$( basename "$file" )"
+        #filename="$( basename "$file" )"
+        filename="${file}"
+        filename="${filename%/}"
+        filename="${filename##*/}"
 
         # - checks }}}
         # un-needed / blacklisted ones {{{
@@ -312,7 +315,9 @@ main(){
     while read -ru 3 file
     do
         if [[ -s "$file" ]] ; then
-            filename="$(basename "$file" )"
+            filename="${file}"
+            filename="${filename%/}"
+            filename="${filename##*/}"
 
             # verify the needed ones
             if [[ "$filename" = polkit*authentication* ]] ; then

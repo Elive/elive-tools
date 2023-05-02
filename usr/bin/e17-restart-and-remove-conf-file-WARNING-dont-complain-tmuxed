@@ -16,7 +16,7 @@ else
     PROCCESS=" "
 fi
 if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
-    el_error "$(basename $0) already running"
+    echo -e "E: $(basename "$0" ) already running"
     exit
 else
     echo $$ > "$lockfile"
@@ -56,7 +56,7 @@ main(){
         fi
     fi
 
-    cd ~
+    cd ~ || exit 1
     sync
 
     case "$@" in
@@ -64,8 +64,6 @@ main(){
 
             elive-autostart-applications stop
 
-            killall -9 cairo-dock 2>/dev/null
-            killall -9 conky 2>/dev/null
             # kill all startup-desktop processes
             for i in ~/.e16/New/* ~/.e16/Init/*
             do
@@ -75,11 +73,14 @@ main(){
                 fi
             done
 
+            killall -9 cairo-dock 2>/dev/null
+            killall -9 conky 2>/dev/null
+            sync
             killall -s STOP e16 starte16 efreetd 2>/dev/null
             sync
 
             # upgrade confs
-            elive-skel upgrade .e16
+            EL_DEBUG=0 elive-skel upgrade .e16
 
             ;;
 
@@ -91,29 +92,29 @@ main(){
             rm -fr ~/.e
             ;;
         *)
-            el_error "unknown desktop to restart conf, example: $(basename $0) e16|e17"
+            echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17" 1>&2
             exit 1
             ;;
     esac
 
 
     # generic upgrades for any desktop
-    elive-skel upgrade .config/audacious/playlists/1000.audpl
-    elive-skel upgrade .config/cairo-dock
-    elive-skel upgrade .config/gtk-3.0/settings.ini
-    elive-skel upgrade .config/ulauncher
-    elive-skel upgrade .config/mimeapps.list
-    elive-skel upgrade .conkyrc
-    elive-skel upgrade .gtkrc-2.0.mine
-    elive-skel upgrade .local/share/ulauncher
-    elive-skel upgrade .local/share/applications/defaults.list
-    elive-skel upgrade .local/share/applications/mimeapps.list
-    elive-skel upgrade .xsettingsd
-    elive-skel upgrade .Xdefaults
+    EL_DEBUG=0 elive-skel upgrade .config/audacious/playlists/1000.audpl
+    EL_DEBUG=0 elive-skel upgrade .config/cairo-dock
+    EL_DEBUG=0 elive-skel upgrade .config/gtk-3.0/settings.ini
+    EL_DEBUG=0 elive-skel upgrade .config/ulauncher
+    EL_DEBUG=0 elive-skel upgrade .config/mimeapps.list
+    EL_DEBUG=0 elive-skel upgrade .conkyrc
+    EL_DEBUG=0 elive-skel upgrade .gtkrc-2.0.mine
+    EL_DEBUG=0 elive-skel upgrade .local/share/ulauncher
+    EL_DEBUG=0 elive-skel upgrade .local/share/applications/defaults.list
+    EL_DEBUG=0 elive-skel upgrade .local/share/applications/mimeapps.list
+    EL_DEBUG=0 elive-skel upgrade .xsettingsd
+    EL_DEBUG=0 elive-skel upgrade .Xdefaults
 
     # cleanups
     rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
-    rm -rf ~/.xsession-errors 1>/dev/null 2>&1
+    rm -fr ~/.xsession-errors 1>/dev/null 2>&1
 
     sync
 

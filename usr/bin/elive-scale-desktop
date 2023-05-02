@@ -390,6 +390,11 @@ main(){
     xrdb -merge "$HOME/.Xdefaults"
 
     if ((is_reload_wanted)) ; then
+        # ignore reloading e16 if nothing changed
+        if [[ "$scale_factor" = "1.00"* ]] && [[ "$dpi" = "96x96" ]] ; then
+          unset is_restart_needed_e16
+        fi
+
         # reload desktop
         if ((is_restart_needed_e16)) ; then
             if [[ -n "$EROOT" ]] ; then

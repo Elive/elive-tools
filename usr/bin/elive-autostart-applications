@@ -53,13 +53,13 @@ do_list(){
             unset executable cmd pid
             read -r line <<< "$line"
 
-            # skip already runs:
-            if el_array_member_check "$line" "${already_run[@]}" ; then
+            # skip comments
+            if [[ "$line" = "#"* ]] || [[ -z "$line" ]] ; then
                 continue
             fi
 
-            # skip comments
-            if [[ "$line" = "#"* ]] || [[ -z "$line" ]] ; then
+            # skip already runs:
+            if el_array_member_check "$line" "${already_run[@]}" ; then
                 continue
             fi
 

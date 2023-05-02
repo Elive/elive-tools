@@ -33,6 +33,14 @@ main(){
         is_thanatests=1
     fi
 
+    if grep -Fqs "keyboard: not found" /etc/elive-version ; then
+        is_keyboard_notfound=1
+    fi
+
+    if hcitool dev | grep -qs ":.*:.*:" ; then
+        is_bluetooth_availble=1
+    fi
+
     # }}}
 
     if [[ -n "$EROOT" ]] ; then
@@ -108,31 +116,31 @@ main(){
         case "$filename" in
             # do we need a touch-screen keyboard?
             "onboard-autostart.desktop")
-                if grep -Fqs "keyboard: not found" /etc/elive-version ; then
+                if ((is_keyboard_notfound)) ; then
                     menu+=("TRUE")
                     menu_auto+=("$file")
                     menu_auto_live+=("$file")
-                    el_debug "state: TRUE"
+                    #el_debug "state: TRUE"
                 else
                     menu+=("FALSE")
-                    el_debug "state: FALSE"
+                    #el_debug "state: FALSE"
                 fi
                 ;;
             "blueman.desktop")
                 # make sure we have bluetooth device
-                if hcitool dev | grep -qs ":.*:.*:" ; then
+                if ((is_bluetooth_availble)) ; then
                     if [[ -n "$EROOT" ]] ; then
                         menu+=("TRUE")
                         menu_auto+=("$file")
                         menu_auto_live+=("$file")
-                        el_debug "state: TRUE"
+                        #el_debug "state: TRUE"
                     else
                         menu+=("FALSE")
-                        el_debug "state: FALSE"
+                        #el_debug "state: FALSE"
                     fi
                 else
                     menu+=("FALSE")
-                    el_debug "state: FALSE"
+                    #el_debug "state: FALSE"
                 fi
                 ;;
 
@@ -142,7 +150,7 @@ main(){
                     menu+=("TRUE")
                     menu_auto+=("$file")
                     #menu_auto_live+=("$file")
-                    el_debug "state: TRUE"
+                    #el_debug "state: TRUE"
                 fi
                 ;;
             "polkit"*|"pulseaudio"*)
@@ -150,36 +158,36 @@ main(){
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 menu_auto_live+=("$file")
-                el_debug "state: TRUE"
+                #el_debug "state: TRUE"
                 ;;
             "gdu-notif"*|"user-dirs-update"*|"update-notifier"*)
                 # only for installed system
                 menu+=("TRUE")
                 menu_auto+=("$file")
-                el_debug "state: TRUE"
+                #el_debug "state: TRUE"
                 ;;
             "elive-assistant-inspirateme"*)
                 # do not auto-enable
                 menu+=("FALSE")
-                el_debug "state: FALSE"
+                #el_debug "state: FALSE"
                 ;;
             "elive-"*)
                 # always enable
                 menu+=("TRUE")
                 menu_auto+=("$file")
                 menu_auto_live+=("$file")
-                el_debug "state: TRUE"
+                #el_debug "state: TRUE"
                 ;;
 
             "nm-applet"*|*"DejaDup.Monitor"*)
                 menu+=("FALSE")
-                el_debug "state: FALSE"
+                #el_debug "state: FALSE"
                 ;;
 
             *)
                 NOREPORTS=1 el_warning "unlisted / unknown autolauncher: $filename"
                 menu+=("FALSE")
-                el_debug "state: FALSE"
+                #el_debug "state: FALSE"
                 ;;
         esac
 
@@ -188,7 +196,7 @@ main(){
 
         # include file
         menu+=("$file")
-        el_debug "file: $file"
+        #el_debug "file: $file"
 
         # include name {{{
         if [[ "${LANG%%.*}" = "en_US" ]] ; then
@@ -221,7 +229,7 @@ main(){
         name="${name#*]=}"
         name="${name#Name=}"
         menu+=("${name}")
-        el_debug "name: ${name}"
+        #el_debug "name: ${name}"
 
         # }}}
         # include comment {{{
@@ -252,9 +260,9 @@ main(){
         comment="${comment#Comment=}"
         # add comment
         menu+=("${comment}")
-        el_debug "comment: ${comment}"
+        #el_debug "comment: ${comment}"
 
-        el_debug "       (loop)"
+        #el_debug "       (loop)"
         # }}}
 
     done 3<<< "$( find /etc/xdg/autostart/ "$HOME/.config/autostart/" -type f -iname '*'.desktop | sort -u )"
@@ -557,8 +565,6 @@ EOF
     # Elive Retro (retrowave) version {{{
     #
     if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] && ! ((is_thanatests)) ; then
-        sleep 5
-
             #--field="Candies::lbl" \
             #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
             #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \

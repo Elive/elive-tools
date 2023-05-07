@@ -3646,14 +3646,13 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     #setopt kshglob noshglob braceexpand
     # always split words or this would make things incompatible, like for i in ${PATH//:/ } (in other words, variables split by spaces instead of sentences, just like in bash
     setopt shwordsplit
-
-    # we cannot set parameters on this variable, so use it without icon:
-    [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity"
-else
-    [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
-
-    [[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=20 --center --image=logo-elive"
 fi
+
+# set defaults for guis
+[[ -z "$zenity" ]] && [[ -x "/usr/bin/zenity" ]] && zenity="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+[[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=20 --center --image=logo-elive --buttons-layout=spread"
+# set a default guitool compatible with the scripts
+guitool="$zenity"
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
 if [[ -n "$TERM" ]] ; then

@@ -3651,6 +3651,8 @@ if [[ -n "$ZSH_VERSION" ]] ; then
     [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity"
 else
     [[ -z "$guitool" ]] && [[ -x "/usr/bin/zenity" ]] && guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+
+    [[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=20 --center --image=logo-elive"
 fi
 
 # do we are in a terminal ? avoid interactive-in-terminal if not

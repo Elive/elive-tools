@@ -19,8 +19,8 @@ main(){
 
     on_exit rm -f "$script"
 
-    if ! el_dependencies_check gksu ; then
-        el_dependencies_install gksu
+    if ! el_dependencies_check "gksu|zenity|yad" ; then
+        el_dependencies_install "gksu|zenity|yad"
         if ! el_dependencies_check gksu ; then
             el_error "we depend on gksu but we cannot install gksu because requires gksu? hum..."
         fi
@@ -30,9 +30,22 @@ main(){
 
     # mode basic or advanced {{{
     #if zenity --question --text="Do you want to use the basic and easier interface instead of the advanced and complete one?" ; then
-    if zenity --question --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" ; then
-        is_basic_mode=1
-    fi
+    yad --center --on-top --question --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" --button="Basic!gtk-yes:1" --button="Advanced!gtk-no:2" --button=gtk-quit:0
+    case "$?" in
+        1)
+            is_basic_mode=1
+            ;;
+        2)
+            is_basic_mode=0
+            ;;
+        *)
+            exit
+            ;;
+    esac
+
+    # if zenity --question --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" ; then
+    #     is_basic_mode=1
+    # fi
 
     # }}}
     # language conf {{{

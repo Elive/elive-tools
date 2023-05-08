@@ -131,6 +131,9 @@ EOF
 
     if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
         result="$( echo "$result" | awk '{print $1}' )"
+        if [[ "$result" = "us" ]] ; then
+            XKBVARIANT="altgr-intl"
+        fi
     fi
 
     #if [[ "$result" = "cancel" ]] ; then
@@ -139,7 +142,8 @@ EOF
 
     # set the keyboard
     if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
-        setxkbmap "$result"
+        XKBLAYOUT="$result"
+        setxkbmap -option '' -model "$XKBMODEL" "$XKBLAYOUT" "$XKBVARIANT" "$XKBOPTIONS"
     fi
 
     # fallback / reconfigure

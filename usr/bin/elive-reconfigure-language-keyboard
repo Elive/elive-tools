@@ -30,7 +30,7 @@ main(){
 
     # mode basic or advanced {{{
     #if zenity --question --text="Do you want to use the basic and easier interface instead of the advanced and complete one?" ; then
-    $yad --on-top --image="gtk-dialog-question" --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" --button="Basic!gtk-yes:1" --button="Advanced!gtk-no:2" --button=gtk-quit:0
+    $yad --on-top --image="gtk-dialog-question" --text="$( eval_gettext "Do you want to use the basic and simpler interface instead of the advanced and complete one?" )" --button=gtk-quit:0 --button="Advanced!gtk-no:2" --button="Basic!gtk-yes:1"
     case "$?" in
         1)
             is_basic_mode=1

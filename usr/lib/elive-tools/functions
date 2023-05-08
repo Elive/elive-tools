@@ -3650,7 +3650,7 @@ fi
 
 # set defaults for guis
 [[ -z "$zenity" ]] && [[ -x "/usr/bin/zenity" ]] && zenity="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
-[[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=20 --center --image=logo-elive --buttons-layout=right"
+[[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=20 --center --image=logo-elive"
 # set a default guitool compatible with the scripts
 guitool="$zenity"
 

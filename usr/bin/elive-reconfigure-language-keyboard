@@ -56,8 +56,9 @@ main(){
 
     if ((is_basic_mode)) ; then
         result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
+        [[ "$result" = "cancel" ]] && exit
 
-        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+        if [[ -n "$result" ]] && [[ "$result" != "Other" ]] ; then
             result="${result}.UTF-8"
             export LANG="$result"
 

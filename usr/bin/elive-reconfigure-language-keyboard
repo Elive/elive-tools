@@ -127,6 +127,7 @@ EOF
     # always set the keyboard to default detected when when we "validate" without selection:
 
     if [[ -n "$result" ]] ; then
+      result="$( echo "$result" | awk '{print $1}' )"
       # select a variant keyboard if needed
       XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" )"
       XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
@@ -139,7 +140,6 @@ EOF
     fi
 
     if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
-        result="$( echo "$result" | awk '{print $1}' )"
         # set US variant to altgr if empty
         if [[ "$result" = "us" ]] && [[ -z "$XKBVARIANT" ]] ; then
             XKBVARIANT="altgr-intl"

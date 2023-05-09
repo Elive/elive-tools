@@ -125,11 +125,13 @@ EOF
 
     result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" || echo "$kbmap" )"
     # always set the keyboard to default detected when when we "validate" without selection:
+
     if [[ -n "$result" ]] ; then
-      XKBVARIANT="$( { sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}'" --column="Country Variant" )"
+      # select a variant keyboard if needed
+      XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" )"
       XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
 
-      if ! echo "$XKBVARIANT" | grep -qs "[[:alnum:]]" ; then
+      if [[ "$XKBVARIANT" = *"Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
         unset XKBVARIANT
       fi
     else

@@ -134,13 +134,16 @@ chroot_layers_mount(){
     # create some needed dirs if they don't exist yet:
     mkdir -p "${dir}/home" "${dir}/tmp" "${dir}/var/lib/live" "${dir}/var/lock" "${dir}/var/log" "${dir}/var/run" "${dir}/var/tmp" "${dir}/var/spool"
 
-    # devpts
+    # dev & devpts
     mkdir -p "$dir/dev/pts"
     if ((is_mode_bind)) ; then
         mount --bind "/dev" "${dir}/dev"
         mount --bind "/dev/pts" "${dir}/dev/pts"
         mount -t tmpfs devshm-$id "${dir}/dev/shm"
     else
+        # mount a tmpfs of type dev first, we need thigns like /dev/null working:
+        mount dev-$id -t devtmpfs "${dir}/dev" || true
+
         if ((is_wheezy)) ; then
             mount devpts-$id -t devpts "${dir}/dev/pts" || true
         else
@@ -347,6 +350,7 @@ chroot_layers_umount(){
         return 0
     fi
 
+
     # devpts
     if ((is_mode_bind)) ; then
         if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
@@ -360,6 +364,7 @@ chroot_layers_umount(){
             umount "$dir/dev"
         fi
     else
+        # umount /dev/pts
         if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
             if grep -Fqs "$dir/dev/pts" /proc/mounts || el_check_dir_has_files "$dir/"dev/pts/* ; then
                 umount "$dir/dev/pts"
@@ -369,6 +374,10 @@ chroot_layers_umount(){
                     el_warning "unable to umount dev/pts, try with -f ?"
                 fi
             fi
+        fi
+        # umount /dev too
+        if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
+            umount "$dir/dev"
         fi
     fi
 

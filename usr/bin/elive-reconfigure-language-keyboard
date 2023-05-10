@@ -50,7 +50,11 @@ main(){
     # }}}
     # language conf {{{
     # ask for preselected language to use
-    language="$LANG"
+    if [[ "$LANG" = *"_"* ]] ; then
+        language="$LANG"
+    else
+        language="en_US"
+    fi
     language="${language%% *}"
     language="${language%%.*}"
 
@@ -58,7 +62,7 @@ main(){
         result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
         # [[ "$result" = "cancel" ]] && exit  # do not exit on first dialog because the tool will not exit cleanly, languages will be not configured correctly
         if [[ "$result" = "cancel" ]] ; then
-            result="en_US"
+            result="$language"
         fi
 
         if [[ -n "$result" ]] && [[ "$result" != "Other" ]] ; then
@@ -67,7 +71,7 @@ main(){
 
             # configure language
             if [[ "$LANG" = *UTF* ]] ; then
-                el_explain 0 "Configuring system language to $LANG..."
+                el_explain 0 "Configuring system language to __${LANG}__..."
 
                 cat > "$script" -- <<EOF
 #!/bin/bash

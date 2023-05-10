@@ -124,27 +124,27 @@ EOF
     fi
 
 
-    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" || echo "$kbmap" )"
+    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" || echo "cancel" )"
     # always set the keyboard to default detected when when we "validate" without selection:
 
-    if [[ -n "$result" ]] ; then
-        result="$( echo "$result" | awk '{print $1}' )"
-        # select a variant keyboard if needed
-        XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" )"
-        XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
-
-        if [[ "$XKBVARIANT" = *"Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
-            unset XKBVARIANT
-        fi
-    else
+    if [[ "$result" = "cancel" ]] ; then
         result="$kbmap"
+    else
+        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+            result="$( echo "$result" | awk '{print $1}' )"
+            # select a variant keyboard if needed
+            XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" )"
+            XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
+
+            if [[ "$XKBVARIANT" = "  Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
+                unset XKBVARIANT
+            fi
+        fi
     fi
 
-    if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
-        # set US variant to altgr if empty
-        if [[ "$result" = "us" ]] && [[ -z "$XKBVARIANT" ]] ; then
-            XKBVARIANT="altgr-intl"
-        fi
+    # set US variant to altgr if empty
+    if [[ "$result" = "us" ]] && [[ -z "$XKBVARIANT" ]] ; then
+        XKBVARIANT="altgr-intl"
     fi
 
     #if [[ "$result" = "cancel" ]] ; then

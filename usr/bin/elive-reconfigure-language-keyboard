@@ -59,7 +59,7 @@ main(){
     language="${language%%.*}"
 
     if ((is_basic_mode)) ; then
-        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" || echo cancel )"
+        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" 2>/dev/null || echo cancel )"
         # [[ "$result" = "cancel" ]] && exit  # do not exit on first dialog because the tool will not exit cleanly, languages will be not configured correctly
         if [[ "$result" = "cancel" ]] ; then
             result="$language"
@@ -131,7 +131,7 @@ EOF
     fi
 
 
-    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" || echo "cancel" )"
+    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" 2>/dev/null || echo "cancel" )"
     # always set the keyboard to default detected when when we "validate" without selection:
 
     if [[ "$result" = "cancel" ]] ; then
@@ -142,10 +142,10 @@ EOF
             XKBLAYOUT="$result"
 
             # select a variant keyboard if needed
-            XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" )"
+            XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u | grep "$result" ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" 2>/dev/null )"
             XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
 
-            if [[ "$XKBVARIANT" = "  Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
+            if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "  Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
                 unset XKBVARIANT
             fi
         fi
@@ -155,10 +155,6 @@ EOF
     if [[ -z "$XKBVARIANT" ]] && [[ "$result" = "us" || "$result" = "gb" ]] ; then
         XKBVARIANT="altgr-intl"
     fi
-
-    #if [[ "$result" = "cancel" ]] ; then
-        #is_keyboard_canceled=1
-    #fi
 
     # set the keyboard
     if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then

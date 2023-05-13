@@ -215,6 +215,8 @@ check_hardware(){
         is_multiple_cards=1
         if laptop-detect ; then
             is_optimus=1
+            # FIXME: do we really want to disable it for optimus? or we want it?
+            # FIXME: "multiple graph8ics cards found" -> instead, ask "yes/no" to use the nvidia (yes) or intel (not adding the modeline)
             unset is_xorg_template_wanted
         fi
     fi
@@ -534,7 +536,8 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If these drivers fail or freeze your computer, try with the other versions and also check the other boot options, or use the open-source drivers. Using a different Elive version may work better too. You can find more help in our forums." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If the installation of this driver fails, we suggest trying with a different version of the driver or with a different kernel version which you can select it in the first boot menu. If instead the installation works but the driver doesn't work correctly or makes your computer unstable, you can try using the open-source drivers, which sometimes work better. If you still have issues, use our forums to ask for help. Trying with a different version of Elive may help too." )" "" )"
+
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "If the install fails..." \
@@ -553,7 +556,7 @@ interactive_ask_privative(){
                         if ((is_wheezy)) ; then
                             message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. For compatibility reasons the nouveau module is blacklisted on boot, so either reboot in this mode or remove that parameter from the boot options." )" "" )"
                         else
-                            message_onlyfree="$( printf "$( eval_gettext "Reboot and do not select the proprietary drivers option, or just remove the parameter '%s' from the boot options by pressing the Tab key (\"E\" on UEFI boot). Due to compatibility reasons, booting without that driver is needed, this step is needed in order to continue." )" "modprobe.blacklist=nouveau" )"
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and select the normal, non-nvidia option, or just remove the parameter '%s' from the boot options by pressing the Tab key (or \"e\" on UEFI boot and then F10 to boot). Booting without this parameter is needed in order to enable the open-source drivers." )" "modprobe.blacklist=nouveau" )"
                         fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1050,6 +1053,8 @@ install_driver(){
 
     if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
 
+        # FIXME: sometimes the issue is simply that it doesn't compile for the newer kernel (if we booted in teh new one), try to parse these error mesages
+        # FIXME: why it works in the second attempt? it donloads something from internet?
         NOREPORTS=1 el_error "error ^^^^^^^^^^^^^^^^^^^^^^^^"
         sleep 12
 
@@ -1109,6 +1114,8 @@ install_driver(){
         fi
     fi
 
+    # FIXME: instead of verifying the previous message fail, just do THIS verification (otherwise, the driver can be compiled for one kernel but not for the other, we only need to know if we have it successfully for our kernel)
+    # FIXME: in the case that there's a driver for another kernel but not for ours one, show a message saying that is needed to reboot in the other one in order to use it because is not compatible with the new kernel (but it is with the other)
     # verify if the installation succeeded
     if ! find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
 

@@ -751,6 +751,10 @@ interactive_ask_driver_version(){
                 fi
             fi
 
+            if ((is_optimus)) ; then
+                _NVIDIA_PACKAGES="optimus-manager $_NVIDIA_PACKAGES"
+            fi
+
 
             # i386 no longer supports this version, it fallsback to the version 390
             if apt-cache show nvidia-driver | grep -qs "^Depends: .*nvidia-legacy-" ; then

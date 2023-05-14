@@ -111,6 +111,9 @@ load_driver(){
     # load driver
     if which nvidia-modprobe 1>/dev/null 2>&1 ; then
         nvidia-modprobe
+        nvidia-modprobe -m
+        nvidia-modprobe -l
+        nvidia-modprobe -s
     fi
 
     if ! lsmod | grep -qs "^nvidia" ; then
@@ -1124,6 +1127,11 @@ install_driver(){
         else
             unset is_driver_compiled_kernel
         fi
+    fi
+
+    # because we may have false positive error messages, just clean the screen since everything went fine:
+    if ((is_driver_compiled_kernel)) ; then
+        clear
     fi
 
 

@@ -40,7 +40,7 @@ usage(){
     echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, tesla-418, tesla-450, tesla-460, legacy-390xx legacy-340xx, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
-    echo -e "  -x: extra packages wanted (cuda, opencl, encoder, optix, etc)"
+    echo -e "  -x: extra packages wanted (all: cuda, opencl, encoder, optix, etc)"
     echo -e "  -u: uninstall drivers"
     echo -e "  -v: verbose mode"
 }
@@ -392,17 +392,18 @@ detect_driver_version(){
         if ((is_mode_check)) ; then
             echo -e "The Nvidia drivers for your machine is: $_NVIDIA_VERSION"
             exit
-        else
-            # suggest the version to use
-            if ! ((is_mode_auto)) ; then
-                local message_version_suggest
-                message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version." )" "$_NVIDIA_VERSION" )"
-
-                dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                    --title "Suggested Version" \
-                    --msgbox "$message_version_suggest" \
-                    0 0
-            fi
+        # UPDATE: deprecated, included in the next dialog
+        # else
+        #     # suggest the version to use
+        #     if ! ((is_mode_auto)) ; then
+        #         local message_version_suggest
+        #         message_version_suggest="$( printf "$( eval_gettext "The probable version of the Nvidia driver that you need is '%s'. If it doesn't work, try with a different version." )" "$_NVIDIA_VERSION" )"
+        #
+        #         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+        #             --title "Suggested Version" \
+        #             --msgbox "$message_version_suggest" \
+        #             0 0
+        #     fi
         fi
 
         # preselect to not ask later
@@ -503,7 +504,7 @@ interactive_ask_privative(){
 
     if ! ((is_mode_auto)) ; then
         case "$ret" in
-            0|255|123) # yes, timeout, cancel
+            0|255|123|124) # yes, timeout, cancel
                 if ((is_mode_live)) ; then
                     log_progress_msg "Installing proprietary Nvidia drivers"
 
@@ -527,7 +528,7 @@ interactive_ask_privative(){
                             ret="$?"
 
                             case "$ret" in
-                                0|255|123) # yes, timeout, cancel
+                                0|255|124|123) # yes, timeout, cancel
                                     ( reboot & )
                                     sleep 4
                                     exit
@@ -599,6 +600,8 @@ interactive_ask_driver_version(){
 
     local message_select_driver
     message_select_driver="$( printf "$( eval_gettext "Select the version of the driver your graphics card needs." )" "" )"
+    local message_select_driver_detected
+    message_select_driver_detected="$( printf "$( eval_gettext "For your computer, it is most likely '\Zb%s\ZB'" )" "$_NVIDIA_VERSION" )"
 
 
     if ! ((is_mode_auto)) && ! ((is_mode_version_set)) ; then
@@ -668,11 +671,18 @@ interactive_ask_driver_version(){
                 fi
 
             done 3<<< "$( { echo "current" ;  LC_ALL=C apt-cache search xserver-xorg-video-nvidia | grep -v "nouveau" | awk '{print $1}' | sort -V -r | psort -- -p "current" -p "legacy" -p "tesla"  ; } )" \
-                | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver (${_NVIDIA_VERSION} ?)" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+                | xargs dialog --timeout 240 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "$message_select_driver\n${message_select_driver_detected}" 0 0 0  2>"/tmp/.$(basename $0)-ret"
+
+            ret="$?"
+
+            # timeout, so select the default one
+            if echo "$ret" | grep -qsE "^124$" ; then
+                echo "$_NVIDIA_VERSION" > "/tmp/.$(basename $0)-ret"
+            fi
 
             # user canceled? uninstall and exit
-            if echo "$?" | grep -qsE "^(1|123|255|125)$" || grep -qsE "^(1|123|255|125)$" "/tmp/.$(basename $0)-ret" ; then
-                #uninstall_driver
+            if echo "$ret" | grep -qsE "^(1|123|255|125)$" || grep -qsE "^(1|123|255|125)$" "/tmp/.$(basename $0)-ret" ; then
+                uninstall_driver
                 try_again
                 exit
             fi
@@ -917,7 +927,7 @@ install_driver(){
             fi
 
             case "$ret" in
-                0|255|123) # yes, timeout, cancel
+                0|255|124|123) # yes, timeout, cancel
                     true
                     ;;
                 1) # no
@@ -946,7 +956,7 @@ install_driver(){
         fi
 
         case "$ret" in
-            0|255|123) # yes, timeout, cancel
+            0|255|124|123) # yes, timeout, cancel
                 if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
                     sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
                 fi
@@ -1034,7 +1044,7 @@ install_driver(){
                         ret="$?"
 
                         case "$ret" in
-                            0|255|123) # yes, timeout, cancel
+                            0|255|124|123) # yes, timeout, cancel
                                 ( reboot & )
                                 sleep 4
                                 exit

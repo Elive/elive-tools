@@ -1051,10 +1051,29 @@ install_driver(){
     echo -e "\n\n\n\n\nInstalling... Please be patient...\n\n"
     sleep 1
 
-    if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
+    # Install from packages:
+    if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
+        is_driver_compiled_fullinstall=1
+    else
+        unset is_driver_compiled_fullinstall
+    fi
 
-        # FIXME: sometimes the issue is simply that it doesn't compile for the newer kernel (if we booted in teh new one), try to parse these error mesages
-        # FIXME: why it works in the second attempt? it donloads something from internet?
+    # check if at least one (kernel) driver was compiled
+    if find "/lib/modules/" -type f -name '*'nvidia'*'ko | grep -qs "/updates/dkms/nvidia" ; then
+        is_driver_compiled_some=1
+    else
+        unset is_driver_compiled_some
+    fi
+
+    if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+        is_driver_compiled_kernel=1
+    else
+        unset is_driver_compiled_kernel
+    fi
+
+    # if no driver was compiled for any of the kernels, try again by updating the packages list
+    if ! ((is_driver_compiled_some)) ; then
+
         NOREPORTS=1 el_error "error ^^^^^^^^^^^^^^^^^^^^^^^^"
         sleep 12
 
@@ -1074,53 +1093,51 @@ install_driver(){
                 0 0
         fi
 
+        # first update packages, importan
         el_aptget_update force
 
-        if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-            true
+        if  TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
+            is_driver_compiled_fullinstall=1
+        else
+            unset is_driver_compiled_fullinstall
+        fi
 
-            #while read -ru 3 package
-            #do
-                #if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $package ; then
-                    ## open a shell
-                    #if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
-                        #echo -e "\n\n\nE: Installing nvidia packages failed, try yourself and suggest a fix to Elive\n" 1>&2
-                        #sleep 5
-                    #else
-                        #if [[ "$_NVIDIA_VERSION" = "current" ]] ; then
-                            #echo -e "\nE: Installing nvidia packages failed, please try to install them yourself" 1>&2
-                            #echo -e "\nE: Boot Elive with the nox11autologin parameter to not start the graphical system" 1>&2
-                            #echo -e "\nE: If you see that Elive has a missing configuration or package for the 'current'" 1>&2
-                            #echo -e "\nE: version, please report what is needed to include to have the tool working for all" 1>&2
-                            #sleep 5
-                        #else
-                            #echo -e "\nE: Installing nvidia packages failed, try it yourself and suggest the fix to Elive" 1>&2
-                            #sleep 5
-                        #fi
-                    #fi
+        # check if at least one (kernel) driver was compiled
+        if find "/lib/modules/" -type f -name '*'nvidia'*'ko | grep -qs "/updates/dkms/nvidia" ; then
+            is_driver_compiled_some=1
+        else
+            unset is_driver_compiled_some
+        fi
 
-                    ## open an interactive shell
-                    #if ! ((is_mode_auto)) || ((is_mode_live)) ; then
-                        #if el_confirm "$( eval_gettext "The installation failed. You can now open a terminal in order to inspect the status of the packages or try to load the module manually and then run the graphical system. After to experiment you can report any change needed for this tool in our forums so we can fix it and have it working for everybody. Open the terminal now?" )" ; then
-                            #find "/lib/modules/$(uname -r)/updates -type f -iname '*'nvidia'*'
-                            #el_explain 0 "try to 'modprobe nvidia' or the correct module name, check the status of the packages, run 'dmesg' to check for errors or messages, use 'apse nvidia $_NVIDIA_VERSION' to search for a possible missing package, and finally run the graphical system with 'startx'"
-                            #el_explain 0 "Type '__exit__' for continue..."
-                            #$SHELL -l
-
-                        #fi
-                    #fi
-                #fi
-            #done 3<<< "$( echo "$_NVIDIA_PACKAGES")"
+        if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+            is_driver_compiled_kernel=1
+        else
+            unset is_driver_compiled_kernel
         fi
     fi
 
-    # FIXME: instead of verifying the previous message fail, just do THIS verification (otherwise, the driver can be compiled for one kernel but not for the other, we only need to know if we have it successfully for our kernel)
-    # FIXME: in the case that there's a driver for another kernel but not for ours one, show a message saying that is needed to reboot in the other one in order to use it because is not compatible with the new kernel (but it is with the other)
+
+    # if driver compiled on a different kernel, tell the user that needs to reboot in order to use it
+    if ((is_driver_compiled_some)) && ! ((is_driver_compiled_kernel)) ; then
+        local message_warning_install_other
+        message_warning_install_other="$( printf "$( eval_gettext "The driver didn't compile for the running kernel but it did for the other one. You need to REBOOT your computer and select from the boot menu the other kernel, then run again this Nvidia installation. Your running kernel which failed is:" )" "" )"
+
+        if ! ((is_mode_auto)) ; then
+            dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Another kernel is required" \
+                --msgbox "$message_warning_install_other" \
+                0 0
+
+            # suggest to reboot
+            try_again
+        fi
+    fi
+
     # verify if the installation succeeded
-    if ! find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+    if ! ((is_driver_compiled_kernel)) ; then
 
         clear ; echo
-        NOREPORTS=1 el_error "Driver compilation seems to have failed:\n$(find /lib/modules/ -type f -iname '*'nvidia'*'ko )"
+        NOREPORTS=1 el_error "Driver compilation seems to have failed:\n$(find /lib/modules/ -type f -iname '*'nvidia'*'ko | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" )"
         sleep 4
 
         local message_warning_install_failed
@@ -1132,7 +1149,6 @@ install_driver(){
                 --msgbox "$message_warning_install_failed" \
                 0 0
         fi
-
 
 
         if ! ((is_mode_auto)) || ((is_mode_live)) ; then
@@ -1306,21 +1322,21 @@ try_again(){
     read -r ret <<< "$ret"
 
     case "$ret" in
-        open)
+        "open")
             uninstall_driver
             exit
             ;;
-        other)
+        "other")
             export is_mode_already_run=1
             $0 $args
             exit
             ;;
-        reboot)
+        "reboot")
             ( reboot & )
             sleep 4
             exit
             ;;
-        console)
+        "console")
             reset
             if [[ -n "$SHELL" ]] ; then
                 $SHELL
@@ -1332,7 +1348,7 @@ try_again(){
                 fi
             fi
             ;;
-        exit)
+        "exit")
             exit
             ;;
     esac
@@ -1475,7 +1491,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdifm:lquvhtx" opt; do
+    while getopts ":acdfm:lquvhtx" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -1489,10 +1505,6 @@ main(){
             f)
                 is_mode_force=1
                 ;;
-            #i)
-                #is_mode_interactive=1
-                #unset is_mode_auto
-                #;;
             v)
                 export EL_DEBUG=2
 

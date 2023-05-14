@@ -623,7 +623,7 @@ interactive_ask_driver_version(){
 
                 case $_id in
                     *tesla-*)
-                        _desc="$( printf "$( eval_gettext "High-Performance Computing drivers (very new)" )" )"
+                        _desc="$( printf "$( eval_gettext "High-Performance Computing drivers" )" )"
                         ;;
                     *nvidia|current)
                         _desc="$( printf "$( eval_gettext "Last drivers for the newest cards" )" )"

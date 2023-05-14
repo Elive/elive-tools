@@ -221,7 +221,8 @@ check_hardware(){
             # FIXME: do we really want to disable it for optimus? or we want it?
             # FIXME: "multiple graph8ics cards found" -> instead, ask "yes/no" to use the nvidia (yes) or intel (not adding the modeline)
             #
-            # FIXME NEW: seems like it works, we may need to install "primus" and "bumblebee", i think running "optirum foo" it works, not sure
+            # FIXME NEW: seems like it works, we may need to install "primus" and "bumblebee", i think running "optirum foo" it works, may nrequiere bumblebee driver installed. $ optirun glxinfo | grep OpenGL
+
             unset is_xorg_template_wanted
         fi
     fi

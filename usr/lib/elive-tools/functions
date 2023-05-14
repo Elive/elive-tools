@@ -2427,7 +2427,7 @@ el_step_requires_fixme(){
         fi
         echo -e "$(tput setaf 3)$(tput blink)New SHELL Started$(tput op)"
         el_explain 0 "Type '__exit__' for continue..."
-        $SHELL -l
+        $SHELL -l || true
     else
         cd "${prev_dir}"
         el_set_display_variables

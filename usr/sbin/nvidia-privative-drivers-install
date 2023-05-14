@@ -217,6 +217,8 @@ check_hardware(){
             is_optimus=1
             # FIXME: do we really want to disable it for optimus? or we want it?
             # FIXME: "multiple graph8ics cards found" -> instead, ask "yes/no" to use the nvidia (yes) or intel (not adding the modeline)
+            #
+            # FIXME NEW: seems like it works, we may need to install "primus" and "bumblebee", i think running "optirum foo" it works, not sure
             unset is_xorg_template_wanted
         fi
     fi
@@ -1055,7 +1057,15 @@ install_driver(){
     if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
         is_driver_compiled_fullinstall=1
     else
-        unset is_driver_compiled_fullinstall
+        # hack the postinst to not fail
+        sed -i -e '/^set -e/d' /var/lib/dpkg/info/nvidia-*dkms.postinst
+        DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt_get -y -f install -q=2
+
+        if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
+            is_driver_compiled_fullinstall=1
+        else
+            unset is_driver_compiled_fullinstall
+        fi
     fi
 
     # check if at least one (kernel) driver was compiled

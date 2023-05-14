@@ -509,8 +509,23 @@ el_resolution_get(){ # show our actual resolution
         fi
     fi
 
+    if [[ -z "$resolution_h" ]] ; then
+        resolution_h="${resolution%%x*}"
+        resolution_v="${resolution##*x}"
+    fi
+
     if [[ -n "$resolution" ]] ; then
-        echo "$resolution"
+        if [[ -n "$1" ]] ; then
+            if [[ "$1" = "h"* ]] ; then
+                echo "$resolution_h"
+            elif [[ "$1" = "v"* ]] ; then
+                echo "$resolution_v"
+            else
+                echo "$resolution"
+            fi
+        else
+            echo "$resolution"
+        fi
     else
         el_error "problem obtaining primary screen resolution, missing dependencies? xdpyinfo | xrandr"
     fi

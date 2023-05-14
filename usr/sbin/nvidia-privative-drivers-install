@@ -117,7 +117,7 @@ load_driver(){
     fi
 
     if ! lsmod | grep -qs "^nvidia" ; then
-        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm).ko" )"
+        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm|peermem).ko" )"
 
         if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
             for i in $nvidia_modules

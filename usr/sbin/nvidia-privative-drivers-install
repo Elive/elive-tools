@@ -1627,8 +1627,10 @@ main(){
     # just check if installed and working
     if ((is_mode_test_installed)) ; then
         if check_driver ; then
+            el_debug "driver is installed and working"
             exit 0
         else
+            el_debug "driver is NOT installed / working"
             exit 1
         fi
     fi

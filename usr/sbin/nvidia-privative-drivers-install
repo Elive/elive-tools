@@ -1062,7 +1062,7 @@ install_driver(){
     else
         # hack the postinst to not fail
         sed -i -e '/^set -e/d' /var/lib/dpkg/info/nvidia-*dkms.postinst
-        DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt_get -y -f install -q=2
+        apt_get -y -f install -q=2
 
         if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
             is_driver_compiled_fullinstall=1
@@ -1482,6 +1482,32 @@ uninstall_driver(){
 
     # - end }}}
 }
+
+apt_get(){
+    local is_waiting i
+    i=0
+
+    tput sc
+    while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+        case $(($i % 4)) in
+            0 ) j="-" ;;
+            1 ) j="\\" ;;
+            2 ) j="|" ;;
+            3 ) j="/" ;;
+        esac
+        tput rc
+        echo -en "\r[$j] Waiting for other software managers to finish..."
+        is_waiting=1
+
+        sleep 0.5
+        ((i=i+1))
+    done
+
+    # run what we want
+    TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
+}
+
+
 
 
 main(){

@@ -120,6 +120,7 @@ load_driver(){
     nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|peermem).ko" | grep "nvidia.*drm.ko" )"
     for i in $nvidia_modules
     do
+        i="$( basename "${i%.ko}" )"
         el_info "running: modprobe $i"
 
         if modprobe "$i" ; then
@@ -134,8 +135,8 @@ load_driver(){
         if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
             for i in $nvidia_modules
             do
-                _NVIDIA_MODULE="$(basename "$i" )"
-                _NVIDIA_MODULE="${_NVIDIA_MODULE%.ko}"
+                i="$( basename "${i%.ko}" )"
+                _NVIDIA_MODULE="${i}"
                 el_info "running: modprobe $_NVIDIA_MODULE"
 
                 if modprobe "$_NVIDIA_MODULE" ; then

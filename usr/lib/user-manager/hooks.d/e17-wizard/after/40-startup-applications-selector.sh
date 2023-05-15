@@ -416,7 +416,7 @@ EOF
         fi
 
         # include composite, only if the video card has enough power
-        video_memory="$( glxinfo | grep -F "Video memory:" | sed -e 's|^.*memory: ||g' -e 's|MB.*$||g' )"
+        video_memory="$( glxinfo | grep -i "Video memory:" | sed -e 's|^.*memory: ||g' -e 's|MB.*$||g' | head -1 )"
         if [[ "$video_memory" -ge 128 ]] || [[ -e "/tmp/.virtualmachine-detected" ]] ; then
             menu+=("TRUE")
         else

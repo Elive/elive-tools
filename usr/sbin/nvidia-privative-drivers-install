@@ -918,11 +918,9 @@ Section "Device"
     Identifier     "Default screen"
     Driver         "nvidia"
     Option         "NoLogo"     "true"
+    # append options here
 EndSection
 EOF
-        # always allow to append options from automated tools:
-        echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
-
         # - conf }}}
     # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
@@ -989,11 +987,9 @@ Section "OutputClass"
     Option "PrimaryGPU" "yes"
     ModulePath "/usr/lib/nvidia/xorg"
     ModulePath "/usr/lib/xorg/modules"
+    # append options here
 EndSection
 EOF
-            # always allow to append options from automated tools:
-            echo -e '# append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
-
             # this entry is needed in order to start the "startx" command with the nvidia card
             if ! grep -qs "xrandr --setprovideroutputsource modesetting NVIDIA-0" /home/eliveuser/.xinitrc ; then
                 buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"

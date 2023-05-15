@@ -770,10 +770,7 @@ interactive_ask_driver_version(){
             fi
 
             if ((is_optimus)) ; then
-                if ! ((is_optimus_onlynvidia)) ; then
-                    # FIXME: seems like they are installed no matter which option of optimus we use
-                    _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
-                fi
+                _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
             fi
 
 
@@ -943,7 +940,7 @@ EOF
 
         # select if wants the full nvidia or on-demand
         local message_optimus_type
-        message_optimus_type="$( printf "$( eval_gettext "There are two ways to use your Nvidia card:enabling it to be used all the time or using it only when needed to improve battery life. The latter option requires running your wanted 3D applications from a terminal with a command prepended. Like in these examples:" )" "" )"
+        message_optimus_type="$( printf "$( eval_gettext "There are two ways to use your Nvidia card: Enabling it to be used all the time, or using it only when needed to improve battery life. The latter option requires running your wanted 3D applications from a terminal with a command prepended. Like in these examples:" )" "" )"
         local message_optimus_type_question
         message_optimus_type_question="$( printf "$( eval_gettext "Do you want to use only Nvidia? (suggested for novice users). Answering NO will use the less-powered integrated card by default and use the other one only when you request it." )" "" )"
 

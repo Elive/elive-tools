@@ -218,12 +218,7 @@ check_hardware(){
         is_multiple_cards=1
         if laptop-detect ; then
             is_optimus=1
-            # FIXME: do we really want to disable it for optimus? or we want it?
-            # FIXME: "multiple graph8ics cards found" -> instead, ask "yes/no" to use the nvidia (yes) or intel (not adding the modeline)
-            #
-            # FIXME NEW: seems like it works, we may need to install "primus" and "bumblebee", i think running "optirum foo" it works, may nrequiere bumblebee driver installed. $ optirun glxinfo | grep OpenGL
-
-            unset is_xorg_template_wanted
+            touch /tmp/.nvidia_optimus
         fi
     fi
     # }}}
@@ -762,7 +757,9 @@ interactive_ask_driver_version(){
             fi
 
             if ((is_optimus)) ; then
-                _NVIDIA_PACKAGES="optimus-manager $_NVIDIA_PACKAGES"
+                if ! ((is_optimus_full)) ; then
+                    _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
+                fi
             fi
 
 
@@ -900,14 +897,41 @@ install_driver(){
     # conf {{{
     # create conf first
     if ((is_xorg_template_wanted)) ; then
+        # clean it first
         : > /etc/X11/xorg.conf.d/20-nvidia.conf
 
-        echo 'Section "Device"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Identifier     "Default screen"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Driver         "nvidia"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
-        echo '        Option         "NoLogo"     "true"' >> /etc/X11/xorg.conf.d/20-nvidia.conf
+        if ((is_optimus_full)) ; then
+            cat > "/etc/X11/xorg.conf.d/20-nvidia.conf" << EOF
+Section "OutputClass"
+    Identifier "intel"
+    MatchDriver "i915"
+    Driver "modesetting"
+EndSection
+
+Section "OutputClass"
+    Identifier "nvidia"
+    MatchDriver "nvidia-drm"
+    Driver "nvidia"
+    Option "AllowEmptyInitialConfiguration"
+    Option "PrimaryGPU" "yes"
+    ModulePath "/usr/lib/nvidia/xorg"
+    ModulePath "/usr/lib/xorg/modules"
+EndSection
+EOF
+
+        else
+            cat > "/etc/X11/xorg.conf.d/20-nvidia.conf" << EOF
+Section "Device"
+    Identifier     "Default screen"
+    Driver         "nvidia"
+    Option         "NoLogo"     "true"
+EndSection
+EOF
+
+        fi
+
+        # always allow to append options from automated tools:
         echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
-        echo 'EndSection' >> /etc/X11/xorg.conf.d/20-nvidia.conf
 
         # - conf }}}
         # force brightness entry conf {{{
@@ -997,6 +1021,7 @@ install_driver(){
     if ((is_multiple_cards)) ; then
 
         if ! ((is_mode_auto)) ; then
+            # FIXME: include a better explanation for optimus type cards, just like "how" it works, how it can be, what can be tested, etc
             if ((is_optimus)) ; then
                 local message_multiple_cards
                 message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, your laptop might use the special Nvidia Optimus drivers, where the internal card is used for battery saving and the Nvidia card is used when more performance is needed. You can use Nvidia in Elive if you install the drivers, or it will use Intel if you don't. We are now going to use the Nvidia for more performance. If you have any problem running your graphical system we suggest you enter in the BIOS and disable one of them. Search in Google to know how to configure your BIOS." )" "" )"
@@ -1009,6 +1034,37 @@ install_driver(){
                 --title "Multiple Graphic Cards found" \
                 --msgbox "$message_multiple_cards" \
                 0 0
+
+            # select if wants the full nvidia or on-demand
+            local message_optimus_type
+            message_optimus_type="$( printf "$( eval_gettext "There are two ways to use your Nvidia card:enabling it to be used all the time or using it only when needed to improve battery life. The latter option requires running your wanted 3D applications from a terminal with a command prepended. Like in these examples:" )" "" )"
+            local message_optimus_type_question
+            message_optimus_type_question="$( printf "$( eval_gettext "Do you want to use only Nvidia? (suggested for novice users). Answering NO will use the less-powered integrated card by default and use the other one only when you request it." )" "" )"
+
+            if ((is_mode_auto)) || ((is_mode_simulate)) ; then
+                ret=0
+            else
+                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+                    --title "Select a method to use your both graphic cards" \
+                    --yesno "IMPORTANT: ${message_optimus_type}\n\n\$ primusrun steam\n\$ primusrun supertuxkart\n\n${message_optimus_type_question}" \
+                    0 0
+                ret="$?"
+            fi
+
+            case "$ret" in
+                0|255|124|123) # yes, timeout, cancel
+                    true
+                    is_optimus_full=1
+                    ;;
+                1) # no
+                    true
+                    unset is_optimus_full
+                    # if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                    #     sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                    # fi
+                    ;;
+            esac
+
         fi
     fi
     # - Optimus }}}

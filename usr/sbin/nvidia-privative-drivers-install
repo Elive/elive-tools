@@ -770,6 +770,7 @@ interactive_ask_driver_version(){
 
             if ((is_optimus)) ; then
                 if ! ((is_optimus_onlynvidia)) ; then
+                    # FIXME: seems like they are installed no matter which option of optimus we use
                     _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
                 fi
             fi
@@ -988,12 +989,11 @@ Section "OutputClass"
 EndSection
 EOF
             # always allow to append options from automated tools:
-            echo '        # append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
+            echo -e '# append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
 
-        else
             # this entry is needed in order to start the "startx" command with the nvidia card
             buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"
-            echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n${buf}" >> /home/eliveuser/.xinitrc
+            echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
         fi
     fi
     # - Optimus }}}

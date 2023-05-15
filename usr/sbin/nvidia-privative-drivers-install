@@ -116,6 +116,18 @@ load_driver(){
         nvidia-modprobe -s
     fi
 
+    # always load the drm module otherwise it will not work
+    nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|peermem).ko" | grep "nvidia.*drm.ko" )"
+    for i in $nvidia_modules
+    do
+        el_info "running: modprobe $i"
+
+        if modprobe "$i" ; then
+            break
+        fi
+    done
+    unset nvidia_modules
+
     if ! lsmod | grep -qs "^nvidia" ; then
         nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm|peermem).ko" )"
 

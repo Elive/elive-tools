@@ -995,8 +995,10 @@ EOF
             echo -e '# append options here' >> /etc/X11/xorg.conf.d/20-nvidia.conf # do not remove
 
             # this entry is needed in order to start the "startx" command with the nvidia card
-            buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"
-            echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
+            if ! grep -qs "xrandr --setprovideroutputsource modesetting NVIDIA-0" /home/eliveuser/.xinitrc ; then
+                buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"
+                echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
+            fi
         fi
     fi
     # - Optimus }}}

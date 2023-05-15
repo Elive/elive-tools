@@ -936,10 +936,12 @@ EOF
             message_multiple_cards="$( printf "$( eval_gettext "An additional graphic card has been detected, we will proceed by using Nvidia but if you have any problem running the graphical system we suggest you remove one of the graphic cards. If the other graphic card is included in the motherboard you should be able to disable it from the BIOS. Search in Google to know how to configure your BIOS." )" "" )"
         fi
 
-        dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-            --title "Multiple Graphic Cards found" \
-            --msgbox "$message_multiple_cards" \
-            0 0
+        if ! ((is_mode_auto)) ; then
+            dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                --title "Multiple Graphic Cards found" \
+                --msgbox "$message_multiple_cards" \
+                0 0
+        fi
 
         # select if wants the full nvidia or on-demand
         local message_optimus_type

@@ -901,10 +901,9 @@ install_driver(){
 
     # }}}
 
-    # uninstall previous drivers {{{
+    # uninstall previous drivers
     uninstall_driver
 
-    # - uninstall previous drivers }}}
     # nvidia xorg conf {{{
     # create conf first
     if ((is_xorg_template_wanted)) ; then
@@ -995,66 +994,66 @@ EOF
                 echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
             fi
         fi
-        # - Optimus }}}
-        # force brightness entry conf {{{
-        if laptop-detect ; then
+    fi
+    # - Optimus }}}
+    # force brightness entry conf {{{
+    if laptop-detect ; then
 
-            local message_brightness_force
-            message_brightness_force="$( printf "$( eval_gettext "Does the brightness of your screen work correctly? If you see any problem with the brightness select 'NO' the next time. Select 'YES' if you don't know." )" "" )"
-
-            if ((is_mode_auto)) || ((is_mode_simulate)) ; then
-                ret=0
-            else
-                dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
-                    --title "Brightness of the Screen" \
-                    --yesno "$message_brightness_force" \
-                    0 0
-                ret="$?"
-            fi
-
-            case "$ret" in
-                0|255|124|123) # yes, timeout, cancel
-                    true
-                    ;;
-                1) # no
-                    true
-                    if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-                        sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
-                    fi
-                    ;;
-            esac
-        fi
-
-        # - force brightness entry conf }}}
-        # force dpi size to 96 {{{
-
-        local message_dpi_force
-        message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen look wrong. Sometimes the auto-detection fails, resulting in wrong sized elements. This option will set 96 DPI which is a common standard and works well in most cases. But you should try without this option first." )" "" )"
+        local message_brightness_force
+        message_brightness_force="$( printf "$( eval_gettext "Does the brightness of your screen work correctly? If you see any problem with the brightness select 'NO' the next time. Select 'YES' if you don't know." )" "" )"
 
         if ((is_mode_auto)) || ((is_mode_simulate)) ; then
             ret=0
         else
-            dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
-                --title "Force DPI defaults?" \
-                --yesno "$message_dpi_force" \
+            dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+                --title "Brightness of the Screen" \
+                --yesno "$message_brightness_force" \
                 0 0
             ret="$?"
         fi
 
         case "$ret" in
             0|255|124|123) # yes, timeout, cancel
-                if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-                    sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
-                fi
                 true
                 ;;
             1) # no
                 true
+                if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                    sed -i 's|^.*append options here.*$|        Option "RegistryDwords" "EnableBrightnessControl=1"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+                fi
                 ;;
         esac
     fi
 
-    # - }}}
+    # - force brightness entry conf }}}
+    # force dpi size to 96 {{{
+
+    local message_dpi_force
+    message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen look wrong. Sometimes the auto-detection fails, resulting in wrong sized elements. This option will set 96 DPI which is a common standard and works well in most cases. But you should try without this option first." )" "" )"
+
+    if ((is_mode_auto)) || ((is_mode_simulate)) ; then
+        ret=0
+    else
+        dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+            --title "Force DPI defaults?" \
+            --yesno "$message_dpi_force" \
+            0 0
+        ret="$?"
+    fi
+
+    case "$ret" in
+        0|255|124|123) # yes, timeout, cancel
+            if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+                sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+            fi
+            true
+            ;;
+        1) # no
+            true
+            ;;
+    esac
+
+    # optimus - }}}
     # know arch and report {{{
     case "$(uname -m)" in
         i*86)

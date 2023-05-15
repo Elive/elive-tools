@@ -158,14 +158,14 @@ EOF
     # set the keyboard
     if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
         XKBLAYOUT="$result"
-        setxkbmap -option '' -model "$XKBMODEL" "$XKBLAYOUT" "$XKBVARIANT" "$XKBOPTIONS"
+        setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
     fi
 
     # fallback / reconfigure
     if [[ "${result}" = "Other" ]] ; then
         urxvt -e bash -c "gksu dpkg-reconfigure keyboard-configuration"
         source /etc/default/keyboard
-        setxkbmap -option '' -model "$XKBMODEL" "$XKBLAYOUT" "$XKBVARIANT" "$XKBOPTIONS"
+        setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
     fi
 
     # }}}

@@ -1028,30 +1028,42 @@ EOF
     # - force brightness entry conf }}}
     # force dpi size to 96 {{{
 
-    local message_dpi_force
-    message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen look wrong. Sometimes the auto-detection fails, resulting in wrong sized elements. This option will set 96 DPI which is a common standard and works well in most cases. But you should try without this option first." )" "" )"
+    # local message_dpi_force
+    # message_dpi_force="$( printf "$( eval_gettext "Select this option if the fonts and sizes on your screen look wrong. Sometimes the auto-detection fails, resulting in wrong sized elements. This option will set 96 DPI which is a common standard and works well in most cases. But you should try without this option first." )" "" )"
+    #
+    # if ((is_mode_auto)) || ((is_mode_simulate)) ; then
+    #     ret=0
+    # else
+    #     dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
+    #         --title "Force DPI defaults?" \
+    #         --yesno "$message_dpi_force" \
+    #         0 0
+    #     ret="$?"
+    # fi
+    #
+    # case "$ret" in
+    #     0|255|124|123) # yes, timeout, cancel
+    #         if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+    #             sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
+    #         fi
+    #         true
+    #         ;;
+    #     1) # no
+    #         true
+    #         ;;
+    # esac
+    local message_dpi_fix
+    message_dpi_fix="$( printf "$( eval_gettext "Some Nvidia drivers has issues detecting the scaling size of the screen. If you find that your fonts are too big or too small, Elive has a feature to set your desired desktop scaling. If you want to know the exact DPI value that has your screen, run Elive without the nvidia drivers and from a terminal run: " )" "" )"
 
-    if ((is_mode_auto)) || ((is_mode_simulate)) ; then
-        ret=0
-    else
-        dialog --timeout 60 --clear --colors --defaultno --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
-            --title "Force DPI defaults?" \
-            --yesno "$message_dpi_force" \
-            0 0
-        ret="$?"
+    dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+        --title "DPI issues with some cards" \
+        --msgbox "${message_dpi_fix} el_dpi_get" \
+        0 0
+
+    # force the fix anyways in order to avoid bad settings
+    if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
+        sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
     fi
-
-    case "$ret" in
-        0|255|124|123) # yes, timeout, cancel
-            if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
-                sed -i 's|^.*append options here.*$|        Option "UseEdidDpi"  "False"\n        Option "DPI"     "96 x 96"\n&|' /etc/X11/xorg.conf.d/20-nvidia.conf
-            fi
-            true
-            ;;
-        1) # no
-            true
-            ;;
-    esac
 
     # optimus - }}}
     # know arch and report {{{

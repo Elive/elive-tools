@@ -905,7 +905,7 @@ install_driver(){
     uninstall_driver
 
     # - uninstall previous drivers }}}
-    # conf {{{
+    # nvidia xorg conf {{{
     # create conf first
     if ((is_xorg_template_wanted)) ; then
         # clean it first
@@ -918,7 +918,8 @@ Section "Device"
     # append options here
 EndSection
 EOF
-        # - conf }}}
+    fi
+    # - conf }}}
     # Optimus {{{
     # OPTIMUS devices: if we are in laptop, and have more than one graphic card and both are not nvidia ones...
     if ((is_multiple_cards)) ; then
@@ -951,7 +952,7 @@ EOF
                 --title "Select a method to use your both graphic cards" \
                 --yesno "*******   IMPORTANT:   ******\n\n${message_optimus_type}\n\n\$ primusrun steam\n\$ primusrun supertuxkart\n\n${message_optimus_type_question}" \
                 0 0
-            ret="$?"
+                            ret="$?"
         fi
 
         case "$ret" in
@@ -962,6 +963,7 @@ EOF
             1) # no
                 true
                 unset is_optimus_onlynvidia
+                unset is_xorg_template_wanted
                 touch /tmp/.nvidia_optimus_conf_onlynvidia
                 ;;
         esac
@@ -993,8 +995,7 @@ EOF
                 echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
             fi
         fi
-    fi
-    # - Optimus }}}
+        # - Optimus }}}
         # force brightness entry conf {{{
         if laptop-detect ; then
 
@@ -1120,7 +1121,6 @@ EOF
                         esac
                     fi
                 fi
-
             fi
         fi
     fi
@@ -1289,7 +1289,8 @@ EOF
         else
             message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' | grep -v "typec_nvidia" )"
         fi
-            # show the message if we have any
+
+        # show the message if we have any
         if [[ -n "$message_unable_to_load" ]] && ! ((is_mode_auto)) ; then
             dialog --timeout 900 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                 --title "Simulation mode" \

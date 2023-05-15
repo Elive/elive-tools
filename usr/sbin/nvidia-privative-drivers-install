@@ -1057,7 +1057,7 @@ EOF
 
     dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
         --title "DPI issues with some cards" \
-        --msgbox "${message_dpi_fix} el_dpi_get" \
+        --msgbox "${message_dpi_fix}\n\nel_dpi_get" \
         0 0
 
     # force the fix anyways in order to avoid bad settings

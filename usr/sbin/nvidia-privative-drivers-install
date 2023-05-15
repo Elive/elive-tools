@@ -951,7 +951,7 @@ EOF
         else
             dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, TAB to select, Enter to confirm" \
                 --title "Select a method to use your both graphic cards" \
-                --yesno "IMPORTANT: ${message_optimus_type}\n\n\$ primusrun steam\n\$ primusrun supertuxkart\n\n${message_optimus_type_question}" \
+                --yesno "*******   IMPORTANT:   ******\n\n${message_optimus_type}\n\n\$ primusrun steam\n\$ primusrun supertuxkart\n\n${message_optimus_type_question}" \
                 0 0
             ret="$?"
         fi

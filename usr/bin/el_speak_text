@@ -33,6 +33,7 @@ main(){
 
     if [[ "$( echo "$text" | wc -w )" -gt 30 ]] ; then
         el_notify soft stock_volume "Elive Speaking: Text too long" "This text is too long to be spoken, ignoring it..."
+        exit
     fi
 
     #text_filename="${text//\//%}"

@@ -853,12 +853,12 @@ interactive_ask_driver_version(){
                     _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
                 fi
                 # opencl support
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvcuvid1 $_NVIDIA_PACKAGES"
                 fi
                 # pretty small and needed, cuda support but requires opencl-icd too
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                if apt-cache show "nvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
                 fi
                 # OptiX ray tracing
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
@@ -869,8 +869,8 @@ interactive_ask_driver_version(){
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
                 fi
                 # vdpau video driver, pretty required
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
+                if apt-cache show "nvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
                 # arch based packages:
                 if [[ "$( el_architecture host )" = "i386" ]] ; then
@@ -887,12 +887,12 @@ interactive_ask_driver_version(){
             # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
             if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
                 # opencl support
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                if apt-cache show "nvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
                 fi
                 # pretty small and needed, cuda support but requires opencl-icd too
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvcuvid1 $_NVIDIA_PACKAGES"
                 fi
                 # OptiX ray tracing
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
@@ -903,8 +903,8 @@ interactive_ask_driver_version(){
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
                 fi
                 # vdpau video driver, pretty required
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
+                if apt-cache show "nvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
             fi
 

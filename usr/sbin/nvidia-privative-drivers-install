@@ -779,24 +779,20 @@ interactive_ask_driver_version(){
             # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
             if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
                 # opencl support
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                if apt-cache show "nvidia-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-opencl-icd $_NVIDIA_PACKAGES"
                 fi
                 # pretty small and needed, cuda support but requires opencl-icd too
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
                 fi
                 # OptiX ray tracing
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvoptix1 $_NVIDIA_PACKAGES"
                 fi
                 # video encoding, pretty small
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
-                fi
-                # vdpau video driver, pretty required
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-encode1 $_NVIDIA_PACKAGES"
                 fi
             fi
 
@@ -891,30 +887,26 @@ interactive_ask_driver_version(){
             # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
             if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
                 # opencl support
-                if apt-cache show "nvidia-opencl-icd" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="nvidia-opencl-icd $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
                 fi
                 # pretty small and needed, cuda support but requires opencl-icd too
-                if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
                 fi
                 # OptiX ray tracing
-                if apt-cache show "libnvoptix1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvoptix1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
                 fi
                 # video encoding, pretty small
-                if apt-cache show "libnvidia-encode1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-encode1 $_NVIDIA_PACKAGES"
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
+                fi
+                # vdpau video driver, pretty required
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
             fi
-
-
-            # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
-            if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
-                _NVIDIA_PACKAGES="nvidia-opencl-icd"
-            fi
-
-
 
 
             ;;

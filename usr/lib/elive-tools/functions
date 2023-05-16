@@ -489,7 +489,7 @@ el_resolution_get(){ # show our actual resolution
     # xrandr: more reliable based on the primary screen:
     if [[ -z "$resolution" ]] ; then
         if [[ -x "$( which xrandr )" ]] ; then
-            buf="$( LC_ALL=C xrandr -q | grep -F connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
+            buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
 
             resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
             read -r resolution_h <<< "$resolution_h"
@@ -539,7 +539,7 @@ el_dpi_get(){
 
     if el_dependencies_check "xrandr" ; then
 
-        buf="$( LC_ALL=C xrandr -q | grep -F connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
+        buf="$( LC_ALL=C xrandr -q | grep -w connected | psort -- -p "primary" | head -1 | tr ' ' '\n' )"
 
         resolution_h="$( echo "$buf" | grep "[[:digit:]]x[[:digit:]]" | sed -e 's|x.*$||g' )"
         read -r resolution_h <<< "$resolution_h"

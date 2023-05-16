@@ -7,7 +7,6 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 
-
 # include sbin in our PATH since its needed sometimes, and there's nothing wrong by using it!
 if [[ "$PATH" != *"/usr/sbin"* ]] ; then
     # needed for: laptop-detect
@@ -745,17 +744,25 @@ interactive_ask_driver_version(){
                 if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
                 fi
+                # OpenCL support for things like Blender, Davinci Resolve, etc
                 if apt-cache show "nvidia-opencl-icd" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-opencl-icd $_NVIDIA_PACKAGES"
                 fi
+                # pretty small and needed, cuda support but requires opencl-icd too
                 if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
                 fi
+                # OptiX ray tracing
                 if apt-cache show "libnvoptix1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvoptix1 $_NVIDIA_PACKAGES"
                 fi
+                # video encoding, pretty small
                 if apt-cache show "libnvidia-encode1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-encode1 $_NVIDIA_PACKAGES"
+                fi
+                # vdpau video driver, pretty required
+                if apt-cache show "nvidia-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
                 # arch based packages:
                 if [[ "$( el_architecture host )" = "i386" ]] ; then
@@ -769,8 +776,28 @@ interactive_ask_driver_version(){
                 fi
             fi
 
-            if ((is_optimus)) ; then
-                _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
+            # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
+            if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
+                # opencl support
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                fi
+                # pretty small and needed, cuda support but requires opencl-icd too
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
+                fi
+                # OptiX ray tracing
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
+                fi
+                # video encoding, pretty small
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
+                fi
+                # vdpau video driver, pretty required
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
+                fi
             fi
 
 
@@ -829,18 +856,23 @@ interactive_ask_driver_version(){
                 if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
                 fi
+                # opencl support
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-ncuvid1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-ncuvid1 $_NVIDIA_PACKAGES"
                 fi
+                # pretty small and needed, cuda support but requires opencl-icd too
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
                 fi
+                # OptiX ray tracing
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvoptix1 $_NVIDIA_PACKAGES"
                 fi
+                # video encoding, pretty small
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
                 fi
+                # vdpau video driver, pretty required
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
                 fi
@@ -856,6 +888,32 @@ interactive_ask_driver_version(){
                 fi
             fi
 
+            # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
+            if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
+                # opencl support
+                if apt-cache show "nvidia-opencl-icd" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="nvidia-opencl-icd $_NVIDIA_PACKAGES"
+                fi
+                # pretty small and needed, cuda support but requires opencl-icd too
+                if apt-cache show "libnvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvcuvid1 $_NVIDIA_PACKAGES"
+                fi
+                # OptiX ray tracing
+                if apt-cache show "libnvoptix1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvoptix1 $_NVIDIA_PACKAGES"
+                fi
+                # video encoding, pretty small
+                if apt-cache show "libnvidia-encode1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-encode1 $_NVIDIA_PACKAGES"
+                fi
+            fi
+
+
+            # needed for things that requires extra features like Davinci Resolve:, requires 25/108 extra MB installed
+            if [[ "$RAM_TOTAL_SIZE_mb" -gt 3700 ]] || ((is_persistence)) || ! ((is_live)) ; then
+                _NVIDIA_PACKAGES="nvidia-opencl-icd"
+            fi
+
 
 
 
@@ -865,6 +923,11 @@ interactive_ask_driver_version(){
     # add the modprobe package
     if ! ((is_wheezy)) ; then
         _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES nvidia-modprobe"
+    fi
+
+    # optimus extra packages
+    if ((is_optimus)) ; then
+        _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
     fi
 
     el_debug "Selected list of packages to install:\n$( echo "${_NVIDIA_PACKAGES}" | tr ' ' '\n' )"
@@ -1099,7 +1162,7 @@ EOF
             rmmod nouveau
             if lsmod | grep -qsE "^nouveau\s+" ; then
                 # report
-                if grep -qs "boot=live" /proc/cmdline && grep -qs "blacklist.*nouveau" /proc/cmdline ; then
+                if ((is_live)) && grep -qs "blacklist.*nouveau" /proc/cmdline ; then
                     el_error "Nouveau module unable to unload while boot parameters are meant to be blacklisted:\n$(cat /proc/cmdline)"
                 else
                     echo -e "\nE: nouveau module is loaded and we cannot unload it"
@@ -1182,7 +1245,7 @@ EOF
         sleep 12
 
         # CUDA in live mode? this won't work due to too much RAM needed:
-        if ((is_extra_packages_wanted)) && grep -qs "boot=live" /proc/cmdline && ! grep -qs "persistence" /proc/cmdline ; then
+        if ((is_extra_packages_wanted)) && ((is_live)) && ! ((is_persistence)) ; then
             message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to install and compile the driver. We will try again by first updating the packages list. If you are trying to install extra packages like CUDA we suggest you first install Elive on your hard disk and then run this tool, since this operation requires a lot of RAM memory." )" "" )"
         else
             message_warning_install_failed_try_again="$( printf "$( eval_gettext "Failed to install and compile the driver. We will try again by first updating the packages list. This problem can be caused due to a too new kernel version, or because you don't have enough RAM memory if you are installing in Live mode." )" "" )"
@@ -1278,7 +1341,7 @@ EOF
 
     # add the packages to the installed system later too
     # update: not needed in the new installer which should run the command to install it itself
-    #if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
+    # if ((is_live)) ; then
         ## first remove any possible previous entry for nvidia
         #sed -i '/nvidia/d' /tmp/.packages-to-install 2>/dev/null
         #sed -i '/nvidia/d' /tmp/.packages-to-hold    2>/dev/null
@@ -1364,14 +1427,14 @@ EOF
     service nvidia-kernel restart 1>/dev/null 2>&1
 
     # regenerate initramfs if we are not in live (and persistence)
-    if ! grep -qs "boot=live" /proc/cmdline && ! grep -qs "persistence" /proc/cmdline ; then
+    if ! ((is_live)) && ! ((is_persitence)) ; then
         LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
         rm -f /boot/*old-dkms 2>/dev/null
     fi
 
     el_info "Install complete"
 
-    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" && ! ((is_mode_auto)) && ! ((is_mode_simulate)) ; then
+    if ((is_live)) && ! ((is_mode_auto)) && ! ((is_mode_simulate)) ; then
         local message_suggestion
         message_suggestion="$( printf "$( eval_gettext "Suggestion: Sometimes the screen looks distorted after having installed the drivers in live mode. If this happens, try to switch to the console mode and then back to the graphical system. You should not have this issue when Elive is installed on your computer." )" "" )"
         dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1612,6 +1675,13 @@ main(){
     . /lib/lsb/init-functions
 
     _CMDLINE="$(cat /proc/cmdline)"
+    RAM_TOTAL_SIZE_mb="$( el_ram_usage_show "total" )"
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "boot=live" ; then
+        is_live=1
+    fi
+    if echo "${_CMDLINE}" | LC_ALL=C grep -qsE "persistence" ; then
+        is_persistence=1
+    fi
 
     el_dependencies_check "dialog|apt-cache"
 

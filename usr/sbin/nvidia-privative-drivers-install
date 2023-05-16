@@ -1555,7 +1555,7 @@ uninstall_driver(){
         [[ -z "$line" ]] && continue
 
         # if matches
-        if echo "$line" | grep -qsE "(nvidia|lib.*nvidia|glx.*nvidia|xserver.*nvidia)" ; then
+        if echo "$line" | grep -qsE "(nvidia|lib.*nvidia|glx.*nvidia|xserver.*nvidia|bumblebee|primus)" ; then
             # which doesn't maches
             if ! echo "$line" | grep -qsE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" ; then
                 el_debug "Adding $line to the list of uninstall packages"
@@ -1563,7 +1563,7 @@ uninstall_driver(){
             fi
         fi
 
-    done 3<<< "$( COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' )"
+    done 3<<< "$( COLUMNS=1000 dpkg -l | grep -E "(nvidia|bumblebee|primus)" | awk '{print $2}' )"
 
     # remove extra leading blank chars
     read -r _NVIDIA_PACKAGES <<< "$_NVIDIA_PACKAGES"

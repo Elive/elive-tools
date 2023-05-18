@@ -1044,9 +1044,19 @@ Section "OutputClass"
 EndSection
 EOF
             # this entry is needed in order to start the "startx" command with the nvidia card
-            if ! grep -qs "xrandr --setprovideroutputsource modesetting NVIDIA-0" /home/eliveuser/.xinitrc ; then
-                buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"
-                echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
+            if ((is_live)) ; then
+                if ! grep -qs "xrandr --setprovideroutputsource modesetting NVIDIA-0" /home/eliveuser/.xinitrc ; then
+                    buf="$( cat /home/eliveuser/.xinitrc 2>/dev/null )"
+                    echo -e "xrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto\n\n${buf}" > /home/eliveuser/.xinitrc
+                fi
+            fi
+            # enable it on lightdm when needed
+            if [[ -e "/var/lib/dpkg/info/lightdm.list" ]] ; then
+                mkdir -p "/etc/lightdm"
+                echo -e "#!/bin/sh\nxrandr --setprovideroutputsource modesetting NVIDIA-0\nxrandr --auto" > "/etc/lightdm/display_setup.sh"
+                chmod +x "/etc/lightdm/display_setup.sh"
+                # set lightdm to run the script when login
+                sed -i -e "s|^\(#\)*display-setup-script=.*$|display-setup-script=/etc/lightdm/display_setup.sh|g" "/etc/lightdm/lightdm.conf"
             fi
         fi
     fi

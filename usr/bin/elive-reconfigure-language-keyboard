@@ -132,7 +132,8 @@ EOF
 
 
     result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" 2>/dev/null || echo "cancel" )"
-    # always set the keyboard to default detected when when we "validate" without selection:
+    # always set the keyboard to default when when we "validate" without selection:
+    [[ -z "$result" ]] && [[ -n "$kbmap" ]] && result="$kbmap"
 
     if [[ "$result" = "cancel" ]] ; then
         result="$kbmap"

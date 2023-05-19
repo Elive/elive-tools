@@ -142,10 +142,10 @@ EOF
             result="$( echo "$result" | awk '{print $1}' )"
 
             # select a variant keyboard if needed
-            XKBVARIANT="$( { echo "  Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" 2>/dev/null )"
+            XKBVARIANT="$( { echo "Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u | awk '{$2 = "\t"; print $0}' ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" 2>/dev/null )"
             XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
 
-            if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "  Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
+            if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
                 unset XKBVARIANT
             fi
         fi

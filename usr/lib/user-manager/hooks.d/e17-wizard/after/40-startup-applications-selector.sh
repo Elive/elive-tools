@@ -567,80 +567,113 @@ EOF
 
 
     #
-    # Elive Retro (retrowave) version {{{
+    # Welcome instructions & demo {{{
     #
-    if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] && ! ((is_thanatests)) ; then
-            #--field="Candies::lbl" \
-            #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
-            #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
+    if ! ((is_thanatests)) ; then
 
-        result="$( yad --width=400 --center --title="Elive Retro menu" \
-            --form \
-            --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
-            --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
-            --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
-            --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
-            --button="gtk-ok" || true )"
-        #ret="$?"
-        if [[ -n "$result" ]] ; then
-            retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
-            retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
-            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-            #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-            #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+        # Elive Retro version
+        if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
+            is_version_retro=1
+                #--field="Candies::lbl" \
+                #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
+                #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
+
+            result="$( yad --width=400 --center --title="Elive Retro menu" \
+                --form \
+                --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
+                --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
+                --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
+                --field="$( eval_gettext "Desktop demo instructions" ):chk" TRUE \
+                --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
+                --button="gtk-ok" || true )"
+            #ret="$?"
+            if [[ -n "$result" ]] ; then
+                retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+                retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
+                demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
+                retro_forum="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+                #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+                #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+            else
+                retro_play="FALSE"
+                retro_play_type="Play in a window"
+                demo_instructions="FALSE"
+                retro_forum="FALSE"
+                #retro_music_composer="FALSE"
+                #retro_demo_mode="FALSE"
+            fi
         else
-            retro_play="FALSE"
-            retro_play_type="Play in a window"
-            retro_forum="FALSE"
-            #retro_music_composer="FALSE"
-            #retro_demo_mode="FALSE"
-        fi
 
-        # run this in a subshell waiting for internet because we depend on it
-        (
-
-        count=0
-        while true
-        do
-            if el_verify_internet fast ; then
-                break
+            # Normal versions:
+            result="$( yad --width=400 --center --title="Elive Welcome Menu" \
+                --form \
+                --image=utilities-terminal --image-on-top --text="Elive instructions and demo" \
+                --field="$( eval_gettext "Desktop demo instructions" ):chk" TRUE \
+                --button="gtk-ok" || true )"
+            #ret="$?"
+            if [[ -n "$result" ]] ; then
+                demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+            else
+                demo_instructions="FALSE"
             fi
-            sleep 4
-            count="$(( $count + 1 ))"
-
-            # 4 minutes:
-            if [[ "$count" -gt 60 ]] ; then
-                break
-            fi
-        done
-
-        # music retrowave
-        if [[ "$retro_play" = "TRUE" ]] ; then
-            case "$retro_play_type" in
-                *"window"*|*"Window"*)
-                    ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
-                    # wait so that the PDF will run after this window, if we want to close it we will not close mpv accidentally
-                    sleep 2
-                    ;;
-                *"YouTube"*|*"Youtube"*|*"youtube"*)
-                    web-launcher --delay=2 --app="https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
-                    ;;
-                *"Radio"*|*"radio"*)
-                    audacious -p &
-                    ;;
-            esac
         fi
-
-        # forum
-        if [[ "$retro_forum" = "TRUE" ]] ; then
-            web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
-        fi
-
-
-        # finished bg waiting for internet tasks
-        ) &
-
     fi
+
+    # run this in a subshell waiting for internet because we depend on it
+    (
+    count=0
+    while true
+    do
+        if el_verify_internet fast ; then
+            break
+        fi
+        sleep 5
+        count="$(( $count + 1 ))"
+
+        # 4 minutes:
+        if [[ "$count" -gt 60 ]] ; then
+            break
+        fi
+    done
+
+    # performance formats:
+    # 18  mp4   640x360
+    # 22  mp4   1280x720
+
+    # instructions video, first one to run
+    if [[ "$demo_instructions" = "TRUE" ]] ; then
+        if [[ "$(el_resolution_get horiz)" -lt 1900 ]] || [[ "$RAM_TOTAL_SIZE_mb" -lt 3300 ]] ; then
+            mpv --no-config --profile=pseudo-gui --autofit=80% --ytdl --ytdl-format=22/mp4   "https://www.elivecd.org/video-instructions-01"
+        else
+            mpv --no-config --profile=pseudo-gui --autofit=80%  "https://www.elivecd.org/video-instructions-01"
+        fi
+    fi
+
+    # music retrowave
+    if [[ "$retro_play" = "TRUE" ]] ; then
+        case "$retro_play_type" in
+            *"window"*|*"Window"*)
+                ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
+                # wait so that the PDF will run after this window, if we want to close it we will not close mpv accidentally
+                sleep 2
+                ;;
+            *"YouTube"*|*"Youtube"*|*"youtube"*)
+                web-launcher --delay=2 --app="https://www.youtube.com/watch?v=OXgwyZe_FeY&list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" &
+                ;;
+            *"Radio"*|*"radio"*)
+                audacious -p &
+                ;;
+        esac
+    fi
+
+    # forum
+    if [[ "$retro_forum" = "TRUE" ]] ; then
+        web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
+    fi
+
+
+    # finished bg waiting for internet tasks
+    ) &
 
 
     # }}}

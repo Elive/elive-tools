@@ -571,6 +571,11 @@ EOF
     #
     if ! ((is_thanatests)) ; then
 
+        _chk_hotkeys=FALSE
+        if ! ((is_live)) && [[ -x "/usr/bin/elive-help" ]] ; then
+            _chk_hotkeys=TRUE
+        fi
+
         # Elive Retro version
         if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
             is_version_retro=1
@@ -583,7 +588,8 @@ EOF
                 --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
                 --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
                 --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
-                --field="$( eval_gettext "Desktop demo instructions" ):chk" TRUE \
+                --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
+                --field="$( eval_gettext "Elive Hotkeys" ):chk" $_chk_hotkeys \
                 --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
                 --button="gtk-ok" || true )"
             #ret="$?"
@@ -591,13 +597,15 @@ EOF
                 retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
                 retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
                 demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-                retro_forum="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+                demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+                retro_forum="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
                 #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
                 #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
             else
                 retro_play="FALSE"
                 retro_play_type="Play in a window"
                 demo_instructions="FALSE"
+                demo_hotkeys="FALSE"
                 retro_forum="FALSE"
                 #retro_music_composer="FALSE"
                 #retro_demo_mode="FALSE"
@@ -608,13 +616,16 @@ EOF
             result="$( yad --width=400 --center --title="Elive Welcome Menu" \
                 --form \
                 --image=utilities-terminal --image-on-top --text="Elive instructions and demo" \
-                --field="$( eval_gettext "Desktop demo instructions" ):chk" TRUE \
+                --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
+                --field="$( eval_gettext "Elive Hotkeys" ):chk" $_chk_hotkeys \
                 --button="gtk-ok" || true )"
             #ret="$?"
             if [[ -n "$result" ]] ; then
                 demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+                demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
             else
                 demo_instructions="FALSE"
+                demo_hotkeys="FALSE"
             fi
         fi
     fi
@@ -648,6 +659,14 @@ EOF
             mpv --no-config --profile=pseudo-gui --autofit=80%  "https://www.elivecd.org/video-instructions-01"
         fi
     fi
+
+    # hotkeys pdf
+    if [[ "$demo_hotkeys" = "TRUE" ]] ; then
+        if [[ -x "/usr/bin/elive-help" ]] ; then
+            elive-help --hotkeys --fs --iconify --preview &
+        fi
+    fi
+
 
     # music retrowave
     if [[ "$retro_play" = "TRUE" ]] ; then

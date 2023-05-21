@@ -589,7 +589,7 @@ EOF
                 --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
                 --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
                 --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
-                --field="$( eval_gettext "Elive Hotkeys" ):chk" $_chk_hotkeys \
+                --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
                 --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
                 --button="gtk-ok" || true )"
             #ret="$?"
@@ -617,7 +617,7 @@ EOF
                 --form \
                 --image=utilities-terminal --image-on-top --text="Elive instructions and demo" \
                 --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
-                --field="$( eval_gettext "Elive Hotkeys" ):chk" $_chk_hotkeys \
+                --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
                 --button="gtk-ok" || true )"
             #ret="$?"
             if [[ -n "$result" ]] ; then

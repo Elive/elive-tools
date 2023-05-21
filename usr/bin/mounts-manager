@@ -137,7 +137,8 @@ chroot_layers_mount(){
     # dev & devpts
     mkdir -p "$dir/dev/pts"
     if ((is_mode_bind)) ; then
-        mount --bind "/dev" "${dir}/dev"
+        #mount --bind "/dev" "${dir}/dev"
+        mount dev-$id -t devtmpfs "${dir}/dev" || true
         mount --bind "/dev/pts" "${dir}/dev/pts"
         mount -t tmpfs devshm-$id "${dir}/dev/shm"
     else
@@ -353,16 +354,14 @@ chroot_layers_umount(){
 
     # devpts
     if ((is_mode_bind)) ; then
-        if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
-            umount "$dir/dev/pts"
-        fi
         if check_is_mounted "$dir/dev/shm" 2>/dev/null 1>&2 ; then
             umount "$dir/dev/shm"
         fi
 
-        if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
-            umount "$dir/dev"
+        if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
+            umount "$dir/dev/pts"
         fi
+
     else
         # umount /dev/pts
         if check_is_mounted "$dir/dev/pts" 2>/dev/null 1>&2 ; then
@@ -375,9 +374,16 @@ chroot_layers_umount(){
                 fi
             fi
         fi
-        # umount /dev too
+    fi
+
+    # dev
+    if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
+        for i in $(seq 10) ; do
+            umount "$dir/dev" 1>/dev/null 2>&1 && break
+            sleep 1
+        done
         if check_is_mounted "$dir/dev" 2>/dev/null 1>&2 ; then
-            umount "$dir/dev"
+            el_warning "unable to umount $dir/dev"
         fi
     fi
 

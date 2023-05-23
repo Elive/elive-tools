@@ -653,10 +653,11 @@ EOF
 
     # instructions video, first one to run
     if [[ "$demo_instructions" = "TRUE" ]] ; then
+        precache mpv 1>/dev/null ; mpv "" 2>/dev/null || true
         if [[ "$(el_resolution_get horiz)" -lt 1900 ]] || [[ "$RAM_TOTAL_SIZE_mb" -lt 3300 ]] ; then
-            mpv --no-config --profile=pseudo-gui --autofit=80% --ytdl --ytdl-format=22/mp4   "https://www.elivecd.org/video-instructions-01"
+            mpv --no-config --profile=pseudo-gui --autofit=80% --ytdl --ytdl-format=22/mp4 --start=0 --cache=yes  "https://www.elivecd.org/video-instructions-01"
         else
-            mpv --no-config --profile=pseudo-gui --autofit=80%  "https://www.elivecd.org/video-instructions-01"
+            mpv --no-config --profile=pseudo-gui --autofit=80% --start=0 --cache=yes  "https://www.elivecd.org/video-instructions-01"
         fi
     fi
 
@@ -672,6 +673,7 @@ EOF
     if [[ "$retro_play" = "TRUE" ]] ; then
         case "$retro_play_type" in
             *"window"*|*"Window"*)
+                precache mpv 1>/dev/null ; mpv "" 2>/dev/null || true
                 ( mpv --no-config --profile=pseudo-gui --autofit=60% --ytdl --ytdl-format=18/22/bestaudio*/mp4   "https://www.youtube.com/?list=PL8StX6hh3Nd8JNRF75IOA9wnC8pKfB7cs" & )
                 # wait so that the PDF will run after this window, if we want to close it we will not close mpv accidentally
                 sleep 2

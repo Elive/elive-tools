@@ -654,6 +654,23 @@ EOF
     # instructions video, first one to run
     if [[ "$demo_instructions" = "TRUE" ]] ; then
         precache mpv 1>/dev/null ; mpv "" 2>/dev/null || true
+
+        # set the window without buttons which looks better
+        (
+        if eesh border list | grep -qs BUTTONLESS ; then
+            for count in $( seq 15 )
+            do
+                buf="$( eesh wl prop "mpv" | tail -1 | awk '{print $1}' )"
+                if [[ -n "$buf" ]] ; then
+                    eesh wop "$buf" border BUTTONLESS
+                    break
+                fi
+                sleep 1
+                count="$(( $count + 1 ))"
+            done
+        fi
+        )
+
         if [[ "$(el_resolution_get horiz)" -lt 1900 ]] || [[ "$RAM_TOTAL_SIZE_mb" -lt 3300 ]] ; then
             mpv --no-config --profile=pseudo-gui --autofit=80% --ytdl --ytdl-format=22/mp4 --start=0 --cache=yes  "https://www.elivecd.org/video-instructions-01"
         else

@@ -658,9 +658,9 @@ EOF
         # set the window without buttons which looks better
         (
         if eesh border list | grep -qs BUTTONLESS ; then
-            for count in $( seq 15 )
+            for count in $( seq 20 )
             do
-                buf="$( eesh wl prop "mpv" | tail -1 | awk '{print $1}' )"
+                buf="$( eesh wl prop "mpv" | grep "0x" | tail -1 | awk '{print $1}' )"
                 if [[ -n "$buf" ]] ; then
                     eesh wop "$buf" border BUTTONLESS
                     break

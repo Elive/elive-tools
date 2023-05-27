@@ -36,7 +36,7 @@ main(){
             is_basic_mode=1
             ;;
         2)
-            is_basic_mode=0
+            unset is_basic_mode
             ;;
         *)
             exit
@@ -122,7 +122,11 @@ EOF
 
     # }}}
 
+
     # keyboard conf {{{
+    # get conf
+    source /etc/default/keyboard
+
     # if our lang is like es_ES, set the keyboard simply to it
     if [[ "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($1)}' )" = "$( echo "${LANG%.*}" | awk -v FS="_" '{print toupper($2)}' )" ]] ; then
         kbmap="$( echo "${LANG%.*}" | awk -v FS="_" '{print $1}' )"
@@ -131,39 +135,41 @@ EOF
     fi
 
 
-    result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sed -E -e 's|^\s+||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" 2>/dev/null || echo "cancel" )"
-    # always set the keyboard to default when when we "validate" without selection:
-    [[ -z "$result" ]] && [[ -n "$kbmap" ]] && result="$kbmap"
+    if ((is_basic_mode)) ; then
+        result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sed -E -e 's|^\s+||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" 2>/dev/null || echo "cancel" )"
+        # always set the keyboard to default when when we "validate" without selection:
+        [[ -z "$result" ]] && [[ -n "$kbmap" ]] && result="$kbmap"
 
-    if [[ "$result" = "cancel" ]] ; then
-        result="$kbmap"
-    else
-        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
-            result="$( echo "$result" | awk '{print $1}' )"
+        if [[ "$result" = "cancel" ]] ; then
+            result="$kbmap"
+        else
+            if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+                result="$( echo "$result" | awk '{print $1}' )"
 
-            # select a variant keyboard if needed
-            XKBVARIANT="$( { echo "Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u | awk '{$2 = "\t"; print $0}' ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" 2>/dev/null )"
-            XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
+                # select a variant keyboard if needed
+                XKBVARIANT="$( { echo "Normal       generic variant for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u | awk '{$2 = "\t"; print $0}' ; } | zenity --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Country Variant" 2>/dev/null )"
+                XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
 
-            if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
-                unset XKBVARIANT
+                if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
+                    unset XKBVARIANT
+                fi
             fi
+        fi
+
+        # set US variant to altgr if empty
+        if [[ -z "$XKBVARIANT" ]] && [[ "$result" = "us" || "$result" = "gb" ]] ; then
+            XKBVARIANT="altgr-intl"
+        fi
+
+        # set the keyboard
+        if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
+            XKBLAYOUT="$result"
+            setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
         fi
     fi
 
-    # set US variant to altgr if empty
-    if [[ -z "$XKBVARIANT" ]] && [[ "$result" = "us" || "$result" = "gb" ]] ; then
-        XKBVARIANT="altgr-intl"
-    fi
-
-    # set the keyboard
-    if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
-        XKBLAYOUT="$result"
-        setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
-    fi
-
     # fallback / reconfigure
-    if [[ "${result}" = "Other" ]] ; then
+    if ! ((is_basic_mode)) || [[ "${result}" = "Other" ]] ; then
         urxvt -e bash -c "gksu dpkg-reconfigure keyboard-configuration"
         source /etc/default/keyboard
         setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"

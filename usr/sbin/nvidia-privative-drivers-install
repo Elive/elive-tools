@@ -41,6 +41,7 @@ usage(){
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
     echo -e "  -x: extra packages wanted (all: cuda, opencl, encoder, optix, etc)"
     echo -e "  -u: uninstall drivers"
+    echo -e "  -s: safe mode: do not remove modules"
     echo -e "  -v: verbose mode"
 }
 
@@ -50,6 +51,11 @@ usage(){
 #===============================================================================
 rmmod_nvidia(){
     local module nvidia_modules
+
+    if ((is_safe_mode)) ; then
+        return 0
+    fi
+
     if [[ -n "$_NVIDIA_VERSION" ]] ; then
         nvidia_modules="nvidia-legacy-${_NVIDIA_VERSION} nvidia-tesla-${_NVIDIA_VERSION}"
     fi
@@ -1159,9 +1165,13 @@ EOF
     # note: we should have already enough memory because we should have already requested to add a swap in case that we don't have enough space
     if lsmod | grep -qsE "^nouveau\s+" ; then
         if ((is_mode_force)) ; then
-            rmmod -f nouveau
+            if ! ((is_safe_mode)) ; then
+                rmmod -f nouveau
+            fi
         else
-            rmmod nouveau
+            if ! ((is_safe_mode)) ; then
+                rmmod nouveau
+            fi
             if lsmod | grep -qsE "^nouveau\s+" ; then
                 # report
                 if ((is_live)) && grep -qs "blacklist.*nouveau" /proc/cmdline ; then
@@ -1699,7 +1709,7 @@ main(){
     # }}}
 
     # Usage
-    while getopts ":acdfm:lquvhtx" opt; do
+    while getopts ":acdfm:lquvhtxs" opt; do
         case $opt in
             a)
                 is_mode_auto=1
@@ -1736,6 +1746,9 @@ main(){
                 ;;
             x)
                 is_extra_packages_wanted=1
+                ;;
+            s)
+                is_safe_mode=1
                 ;;
             h)
                 usage

@@ -1223,15 +1223,17 @@ EOF
     sleep 1
 
     # Install from packages:
-    if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-        is_driver_compiled_fullinstall=1
+    if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+        apt-get install -y $_NVIDIA_PACKAGES ; then
+            is_driver_compiled_fullinstall=1
     else
         # hack the postinst to not fail
         sed -i -e '/^set -e/d' /var/lib/dpkg/info/nvidia-*dkms.postinst
         apt_get -y -f install -q=2
 
-        if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-            is_driver_compiled_fullinstall=1
+        if TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+            apt-get install -y $_NVIDIA_PACKAGES ; then
+                is_driver_compiled_fullinstall=1
         else
             unset is_driver_compiled_fullinstall
         fi
@@ -1275,8 +1277,9 @@ EOF
         # first update packages, importan
         el_aptget_update force
 
-        if  TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y $_NVIDIA_PACKAGES ; then
-            is_driver_compiled_fullinstall=1
+        if  TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+            apt-get install -y $_NVIDIA_PACKAGES ; then
+                is_driver_compiled_fullinstall=1
         else
             unset is_driver_compiled_fullinstall
         fi
@@ -1593,12 +1596,15 @@ uninstall_driver(){
 
         #if ((is_mode_auto)) ; then
             el_debug "apt-get remove --purge -y $_NVIDIA_PACKAGES"
-            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge -y $_NVIDIA_PACKAGES
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+                apt-get remove --purge -y $_NVIDIA_PACKAGES
             # uninstall also extra packages that we may have installed, otherwise it can fail installing new ones:
-            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get autoremove -y --purge
+            TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+                apt-get autoremove -y --purge
         #else
             #el_debug "apt-get remove --purge $_NVIDIA_PACKAGES"
-            #TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get remove --purge $_NVIDIA_PACKAGES
+            #TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+                #apt-get remove --purge $_NVIDIA_PACKAGES
         #fi
     else
         el_info "Nvidia packages already removed"
@@ -1607,7 +1613,8 @@ uninstall_driver(){
 
     # just in case, reinstall the nouveau driver
     if ! COLUMNS=1000 dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
-        TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -y xserver-xorg-video-nouveau
+        TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
+            apt-get install -y xserver-xorg-video-nouveau
     fi
 
     # - packages }}}
@@ -1671,7 +1678,8 @@ apt_get(){
     done
 
     # run what we want
-    TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
+    TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  \
+        apt-get "$@"
 }
 
 

@@ -158,7 +158,6 @@ main(){
                 -c "Made in Elive Linux, the best OS ever, using the automated CLI tool '$(basename $0)'" \
                 -t "https://privtracker.com/p3r6p4hrhw51no4e/announce" \
                 -t "http://bt.okmp3.ru:2710/announce" \
-                -t "http://fosstorrents.com:6969/announce" \
                 -t "http://nyaa.tracker.wf:7777/announce" \
                 -t "http://open.acgnxtracker.com:80/announce" \
                 -t "http://share.camoe.cn:8080/announce" \
@@ -171,25 +170,13 @@ main(){
                 -t "http://tracker.bt4g.com:2095/announce" \
                 -t "http://tracker.files.fm:6969/announce" \
                 -t "http://tracker.gbitt.info:80/announce" \
-                -t "http://tracker.ipv6tracker.ru:80/announce" \
-                -t "udp://9.rarbg.com:2810/announce" \
                 -t "udp://bt1.archive.org:6969/announce" \
                 -t "udp://bt2.archive.org:6969/announce" \
-                -t "udp://exodus.desync.com:6969/announce" \
                 -t "udp://movies.zsw.ca:6969/announce" \
-                -t "udp://open.demonii.com:1337/announce" \
                 -t "udp://p4p.arenabg.com:1337/announce" \
-                -t "udp://tracker1.bt.moack.co.kr:80/announce" \
                 -t "udp://tracker2.dler.com:80/announce" \
-                -t "udp://tracker.auctor.tv:6969/announce" \
-                -t "udp://tracker.birkenwald.de:6969/announce" \
-                -t "udp://tracker.blacksparrowmedia.net:6969/announce" \
-                -t "udp://tracker.cyberia.is:6969/announce" \
-                -t "udp://tracker.moeking.me:6969/announce" \
                 -t "udp://tracker.opentrackr.org:1337/announce" \
-                -t "udp://tracker.theoks.net:6969/announce" \
                 -t "udp://tracker.torrent.eu.org:451/announce" \
-                -t "udp://www.torrent.eu.org:451/announce" \
                 -o "/tmp/${name}.torrent" \
                 "$name"
         else

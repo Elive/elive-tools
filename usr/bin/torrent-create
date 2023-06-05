@@ -77,7 +77,7 @@ main(){
         exit 1
     fi
     if ! el_check_dirs "$download_dir" ; then
-        gui_error "Directory for download transmission torrents not available, mount it first"
+        gui_error "Directory for download transmission torrents not available, configure your Transmission application first"
         exit 1
     fi
 
@@ -217,7 +217,7 @@ main(){
         NOREPORTS=1 el_warning "You must restart transmission after it correctly verified the local data, for some reason seems like a restart is needed in order to correctly share the metadata to other users"
 
     else
-        gui_error "Directory for download transmission torrents not available, mount it and then run transmission with the file:\n/tmp/${name}.torrent"
+        gui_error "Directory for download transmission torrents not available, create or mount it first, the run transmission with the file:\n/tmp/${name}.torrent"
     fi
 
     el_info "Your data is being transmitted via torrent now, you can entirely delete the torrent from Transmission when you finish so this is a copy of your real data"

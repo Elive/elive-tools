@@ -59,7 +59,8 @@ main(){
     language="${language%%.*}"
 
     if ((is_basic_mode)) ; then
-        result="$( { cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sed -E -e 's|^\s+||g' | sort -u ; echo "Other" ; } | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" 2>/dev/null || echo cancel )"
+        result="$( { echo "Other" ; echo "${language}" ; cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sed -E -e 's|^\s+||g' ; } | sort -u | psort -- -p "Other" -p "_${language##*_}$" -p "^${language%%_*}_" | zenity --height=380 --list --text="Change your language? Actual is '${language}'" --column="language__COUNTRY" 2>/dev/null || echo cancel )"
+
         # [[ "$result" = "cancel" ]] && exit  # do not exit on first dialog because the tool will not exit cleanly, languages will be not configured correctly
         if [[ "$result" = "cancel" ]] ; then
             result="$language"

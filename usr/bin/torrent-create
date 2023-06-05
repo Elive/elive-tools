@@ -77,7 +77,13 @@ main(){
         exit 1
     fi
     if ! el_check_dirs "$download_dir" ; then
-        gui_error "Directory for download transmission torrents not available, configure your Transmission application first"
+        if [[ -n "$download_dir" ]] ; then
+            mkdir -p "$download_dir"
+        fi
+    fi
+    if ! el_check_dirs "$download_dir" ; then
+        gui_error "Directory for download transmission torrents not available, configure it in your Transmission application first"
+        ( transmission-gtk & )
         exit 1
     fi
 

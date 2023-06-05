@@ -202,7 +202,7 @@ main(){
 
 
     # run transmission to start seeding it
-    if [[ -d "$( grep download-dir ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' )"  ]] ; then
+    if [[ -d "$( grep \"download-dir\" ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' )"  ]] ; then
         el_info "Starting transmission to seed your torrent..."
         ( transmission-gtk "/tmp/${name}.torrent" 2>/dev/null & )
 

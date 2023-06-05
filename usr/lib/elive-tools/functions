@@ -3713,6 +3713,10 @@ if [[ -n "$TERM" ]] ; then
         is_console=0
     fi
 
+    if [[ "$TERM" = "screen-256color"* ]] || [[ "$TERM" = *"tmux"* ]] ; then
+        is_terminal_remote=1
+    fi
+
     # cronjobs must never be interactives
     if [[ "$TERM" = "dumb" ]] ; then
         is_terminal=0

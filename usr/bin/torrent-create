@@ -1,0 +1,231 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+#set -e
+#trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 15 ERR TERM
+
+exit_error(){
+    # delete temporal copy if exists
+    if [[ -e "${download_dir}/$name" ]] ; then
+        if gui_confirm "Do you want to remove this temporal copy? '${download_dir}/$name'" ; then
+            if [[ -x "$( which trash-put )" ]] ; then
+                trash-put "${download_dir}/$name"
+            else
+                rm -rf "${download_dir}/$name"
+            fi
+        fi
+    fi
+
+    exit
+}
+
+gui_error(){
+    if ! ((is_interactive)) ; then
+        $guitool --error --text="$*"
+    fi
+    el_error "$@"
+}
+gui_confirm(){
+    if ((is_interactive)) ; then
+        if el_confirm "$@" ; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        if $guitool --question --text="$@" ; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+main(){
+    # pre {{{
+    local name magnet file
+
+    if ! el_dependencies_check "transmission-cli|transmission-gtk|xclip|lynx|rsync" ; then
+        el_dependencies_install "transmission-cli|transmission-gtk|xclip|lynx|rsync"
+    fi
+
+    # force to use GUI when run from thunar
+    #if [[ "$DESKTOP_STARTUP_ID" = *"thunar"* ]] ; then
+        #unset is_interactive
+    #fi
+    unset is_interactive
+
+    # Usage
+    if [[ -z "${1}" ]] || ! [[ -e "$1" ]] ; then
+        echo -e "Usage: "$(basename $BASH_SOURCE)" (file|files|dir|dirs)"
+        exit 1
+    fi
+
+    name="$( basename "$1" )"
+    name="${name%/}"
+    if [[ -n "$2" ]] ; then
+        name="${name} (+ extras)"
+    fi
+
+    # check if transmission torrents directory is available (I use an external disk for them)
+    download_dir="$( grep \"download-dir\" ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' | tail -1 )"
+
+    # check torrent downloads directory
+    if [[ -z "$download_dir" ]] ; then
+        gui_error "Please first run the application 'transmission' and configure the downloads directory"
+        exit 1
+    fi
+    if ! el_check_dirs "$download_dir" ; then
+        gui_error "Directory for download transmission torrents not available, mount it first"
+        exit 1
+    fi
+
+    # check name / files compatibility
+    for file in "$@"
+    do
+        if echo -- "$(basename "$file" )" | grep --color=auto -E '(/|\\|\||\*|:)' ; then
+            gui_error "Sorry, your directory or files cannot contain any of these characters: \\ | / * :"
+            exit 1
+        fi
+    done
+
+
+    # }}}
+
+    # make a copy of what we want to share in order to seed them and from a temporal place
+    mkdir -p "${download_dir}"
+    if [[ -e "${download_dir}/$name" ]] ; then
+        # if we are giving a single directory:
+        if [[ -d "${1}" ]] && [[ -z "$2" ]] ; then
+            el_warning "Directory for your torrent files ALREADY exists, do you want to update its contents?\nThis will DELETE all the previous data in: ${download_dir}/${name} "
+            el_info "Going to run: rsync -av --delete \"${1%/}/\" \"${download_dir}/${name%/}/\""
+            if gui_confirm "Update the directory deleting its previous contents?" ; then
+                rsync -av --delete "${1%/}/" "${download_dir}/${name%/}/"
+            fi
+        else
+            if [[ -f "${1}" ]] && [[ -z "$2" ]] ; then
+                if gui_confirm "Destination file already exists, do you want to re-copy it?" ; then
+                    cp -a "$1" "${download_dir}/$name/"
+                fi
+            else
+                if gui_confirm "Directory destination for your torrent already exists:\n${download_dir}/${name}\n\nDo you want to remove it?" ; then
+                    rm -rf "${download_dir}/${name}"
+                else
+                    gui_error "Directory destination for your torrent already exists, delete it first:\n${download_dir}/${name}"
+                    exit
+                fi
+            fi
+        fi
+    else
+        el_info "Copying data to '${download_dir}/${name}' ..."
+        if [[ -d "${1}" ]] && [[ -z "$2" ]] ; then
+            #mkdir -p "${download_dir}/$name"
+            cp -a "$@" "${download_dir}/$name"
+        else
+            mkdir -p "${download_dir}/$name"
+            cp -a "$@" "${download_dir}/$name/"
+        fi
+    fi
+
+    cd "${download_dir}"
+
+
+
+    # create a .torrent file
+    # note: seems like using the -p option doesn't works, but privtracker provides a private tracker, in all other trackers there's a risk of unknonwn (possibly) public sharing
+    #if timeout 15 lynx -dump "privtracker.com" | grep -qs "github.com/meehow/privtracker" ; then
+        #transmission-create \
+            #-c "Made in Elive Linux, the best OS ever, using the automated CLI tool '$(basename $0)'" \
+            #-t "https://privtracker.com/p3r6p4hrhw51no4e/announce" \
+            #-o "/tmp/${name}.torrent" \
+            #"$name"
+    #else
+        ## main private tracker doesn't works, fallback to a full (working) list instead in order to continue making the tool working and not fail:
+        #el_warning "Seems like the default private tracker is not working, we are going to use a full list instead"
+
+        # updated good list of trackers: https://github.com/ngosang/trackerslist
+
+        #if gui_confirm "Going to use a more complete list of trackers, this will make probably your torrent contents public, do you want to continue?" ; then
+        if gui_confirm "This torrent will be shared probably public since we are not using private-trackers. Do you want to continue?" ; then
+            transmission-create \
+                -c "Made in Elive Linux, the best OS ever, using the automated CLI tool '$(basename $0)'" \
+                -t "https://privtracker.com/p3r6p4hrhw51no4e/announce" \
+                -t "http://bt.okmp3.ru:2710/announce" \
+                -t "http://fosstorrents.com:6969/announce" \
+                -t "http://nyaa.tracker.wf:7777/announce" \
+                -t "http://open.acgnxtracker.com:80/announce" \
+                -t "http://share.camoe.cn:8080/announce" \
+                -t "https://tracker.imgoingto.icu:443/announce" \
+                -t "https://tracker.kuroy.me:443/announce" \
+                -t "https://tracker.loligirl.cn:443/announce" \
+                -t "https://tracker.tamersunion.org:443/announce" \
+                -t "https://tr.burnabyhighstar.com:443/announce" \
+                -t "https://tr.ready4.icu:443/announce" \
+                -t "http://tracker.bt4g.com:2095/announce" \
+                -t "http://tracker.files.fm:6969/announce" \
+                -t "http://tracker.gbitt.info:80/announce" \
+                -t "http://tracker.ipv6tracker.ru:80/announce" \
+                -t "udp://9.rarbg.com:2810/announce" \
+                -t "udp://bt1.archive.org:6969/announce" \
+                -t "udp://bt2.archive.org:6969/announce" \
+                -t "udp://exodus.desync.com:6969/announce" \
+                -t "udp://movies.zsw.ca:6969/announce" \
+                -t "udp://open.demonii.com:1337/announce" \
+                -t "udp://p4p.arenabg.com:1337/announce" \
+                -t "udp://tracker1.bt.moack.co.kr:80/announce" \
+                -t "udp://tracker2.dler.com:80/announce" \
+                -t "udp://tracker.auctor.tv:6969/announce" \
+                -t "udp://tracker.birkenwald.de:6969/announce" \
+                -t "udp://tracker.blacksparrowmedia.net:6969/announce" \
+                -t "udp://tracker.cyberia.is:6969/announce" \
+                -t "udp://tracker.moeking.me:6969/announce" \
+                -t "udp://tracker.opentrackr.org:1337/announce" \
+                -t "udp://tracker.theoks.net:6969/announce" \
+                -t "udp://tracker.torrent.eu.org:451/announce" \
+                -t "udp://www.torrent.eu.org:451/announce" \
+                -o "/tmp/${name}.torrent" \
+                "$name"
+        else
+            NOREPORTS=1 gui_error "Aborted by user"
+            exit 1
+        fi
+    #fi
+
+
+    # get magnet link
+    magnet="$( transmission-show -m "/tmp/${name}.torrent" )"
+
+    if ((is_terminal_remote)) || { [[ "$DISPLAY" = ":0"* ]] && [[ -n "$XAUTHORITY" ]] ; } ; then
+        echo -e "$magnet" | xclip -selection clipboard
+    else
+        echo -e "Magnet link:"
+        echo "$magnet"
+    fi
+
+    # show magnet link
+    el_info "Magnet code copied to clipboard: $magnet"
+    el_info "torrent file created on /tmp/${name}.torrent"
+
+
+    # run transmission to start seeding it
+    if [[ -d "$( grep download-dir ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' )"  ]] ; then
+        el_info "Starting transmission to seed your torrent..."
+        ( transmission-gtk "/tmp/${name}.torrent" 2>/dev/null & )
+
+        echo -e "..." 1>&2
+        NOREPORTS=1 el_warning "You must restart transmission after it correctly verified the local data, for some reason seems like a restart is needed in order to correctly share the metadata to other users"
+
+    else
+        gui_error "Directory for download transmission torrents not available, mount it and then run transmission with the file:\n/tmp/${name}.torrent"
+    fi
+
+    el_info "Your data is being transmitted via torrent now, you can entirely delete the torrent from Transmission when you finish so this is a copy of your real data"
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

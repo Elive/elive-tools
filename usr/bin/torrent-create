@@ -203,10 +203,10 @@ main(){
     magnet="$( transmission-show -m "/tmp/${name}.torrent" )"
 
     if ((is_terminal_remote)) || { [[ "$DISPLAY" = ":0"* ]] && [[ -n "$XAUTHORITY" ]] ; } ; then
-        echo -e "$magnet" | xclip -selection clipboard
+        printf "%s" "$magnet" | xclip -selection clipboard
     else
         echo -e "Magnet link:"
-        echo "$magnet"
+        printf "%s" "$magnet"
     fi
 
     # show magnet link

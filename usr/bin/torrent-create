@@ -197,8 +197,10 @@ main(){
     fi
 
     # show magnet link
-    el_info "Magnet code copied to clipboard: $magnet"
-    el_info "torrent file created on /tmp/${name}.torrent"
+    el_info "Magnet code copied to clipboard:"
+    printf "%s" "$magnet" 1>&2
+
+    el_info "\nTorrent file created on /tmp/${name}.torrent"
 
 
     # run transmission to start seeding it

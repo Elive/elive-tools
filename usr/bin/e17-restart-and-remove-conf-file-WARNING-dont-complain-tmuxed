@@ -104,6 +104,7 @@ main(){
     EL_DEBUG=0 elive-skel upgrade .config/cairo-dock
     EL_DEBUG=0 elive-skel upgrade .config/gtk-3.0/settings.ini
     EL_DEBUG=0 elive-skel upgrade .config/ulauncher
+    EL_DEBUG=0 elive-skel upgrade .config/terminology
     EL_DEBUG=0 elive-skel upgrade .config/mimeapps.list
     EL_DEBUG=0 elive-skel upgrade .conkyrc
     EL_DEBUG=0 elive-skel upgrade .gtkrc-2.0.mine

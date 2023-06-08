@@ -531,7 +531,9 @@ EOF
 
     # add an info header
     rm -f "$HOME/.e16/startup-applications.list"
-    echo "# NOTE: if you want to disable a specific autolauncher, do it by commenting the line (like this one) so it will be ignored, instead if you simply remove the line Elive could suggest you to add it again in the future." >> "$HOME/.e16/startup-applications.list"
+    local message_instructions
+    message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: If you want to add an application to run at the startup, simply add it to this list. If you want to disable one of them, do it by commenting the line (using hashtag symbol at the start of the line, like this one) so it will be ignored, but do not remove the line otherwise Elive could suggest you to add it again in the future." )" "" )"
+    echo "# $message_instructions" >> "$HOME/.e16/startup-applications.list"
 
     # sort the launchers
     echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$HOME/.e16/startup-applications.list"

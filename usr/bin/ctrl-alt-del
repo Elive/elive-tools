@@ -124,6 +124,10 @@ main(){
             timeout 5 aplay /dev/null 2>/dev/null
             LC_ALL=C sleep 0.2
 
+            local message_volume
+            message_volume="$( printf "$( eval_gettext "Audio configuration and volumes restarted. Run again your desired applications." )" "" )"
+
+            el_notify soft stock_volume "Audio Configuration Restarted" "$message_volume"
 
             ;;
         "userconf")

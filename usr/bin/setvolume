@@ -611,7 +611,7 @@ main(){
 
 
     if [[ "${1}" = "defaults" ]] ; then
-        volume_mic=40
+        volume_mic=60
         # enable PCM channel first of all
         timeout 5 aplay /dev/null 2>/dev/null
 

@@ -37,6 +37,11 @@ main(){
     fi
 
 
+    if [[ -e "/tmp/.e16-reload-needed-$USER" ]] ; then
+        eesh restart
+        rm -f "/tmp/.e16-reload-needed-$USER"
+    fi
+
 
 
     # if we are debugging give it a little pause to see what is going on

@@ -554,6 +554,8 @@ load_multiscreens_configuration(){
                     if [[ "$resolution_v" -gt "$resolution_h" ]] ; then
                         ( xrandr -o right & )
                         LC_ALL=C sleep 0.2
+                        # on these cases we need to restart e16 to update the WM sizes (dpi?) because they look wrong
+                        touch /tmp/.e16-reload-needed-$USER
                     fi
                 fi
             fi

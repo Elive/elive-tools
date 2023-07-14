@@ -457,7 +457,7 @@ main(){
 
         # re- fixes
         if [[ -z "$item_size" ]] ; then
-            item_size="$( LC_ALL="$EL_LC_EN" lsblk -b -rino PATH,TYPE,SIZE | awk -v item="${item}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk|md|raid)/ ) ) print $3}' )"
+            item_size="$( LC_ALL="$EL_LC_EN" lsblk -b -rino PATH,TYPE,SIZE | awk -v item="${item}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk|md|raid)/ ) ) print $3}' | sort -ug | tail -1 )"
             if [[ -n "$item_size" ]] ; then
                 item_human_size="$(echo "scale=3; ${item_size%/*} / 1024 / 1024 / 1024" | bc -l )"
 

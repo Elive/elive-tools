@@ -163,7 +163,7 @@ do_list(){
                                     kill -9 "$pid"  2>/dev/null
 
                                     if ps --no-headers -p "$pid" 1>/dev/null 2>&1 ; then
-                                        el_error "unable to kill with -9, WTF?: ex: '$executable' , cmd '$cmd'"
+                                        el_error "unable to kill with -9, WTF?: ex: '$executable' , cmd '$cmd', pid '$pid':\n$(ps -p "$pid" 2>&1 )"
                                     # else
                                     #     el_debug "killed successfully (SECOND pass): $cmd"
                                     fi

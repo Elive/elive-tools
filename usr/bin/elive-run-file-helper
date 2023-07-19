@@ -179,7 +179,7 @@ run_script(){
             options_appimage="--no-sandbox ${options_appimage}"
         fi
         local message_appimage_important
-        message_appimage_important="$( printf "$( eval_gettext "Important: The next time you will double-click in the .AppImage file it will be automatically run from your user, if instead you want to run it again with specific options you need to right click on it and select: 'Open with -> Elive Run Helper'" )" "" )"
+        message_appimage_important="$( printf "$( eval_gettext "Important: The next time you double-click the .AppImage file, it will automatically run from your user. If you want to run it again with specific options, right-click on it and select: 'Open with -> Elive Run Helper'." )" "" )"
 
         $guitool --info --text="$message_appimage_important"
 

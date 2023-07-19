@@ -105,7 +105,7 @@ take_screenshot(){
     else
         message_result="$( eval_gettext "Screenshot copied to clipboard. Paste it where you want using:" ) Ctrl + V"
     fi
-    message_drag_range="$( eval_gettext "Drag your mouse to select a region, or click the desired window to capture it" )"
+    message_drag_range="$( eval_gettext "Drag your mouse to select a region or click on the desired window to capture it." )"
 
     message_hotkeys="$( eval_gettext "Use Alt, Shift, or Ctrl with the hotkey 'Imp / PrSc' for other options" )"
     #message_window_delayed="$( eval_gettext "Pick the window you want to take a screenshot of by clicking on it, and wait a few seconds." )"

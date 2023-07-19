@@ -125,7 +125,7 @@ main(){
             LC_ALL=C sleep 0.2
 
             local message_volume
-            message_volume="$( printf "$( eval_gettext "Resetted audio configuration and volume. Run again your desired applications." )" "" )"
+            message_volume="$( printf "$( eval_gettext "The audio configuration and volume have been reset. Now, please run your desired applications again." )" "" )"
 
             el_notify soft stock_volume "Audio Configuration Resetted" "$message_volume"
 

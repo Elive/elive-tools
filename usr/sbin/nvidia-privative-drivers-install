@@ -498,7 +498,7 @@ interactive_ask_privative(){
                 local message_title
                 message_title="$( printf "$( eval_gettext "Nvidia Graphics Card" )" "" )"
                 local message_message
-                message_message="$( printf "$( eval_gettext "Do you want to install Nvidia's closed-source graphical drivers? Some computers need them, while others work better with the open driver. We recommend trying all the available options to know which one is more suitable for your computer." )" )"
+                message_message="$( printf "$( eval_gettext "Do you want to install Nvidia's closed-source graphical drivers? Some computers require them, while others perform better with the open driver. We recommend trying all the available options to determine which one is more suitable for your computer." )" )"
                 local message_extra
                 message_extra="$( printf "$( eval_gettext "Select 'no' if you want to use the open-source drivers." )" "" )"
 
@@ -556,7 +556,7 @@ interactive_ask_privative(){
                     # }}}
                     # remember that this is not stable {{{
                     local message_remember
-                    message_remember="$( printf "$( eval_gettext "If the installation of this driver fails, we suggest trying with a different version of the driver or with a different kernel version which you can select it in the first boot menu. If instead the installation works but the driver doesn't work correctly or makes your computer unstable, you can try using the open-source drivers, which sometimes work better. If you still have issues, use our forums to ask for help. Trying with a different version of Elive may help too." )" "" )"
+                    message_remember="$( printf "$( eval_gettext "If the installation of this driver fails, we suggest trying a different version of the driver or a different kernel version, which you can select in the first boot menu. If the installation works but the driver does not function correctly or makes your computer unstable, you can try using the open-source drivers, which sometimes work better. If you continue to experience issues, please use our forums to ask for assistance. Trying a different version of Elive may also be helpful." )" "" )"
 
 
                     dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -576,7 +576,7 @@ interactive_ask_privative(){
                         if ((is_wheezy)) ; then
                             message_onlyfree="$( printf "$( eval_gettext "Reboot and select the 'only free-drivers' boot option. For compatibility reasons the nouveau module is blacklisted on boot, so either reboot in this mode or remove that parameter from the boot options." )" "" )"
                         else
-                            message_onlyfree="$( printf "$( eval_gettext "Reboot and select the normal, non-nvidia option, or just remove the parameter '%s' from the boot options by pressing the Tab key (or \"e\" on UEFI boot and then F10 to boot). Booting without this parameter is needed in order to enable the open-source drivers." )" "modprobe.blacklist=nouveau" )"
+                            message_onlyfree="$( printf "$( eval_gettext "Reboot and select the normal, non-NVIDIA option, or simply remove the parameter '%s' from the boot options by pressing the Tab key (or \"e\" on UEFI boot and then F10 to boot). Booting without this parameter is necessary to enable the open-source drivers." )" "modprobe.blacklist=nouveau" )"
                         fi
 
                         dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
@@ -1003,7 +1003,7 @@ EOF
         local message_optimus_type
         message_optimus_type="$( printf "$( eval_gettext "There are two ways to use your Nvidia card: Enabling it to be used all the time, or using it only when needed to improve battery life. The latter option requires running your wanted 3D applications from a terminal with a command prepended. Like in these examples:" )" "" )"
         local message_optimus_type_question
-        message_optimus_type_question="$( printf "$( eval_gettext "Do you want to use only Nvidia? (suggested for novice users). Answering NO will use the less-powered integrated card by default and use the other one only when you request it." )" "" )"
+        message_optimus_type_question="$( printf "$( eval_gettext "Do you want to use only Nvidia? (recommended for novice users). Answering NO will use the less-powered integrated card by default and will use the other one only when you request it." )" "" )"
 
         if ((is_mode_auto)) ; then
             ret=0
@@ -1124,7 +1124,7 @@ EOF
     #         ;;
     # esac
     local message_dpi_fix
-    message_dpi_fix="$( printf "$( eval_gettext "Some Nvidia drivers has issues detecting the scaling size of the screen. If you find that your fonts are too big or too small, Elive has a feature to set your desired desktop scaling. If you want to know the exact DPI value that has your screen, run Elive without the nvidia drivers and from a terminal run: " )" "" )"
+    message_dpi_fix="$( printf "$( eval_gettext "Some Nvidia drivers have issues detecting the scaling size of the screen. If you find that your fonts are too big or too small, Elive has a feature to set your desired desktop scaling. If you want to know the exact DPI value of your screen, run Elive without the Nvidia drivers and, from a terminal, run:" )" "" )"
 
     dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
         --title "DPI issues with some cards" \
@@ -1307,7 +1307,7 @@ EOF
     # if driver compiled on a different kernel, tell the user that needs to reboot in order to use it
     if ((is_driver_compiled_some)) && ! ((is_driver_compiled_kernel)) ; then
         local message_warning_install_other
-        message_warning_install_other="$( printf "$( eval_gettext "The driver didn't compile for the running kernel but it did for the other one. You need to REBOOT your computer and select from the boot menu the other kernel, then run again this Nvidia installation. Your running kernel which failed is:" )" "" )"
+        message_warning_install_other="$( printf "$( eval_gettext "The driver did not compile for the current kernel, but it did for the other one. To resolve this issue, you need to REBOOT your computer and select the other kernel from the boot menu. After that, run the Nvidia installation again. The kernel that failed is the one you are currently using." )" "" )"
 
         if ! ((is_mode_auto)) ; then
             dialog --timeout 280 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \

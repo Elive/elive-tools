@@ -532,7 +532,7 @@ EOF
     # add an info header
     rm -f "$HOME/.e16/startup-applications.list"
     local message_instructions
-    message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: If you want to add an application to run at the startup, simply add it to this list. If you want to disable one of them, do it by commenting the line (using hashtag symbol at the start of the line, like this one) so it will be ignored, but do not remove the line otherwise Elive could suggest you to add it again in the future." )" "" )"
+    message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: To add an application to run at startup, simply add it to this list. If you want to disable one of them, comment the line (using the hashtag symbol at the start of the line, like on this line) so it will be ignored. However, do not remove the line, as Elive may suggest adding it again in the future." )" "" )"
     echo "# $message_instructions" >> "$HOME/.e16/startup-applications.list"
 
     # sort the launchers
@@ -592,7 +592,7 @@ EOF
                 --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
                 --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
                 --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
-                --field="$( eval_gettext "Open the Elive forum of this version" ):chk" FALSE \
+                --field="$( eval_gettext "Open the Elive forum for this version." ):chk" FALSE \
                 --button="gtk-ok" || true )"
             #ret="$?"
             if [[ -n "$result" ]] ; then

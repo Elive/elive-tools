@@ -1126,10 +1126,12 @@ EOF
     local message_dpi_fix
     message_dpi_fix="$( printf "$( eval_gettext "Some Nvidia drivers have issues detecting the scaling size of the screen. If you find that your fonts are too big or too small, Elive has a feature to set your desired desktop scaling. If you want to know the exact DPI value of your screen, run Elive without the Nvidia drivers and, from a terminal, run:" )" "" )"
 
-    dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-        --title "DPI issues with some cards" \
-        --msgbox "${message_dpi_fix}\n\nel_dpi_get" \
-        0 0
+    if ! ((is_mode_auto)) ; then
+        dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+            --title "DPI issues with some cards" \
+            --msgbox "${message_dpi_fix}\n\nel_dpi_get" \
+            0 0
+    fi
 
     # force the fix anyways in order to avoid bad settings
     if [[ -e "/etc/X11/xorg.conf.d/20-nvidia.conf" ]] ; then
@@ -1143,10 +1145,12 @@ EOF
             local message_unsupported_arch
             message_unsupported_arch="$( printf "$( eval_gettext "You are using the 32-bit version of Elive and there are no official Nvidia drivers for this architecture. We will continue but this driver installer will probably fail. You should use the 64-bit version of Elive to have your drivers work correctly in their full capabilities." )" "" )"
 
-            dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
-                --title "Suggested Version" \
-                --msgbox "$message_unsupported_arch" \
-                0 0
+            if ! ((is_mode_auto)) ; then
+                dialog --timeout 30 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
+                    --title "Suggested Version" \
+                    --msgbox "$message_unsupported_arch" \
+                    0 0
+            fi
 
             is_i386=1
             ;;

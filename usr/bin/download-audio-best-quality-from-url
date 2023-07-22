@@ -7,6 +7,7 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+
 main(){
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
@@ -58,7 +59,7 @@ main(){
     ( urxvt -e bash -c "
     #!/bin/bash
     source /usr/lib/elive-tools/functions
-    mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+    mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
 
     if test -n \"$1\" ; then
         if yt-dlp \
@@ -67,13 +68,13 @@ main(){
             is_downloaded=1
         else
             sleep 1
-            mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+            mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
             if yt-dlp \
                 -i -x --embed-metadata \
                 \"$@\" ; then
                 is_downloaded=1
             else
-                mkdir -p \"${download_dir}/tmp\" ; cd \"${download_dir}/tmp\"
+                mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     -i -x --embed-metadata \
                     \"$@\" ; then
@@ -85,8 +86,8 @@ main(){
 
     if ((is_downloaded)) ; then
         cd \"${download_dir}\"
-        find \"${download_dir}/tmp/\" -type f \( ! -iname '*.part' -a ! -iname '*.ytdl' \) -exec mv {} \"${download_dir}/\" \;
-        rmdir \"${download_dir}/tmp\" 2>/dev/null || true
+        find \"${download_dir}/tmp-$$/\" -type f \( ! -iname '*.part' -a ! -iname '*.ytdl' \) -exec mv {} \"${download_dir}/\" \;
+        rmdir \"${download_dir}/tmp-$$\" 2>/dev/null || true
         result=\"\$( el_notify important emblem-downloads '${message_finished}' '${message_download_where}' --action=open='${message_open_directory}' )\"
         if [[ \"\$result\" = \"open\" ]] ; then
             thunar \"$download_dir\"
@@ -95,9 +96,9 @@ main(){
         el_notify normal dialog-error '${message_failed}' '${message_failed_where}'
 
         if zenity --question --cancel-label='${message_delete}' --ok-label='${message_keep}' --text='${message_what_to_do}' ; then
-            thunar '${download_dir}/tmp'
+            thunar '${download_dir}/tmp-$$'
         else
-            rm -rf \"${download_dir}/tmp\"
+            rm -rf \"${download_dir}/tmp-$$\"
         fi
     fi
 

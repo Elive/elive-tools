@@ -121,7 +121,9 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 #===  FUNCTION  ================================================================
 #          NAME:  el_notify
 #   DESCRIPTION:  send a notification to the user in a nice way
-#    PARAMETERS:  $1 = mode (normal|important|critical), $2 = title, $3 = message, $4 = icon
+#    PARAMETERS:  $1 = mode (normal|important|critical), $2 = title, $3 = message, $4 = icon, [$5 = button]
+# Example button: result="$( el_notify wait logo-elive foo bar --action=open=message )"
+#                   will return "open" in the "result" variable when the button is clicked
 #       RETURNS:  -
 #===============================================================================
 el_notify(){

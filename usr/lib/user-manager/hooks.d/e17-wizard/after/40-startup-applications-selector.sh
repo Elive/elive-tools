@@ -181,6 +181,12 @@ main(){
                 menu_auto_live+=("$file")
                 #el_debug "state: TRUE"
                 ;;
+            "lockfs-notify"*)
+                # only for installed system
+                menu+=("TRUE")
+                menu_auto+=("$file")
+                #el_debug "state: TRUE"
+                ;;
 
             "nm-applet"*|*"DejaDup.Monitor"*)
                 menu+=("FALSE")

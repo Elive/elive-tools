@@ -674,7 +674,7 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
 #   Install required packages
 #-------------------------------------------------------------------------------
 el_dependencies_install(){
-    local depends temp is_password_ok
+    local depends temp is_failed
 
     depends="$( echo "$@" | tr '|' ' ' )"
     el_set_display_variables
@@ -740,8 +740,10 @@ EOF
             for i in 1 2
             do
                 if sudo -H bash "$temp" ; then
-                    is_password_ok=1
+                    unset is_failed
                     break
+                else
+                    is_failed=1
                 fi
             done
         else
@@ -761,8 +763,10 @@ EOF
                 for i in 1 2
                 do
                     if gksu "$temp" ; then
-                        is_password_ok=1
+                        unset is_failed
                         break
+                    else
+                        is_failed=1
                     fi
                 done
             else
@@ -779,10 +783,6 @@ EOF
         fi
     fi
 
-    #if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-        #timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
-    #fi
-
     rm -f "${temp}"
 
 }
@@ -791,7 +791,7 @@ EOF
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){
-    local message_updating force want_update buf is_password_ok
+    local message_updating force want_update buf is_failed
     force="$1"
 
     el_set_display_variables
@@ -852,14 +852,16 @@ el_aptget_update(){
                     do
                         if gksu "$temp" ; then
                             if gksu apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating" ; then
-                                is_password_ok=1
+                                unset is_failed
                                 break
+                            else
+                                is_failed=1
                             fi
                         fi
                     done
 
-                    if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-                        timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
+                    if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+                        timeout 40 $guitool --error --text="${SOURCE}: $( eval_gettext "Wrong password" )"
                     fi
 
                 else
@@ -1285,7 +1287,7 @@ el_check_sudo_automated(){
 #===============================================================================
 el_sudo(){
     # pre {{{
-    local args is_password_ok
+    local args is_failed
     el_security_function_loop || return 0
 
     args="$@"
@@ -1309,13 +1311,15 @@ el_sudo(){
                 for i in 1 2
                 do
                     if gksu "$@" ; then
-                        is_password_ok=1
+                        unset is_failed
                         break
+                    else
+                        is_failed=1
                     fi
                 done
 
-                if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-                    timeout 40 $guitool --error --text="${SOURCE}: "$( eval_gettext "Wrong password" )""
+                if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+                    timeout 40 $guitool --error # --text="${SOURCE}: $( eval_gettext "Wrong password" )"
                 fi
             else
                 el_info "Insert Admin Password to run: $@"
@@ -2074,7 +2078,7 @@ el_group_check(){
 #===============================================================================
 el_group_add(){
     # pre {{{
-    local group is_password_ok
+    local group is_failed
 
     group="$1"
 
@@ -2089,16 +2093,18 @@ el_group_add(){
         for i in 1 2
         do
             if gksu "adduser $USER $group" ; then
-                is_password_ok=1
+                unset is_failed
                 break
+            else
+                is_failed=1
             fi
         done
 
-        if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+        if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             local message_wrong_password
             message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
 
-            timeout 40 $guitool --error --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
+            timeout 40 $guitool --error # --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
         fi
 
 
@@ -2111,16 +2117,18 @@ el_group_add(){
             for i in 1 2
             do
                 if gksu "adduser $USER $group" ; then
-                    is_password_ok=1
+                    unset is_failed
                     break
+                else
+                    is_failed=1
                 fi
             done
 
-            if ! ((is_password_ok)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+            if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 local message_wrong_password
                 message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
 
-                timeout 40 $guitool --error --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
+                timeout 40 $guitool --error # --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
             fi
         fi
 

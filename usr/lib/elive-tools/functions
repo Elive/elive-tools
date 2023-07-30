@@ -1308,31 +1308,31 @@ el_sudo(){
     if el_check_sudo_automated 2>/dev/null 1>&2 ; then
         sudo -H -n "$@"
     else
-        # check if we have direct access to this sudo command without prompt:
-        if ! sudo -H "$@" ; then
+        if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+            if ! el_dependencies_check gksu ; then
+                el_dependencies_install "gksu"
+            fi
 
-            if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-                if ! el_dependencies_check gksu ; then
-                    el_dependencies_install "gksu"
+            # multiple gksu attempts
+            for i in 1 2
+            do
+                if gksu "$@" ; then
+                    unset is_failed
+                    break
+                else
+                    is_failed=1
                 fi
+            done
 
-                # multiple gksu attempts
-                for i in 1 2
-                do
-                    if gksu "$@" ; then
-                        unset is_failed
-                        break
-                    else
-                        is_failed=1
-                    fi
-                done
-
-                if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-                    timeout 40 $guitool --error # --text="${SOURCE}: $( eval_gettext "Wrong password" )"
+            if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+                timeout 40 $guitool --error # --text="${SOURCE}: $( eval_gettext "Wrong password" )"
+            fi
+        else
+            el_info "Insert Admin Password to run: $@"
+            if ! sudo -H "$@" ; then
+                if ! su -c "$@" root ; then
+                    is_failed=1
                 fi
-            else
-                el_info "Insert Admin Password to run: $@"
-                su -c "$@" root
             fi
         fi
     fi

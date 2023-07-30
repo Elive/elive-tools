@@ -785,6 +785,10 @@ EOF
 
     rm -f "${temp}"
 
+    if ((is_failed)) ; then
+        return 1
+    fi
+
 }
 
 #-------------------------------------------------------------------------------
@@ -873,6 +877,11 @@ el_aptget_update(){
     else
         el_explain 3 "Packages lists already updated at least 4 hours ago, skipping update"
     fi
+
+    if ((is_failed)) ; then
+        return 1
+    fi
+
 }
 #-------------------------------------------------------------------------------
 #   Check if a newer version of a package exists
@@ -1326,6 +1335,10 @@ el_sudo(){
                 su -c "$@" root
             fi
         fi
+    fi
+
+    if ((is_failed)) ; then
+        return 1
     fi
 
 }
@@ -2139,6 +2152,9 @@ el_group_add(){
     fi
 
 
+    if ((is_failed)) ; then
+        return 1
+    fi
 }
 
 #===  FUNCTION  ================================================================

@@ -14,8 +14,6 @@ main(){
             ( /usr/lib/notification-daemon/notification-daemon & )
             sleep 2
         fi
-    else
-        el_warning "TODO: this tool is not yet supported in different environments than in E16"
     fi
 
 }

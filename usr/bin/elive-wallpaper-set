@@ -43,7 +43,16 @@ main(){
 
         # e16
         if [[ -n "$EROOT" ]] ; then
+            # add it
             cp -a "$file" "$backgrounds_dir"
+
+            # set it
+            name="$( echo "$file" | sed -e 's|^.*/||g' -e 's|\.*$||g' )"
+            eesh bg xset "$name" 0 0 0 "$file" 0 0 0 0 1024 1024 "" 0 0 0 0 0
+            if eesh bg list | grep -qs "^${name}$" ; then
+                eesh bg use "$name" 0
+                eesh bg use "$name" 1
+            fi
         fi
 
         # e17
@@ -52,13 +61,6 @@ main(){
         fi
 
     done
-
-    #set wallpaper
-    if [[ -n "$EROOT" ]] ; then
-        zenity --info --text="Select your new wallpaper in the configuration menu."
-        eesh cfg
-    fi
-
 
 }
 

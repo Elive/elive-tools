@@ -52,6 +52,8 @@ main(){
             if eesh bg list | grep -qs "^${name}$" ; then
                 eesh bg use "$name" 0
                 eesh bg use "$name" 1
+                # adding wallpaper into another pager requires a restart
+                is_reload_e16_needed=1
             fi
         fi
 
@@ -62,6 +64,9 @@ main(){
 
     done
 
+    # if ((is_reload_e16_needed)) ; then
+    #     eesh restart
+    # fi
 }
 
 #

@@ -23,16 +23,7 @@ e16_set_release_wallpaper(){
         wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
 
         if [ -s "$wallpaper" ] ; then
-            name="$( echo "$wallpaper" | sed -e 's|^.*/||g' -e 's|\.*$||g' )"
-            eesh bg xset "$name" 0 0 0 "$wallpaper" 0 0 0 0 1024 1024 "" 0 0 0 0 0
-            if eesh bg list | grep -qs "^${name}$" ; then
-                eesh bg use "$name" 0
-                eesh bg use "$name" 1
-            else
-                if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
-                    el_warning "bg not correctly configured?\n$(eesh bg list)"
-                fi
-            fi
+            elive-wallpaper-set "$wallpaper"
         else
             if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
                 el_warning "/etc/elive/wallpaper has not a correct bg? \n$( ls -1 /etc/elive/wallpaper/ )"

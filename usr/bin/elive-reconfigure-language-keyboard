@@ -196,7 +196,10 @@ EOF
         # set the keyboard
         if [[ -n "$result" ]] && [[ "$result" != "cancel" ]] && [[ "$result" != "Other" ]] ; then
             XKBLAYOUT="$result"
-            setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
+            if ! setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS" ; then
+                el_error "unable to set keyboard: $( setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS" 2>&1 )"
+            fi
+
         fi
     fi
 
@@ -204,7 +207,9 @@ EOF
     if ! ((is_basic_mode)) || [[ "${result}" = "Other" ]] ; then
         urxvt -e bash -c "gksu dpkg-reconfigure keyboard-configuration"
         source /etc/default/keyboard
-        setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS"
+        if ! setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS" ; then
+            el_error "unable to set keyboard: $( setxkbmap "$XKBLAYOUT" -model "$XKBMODEL" -variant "$XKBVARIANT" -option "$XKBOPTIONS" 2>&1 )"
+        fi
     fi
 
     # }}}

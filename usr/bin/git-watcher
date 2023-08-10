@@ -1082,7 +1082,7 @@ EOF
 #===  FUNCTION  ================================================================
 #          NAME:  show_history
 #   DESCRIPTION:  show last history if any
-#    PARAMETERS:  -
+#    PARAMETERS:  [$1 = lines]
 #       RETURNS:  -
 #===============================================================================
 show_history(){
@@ -1093,7 +1093,12 @@ show_history(){
     # }}}
     el_explain 0 "History:"
 
-    lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
+    if [[ -n "$1" ]] ; then
+        lines="$1"
+        shift
+    else
+        lines="$( LC_ALL=C command git status | grep "ahead.*by.*commits" | sed -e 's|^.* by ||g' -e 's| commits.*$||g' )"
+    fi
 
     if [[ -n "$lines" ]] ; then
         #lines="$(( $lines + 1 ))"
@@ -1497,9 +1502,7 @@ EOF
 
             ;;
         l)
-            el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
-
-            $SHELL -l
+            shell_start
 
             $FUNCNAME
             ;;
@@ -1535,6 +1538,7 @@ do_cherry_pick(){
         if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" = 0 ]] ; then
             # last import shows an empty diff, like it was already included in the history or is a useless commit for our branch
             el_explain 0 "\nXXWarning:XX seems like this commit didn't changed anything, probably because the code was already imported, you can keep it for historical purposes or you can remove it to have a more clean history."
+            show_history 3
             if el_confirm "Remove it?" ; then
                 command git reset --quiet --hard HEAD~1
             fi
@@ -1544,7 +1548,7 @@ do_cherry_pick(){
             command git --no-pager show
 
             notify_success
-            el_explain 0 "__Successfully applied!__"
+            el_explain 0 "__Successfully applied!__\n\n"
             #el_explain 0 "If you need to __add related__ commits in more cherry-picks, use the list-nearest feature and give the commits in a list to the multiple-cherry-pick feature"
 
             #echo -e "Press Enter to continue"
@@ -1637,6 +1641,11 @@ do_compare_before_after(){
     el_explain 0 "Updating temporal copy on '${tmpdir_sources}'..."
     rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
 
+    # when we are on the first commit, we cannot fetch the previous state to compare, so consider this a correct state
+    if [[ "${#commits_history[@]}" = "1" ]] && [[ "$commits_amount" = "1" ]] ; then
+        return 0
+    fi
+
     # get the before state
     cd "$tmpdir_sources"
     if [[ "${#commits_history[@]}" -gt $commits_amount ]] ; then
@@ -1645,7 +1654,7 @@ do_compare_before_after(){
         _commit_id="$( echo "$commits_list" | grep -B 1 "${commit_first}" | head -1 )"
 
         command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 8 "${commit_first:0:12}"
-        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}' , is this correct?" ; then
+        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}', '${#commits_history[@]} -gt $commits_amount' , is this correct?" ; then
             return 1
         fi
     fi
@@ -1658,12 +1667,13 @@ do_compare_before_after(){
         while read -ru 3 file
         do
             printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-before"
-        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' )"
     done
 
     # apply the commits
     if ! command git cherry-pick --keep-redundant-commits -Xpatience -x -s $commits 1>/dev/null ; then
-        el_error 0 "failed using: git cherry-pick --keep-redundant-commits -Xpatience -x -s $commits"
+        el_error "failed using: git cherry-pick --keep-redundant-commits -Xpatience -x -s $commits"
+        shell_start
     fi
 
     # save files after to apply the commit
@@ -1671,7 +1681,7 @@ do_compare_before_after(){
         while read -ru 3 file
         do
             printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-after"
-        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )"
+        done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' )"
     done
 
     # remove the temporally imported commit
@@ -1688,6 +1698,13 @@ do_compare_before_after(){
         return 1
     fi
 
+}
+
+# starts a temporal shell to manual work
+shell_start(){
+    el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
+
+    $SHELL -l
 }
 #===  FUNCTION  ================================================================
 #          NAME:  option_show
@@ -2257,9 +2274,7 @@ options_main_interact(){
             $FUNCNAME
             ;;
         l)  # shell
-            el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
-
-            $SHELL -l
+            shell_start
 
             # return back to main menu
             $FUNCNAME
@@ -2835,7 +2850,7 @@ main(){
 
 
             # clear screen, but after that we did everything before to start
-            clear_screen default
+            #clear_screen default
 
         done 3<<< "$( echo "$commits_list" )"
         # if you search with -k without matches, infinite loop happens, avoid it with this check

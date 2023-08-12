@@ -43,17 +43,19 @@ main(){
 
         # e16
         if [[ -n "$EROOT" ]] ; then
+            name="$( echo "$file" | sed -e 's|^.*/||g' -e 's|\.*$||g' -e 's| |_|g' )"
+
             # add it
-            cp -a "$file" "$backgrounds_dir"
+            cp -a "$file" "$backgrounds_dir/$name"
+            file="$backgrounds_dir/$name"
 
             # set it
-            name="$( echo "$file" | sed -e 's|^.*/||g' -e 's|\.*$||g' )"
             eesh bg xset "$name" 0 0 0 "$file" 0 0 0 0 1024 1024 "" 0 0 0 0 0
             if eesh bg list | grep -qs "^${name}$" ; then
-                eesh bg use "$name" 0
-                eesh bg use "$name" 1
-                # adding wallpaper into another pager requires a restart
-                is_reload_e16_needed=1
+                for desk in $( seq $( eesh desk list | wc -l ) )
+                do
+                    eesh bg use "$name" $(( $desk - 1 ))
+                done
             fi
         fi
 
@@ -64,9 +66,6 @@ main(){
 
     done
 
-    # if ((is_reload_e16_needed)) ; then
-    #     eesh restart
-    # fi
 }
 
 #

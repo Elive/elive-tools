@@ -55,6 +55,14 @@ main(){
     ( urxvt -e bash -c "
     #!/bin/bash
     source /usr/lib/elive-tools/functions
+
+    # trap ctrl-c and call ctrl_c()
+    trap ctrl_c INT
+
+    function ctrl_c() {
+        rm -rf \"${download_dir}/tmp-$$\" || true
+    }
+
     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
 
     if test -n \"$1\" ; then

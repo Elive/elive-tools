@@ -355,7 +355,8 @@ main(){
         fi
     else
         dpi_lowered="$( el_dpi_get "lowered" )"
-        max_value="$( echo "${dpi_lowered%x*} * 1.8" | LC_ALL=C bc -l )"
+        # max_value="$( echo "${dpi_lowered%x*} * 1.8" | LC_ALL=C bc -l )"
+        max_value="$( echo "${dpi_lowered%x*} * 2.4" | LC_ALL=C bc -l )"
         max_value="${max_value%.*}"
         el_debug "detected DPI (suggested) ${dpi_lowered}, max DPI suggested for your screen: ${max_value}"
         # get confs

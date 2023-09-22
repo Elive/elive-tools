@@ -39,7 +39,7 @@ usage(){
     echo -e "  -m: model (version of drivers) to use"
     echo -e "      - like:  current, tesla-418, tesla-450, tesla-460, legacy-390xx legacy-340xx, legacy-304xx, legacy-173xx, legacy-96xx"
     #echo -e "  -s: simulate mode (simulate that you have the specified model hardware" # not needed, we have enough hardware with nvidia to test on, and real tests are better
-    echo -e "  -x: extra packages wanted (all: cuda, opencl, encoder, optix, etc)"
+    echo -e "  -x: extra features to install, like cuda, optix, icd, etc"
     echo -e "  -u: uninstall drivers"
     echo -e "  -s: safe mode: do not remove modules"
     echo -e "  -v: verbose mode"

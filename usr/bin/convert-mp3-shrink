@@ -46,7 +46,7 @@ main(){
 
     while read -ru 3 file
     do
-        dest="${to}/$( dirname "$file" )"
+        dest="${to}/$( dirname "${file#*/}" )"
 
         if [[ -s "$dest/$( basename "$file" )" ]] ; then
             el_explain 0 "skipping $(basename "$file" )"

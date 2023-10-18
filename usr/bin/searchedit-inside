@@ -1,0 +1,59 @@
+#!/bin/bash
+source /usr/lib/elive-tools/functions
+
+main(){
+    # pre {{{
+    local file files line
+
+    # Usage
+    if [[ -z "${2}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) mode keywords ignorefiles"
+        echo -e "modes: show|edit"
+        echo -e "ignorefiles: this is a regular expression of patterns to ignore into the find command, to not search inside these paths/files"
+        exit 1
+    fi
+
+    mode="$1"
+    shift
+    keyword="$1"
+    shift
+
+    if [[ -n "$1" ]] ; then
+        ignorefiles="(\.git/|\.pdf$|\.mp3$|\.jpg$|\.png$|\.gz$|\.png$|\.edj$|\.png$|\.bak$|\.old$|${1})"
+    else
+        ignorefiles="(\.git/|\.pdf$|\.mp3$|\.jpg$|\.png$|\.gz$|\.png$|\.edj$|\.png$|\.bak$|\.old$)"
+    fi
+    shift
+
+    # }}}
+
+    while read -ru 3 line
+    do
+        [[ ! -s "$line" ]] && continue
+        #echo -e "d: $line"
+
+        if grep -aqs "$keyword" -- "$line" ; then
+            case "$mode" in
+                show)
+                    echo -e "$line"
+                    ;;
+                edit)
+                    el_array_member_add "$line" "${files[@]}" ; files=("${_out[@]}")
+                    ;;
+            esac
+        fi
+    done 3<<< "$( find . -type f | grep -viE "$ignorefiles" )"
+
+    if [[ "$mode" = "edit" ]] ; then
+        #vim "${files[@]}"
+        nvim "${files[@]}"
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

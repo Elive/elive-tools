@@ -3712,7 +3712,7 @@ if [[ -n "$TERM" ]] ; then
                     el_warning "$FUNCNAME - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/share/e16 directory"
                 fi
             else
-                if pgrep -U "$UID" enlightenment_start 1>/dev/null ; then
+                if pgrep -U "$UID" -f enlightenment_start 1>/dev/null ; then
                     if [[ -e "/usr/bin/enlightenment_start" ]] ; then
                         export E_START="/usr/bin/enlightenment_start"
                     else

@@ -189,7 +189,7 @@ EOF
         fi
 
         # set US variant to altgr if empty
-        if [[ -z "$XKBVARIANT" ]] && [[ "$result" = "us" || "$result" = "gb" ]] ; then
+        if [[ -z "$XKBVARIANT" ]] && [[ "$result" = "us" ]] ; then
             XKBVARIANT="altgr-intl"
         fi
 

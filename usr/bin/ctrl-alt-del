@@ -67,7 +67,7 @@ main(){
     menu+=("$( eval_gettext "Report an issue to Elive" )")
 
 
-    answer="$( timeout 1200 zenity --list --height=280 --text="" --column="" --column="$( eval_gettext "Option" )" "${menu[@]}" --print-column=1 --hide-column=1 || echo cancel )"
+    answer="$( timeout 1200 zenity --list --width=300 --height=280 --text="" --column="" --column="$( eval_gettext "Option" )" "${menu[@]}" --print-column=1 --hide-column=1 || echo cancel )"
 
     case "$answer" in
         "lock")

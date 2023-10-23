@@ -181,7 +181,8 @@ run_script(){
         local message_appimage_important
         message_appimage_important="$( printf "$( eval_gettext "Important: The next time you double-click the .AppImage file, it will automatically run from your user. If you want to run it again with specific options, right-click on it and select: 'Open with -> Elive Run Helper'." )" "" )"
 
-        $guitool --info --text="$message_appimage_important"
+        # not needed, will popup later
+        #$guitool --info --text="$message_appimage_important"
 
         if ((is_root_wanted)) ; then
             gksu "$file" ${options_appimage}

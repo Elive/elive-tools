@@ -1,5 +1,13 @@
 #!/bin/sh
 main(){
+    # debug mode
+    # if grep -Fqs "debug" /proc/cmdline ; then
+    #     export EL_DEBUG=3
+    #     if grep -Fqs "completedebug" /proc/cmdline ; then
+    #         set -x
+    #     fi
+    # fi
+
     if [ -n "$EROOT" ] ; then
         # e16
         true

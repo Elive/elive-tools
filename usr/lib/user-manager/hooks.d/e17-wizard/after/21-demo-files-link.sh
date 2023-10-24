@@ -74,6 +74,14 @@ main(){
     # pre {{{
     local demodir target
 
+    # debug mode
+    if grep -Fqs "debug" /proc/cmdline ; then
+        export EL_DEBUG=3
+        if grep -Fqs "completedebug" /proc/cmdline ; then
+            set -x
+        fi
+    fi
+
     demodir="/usr/share/elive-demo-files-skel"
 
     # user can have the dir empty because selected to remove the files from the install

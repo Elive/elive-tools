@@ -8,6 +8,14 @@ main(){
     # pre {{{
     local lang amount percent dir total
 
+    # debug mode
+    if grep -Fqs "debug" /proc/cmdline ; then
+        export EL_DEBUG=3
+        if grep -Fqs "completedebug" /proc/cmdline ; then
+            set -x
+        fi
+    fi
+
     # ignore if we are in live, users are not so interested yet into collaborate with translations
     if grep -Fqs "boot=live" /proc/cmdline ; then
         exit

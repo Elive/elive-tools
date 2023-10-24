@@ -17,6 +17,15 @@ main(){
     # pre {{{
     local file menu menu_auto menu_auto_live message_gui buf
 
+    # debug mode
+    if grep -Fqs "debug" /proc/cmdline ; then
+        export EL_DEBUG=3
+        if grep -Fqs "completedebug" /proc/cmdline ; then
+            set -x
+        fi
+    fi
+
+
     RAM_TOTAL_SIZE_bytes="$( grep -F MemTotal /proc/meminfo | tr ' ' '\n' | grep "^[[:digit:]]*[[:digit:]]$" | head -1 )"
     RAM_TOTAL_SIZE_mb="$(( $RAM_TOTAL_SIZE_bytes / 1024 ))"
     RAM_TOTAL_SIZE_mb="${RAM_TOTAL_SIZE_mb%.*}"

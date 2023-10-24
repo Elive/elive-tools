@@ -41,49 +41,49 @@ migrate_conf_file(){
 
 
     # replacements {{{
-    if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
+    if [[ "${xdg_desktop}" != "$HOME/Desktop" ]] ; then
         if grep -Fqs "$HOME/Desktop" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Desktop|$( xdg-user-dir DOWNLOAD )|g" "$file"
+            sed -i "s|$HOME/Desktop|${xdg_download}|g" "$file"
             el_debug "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
-    if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
+    if [[ "${xdg_download}" != "$HOME/Downloads" ]] ; then
         if grep -Fqs "$HOME/Downloads" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Downloads|$( xdg-user-dir DOWNLOAD )|g" "$file"
+            sed -i "s|$HOME/Downloads|${xdg_download}|g" "$file"
             el_debug "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
-    if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
+    if [[ "${xdg_documents}" != "$HOME/Documents" ]] ; then
         if grep -Fqs "$HOME/Documents" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Documents|$( xdg-user-dir DOCUMENTS )|g" "$file"
+            sed -i "s|$HOME/Documents|${xdg_documents}|g" "$file"
             el_debug "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
-    if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
+    if [[ "${xdg_pictures}" != "$HOME/Images" ]] ; then
         if grep -Fqs "$HOME/Images" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Images|$( xdg-user-dir PICTURES )|g" "$file"
+            sed -i "s|$HOME/Images|${xdg_pictures}|g" "$file"
             el_debug "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
-    if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
+    if [[ "${xdg_music}" != "$HOME/Music" ]] ; then
         if grep -Fqs "$HOME/Music" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Music|$( xdg-user-dir MUSIC )|g" "$file"
+            sed -i "s|$HOME/Music|${xdg_music}|g" "$file"
             el_debug "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
     fi
 
-    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
+    if [[ "${xdg_videos}" != "$HOME/Videos" ]] ; then
         if grep -Fqs "$HOME/Videos" "$file" 2>/dev/null ; then
-            sed -i "s|$HOME/Videos|$( xdg-user-dir VIDEOS )|g" "$file"
+            sed -i "s|$HOME/Videos|${xdg_videos}|g" "$file"
             el_debug "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
             echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
         fi
@@ -121,6 +121,7 @@ main(){
     if ! el_dependencies_check "xdg-user-dirs-update|xdg-user-dirs-gtk-update" ; then
         exit 1
     fi
+
     # }}}
     version="1.1"
     TMP_PROGRESS_CONFIGURING_f="/tmp/.$(basename $0)-${USER}-progress.txt"
@@ -178,6 +179,16 @@ main(){
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
 
+    # more info: https://wiki.archlinux.org/title/XDG_user_directories
+    xdg_desktop="$( xdg-user-dir DESKTOP )"
+    xdg_download="$( xdg-user-dir DOWNLOAD )"
+    xdg_documents="$( xdg-user-dir DOCUMENTS )"
+    xdg_pictures="$( xdg-user-dir PICTURES )"
+    xdg_music="$( xdg-user-dir MUSIC )"
+    xdg_videos="$( xdg-user-dir VIDEOS )"
+    xdg_templates="$( xdg-user-dir TEMPLATES )"
+    xdg_publicshare="$( xdg-user-dir PUBLICSHARE )"
+
     # source after to have created it and dirs
     # FIXME: what about future upgrades? do not remove it?
     source "${XDG_CONFIG_HOME}/user-dirs.dirs"
@@ -188,24 +199,24 @@ main(){
     #
 
     # move old files to the new structure, if there was any
-    if [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] ; then
+    if [[ "${xdg_download}" != "$HOME/Downloads" ]] ; then
         # if this is just a symlink (old deprecated dir), safe to remove like this
         rm -f "$HOME/Downloads" 2>/dev/null 1>&2 || true
 
         # and just in case is not a symlink:
         if [[ -e "$HOME/Downloads" ]] ; then
-            echo "# Moving files in Downloads to $( xdg-user-dir DOWNLOAD )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Downloads/* "$( xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
+            echo "# Moving files in Downloads to ${xdg_download}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Downloads/* "${xdg_download}/" 2>/dev/null || true
 
             rmdir "$HOME/Downloads" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Downloads" "$(xdg-user-dir DOWNLOAD )/" 2>/dev/null || true
+            mv "$HOME/Downloads" "${xdg_download}/" 2>/dev/null || true
         fi
     fi
 
 
-    desktop_translated_name="$( xdg-user-dir DESKTOP )"
+    desktop_translated_name="${xdg_desktop}"
     desktop_translated_name="${desktop_translated_name##*/}"
 
     # E already created the desktop dir and filled it with files (or maybe not files), we want to keep them so:
@@ -213,7 +224,7 @@ main(){
 
     # Create a better dir structure, we need this dir in any of the cases
     # XXX: note: we have already this structure thanks to our shipped xdg-default-dirs in /etc/xdg, nothing is wrong unless we change it
-    desktop_d="$( basename "$(xdg-user-dir DOWNLOAD )")/$( basename "$(xdg-user-dir DESKTOP )" )"
+    desktop_d="$( basename "${xdg_download}")/$( basename "${xdg_desktop}" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
     mkdir -p "$HOME/$desktop_d" "$XDG_CONFIG_HOME"
 
@@ -225,17 +236,17 @@ main(){
     rmdir "$HOME/desktop_old_d.tmp" 2>/dev/null || true
 
 
-    if [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] ; then
+    if [[ "${xdg_desktop}" != "$HOME/Desktop" ]] ; then
         if [[ -e "$HOME/Desktop" ]] ; then
 
-            echo "# Moving files in Desktop to $( xdg-user-dir DESKTOP )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Desktop/* "$( xdg-user-dir DESKTOP )/" 2>/dev/null || true
+            echo "# Moving files in Desktop to ${xdg_desktop}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Desktop/* "${xdg_desktop}/" 2>/dev/null || true
 
             rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
             if [[ -e "$HOME/Desktop" ]] ; then
-                mv "$HOME/Desktop" "$(xdg-user-dir DESKTOP )/"
+                mv "$HOME/Desktop" "${xdg_desktop}/"
             fi
 
         fi
@@ -246,9 +257,9 @@ main(){
     # Templates
     #
 
-    rmdir "$(xdg-user-dir TEMPLATES )" 2>/dev/null 1>&2 || true
+    rmdir "${xdg_templates}" 2>/dev/null 1>&2 || true
     # Create a better dir structure, we need this dir in any of the cases
-    templates_d="$( basename "$(xdg-user-dir DOCUMENTS )")/$( basename "$(xdg-user-dir TEMPLATES )" )"
+    templates_d="$( basename "${xdg_documents}")/$( basename "${xdg_templates}" )"
     # create it, we need a real one, empty if possible, so that thunar don't hangs when creating new documents
     mkdir -p "$HOME/$templates_d" "$XDG_CONFIG_HOME"
 
@@ -257,14 +268,14 @@ main(){
 
 
     # move old files to the new structure, if there was any
-    if [[ "$( xdg-user-dir TEMPLATES )" != "$HOME/Templates" ]] ; then
+    if [[ "${xdg_templates}" != "$HOME/Templates" ]] ; then
         if [[ -e "$HOME/Templates" ]] ; then
-            mv "$HOME/"Templates/* "$( xdg-user-dir TEMPLATES )/" 2>/dev/null || true
+            mv "$HOME/"Templates/* "${xdg_templates}/" 2>/dev/null || true
 
             rmdir "$HOME/Templates" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Templates" "$(xdg-user-dir TEMPLATES )/" 2>/dev/null || true
+            mv "$HOME/Templates" "${xdg_templates}/" 2>/dev/null || true
         fi
     fi
 
@@ -274,15 +285,15 @@ main(){
     # Documents
     #
 
-    if [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] ; then
+    if [[ "${xdg_documents}" != "$HOME/Documents" ]] ; then
         if [[ -e "$HOME/Documents" ]] ; then
-            echo "# Moving files in Documents to $( xdg-user-dir DOCUMENTS )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Documents/* "$( xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
+            echo "# Moving files in Documents to ${xdg_documents}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Documents/* "${xdg_documents}/" 2>/dev/null || true
 
             rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Documents" "$(xdg-user-dir DOCUMENTS )/" 2>/dev/null || true
+            mv "$HOME/Documents" "${xdg_documents}/" 2>/dev/null || true
         fi
     fi
 
@@ -290,15 +301,15 @@ main(){
     # Music
     #
 
-    if [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] ; then
+    if [[ "${xdg_music}" != "$HOME/Music" ]] ; then
         if [[ -e "$HOME/Music" ]] ; then
-            echo "# Moving files in Music to $( xdg-user-dir MUSIC )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Music/* "$( xdg-user-dir MUSIC )/" 2>/dev/null || true
+            echo "# Moving files in Music to ${xdg_music}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Music/* "${xdg_music}/" 2>/dev/null || true
 
             rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Music" "$(xdg-user-dir MUSIC )/" 2>/dev/null || true
+            mv "$HOME/Music" "${xdg_music}/" 2>/dev/null || true
         fi
     fi
 
@@ -306,15 +317,15 @@ main(){
     # Images / Pictures
     #
 
-    if [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] ; then
+    if [[ "${xdg_pictures}" != "$HOME/Images" ]] ; then
         if [[ -e "$HOME/Images" ]] ; then
-            echo "# Moving files in Images to $( xdg-user-dir PICTURES )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Images/* "$( xdg-user-dir PICTURES )/" 2>/dev/null || true
+            echo "# Moving files in Images to ${xdg_pictures}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Images/* "${xdg_pictures}/" 2>/dev/null || true
 
             rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Images" "$(xdg-user-dir PICTURES )/" 2>/dev/null || true
+            mv "$HOME/Images" "${xdg_pictures}/" 2>/dev/null || true
         fi
     fi
 
@@ -322,27 +333,27 @@ main(){
     # Videos
     #
 
-    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] ; then
+    if [[ "${xdg_videos}" != "$HOME/Videos" ]] ; then
         if [[ -e "$HOME/Videos" ]] ; then
-            echo "# Moving files in Videos to $( xdg-user-dir VIDEOS )" > "$TMP_PROGRESS_CONFIGURING_f"
-            mv "$HOME/"Videos/* "$( xdg-user-dir VIDEOS )/" 2>/dev/null || true
+            echo "# Moving files in Videos to ${xdg_videos}" > "$TMP_PROGRESS_CONFIGURING_f"
+            mv "$HOME/"Videos/* "${xdg_videos}/" 2>/dev/null || true
 
             rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
 
             # if still exist, move it somewhere that doesn't annoy us
-            mv "$HOME/Videos" "$(xdg-user-dir VIDEOS )/" 2>/dev/null || true
+            mv "$HOME/Videos" "${xdg_videos}/" 2>/dev/null || true
         fi
     fi
 
 
     # FIX all the old references
-    if [[ "$( xdg-user-dir VIDEOS )" != "$HOME/Videos" ]] \
-        && [[ "$( xdg-user-dir MUSIC )" != "$HOME/Music" ]] \
-        && [[ "$( xdg-user-dir PICTURES )" != "$HOME/Images" ]] \
-        && [[ "$( xdg-user-dir DOCUMENTS )" != "$HOME/Documents" ]] \
-        && [[ "$( xdg-user-dir DOWNLOAD )" != "$HOME/Downloads" ]] \
-        && [[ "$( xdg-user-dir DESKTOP )" != "$HOME/Desktop" ]] \
-        && [[ "$( xdg-user-dir TEMPLATES )" != "$HOME/Templates" ]] \
+    if [[ "${xdg_videos}" != "$HOME/Videos" ]] \
+        && [[ "${xdg_music}" != "$HOME/Music" ]] \
+        && [[ "${xdg_pictures}" != "$HOME/Images" ]] \
+        && [[ "${xdg_documents}" != "$HOME/Documents" ]] \
+        && [[ "${xdg_download}" != "$HOME/Downloads" ]] \
+        && [[ "${xdg_desktop}" != "$HOME/Desktop" ]] \
+        && [[ "${xdg_templates}" != "$HOME/Templates" ]] \
         ; then
         local entry conf dir file
         while read -ru 3 entry
@@ -448,6 +459,16 @@ main(){
     # update again and save results
     xdg-user-dirs-update
     xdg-user-dirs-gtk-update
+
+    # more info: https://wiki.archlinux.org/title/XDG_user_directories
+    xdg_desktop="$( xdg-user-dir DESKTOP )"
+    xdg_download="$( xdg-user-dir DOWNLOAD )"
+    xdg_documents="$( xdg-user-dir DOCUMENTS )"
+    xdg_pictures="$( xdg-user-dir PICTURES )"
+    xdg_music="$( xdg-user-dir MUSIC )"
+    xdg_videos="$( xdg-user-dir VIDEOS )"
+    xdg_templates="$( xdg-user-dir TEMPLATES )"
+    xdg_publicshare="$( xdg-user-dir PUBLICSHARE )"
 
     # create symlinks for thunar panel
     rm -f "$HOME/.gtk-bookmarks"

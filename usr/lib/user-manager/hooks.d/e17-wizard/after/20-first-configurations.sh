@@ -47,7 +47,10 @@ main(){
 
     el_explain 0 "Setting default volumes..."
     rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2
-    setvolume defaults
+
+    # setvolume defaults
+    # better: run it in background since its slow:
+    ( setvolume defaults & )
 
     # - Audio configurations }}}
     # add elive gpg key {{{

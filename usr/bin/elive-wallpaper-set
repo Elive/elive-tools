@@ -46,7 +46,11 @@ main(){
             name="$( echo "$file" | sed -e 's|^.*/||g' -e 's|\.*$||g' -e 's| |_|g' )"
 
             # add it
-            cp -a "$file" "$backgrounds_dir/$name"
+            if grep -qs "boot=live" /proc/cmdline ; then
+                ln -s "$file" "$backgrounds_dir/$name"
+            else
+                cp -a "$file" "$backgrounds_dir/$name"
+            fi
             file="$backgrounds_dir/$name"
 
             # set it

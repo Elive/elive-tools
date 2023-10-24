@@ -168,7 +168,7 @@ EOF
 
 
     if ((is_basic_mode)) ; then
-        result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sed -E -e 's|^\s+||g' | sort -u | awk '{code = $1 ; $1 = "" ; print code"\n"$0}' | sed -e 's|^\s*||g'   ; echo -e "Other\nConfigure" ; } | zenity --width=340 --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Keyboard" --column="Country"  2>/dev/null || echo "cancel" )"
+        result="$( { sed '/^! layout$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | sed -E -e 's|^\s+||g' | sort -u | awk '{code = $1 ; $1 = "" ; print code"\n"$0}' | sed -e 's|^\s*||g'   ; echo -e "Other\nConfigure" ; } | zenity --width=340 --height=380 --list --text="Change your keyboard? Actual is '${kbmap}'" --column="Code" --column="Layout"  2>/dev/null || echo "cancel" )"
         # always set the keyboard to default when when we "validate" without selection:
         [[ -z "$result" ]] && [[ -n "$kbmap" ]] && result="$kbmap"
 

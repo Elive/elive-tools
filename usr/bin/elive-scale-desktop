@@ -471,8 +471,7 @@ main(){
     # TODO: this is an actual bug, remove later:  https://phab.enlightenment.org/T8930
     if ((is_reload_elementary_needed)) ; then
         # refresh:
-        sync ; sleep 1
-        elementary_config -q
+        ( sync ; sleep 1 ; elementary_config -q ; ) &
     fi
 
 }

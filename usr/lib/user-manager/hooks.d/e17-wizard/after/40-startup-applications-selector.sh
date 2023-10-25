@@ -221,11 +221,11 @@ main(){
             name="$( LC_ALL=C grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
         fi
         if [[ -z "$name" ]] ; then
-            name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$name" ]] ; then
-                name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
-                if [[ -z "$name" ]] ; then
-                    name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #if [[ -z "$name" ]] ; then
+                name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                     if [[ -z "$name" ]] ; then
                         name="$( grep "^Name\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                         if [[ -z "$name" ]] ; then
@@ -235,7 +235,7 @@ main(){
                             fi
                         fi
                     fi
-                fi
+                #fi
             fi
         fi
 
@@ -255,18 +255,18 @@ main(){
             comment="$( LC_ALL=C grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
         fi
         if [[ -z "$comment" ]] ; then
-            comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
             if [[ -z "$comment" ]] ; then
-                comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
-                if [[ -z "$comment" ]] ; then
-                    comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #if [[ -z "$comment" ]] ; then
+                comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
                     if [[ -z "$comment" ]] ; then
                         comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
                         if [[ -z "$comment" ]] ; then
                             comment="$( grep "^Comment\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
                         fi
                     fi
-                fi
+                #fi
             fi
         fi
 

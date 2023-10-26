@@ -219,18 +219,18 @@ main(){
 
         # include name {{{
         if [[ "${LANG%%.*}" = "en_US" ]] ; then
-            name="$( LC_ALL=C grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            name="$( LC_ALL=C grep "^Name=" "$file" | head -1 )"
         fi
         if [[ -z "$name" ]] ; then
-            name="$( grep "^Name\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            name="$( grep "^Name\[${LANG%%_*}\]" "$file" | head -1 )"
             if [[ -z "$name" ]] ; then
-                #name="$( grep "^Name\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #name="$( grep "^Name\[${LANG%%.*}" "$file" | head -1 )"
                 #if [[ -z "$name" ]] ; then
-                name="$( grep "^Name\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                name="$( grep "^Name\[${LANG%%.*}\]" "$file" | head -1 )"
                     if [[ -z "$name" ]] ; then
-                        name="$( grep "^Name\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        name="$( grep "^Name\[${LANG%%_*}" "$file" | head -1 )"
                         if [[ -z "$name" ]] ; then
-                            name="$( grep "^Name=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                            name="$( grep "^Name=" "$file" | head -1 )"
                             if [[ -z "$name" ]] ; then
                                 name="$( basename "${file%.*}" )"
                             fi
@@ -253,18 +253,18 @@ main(){
         # }}}
         # include comment {{{
         if [[ "${LANG%%.*}" = "en_US" ]] ; then
-            comment="$( LC_ALL=C grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            comment="$( LC_ALL=C grep "^Comment=" "$file" | head -1 )"
         fi
         if [[ -z "$comment" ]] ; then
-            comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+            comment="$( grep "^Comment\[${LANG%%_*}\]" "$file" | head -1 )"
             if [[ -z "$comment" ]] ; then
-                #comment="$( grep "^Comment\[${LANG%%.*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                #comment="$( grep "^Comment\[${LANG%%.*}" "$file" | head -1 )"
                 #if [[ -z "$comment" ]] ; then
-                comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                comment="$( grep "^Comment\[${LANG%%.*}\]" "$file" | head -1 )"
                     if [[ -z "$comment" ]] ; then
-                        comment="$( grep "^Comment=" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                        comment="$( grep "^Comment=" "$file" | head -1 )"
                         if [[ -z "$comment" ]] ; then
-                            comment="$( grep "^Comment\[${LANG%%_*}" "$file" | psort -- -p "_" -p "@" | head -1 )"
+                            comment="$( grep "^Comment\[${LANG%%_*}" "$file" | head -1 )"
                         fi
                     fi
                 #fi
@@ -273,7 +273,7 @@ main(){
 
         # empty?
         if [[ -z "$comment" ]] ; then
-            comment="(empty)"
+            comment="(without description)"
         fi
         comment="${comment#*]=}"
         comment="${comment#Comment=}"
@@ -331,8 +331,7 @@ main(){
     while read -ru 3 file
     do
         if [[ -s "$file" ]] ; then
-            filename="${file}"
-            filename="${filename%/}"
+            filename="${file%/}"
             filename="${filename##*/}"
 
             # verify the needed ones

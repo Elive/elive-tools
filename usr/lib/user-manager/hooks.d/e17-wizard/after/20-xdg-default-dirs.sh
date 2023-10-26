@@ -22,7 +22,9 @@ migrate_conf_file(){
 
     # debug info
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
-        echo "# cp \"$file\" \"$file_bkp\"" > "$TMP_PROGRESS_CONFIGURING_f"
+        if ((is_show_progress)) ; then
+            echo "# cp \"$file\" \"$file_bkp\"" > "$TMP_PROGRESS_CONFIGURING_f"
+        fi
         cp "$file" "$file_bkp"
     fi
 
@@ -45,7 +47,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Desktop" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Desktop|${xdg_download}|g" "$file"
             el_debug "Migrated references for __Desktop__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Desktop in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
     # downloads needs to be after desktop, since desktop was the real downloads dir
@@ -53,7 +57,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Downloads" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Downloads|${xdg_download}|g" "$file"
             el_debug "Migrated references for __Downloads__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Downloads in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
 
@@ -61,7 +67,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Documents" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Documents|${xdg_documents}|g" "$file"
             el_debug "Migrated references for __Documents__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Documents in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
 
@@ -69,7 +77,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Images" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Images|${xdg_pictures}|g" "$file"
             el_debug "Migrated references for __Images__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Images in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
 
@@ -77,7 +87,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Music" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Music|${xdg_music}|g" "$file"
             el_debug "Migrated references for __Music__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Music in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
 
@@ -85,7 +97,9 @@ migrate_conf_file(){
         if grep -Fqs "$HOME/Videos" "$file" 2>/dev/null ; then
             sed -i "s|$HOME/Videos|${xdg_videos}|g" "$file"
             el_debug "Migrated references for __Videos__ in __${file}__" 2>> "$cachedir/logs.txt"
-            echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Migrated references for Videos in ${file}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
         fi
     fi
 
@@ -140,6 +154,7 @@ main(){
 
     # only show a gui if we are not in live mode!
     if ! grep -Fqs "boot=live" /proc/cmdline ; then
+        is_show_progress=1
         { ( while test -f "$TMP_PROGRESS_CONFIGURING_f" ; do cat "$TMP_PROGRESS_CONFIGURING_f" || true ; sleep 1 ; done | $guitool --progress --pulsate --text="$( eval_gettext "Migrating directories and configurations to the selected language... This operation can be very slow if you have many files. Please be patient." )" --auto-close ) & disown ; } 2>/dev/null
     fi
 
@@ -205,7 +220,9 @@ main(){
 
         # and just in case is not a symlink:
         if [[ -e "$HOME/Downloads" ]] ; then
-            echo "# Moving files in Downloads to ${xdg_download}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Downloads to ${xdg_download}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Downloads/* "${xdg_download}/" 2>/dev/null || true
 
             rmdir "$HOME/Downloads" 2>/dev/null 1>&2 || true
@@ -239,7 +256,9 @@ main(){
     if [[ "${xdg_desktop}" != "$HOME/Desktop" ]] ; then
         if [[ -e "$HOME/Desktop" ]] ; then
 
-            echo "# Moving files in Desktop to ${xdg_desktop}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Desktop to ${xdg_desktop}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Desktop/* "${xdg_desktop}/" 2>/dev/null || true
 
             rmdir "$HOME/Desktop" 2>/dev/null 1>&2 || true
@@ -287,7 +306,9 @@ main(){
 
     if [[ "${xdg_documents}" != "$HOME/Documents" ]] ; then
         if [[ -e "$HOME/Documents" ]] ; then
-            echo "# Moving files in Documents to ${xdg_documents}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Documents to ${xdg_documents}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Documents/* "${xdg_documents}/" 2>/dev/null || true
 
             rmdir "$HOME/Documents" 2>/dev/null 1>&2 || true
@@ -303,7 +324,9 @@ main(){
 
     if [[ "${xdg_music}" != "$HOME/Music" ]] ; then
         if [[ -e "$HOME/Music" ]] ; then
-            echo "# Moving files in Music to ${xdg_music}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Music to ${xdg_music}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Music/* "${xdg_music}/" 2>/dev/null || true
 
             rmdir "$HOME/Music" 2>/dev/null 1>&2 || true
@@ -319,7 +342,9 @@ main(){
 
     if [[ "${xdg_pictures}" != "$HOME/Images" ]] ; then
         if [[ -e "$HOME/Images" ]] ; then
-            echo "# Moving files in Images to ${xdg_pictures}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Images to ${xdg_pictures}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Images/* "${xdg_pictures}/" 2>/dev/null || true
 
             rmdir "$HOME/Images" 2>/dev/null 1>&2 || true
@@ -335,7 +360,9 @@ main(){
 
     if [[ "${xdg_videos}" != "$HOME/Videos" ]] ; then
         if [[ -e "$HOME/Videos" ]] ; then
-            echo "# Moving files in Videos to ${xdg_videos}" > "$TMP_PROGRESS_CONFIGURING_f"
+            if ((is_show_progress)) ; then
+                echo "# Moving files in Videos to ${xdg_videos}" > "$TMP_PROGRESS_CONFIGURING_f"
+            fi
             mv "$HOME/"Videos/* "${xdg_videos}/" 2>/dev/null || true
 
             rmdir "$HOME/Videos" 2>/dev/null 1>&2 || true
@@ -521,8 +548,10 @@ main(){
     echo "$version" > "$HOME/.config/elive/migrator/xdg-default-dirs-language-upgraded.state"
 
     # progress
-    echo -e "# Done" > "$TMP_PROGRESS_CONFIGURING_f"
-    sleep 1
+    if ((is_show_progress)) ; then
+        echo -e "# Done" > "$TMP_PROGRESS_CONFIGURING_f"
+        sleep 1
+    fi
     rm -f "$TMP_PROGRESS_CONFIGURING_f"
 
     # if we are debugging give it a little pause to see what is going on

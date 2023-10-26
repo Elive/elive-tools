@@ -158,12 +158,13 @@ main(){
 
             "gnome-keyring"*|"update-notifier"*)
                 # in installed, but not in low RAM
-                if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
+                # update: always required for wifi passwords
+                # if [[ "$RAM_TOTAL_SIZE_mb" -gt 900 ]] ; then
                     menu+=("TRUE")
                     menu_auto+=("$file")
-                    #menu_auto_live+=("$file")
+                    menu_auto_live+=("$file")
                     #el_debug "state: TRUE"
-                fi
+                # fi
                 ;;
             "polkit"*|"pulseaudio"*)
                 # always needed these

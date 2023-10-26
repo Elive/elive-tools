@@ -290,7 +290,7 @@ main(){
     if [[ "$RAM_TOTAL_SIZE_mb" -lt 700 ]] ; then
         message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled for your desktop. Note that you don't have much RAM memory and services will use it. Elive has already pre-selected the best options for you." )" )"
     else
-        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. Elive has already pre-selected the best options for you." )" )"
+        message_gui="$( printf "$( eval_gettext "Select the services that you want to have enabled on your desktop. The preselected ones are chosen to ensure correct compatibility with your system." )" )"
     fi
 
     # live (auto) mode?

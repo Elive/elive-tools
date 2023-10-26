@@ -363,7 +363,7 @@ main(){
 
                 # ignore these unneeded ones for speed reasons
                 case "$entry" in
-                    *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|".ccache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*)
+                    *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|*".cache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*|*".eet"*|*".edj"*|"readme"*|*".lock"*|*".lck"*|*"cookie"|*".tdb"|*"/cached/"*|*".sqlite"|*".py"|*".log"|*"history"*)
                         continue ; ;;
                 esac
 
@@ -374,7 +374,7 @@ main(){
                     do
                         # ignore these unneeded ones for speed reasons
                         case "$file" in
-                            *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|".ccache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*)
+                            *".bin"|*".cfg"|*".vim"|*".db"|*".db-journal"|*".md"|*".markdown"|*".png"|*".Rakefile"|*".rb"|*".snippets"|*".svg"|*".txt"|*".xml"|*".yml"|*".gih"|*".gif"|*".vlt"|".gimp-"*|".kde"*|*".cargo"|*".cache"*|*"themes"|"e"|*".java"|*".smc"|*"config/GIMP"*|*".eet"*|*".edj"*|"readme"*|*".lock"*|*".lck"*|*"cookie"|*".tdb"|*"/cached/"*|*".sqlite"|*".py"|*".log"|*"history"*)
                                 continue ; ;;
                         esac
 
@@ -407,23 +407,34 @@ main(){
                                     ;;
                             esac
                         fi
-                    done 3<<< "$( find "$entry" -type f | grep -Fv "$cachedir" )"
+                    done 3<<< "$( find "$entry" -type f | grep -viE "(\.cache/elive-migration|\.config/GIMP|\.png$|\.svg$)" )"
                 fi
 
                 # is a file
                 if [[ -f "$entry" ]] && [[ -s "$entry" ]] ; then
-                    if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$file" ; then
-                        case "$(file -b "$file" )" in
+                    if grep -qsE "$HOME/(Images|Desktop|Downloads|Documents|Videos|Music)" "$entry" ; then
+                        case "$(file -b "$entry" )" in
                             *atabase*|*Image*|*image*|*audio*|*Audio*|*video*)
                                 # exclude these ones, unreliable
                                 true
                                 ;;
                             *text*|JSON*)
-                                migrate_conf_file "$file"
+                                migrate_conf_file "$entry"
+                                ;;
+                            data)
+                                if echo "$entry" | grep -Fqs "config/transmission/" ; then
+                                    migrate_conf_file "$entry"
+                                else
+                                    NOREPORTS=1 el_warning "Unknown filetype to migrate, continuing anyways for $(file -b "$entry"): $entry "
+                                    migrate_conf_file "$entry"
+                                    echo "Unknown filetype $(file -b "$entry" ) for: $entry" >> "$cachedir/logs-unknown-filetypes.txt"
+                                    is_migrate_files_done=1
+                                fi
+
                                 ;;
                             *)
-                                NOREPORTS=1 el_warning "Unknown filetype to migrate, continuing anyways for $(file -b "$file"): $file "
-                                migrate_conf_file "$file"
+                                NOREPORTS=1 el_warning "Unknown filetype to migrate, continuing anyways for $(file -b "$entry"): $entry "
+                                migrate_conf_file "$entry"
                                 # Only report if they are unknown filetypes, otherwise should be more than fine
                                 is_migrate_files_done=1
                                 ;;
@@ -432,7 +443,7 @@ main(){
                 fi
             fi
         #done 3<<< "$( ls -a1 "$HOME" | awk 'NR > 2' | grep -v "\.old$" )"
-        done 3<<< "$( ls -a1 "$HOME" | grep -vE "(\.old$|^\.$|^\.\.$)" )"
+        done 3<<< "$( ls -a1 "$HOME" | grep -vE "(\.old$|^\.$|^\.\.$|\.cache|\.ccache|\.ecomp)" )"
     fi
 
 

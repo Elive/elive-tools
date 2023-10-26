@@ -17,7 +17,7 @@ main(){
         fi
     fi
 
-    elive-scale-desktop --auto --quiet
+    ( elive-scale-desktop --auto --quiet & )
 }
 
 #

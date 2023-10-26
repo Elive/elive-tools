@@ -17,7 +17,8 @@ main(){
     fi
 
     # run again, because now we may have confs like conky & others that we need to reconfigure
-    elive-scale-desktop --auto --quiet
+    waitfor elive-scale-desktop
+    ( elive-scale-desktop --auto --quiet & )
 }
 
 #

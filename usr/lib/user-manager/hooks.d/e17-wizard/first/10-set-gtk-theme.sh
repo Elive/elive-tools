@@ -32,7 +32,7 @@ e16_set_release_wallpaper(){
         wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
 
         if [ -s "$wallpaper" ] ; then
-            elive-wallpaper-set "$wallpaper"
+            ( elive-wallpaper-set "$wallpaper" & )
         else
             if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
                 el_warning "/etc/elive/wallpaper has not a correct bg? \n$( ls -1 /etc/elive/wallpaper/ )"

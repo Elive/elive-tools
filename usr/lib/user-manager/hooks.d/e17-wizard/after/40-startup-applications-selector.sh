@@ -38,6 +38,23 @@ main(){
         fi
     fi
 
+        # determine the mount version
+    case "$( cat /etc/debian_version )" in
+        12.*|"bookworm"*)
+            is_bookworm=1
+            ;;
+        #11.*|"bullseye"*)
+            #is_bullseye=1
+            #;;
+        #10.*|"buster"*)
+            #is_buster=1
+            #;;
+        #7.*|"wheezy"*)
+            #is_wheezy=1
+            #;;
+    esac
+
+
     if grep -Fqs "thanatests" /proc/cmdline ; then
         is_thanatests=1
     fi
@@ -552,6 +569,11 @@ EOF
 
     # sort the launchers
     echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$HOME/.e16/startup-applications.list"
+
+    # fix for bookworm asking for wifi password, for some reason even if the daemon is correctly running, this needs to be run again otherwise wifi password asking will not show up
+    if ((is_live)) && ((is_bookworm)) ; then
+        echo "gnome-keyring-daemon" >> "$HOME/.e16/startup-applications.list"
+    fi
 
     # configure cairo-dock
     source /etc/elive/machine-profile 2>/dev/null || true

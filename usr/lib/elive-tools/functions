@@ -264,13 +264,17 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     # we only need to know if we can ping to outside, not dns resolving
     if timeout $timeout ping -c 1 "$target"  2>/dev/null 1>&2 ; then
         return 0
+    else
+        if timeout $timeout ping -c 1 "1.1.1.1"  2>/dev/null 1>&2 ; then
+            return 0
+        fi
     fi
 
 
     # wanna debug more?
     if [[ "${EL_DEBUG}" -gt "3" ]] ; then
-        el_debug "doing a ping to google don't respond: $( timeout 1 ping -c 1 "$target" 2>&1 )"
-        if timeout 1 ping -c 1 "$target" 2>/dev/null 1>&2 ; then
+        el_debug "doing a ping to google don't respond: $( timeout 2 ping -c 1 "$target" 2>&1 )"
+        if timeout 2 ping -c 1 "$target" 2>/dev/null 1>&2 ; then
             el_debug "by other side we can ping directly to an ip, check your /etc/resolv.conf"
         else
             el_debug "we cannot even ping to the google dns ($target)"
@@ -361,6 +365,10 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             do
                 if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
                     return 0
+                else
+                    if timeout 2 ping -c 1 "1.1.1.1"  2>/dev/null 1>&2 ; then
+                        return 0
+                    fi
                 fi
                 sleep 1
             done

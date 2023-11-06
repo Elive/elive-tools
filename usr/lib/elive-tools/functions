@@ -2684,7 +2684,7 @@ el_report_to_elive(){
     esac
 
     if [[ -z "$id" ]] ; then
-        id="$( cat /etc/elive-version | grep -F "machine-id: " | awk '{print $2}' )"
+        id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' )"
     fi
     # create an unique identifier to differentiate betweem same-reports
     if [[ -z "$id" ]] ; then
@@ -2693,10 +2693,13 @@ el_report_to_elive(){
     if [[ -z "$id" ]] ; then
         id="$( ip a | LC_ALL=C grep -E "(link/ether|fe80)" | sha256sum | awk '{print $1}' )"
     fi
-    # alternative (dynamic, it will change)
     if [[ -z "$id" ]] ; then
-        id="$( dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1sum | awk '{print $1}' )"
+        id=nomachineid
     fi
+    # alternative (dynamic, it will change)
+    # if [[ -z "$id" ]] ; then
+    #     id="$( dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1sum | awk '{print $1}' )"
+    # fi
 
     if [[ -z "$conf_send_debug_reports_email" ]] ; then
         conf_send_debug_reports_email="anonymous:${id}"

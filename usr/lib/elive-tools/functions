@@ -3902,12 +3902,6 @@ fi
         #echo "good bye"
     #}
 # - report, something for inform the user about something important, which interfaces and cases ?
-# -
-# -
-# -
-# -
-# -
-# -
 
 
 # vim: set foldmethod=marker filetype=sh :

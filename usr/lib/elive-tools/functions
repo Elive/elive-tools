@@ -2565,17 +2565,7 @@ el_report_to_elive(){
 
 
     # at least one month old, we can parse the results from the server to show only recent ones too
-    if ((FORCE_REPORTS)) ; then
-        if el_check_version_development 1>/dev/null 2>&1 ; then
-            if ! el_check_version_development_is_days_recent 120 ; then
-                return 0
-            fi
-        else
-            if ! el_check_version_is_days_recent 120 ; then
-                return 0
-            fi
-        fi
-    else
+    if ! ((FORCE_REPORTS)) ; then
         if el_check_version_development 1>/dev/null 2>&1 ; then
             # ignore reports for more than X days old
             # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
@@ -2595,7 +2585,7 @@ el_report_to_elive(){
                     return 0
                 fi
             else
-                if ! el_check_version_is_days_recent 40 ; then
+                if ! el_check_version_is_days_recent 60 ; then
                     return 0
                 fi
             fi

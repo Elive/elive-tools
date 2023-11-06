@@ -3878,8 +3878,6 @@ fi
 #
 # - check same proceses
 # - el_fixme_required -> report to the user that the feature is not implemented by some future userfriendly way
-# - arrays ?
-# - run web
 # - trap signals (exit statuses, etc)
 #EXAMPLES (of correct managing of traps):
     #set -E  # inherit errors to parent, good for deep traping, suggested

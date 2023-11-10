@@ -992,6 +992,7 @@ el_package_upgrade_fast(){
                 ;;
             *)
                 el_error "unable to get the arch value for package '${package}': $arch"
+                failed=1
                 continue
                 ;;
         esac
@@ -1005,6 +1006,7 @@ el_package_upgrade_fast(){
             url_subdir="$( LC_ALL=C grep -h "^Filename: .*/${package}/" /var/lib/apt/lists/*Packages | sed -e "s|/${package}_.*$|/|g" -e 's|^Filename: ||g' | sort -u | head -1  )"
             if [[ -z "$url_subdir" ]] ; then
                 el_error "unable to get the url_subdir for package '${package}': $url_subdir"
+                failed=1
                 continue
             fi
         fi
@@ -1017,6 +1019,7 @@ el_package_upgrade_fast(){
             url="${url%/}/"
         else
             el_error "unable to get the 'url' for package '${package}': $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )\nthis feature only works for now with packages from the Elive repository"
+            failed=1
             continue
         fi
 
@@ -1024,6 +1027,7 @@ el_package_upgrade_fast(){
         distro="$( grep -hE "^deb\s+(http.*elivecd.org|file:///)" /etc/apt/sources.list.d/*elive.list | awk '{print $3}' | tail -1 )"
         if [[ -z "$distro" ]] ; then
             el_error "unable to get the 'distro' for package '${package}': $(grep -h "^deb " /etc/apt/sources.list.d/*elive.list )"
+            failed=1
             continue
         fi
 
@@ -1034,6 +1038,7 @@ el_package_upgrade_fast(){
                 package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package_}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
                 if ! [[ -s "$package_url" ]] ; then
                     el_error "unable to get the 'package_url' for package '${package}' in file:/// mode:\n$( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
+                    failed=1
                     continue
                 fi
                 ;;
@@ -1050,6 +1055,7 @@ el_package_upgrade_fast(){
                 fi
                 if [[ -z "$package_url" ]] ; then
                     el_error "unable to get the 'package_url' for package '${package}' distro '${distro}' arch '${arch}' :\n$( lynx -read_timeout 20 -connect_timeout 20 -dump "${url}${url_subdir}" | grep "${package}.*\.deb" )"
+                    failed=1
                     continue
                 fi
 
@@ -1060,6 +1066,7 @@ el_package_upgrade_fast(){
         candidate="$( echo "$package_url" | sed -e "s|^.*/${package}_||g" -e 's|_.*$||g' )"
         if [[ -z "$candidate" ]] ; then
             el_error "unable to get the 'candidate' for package '${package}': $(echo "$package_url" )"
+            failed=1
             continue
         fi
 

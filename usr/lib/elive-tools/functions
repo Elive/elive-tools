@@ -2520,7 +2520,7 @@ el_report_to_elive(){
         fi
         # make sure its not a modified version of Elive, so we don't want to receive reports from other things
         if grep -Fqs "machine-id: " /etc/elive-version && grep -Fqs "fingerprint: " /etc/elive-version ; then
-            fingerprint="$( echo "DFF8D7C2+$( grep -F "machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | sha1sum | awk '{print $1}'  )"
+            fingerprint="$( echo "DFF8D7C2+$( grep -F "machine-id: " /etc/elive-version | sed -e 's|^machine-id: ||g' )" | tail -1 | sha1sum | awk '{print $1}'  )"
             if ! grep -Fqs "fingerprint: $fingerprint" /etc/elive-version ; then
                 return 0
             fi
@@ -2691,7 +2691,7 @@ el_report_to_elive(){
     esac
 
     if [[ -z "$id" ]] ; then
-        id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' )"
+        id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' | tail -1 )"
     fi
     # create an unique identifier to differentiate betweem same-reports
     if [[ -z "$id" ]] ; then
@@ -3396,7 +3396,7 @@ el_get_machine_id(){
 
     # use the cached / saved ID
     if grep -qsF "machine-id: " "/etc/elive-version" 2>/dev/null ; then
-        machine_id="$( cat /etc/elive-version | grep "^machine-id: " | sed -e 's|^machine-id: ||g' | tail -1 )"
+        machine_id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' | tail -1 )"
         if [[ -n "$machine_id" ]] ; then
             echo "$machine_id"
             return
@@ -3467,7 +3467,7 @@ el_get_machine_id(){
     if [[ -z "$machine_id" ]] ; then
         # re-use a backup if we cannot fetch machine-id in shutdown step
         if [[ -e "/tmp/.machine-id" ]] ; then
-            machine_id="$( cat /tmp/.machine-id 2>/dev/null || true )"
+            machine_id="$( cat /tmp/.machine-id 2>/dev/null | tail -1 || true )"
             read -r machine_id <<< "$machine_id"
         fi
     fi

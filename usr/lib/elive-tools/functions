@@ -2509,7 +2509,11 @@ el_report_to_elive(){
     # max 5 reports per tool
     limit_reports_amount=6
     # min 4 hours passed if limit is reached to send more reports: 14400, 2 days: 172800
-    limit_reports_seconds=172800
+    if ((FORCE_REPORTS)) ; then
+        limit_reports_seconds=30
+    else
+        limit_reports_seconds=172800
+    fi
 
     messages_extra=""
 

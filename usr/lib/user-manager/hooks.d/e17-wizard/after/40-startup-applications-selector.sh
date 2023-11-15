@@ -622,10 +622,10 @@ EOF
         if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
             is_version_retro=1
             message_desc="$( printf "$( eval_gettext "Elive RetroWave special version" )" "" ) $VERSION"
-            $play_music="TRUE"
+            play_music="TRUE"
         else
             message_desc="$PRETTY_NAME"
-            $play_music="FALSE"
+            play_music="FALSE"
         fi
 
         # show generic menu for all the versions:

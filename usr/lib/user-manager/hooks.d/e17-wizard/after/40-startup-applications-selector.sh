@@ -615,58 +615,70 @@ EOF
             _chk_hotkeys=TRUE
         fi
 
+        local message_desc
+        source /etc/os-release
+
         # Elive Retro version
         if [[ -e "/var/lib/dpkg/info/elive-skel-retrowave-all.list" ]] ; then
             is_version_retro=1
-                #--field="Candies::lbl" \
-                #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
-                #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
-
-            result="$( yad --width=400 --center --title="Elive Retro menu" \
-                --form \
-                --image=utilities-terminal --image-on-top --text="Elive RetroWave special version" \
-                --field="$( eval_gettext "Play a selection of the best RetroWave music to improve your experience" ):chk" TRUE \
-                --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
-                --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
-                --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
-                --field="$( eval_gettext "Open the Elive forum for this version." ):chk" FALSE \
-                --button="gtk-ok" || true )"
-            #ret="$?"
-            if [[ -n "$result" ]] ; then
-                retro_play="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
-                retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
-                demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
-                demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-                retro_forum="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
-                #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
-                #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
-            else
-                retro_play="FALSE"
-                retro_play_type="Play in a window"
-                demo_instructions="FALSE"
-                demo_hotkeys="FALSE"
-                retro_forum="FALSE"
-                #retro_music_composer="FALSE"
-                #retro_demo_mode="FALSE"
-            fi
+            message_desc="$( printf "$( eval_gettext "Elive RetroWave special version" )" "" ) $VERSION"
+            $play_music="TRUE"
         else
-
-            # Normal versions:
-            result="$( yad --width=400 --center --title="Elive Welcome Menu" \
-                --form \
-                --image=utilities-terminal --image-on-top --text="Elive instructions and demo" \
-                --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
-                --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
-                --button="gtk-ok" || true )"
-            #ret="$?"
-            if [[ -n "$result" ]] ; then
-                demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
-                demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
-            else
-                demo_instructions="FALSE"
-                demo_hotkeys="FALSE"
-            fi
+            message_desc="$PRETTY_NAME"
+            $play_music="FALSE"
         fi
+
+        # show generic menu for all the versions:
+        result="$( yad --width=400 --center --title="Elive Intro" \
+            --form \
+            --image=utilities-terminal --image-on-top --text="$message_desc" \
+            --field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
+            --field="$( eval_gettext "Play a selection of the best RetroWave music" ):chk" $play_music \
+            --field="$( eval_gettext "Mode" ):CB" "Play in a window!""Play in YouTube!""Radio SynthWave" \
+            --field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
+            --field="$( eval_gettext "Open the Elive forum." ):chk" FALSE \
+            --button="gtk-ok" || true )"
+        #ret="$?"
+
+            #--field="Candies::lbl" \
+            #--field="$( eval_gettext "Retro Music Composer" ):chk" FALSE \
+            #--field="$( eval_gettext "Demo mode: run applications for the experience" ):chk" FALSE \
+
+        if [[ -n "$result" ]] ; then
+            demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+            retro_play="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
+            retro_play_type="$( echo "${result}" | awk -v FS="|" '{print $3}' )"
+            demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            retro_forum="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+            #retro_music_composer="$( echo "${result}" | awk -v FS="|" '{print $4}' )"
+            #retro_demo_mode="$( echo "${result}" | awk -v FS="|" '{print $5}' )"
+        else
+            retro_play="FALSE"
+            retro_play_type="Play in a window"
+            demo_instructions="FALSE"
+            demo_hotkeys="FALSE"
+            retro_forum="FALSE"
+            #retro_music_composer="FALSE"
+            #retro_demo_mode="FALSE"
+        fi
+        #else
+
+            ## Normal versions:
+            #result="$( yad --width=400 --center --title="Elive Welcome Menu" \
+                #--form \
+                #--image=utilities-terminal --image-on-top --text="Elive instructions and demo" \
+                #--field="$( eval_gettext "1-minute instructions" ):chk" TRUE \
+                #--field="$( eval_gettext "Show me the Elive hotkeys" ):chk" $_chk_hotkeys \
+                #--button="gtk-ok" || true )"
+            ##ret="$?"
+            #if [[ -n "$result" ]] ; then
+                #demo_instructions="$( echo "${result}" | awk -v FS="|" '{print $1}' )"
+                #demo_hotkeys="$( echo "${result}" | awk -v FS="|" '{print $2}' )"
+            #else
+                #demo_instructions="FALSE"
+                #demo_hotkeys="FALSE"
+            #fi
+        #fi
     fi
 
     # run this in a subshell waiting for internet because we depend on it
@@ -746,7 +758,11 @@ EOF
 
     # forum
     if [[ "$retro_forum" = "TRUE" ]] ; then
-        web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
+        if ((is_version_retro)) ; then
+            web-launcher --delay=10 "https://forum.elivelinux.org/c/special-versions/eliveretro/70" &
+        else
+            web-launcher --delay=10 "https://forum.elivelinux.org/" &
+        fi
     fi
 
 

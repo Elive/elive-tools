@@ -2610,6 +2610,7 @@ el_report_to_elive(){
 
     el_config_get
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
+    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
 
     # at least X time passed to clean reports counter
     if [[ -s "$tmp_conf_f" ]] ; then
@@ -3164,6 +3165,7 @@ el_config_get(){
     local tmp_conf_f
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
+    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
 
     # }}}
     # checks {{{
@@ -3213,6 +3215,7 @@ el_config_save(){
     local tmp_conf_f
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
+    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
 
     if [[ -z "$@" ]] ; then
         el_error "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
@@ -3272,6 +3275,7 @@ el_config_restart(){
     local tmp_conf_f
 
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
+    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
 
     # }}}
     # checks {{{

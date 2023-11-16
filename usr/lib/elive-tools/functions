@@ -228,7 +228,7 @@ el_notify(){
 #-------------------------------------------------------------------------------
 el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
     # pre {{{
-    local timeout count target mode
+    local timeout count target target2 mode
     timeout="$1"
     mode="$2"
     # note: this code contains commented lines used for debug (to simulate a full lag)
@@ -236,6 +236,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     # note: dns resolving can be very slow if we are for example using torrents
     #target="www.google.com"
     target="8.8.8.8"
+    target2="1.1.1.1"
 
     if [[ -z "$timeout" ]] ; then
         # default timeout if not set
@@ -265,7 +266,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     if timeout $timeout ping -c 1 "$target"  2>/dev/null 1>&2 ; then
         return 0
     else
-        if timeout $timeout ping -c 1 "1.1.1.1"  2>/dev/null 1>&2 ; then
+        if timeout $timeout ping -c 1 "$target2"  2>/dev/null 1>&2 ; then
             return 0
         fi
     fi
@@ -289,7 +290,7 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
 #-------------------------------------------------------------------------------
 el_verify_internet(){ # verify if we have internet connection (true or false, return value)
     # pre {{{
-    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target interface
+    local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target target2 interface
 
     stamp_hour_prev="/tmp/.stamps-${USER}/verify_internet_connection"
     mkdir -p "$( dirname "${stamp_hour_prev}" )"
@@ -309,6 +310,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     fi
 
     target="8.8.8.8"
+    target2="1.1.1.1"
 
     # }}}
 
@@ -366,7 +368,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
                 if timeout 2 ping -c 1 "$target"  2>/dev/null 1>&2 ; then
                     return 0
                 else
-                    if timeout 2 ping -c 1 "1.1.1.1"  2>/dev/null 1>&2 ; then
+                    if timeout 2 ping -c 1 "$target2"  2>/dev/null 1>&2 ; then
                         return 0
                     fi
                 fi

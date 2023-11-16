@@ -2506,7 +2506,7 @@ el_report_to_elive(){
         fi
     fi
 
-    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint
+    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f source limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint
     el_security_function_loop || return 0
     # max 5 reports per tool
     limit_reports_amount=6
@@ -2609,8 +2609,8 @@ el_report_to_elive(){
     conf_counter_reports_sent=0
 
     el_config_get
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
-    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
+    source="$( readlink -f "$SOURCE" )"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     # at least X time passed to clean reports counter
     if [[ -s "$tmp_conf_f" ]] ; then
@@ -3162,10 +3162,10 @@ el_request_donation(){
 #===============================================================================
 el_config_get(){
     # pre {{{
-    local tmp_conf_f
+    local tmp_conf_f source
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
-    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
+    source="$( readlink -f "$SOURCE" )"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     # }}}
     # checks {{{
@@ -3212,10 +3212,9 @@ el_config_save(){
 
     # }}}
 
-    local tmp_conf_f
-    #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
-    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
+    local tmp_conf_f source
+    source="$( readlink -f "$SOURCE" )"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     if [[ -z "$@" ]] ; then
         el_error "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
@@ -3272,10 +3271,10 @@ el_config_save(){
 #===============================================================================
 el_config_restart(){
     # pre {{{
-    local tmp_conf_f
+    local tmp_conf_f source
 
-    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${SOURCE//\//%%}_conf.sh"
-    tmp_conf_f="${tmp_conf_f/el_config\/%%bin/el_config\/%%usr%%bin}"
+    source="$( readlink -f "$SOURCE" )"
+    tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     # }}}
     # checks {{{

@@ -25,6 +25,9 @@ error_signal_debug(){
 }
 ########################
 
+FIRST_UID=1000
+LAST_UID=60000
+
 . /etc/adduser.conf
 
 # FIXME: since the installer requires also the same thing, make a "functions" file for create new users, source it from the installer and call the functions to create a new user, simple fast and easy

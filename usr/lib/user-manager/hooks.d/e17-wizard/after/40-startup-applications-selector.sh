@@ -778,6 +778,7 @@ EOF
         sync
         LC_ALL=C sleep 0.3
         sudo bash -c "echo 3 > /proc/sys/vm/drop_caches"
+        sudo rm -f /run/live/overlay/rw/home/*/.cache/fontconfig/* 2>/dev/null || true
     fi
 
     # if we are debugging give it a little pause to see what is going on

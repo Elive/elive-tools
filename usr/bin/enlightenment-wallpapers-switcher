@@ -89,14 +89,16 @@ main(){
 
             el_debug "Switching to desktop wallpaper: $line"
 
-            # set wallpaper on first desktop only for now
+            # set wallpaper
             eesh bg use "$line" 0
+            eesh bg use "$line" 1
 
             sleep "$time_switching_seconds"
         done 3<<< "$( eesh bg list )"
 
         # switch back to the original one
         eesh bg use "$default_wallpaper" 0
+        eesh bg use "$default_wallpaper" 1
     fi
 }
 

@@ -159,8 +159,12 @@ main(){
                 # make sure we have bluetooth device
                 if ((is_bluetooth_availble)) ; then
                     if [[ -n "$EROOT" ]] ; then
-                        menu+=("TRUE")
-                        menu_auto+=("$file")
+                        if ((is_live)) ; then
+                            menu+=("TRUE")
+                        else
+                            menu+=("FALSE")
+                        fi
+                        # menu_auto+=("$file")
                         menu_auto_live+=("$file")
                         #el_debug "state: TRUE"
                     else

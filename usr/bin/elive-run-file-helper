@@ -125,7 +125,14 @@ run_script(){
     # window executables?
     if echo "$file" | grep -qsi ".*\.exe" ; then
         # in fact im not sure that "application/x-executable" is a mimemtype for windows files, but just in case:
+        # if wine was not installed, run it twice so first it will install the real one:
+        if [[ -e "/var/lib/dpkg/info/pulseaudio.list" ]] ; then
+            wine start /unix "$file"
+        fi
+
+        # run wine
         wine start /unix "$file"
+
         exit
     fi
 

@@ -33,7 +33,7 @@ main(){
     sleep 3
 
     # show a notification where to stop the player
-    result="$( el_notify wait chromecast Chromcast "$message_chromecast_playing" --action=stop="$message_stop_playback" )"
+    result="$( el_notify wait chromecast Chromecast "$message_chromecast_playing" --action=stop="$message_stop_playback" )"
 
     if [[ "$result" = "stop" ]] ; then
         killall mkchromecast 2>/dev/null || killall -9 mkchromecast 2>/dev/null

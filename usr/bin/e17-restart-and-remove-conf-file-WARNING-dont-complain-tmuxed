@@ -91,6 +91,11 @@ main(){
 
             # upgrade confs
             rm -fr ~/.e
+
+            # upgrade confs
+            EL_DEBUG=0 elive-skel upgrade .ecomp
+            EL_DEBUG=0 elive-skel upgrade .emerald
+
             ;;
         *)
             echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17" 1>&2
@@ -100,23 +105,27 @@ main(){
 
 
     # generic upgrades for any desktop
-    EL_DEBUG=0 elive-skel upgrade .config/audacious/playlists/1000.audpl
     EL_DEBUG=0 elive-skel upgrade .config/cairo-dock
-    EL_DEBUG=0 elive-skel upgrade .config/gtk-3.0/settings.ini
     EL_DEBUG=0 elive-skel upgrade .config/ulauncher
-    EL_DEBUG=0 elive-skel upgrade .config/terminology
-    EL_DEBUG=0 elive-skel upgrade .config/mimeapps.list
-    EL_DEBUG=0 elive-skel upgrade .conkyrc
-    EL_DEBUG=0 elive-skel upgrade .gtkrc-2.0.mine
     EL_DEBUG=0 elive-skel upgrade .local/share/ulauncher
-    EL_DEBUG=0 elive-skel upgrade .local/share/applications/defaults.list
-    EL_DEBUG=0 elive-skel upgrade .local/share/applications/mimeapps.list
+
+    EL_DEBUG=0 elive-skel upgrade .gtkrc-2.0.mine
+    EL_DEBUG=0 elive-skel upgrade .config/gtk-3.0/settings.ini
     EL_DEBUG=0 elive-skel upgrade .xsettingsd
     EL_DEBUG=0 elive-skel upgrade .Xdefaults
+
+    EL_DEBUG=0 elive-skel upgrade .conkyrc
+
+    EL_DEBUG=0 elive-skel upgrade .config/audacious/playlists/1000.audpl
+    EL_DEBUG=0 elive-skel upgrade .config/terminology
+    EL_DEBUG=0 elive-skel upgrade .config/mimeapps.list
+    EL_DEBUG=0 elive-skel upgrade .local/share/applications/defaults.list
+    EL_DEBUG=0 elive-skel upgrade .local/share/applications/mimeapps.list
 
     # cleanups
     rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
     rm -fr ~/.xsession-errors 1>/dev/null 2>&1
+    rm -fr ~/.config/Thunar/uca.xml 1>/dev/null 2>&1
 
     # sync
 

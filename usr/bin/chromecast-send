@@ -18,9 +18,9 @@ main(){
     fi
 
     local message_chromecast_playing
-    message_chromecast_playing="$( printf "$( eval_gettext "Video is playing in your default Chromecast screen" )" "" )"
+    message_chromecast_playing="$( printf "$( eval_gettext "Video Playing in your Chromecast Screen" )" "" )"
     local message_stop_playback
-    message_stop_playback="$( printf "$( eval_gettext "Stop Playback in Chromecast" )" "" )"
+    message_stop_playback="$( printf "$( eval_gettext "Stop Playback" )" "" )"
 
     # }}}
 

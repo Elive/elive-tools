@@ -25,7 +25,11 @@ main(){
     # }}}
 
     # send video to chromecast
-    ( mkchromecast --video -i "$@" & )
+    if ((is_interactive)) ; then
+        ( mkchromecast --video -i "$@" & )
+    else
+        ( mkchromecast --video -i "$@" 1>/dev/null 2>&1 & )
+    fi
     sleep 2
 
     # show a notification where to stop the player

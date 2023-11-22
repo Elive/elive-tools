@@ -147,6 +147,7 @@ run_compiler(){
                 $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
                     if ! makedeb -sri \"$file\" ; then
                         echo ; echo FAILED ;
+                        echo ; grep -H '^depends=' \"$file\" ;
                         if el_confirm 'Try again ignoring defined dependencies?' ; then
                             if ! makedeb -sri \"$file\" ; then
                                 echo ; echo FAILED ; sleep 10 ;
@@ -160,6 +161,7 @@ run_compiler(){
                     $precmd terminology -e "source /usr/lib/elive-tools/functions ;
                         if ! makedeb -sri \"$file\" ; then
                             echo ; echo FAILED ;
+                            echo ; grep -H '^depends=' \"$file\" ;
                             if el_confirm 'Try again ignoring defined dependencies?' ; then
                                 if ! makedeb -sri \"$file\" ; then
                                     echo ; echo FAILED ; sleep 10 ;

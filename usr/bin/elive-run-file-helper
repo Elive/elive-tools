@@ -219,16 +219,16 @@ run_script(){
             # auto sudo
             if [[ -x "$( which urxvt )" ]] ; then
                 if ((is_root_wanted)) ; then
-                    $precmd urxvt -hold -e bash -c "gksu $file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "gksu $file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
                 else
-                    $precmd urxvt -hold -e bash -c "$file ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                    $precmd urxvt -hold -e bash -c "$file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
                 fi
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
                     if ((is_root_wanted)) ; then
-                        $precmd terminology -hold -e "gksu ${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "gksu ${file} ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
                     else
-                        $precmd terminology -hold -e "${file} ; sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                        $precmd terminology -hold -e "${file} ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
                     fi
                 fi
             fi

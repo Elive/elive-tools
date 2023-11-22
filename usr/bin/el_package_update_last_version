@@ -66,7 +66,7 @@ main(){
                 apt-get update || apt-get update
             else
                 if el_check_sudo_automated ; then
-                    sudo apt-get update || sudo apt-get update
+                    sudo -E apt-get update || sudo -E apt-get update
                 fi
             fi
         else
@@ -146,7 +146,7 @@ main(){
             apt-get update || apt-get update
         else
             if el_check_sudo_automated ; then
-                sudo apt-get update || sudo apt-get update
+                sudo -E apt-get update || sudo -E apt-get update
             fi
         fi
     else
@@ -172,8 +172,8 @@ main(){
                 fi
             else
                 if el_check_sudo_automated ; then
-                    sudo TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install
-                    sudo TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename}
+                    sudo -E TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install
+                    sudo -E TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename}
                 else
                     el_error "$(basename $0) called in automated mode and we are non-root, how we should proceed? ignoring..."
                 fi

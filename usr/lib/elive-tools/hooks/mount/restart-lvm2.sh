@@ -12,7 +12,7 @@ if [[ -x "/etc/init.d/lvm2" ]] ; then
         # running as user (maybe in live)
         source /usr/lib/elive-tools/functions
         if el_check_sudo_automated ; then
-            sudo -H invoke-rc.d lvm2 start
+            sudo -E invoke-rc.d lvm2 start
         fi
     fi
 fi

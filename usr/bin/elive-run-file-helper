@@ -183,7 +183,16 @@ run_compiler(){
         # fi
         #
 
-        exit
+    fi
+
+    if [[ "$mime" = "text/x-makefile" ]] ; then
+        if [[ -x "$( which urxvt )" ]] ; then
+            $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
+        else
+            if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
+                $precmd terminology -hold -e "make && echo -e \"\n\nCOMPILED\n\""
+            fi
+        fi
     fi
 }
 
@@ -406,6 +415,10 @@ main(){
                     fi
                 fi
 
+                if [[ -z "$mime" ]] ; then
+                    $precmd xdg-open "$file"
+                    exit
+                fi
                 ;;
         esac
 
@@ -428,6 +441,7 @@ main(){
                 ;;
             "text/PKGBUILD")
                 run_compiler "user" "$file"
+                exit
                 ;;
             "application/zlib"|"application/x-bzip2")
                 if echo "$file" | grep -qsi "\.dmg$" ; then
@@ -435,10 +449,8 @@ main(){
                 fi
                 ;;
             "text/x-makefile")
-
-                if [[ -x "$( which urxvt )" ]] ; then
-                    $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
-                fi
+                run_compiler "user" "$file"
+                exit
                 ;;
             "application/edje"|"application/x-extension-edj")
                 run_edje "$file"

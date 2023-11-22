@@ -152,7 +152,7 @@ el_notify(){
 
     # count amount of seconds
     words="$( echo "$title $message" | wc -w )"
-    time="$( echo "$words / 2.7" | LC_NUMERIC=C bc -l | sed -e 's|\..*$||g' )"
+    time="$( echo "$words / 2.8" | LC_NUMERIC=C bc -l | sed -e 's|\..*$||g' )"
     time="${time%.*}"
     time="$(( $time + 3 ))"
 
@@ -164,7 +164,7 @@ el_notify(){
 
     case "$mode" in
         soft)
-            time="$(( $time - 3 ))"
+            time="$(( $time - 2 ))"
             extra_args="$extra_args -u low"
             ;;
         nor*)

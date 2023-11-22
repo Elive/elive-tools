@@ -7,6 +7,9 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+
+message_done="$( printf "$( eval_gettext "All operations are finished. You can now close the terminal." )" "" )"
+
 not_supported(){
     local mime file
 
@@ -110,7 +113,7 @@ run_edje(){
     el_warning "Unknown EDJE purpose file: groups:\n$( edje_player -G "$file" )"
 }
 
-run_script(){
+run_compiler(){
     local file mode
 
     mode="$1"
@@ -118,8 +121,78 @@ run_script(){
     file="$1"
     shift
 
-    local message_done
-    message_done="$( printf "$( eval_gettext "All operations are finished. You can now close the terminal." )" "" )"
+
+    # PKGBUILD files
+    if echo "$file" | grep -qs ".*PKGBUILD$" ; then
+
+        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "PKGBUILD files are meant to build a package, do you want do build it?" )" ; then
+
+            # deps
+            if ! el_dependencies_check "makedeb" ; then
+                export MAKEDEB_RELEASE=makedeb
+                if [[ -x "$( which urxvt )" ]] ; then
+                    $precmd urxvt -e bash -c "$(wget -qO - 'https://shlink.makedeb.org/install')"
+                else
+                    if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
+                        $precmd terminology -e "$(wget -qO - 'https://shlink.makedeb.org/install')"
+                    fi
+                fi
+            fi
+
+            el_notify normal gtk-dialog-info "Remember" "$( eval_gettext "If the build fails due to a missing dependency, you can simply edit the PKGBUILD file to change or remove the msising dependencies." )"
+
+
+            # build
+            if [[ -x "$( which urxvt )" ]] ; then
+                $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
+                    if ! makedeb -sri \"$file\" ; then
+                        echo ; echo FAILED ;
+                        if el_confirm 'Try again ignoring defined dependencies?' ; then
+                            if ! makedeb -sri \"$file\" ; then
+                                echo ; echo FAILED ; sleep 10 ;
+                            fi ;
+                        fi ;
+                    else
+                        echo ; echo DONE ; sleep 2 ;
+                    fi"
+            else
+                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
+                    $precmd terminology -e "source /usr/lib/elive-tools/functions ;
+                        if ! makedeb -sri \"$file\" ; then
+                            echo ; echo FAILED ;
+                            if el_confirm 'Try again ignoring defined dependencies?' ; then
+                                if ! makedeb -sri \"$file\" ; then
+                                    echo ; echo FAILED ; sleep 10 ;
+                                fi ;
+                            fi ;
+                        else
+                            echo ; echo DONE ; sleep 2 ;
+                        fi"
+                fi
+            fi
+
+            # el_notify normal logo-elive "Remember" "$message_appimage_important"
+        fi
+
+        # if ((is_root_wanted)) ; then
+        #     gksu "$file" ${options_appimage}
+        # else
+        #     "$file" ${options_appimage}
+        # fi
+        #
+
+        exit
+    fi
+}
+
+
+run_script(){
+    local file mode
+
+    mode="$1"
+    shift
+    file="$1"
+    shift
 
 
     # window executables?
@@ -276,6 +349,7 @@ main(){
 
         mime="$( LC_ALL="$EL_LC_EN" file -bi "$file" | sed -e 's|; charset.*$||g' )"
         [[ -z "$mime" ]] && continue
+        el_debug "MIME: $mime"
 
         # some fixes
         # XXX IMPORTANT: file --mime-type doesn't always include all the values, check in thunar properties "what name says the file type has" and then search it in the mimetype freedesktop database in /usr/share/mime/packages/freedesktop.org.xml
@@ -288,6 +362,11 @@ main(){
                 ;;
             "text/plain"|"application/octet-stream")
                 unset mime
+
+                # PKGBUILD
+                if echo "$file" | grep -qsi "PKGBUILD" ; then
+                    mime="text/PKGBUILD"
+                fi
 
                 # flatpak
                 if echo "$file" | grep -qsi "\.flatpakref" ; then
@@ -344,6 +423,9 @@ main(){
                 ;;
             "text/x-ruby"|"text/x-perl"|"text/x-awk"|"text/x-python")
                 run_script "user" "$file"
+                ;;
+            "text/PKGBUILD")
+                run_compiler "user" "$file"
                 ;;
             "application/zlib"|"application/x-bzip2")
                 if echo "$file" | grep -qsi "\.dmg$" ; then

@@ -163,7 +163,7 @@ run_compiler(){
                     if makedeb -s \"$file\" ; then
                         is_build=1
                     else
-                        echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you can simply edit the PKGBUILD file manually to change or remove the msising dependencies\n\"
+                        echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them\n\"
                         echo ; grep -H '^depends=' \"$file\"
                         if el_confirm '\nTry again ignoring defined dependencies?' ; then
                             if makedeb \"$file\" ; then
@@ -183,7 +183,7 @@ run_compiler(){
                         if makedeb -s \"$file\" ; then
                             is_build=1
                         else
-                            echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you can simply edit the PKGBUILD file manually to change or remove the msising dependencies\n\"
+                            echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them\n\"
                             echo ; grep -H '^depends=' \"$file\"
                             if el_confirm '\nTry again ignoring defined dependencies?' ; then
                                 if makedeb \"$file\" ; then

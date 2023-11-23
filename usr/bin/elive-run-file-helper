@@ -164,7 +164,7 @@ run_compiler(){
                         if makedeb -d --no-check \"$file\" ; then
                             is_build=1
                         else
-                            echo ; echo FAILED ; sleep 60
+                            echo ; echo -e 'FAILED - review why it failed and close the terminal when finish' ; sleep 20m
                         fi
                     #fi
                 fi

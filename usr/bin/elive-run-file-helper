@@ -129,31 +129,17 @@ run_compiler(){
 
             # deps
             if ! el_dependencies_check "makedeb" 2>/dev/null ; then
-                if [[ -x "$( which urxvt )" ]] ; then
-                    $precmd gksu urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
-                    set +e
-                    export MAKEDEB_RELEASE=makedeb
-                    curl -Ls 'https://shlink.makedeb.org/install' | sed -e 's|^.*die.*not allowed.*root user.*$|true|g' > /tmp/.${USER}-script.sh
-                    chmod +x /tmp/.${USER}-script.sh
-                    /tmp/.${USER}-script.sh
-                    rm -f /tmp/.${USER}-script.sh
-                    sleep 2
-                    "
+                $precmd gksu urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
+                set +e
+                export MAKEDEB_RELEASE=makedeb
+                curl -Ls 'https://shlink.makedeb.org/install' | sed -e 's|^.*die.*not allowed.*root user.*$|true|g' > /tmp/.${USER}-script.sh
+                chmod +x /tmp/.${USER}-script.sh
+                /tmp/.${USER}-script.sh
+                rm -f /tmp/.${USER}-script.sh
+                sleep 2
+                "
 
-                    #"$(wget -qO - 'https://shlink.makedeb.org/install')"
-                else
-                    if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                        $precmd gksu terminology -e "source /usr/lib/elive-tools/functions ;
-                        set +e
-                        export MAKEDEB_RELEASE=makedeb
-                        curl -Ls 'https://shlink.makedeb.org/install' | sed -e 's|^.*die.*not allowed.*root user.*$|true|g' > /tmp/.${USER}-script.sh
-                        chmod +x /tmp/.${USER}-script.sh
-                        /tmp/.${USER}-script.sh
-                        rm -f /tmp/.${USER}-script.sh
-                        sleep 2
-                        "
-                    fi
-                fi
+                #"$(wget -qO - 'https://shlink.makedeb.org/install')"
             fi
 
 
@@ -162,55 +148,30 @@ run_compiler(){
 
 
             # build
-            if [[ -x "$( which urxvt )" ]] ; then
-                $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
-                    if makedeb -s \"$file\" ; then
-                        is_build=1
-                    else
-                        echo -e '\nPossible packages to satisfy dependencies:'
-                        source \"$file\"
-                        for package in \"\${depends[@]}\" ; do
-                            apt-cache search glew | awk '{print \$1}' | sort | psort -- -p \"^\${package}\$\" -p \"^lib\" -p \"\-dev\$\" | head -5 | tr '\n' ' ' ; echo
-                        done
+            $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
+                if makedeb -s \"$file\" ; then
+                    is_build=1
+                else
+                    echo -e '\nPossible packages to satisfy dependencies:'
+                    source \"$file\"
+                    for package in \"\${depends[@]}\" ; do
+                        apt-cache search glew | awk '{print \$1}' | sort | psort -- -p \"^\${package}\$\" -p \"^lib\" -p \"\-dev\$\" | head -5 | tr '\n' ' ' ; echo
+                    done
 
-                        printf \"\n%s\n\" \"$message_failed\"
-                        echo ; grep -H '^depends=' \"$file\"
-                        #if el_confirm '\nTry again ignoring defined dependencies?' ; then
-                            if makedeb -d --no-check \"$file\" ; then
-                                is_build=1
-                            else
-                                echo ; echo FAILED ; sleep 60
-                            fi
-                        #fi
-                    fi
-                    if ((is_build)) ; then
-                        el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'
-                    fi
-                    "
-            else
-                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                    $precmd terminology -e "source /usr/lib/elive-tools/functions ;
-                        if makedeb -s \"$file\" ; then
+                    printf \"\n%s\n\" \"$message_failed\"
+                    echo ; grep -H '^depends=' \"$file\"
+                    #if el_confirm '\nTry again ignoring defined dependencies?' ; then
+                        if makedeb -d --no-check \"$file\" ; then
                             is_build=1
                         else
-                            printf \"\n%s\n\" \"$message_failed\"
-                            echo ; grep -H '^depends=' \"$file\"
-                            if el_confirm '\nTry again ignoring defined dependencies?' ; then
-                                if makedeb -d \"$file\" ; then
-                                    is_build=1
-                                else
-                                    echo ; echo FAILED ; sleep 30
-                                fi
-                            fi
+                            echo ; echo FAILED ; sleep 60
                         fi
-                        if ((is_build)) ; then
-                            el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'
-                        fi
-                        "
+                    #fi
                 fi
-            fi
-
-            # el_notify normal logo-elive "Remember" "$message_appimage_important"
+                if ((is_build)) ; then
+                    el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'
+                fi
+                "
         fi
 
         # if ((is_root_wanted)) ; then
@@ -223,13 +184,7 @@ run_compiler(){
     fi
 
     if [[ "$mime" = "text/x-makefile" ]] ; then
-        if [[ -x "$( which urxvt )" ]] ; then
-            $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
-        else
-            if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                $precmd terminology -hold -e "make && echo -e \"\n\nCOMPILED\n\""
-            fi
-        fi
+        $precmd urxvt -hold -e bash -c "make && echo -e \"\n\nCOMPILED\n\""
     fi
 }
 
@@ -327,48 +282,22 @@ run_script(){
 
     if [[ "$UID" = 0 ]] ; then
         # root run from a terminal
-        if [[ -x "$( which urxvt )" ]] ; then
-            $precmd urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
-        else
-            if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                $precmd terminology -hold -e "${file} ; apt-get -f install ; echo ; echo ; echo ${message_done}"
-            fi
-        fi
+        $precmd urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
     else
         # user mode
         if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
             # auto sudo
-            if [[ -x "$( which urxvt )" ]] ; then
-                if ((is_root_wanted)) ; then
-                    $precmd urxvt -hold -e bash -c "gksu $file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
-                else
-                    $precmd urxvt -hold -e bash -c "$file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
-                fi
+            if ((is_root_wanted)) ; then
+                $precmd urxvt -hold -e bash -c "gksu $file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
             else
-                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                    if ((is_root_wanted)) ; then
-                        $precmd terminology -hold -e "gksu ${file} ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
-                    else
-                        $precmd terminology -hold -e "${file} ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
-                    fi
-                fi
+                $precmd urxvt -hold -e bash -c "$file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         else
             # no sudo
-            if [[ -x "$( which urxvt )" ]] ; then
-                if ((is_root_wanted)) ; then
-                    $precmd urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"
-                else
-                    $precmd urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
-                fi
+            if ((is_root_wanted)) ; then
+                $precmd urxvt -hold -e bash -c "gksu $file ; echo ; echo ; echo ${message_done}"
             else
-                if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                    if ((is_root_wanted)) ; then
-                        $precmd terminology -hold -e "gksu ${file} ; echo ; echo ; echo ${message_done}"
-                    else
-                        $precmd terminology -hold -e "${file} ; echo ; echo ; echo ${message_done}"
-                    fi
-                fi
+                $precmd urxvt -hold -e bash -c "$file ; echo ; echo ; echo ${message_done}"
             fi
         fi
     fi
@@ -384,6 +313,11 @@ main(){
         is_simulate=1
         precmd="echo"
         shift
+    fi
+
+    # just make sure we have urxvt installed and don't waste code
+    if ! el_dependencies_check "urxvt" ; then
+        el_dependencies_install "rxvt-unicode"
     fi
 
     # }}}

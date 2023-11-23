@@ -156,8 +156,6 @@ run_compiler(){
                 fi
             fi
 
-            el_notify soft gtk-dialog-info "Remember" "$( eval_gettext "If the build fails due to a missing dependency, you can simply edit the PKGBUILD file to change or remove the msising dependencies." )"
-
 
             # build
             if [[ -x "$( which urxvt )" ]] ; then
@@ -165,10 +163,10 @@ run_compiler(){
                     if makedeb -s \"$file\" ; then
                         is_build=1
                     else
-                        echo ; echo FAILED
+                        echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you can simply edit the PKGBUILD file manually to change or remove the msising dependencies\n\"
                         echo ; grep -H '^depends=' \"$file\"
-                        if el_confirm 'Try again ignoring defined dependencies?' ; then
-                            if makedeb -s \"$file\" ; then
+                        if el_confirm '\nTry again ignoring defined dependencies?' ; then
+                            if makedeb \"$file\" ; then
                                 is_build=1
                             else
                                 echo ; echo FAILED ; sleep 10
@@ -185,10 +183,10 @@ run_compiler(){
                         if makedeb -s \"$file\" ; then
                             is_build=1
                         else
-                            echo ; echo FAILED
+                            echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you can simply edit the PKGBUILD file manually to change or remove the msising dependencies\n\"
                             echo ; grep -H '^depends=' \"$file\"
-                            if el_confirm 'Try again ignoring defined dependencies?' ; then
-                                if makedeb -s \"$file\" ; then
+                            if el_confirm '\nTry again ignoring defined dependencies?' ; then
+                                if makedeb \"$file\" ; then
                                     is_build=1
                                 else
                                     echo ; echo FAILED ; sleep 10

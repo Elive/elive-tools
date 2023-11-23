@@ -24,6 +24,25 @@ el_c_bold="\033[1m" # Bold 'color' effect
 
 set -e
 
+case "$( cat /etc/debian_version )" in
+    12.*|"bookworm"*)
+        is_bookworm=1
+        ;;
+    11.*|"bullseye"*)
+        is_bullseye=1
+        is_old_rdiff=1
+        ;;
+    10.*|9.*|8.*)
+        is_old_rdiff=1
+        ;;
+    # *)
+    #     is_new=1
+    #     ;;
+esac
+
+if ! ((is_old_rdiff)) ; then
+    rdiff_opts="--terminal-verbosity 2"
+fi
 
 # if we have the original and updated functions, use them (so: we are in elive)
 if [[ -s /usr/lib/elive-tools/functions ]] ; then
@@ -169,9 +188,17 @@ do_save(){
 
     #      rsync -av --delete "${target}/" "${bkpdir_id}/"
     check_files_owner_compatibility "${1}/"
-    do_sudo rdiff-backup "${1}/" "${2}/"
+    if ((is_old_rdiff)) ; then
+        do_sudo rdiff-backup "${1}/" "${2}/"
+    else
+        do_sudo rdiff-backup $rdiff_opts backup "${1}/" "${2}/"
+    fi
 
-    version="$( do_sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
+    if ((is_old_rdiff)) ; then
+        version="$( do_sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
+    else
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$2" | wc -l )"
+    fi
 
     echo -e "\r\033[K${el_c_g}Saved${el_c_n}  [${version}]"
     #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
@@ -198,14 +225,22 @@ do_get(){
         echo -ne "Recovering..."
     fi
 
-    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    if ((is_old_rdiff)) ; then
+        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    else
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    fi
 
     el_check_variables "version"
 
     do_sudo rm -rf "${1}.get"
 
     #check_files_owner_compatibility "${1}" # we don't need to check a dir to restore, so we have checked it at saving
-    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+    if ((is_old_rdiff)) ; then
+        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+    else
+        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.get/"
+    fi
 
     if ((is_quiet)) ; then
         do_sudo rsync -aq --delete "${1}.get/" "${2}/"
@@ -221,9 +256,15 @@ do_get(){
 
 do_list(){
     if [[ -d "$1" ]] ; then
-        do_sudo rdiff-backup -l "${1}"
-        echo ""
-        do_sudo rdiff-backup --parsable-output -l "${1}"
+        if ((is_old_rdiff)) ; then
+            do_sudo rdiff-backup -l "${1}"
+            echo ""
+            do_sudo rdiff-backup --parsable-output -l "${1}"
+        else
+            do_sudo rdiff-backup list increments "${1}"
+            echo ""
+            do_sudo rdiff-backup --parsable-output list increments "${1}"
+        fi
     else
         el_info "no backups found for this directory"
     fi
@@ -249,12 +290,20 @@ do_meld(){
         history_num="1"
     fi
 
-    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    if ((is_old_rdiff)) ; then
+        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    else
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    fi
 
     el_check_variables "version"
 
     do_sudo rm -rf "${1}.differ"
-    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    if ((is_old_rdiff)) ; then
+        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    else
+        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+    fi
 
     echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -279,12 +328,21 @@ do_diff(){
         history_num="1"
     fi
 
-    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    if ((is_old_rdiff)) ; then
+        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    else
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    fi
 
     el_check_variables "version"
 
     do_sudo rm -rf "${1}.differ"
-    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+
+    if ((is_old_rdiff)) ; then
+        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    else
+        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+    fi
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -321,12 +379,20 @@ do_diff_reverse(){
         history_num="1"
     fi
 
-    version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    if ((is_old_rdiff)) ; then
+        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    else
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+    fi
 
     el_check_variables "version"
 
     do_sudo rm -rf "${1}.differ"
-    do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    if ((is_old_rdiff)) ; then
+        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+    else
+        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+    fi
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 

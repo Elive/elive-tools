@@ -157,13 +157,17 @@ run_compiler(){
             fi
 
 
+            local message_failed
+            message_failed="$( printf "$( eval_gettext "FAILED: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them:" )" "" )"
+
+
             # build
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
                     if makedeb -s \"$file\" ; then
                         is_build=1
                     else
-                        echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them\n\"
+                        printf \"\n%s\n\" \"$message_failed\"
                         echo ; grep -H '^depends=' \"$file\"
                         if el_confirm '\nTry again ignoring defined dependencies?' ; then
                             if makedeb \"$file\" ; then
@@ -183,7 +187,7 @@ run_compiler(){
                         if makedeb -s \"$file\" ; then
                             is_build=1
                         else
-                            echo ; echo -e \"FAILED\nNote: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them\n\"
+                            printf \"\n%s\n\" \"$message_failed\"
                             echo ; grep -H '^depends=' \"$file\"
                             if el_confirm '\nTry again ignoring defined dependencies?' ; then
                                 if makedeb \"$file\" ; then

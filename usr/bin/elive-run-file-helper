@@ -167,15 +167,21 @@ run_compiler(){
                     if makedeb -s \"$file\" ; then
                         is_build=1
                     else
+                        echo -e '\nPossible packages to satisfy dependencies:'
+                        source \"$file\"
+                        for package in \"\${depends[@]}\" ; do
+                            apt-cache search glew | awk '{print \$1}' | sort | psort -- -p \"^\${package}\$\" -p \"^lib\" -p \"\-dev\$\" | head -5 | tr '\n' ' ' ; echo
+                        done
+
                         printf \"\n%s\n\" \"$message_failed\"
                         echo ; grep -H '^depends=' \"$file\"
-                        if el_confirm '\nTry again ignoring defined dependencies?' ; then
-                            if makedeb -d \"$file\" ; then
+                        #if el_confirm '\nTry again ignoring defined dependencies?' ; then
+                            if makedeb -d --no-check \"$file\" ; then
                                 is_build=1
                             else
-                                echo ; echo FAILED ; sleep 30
+                                echo ; echo FAILED ; sleep 60
                             fi
-                        fi
+                        #fi
                     fi
                     if ((is_build)) ; then
                         el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'

@@ -170,7 +170,7 @@ run_compiler(){
                         printf \"\n%s\n\" \"$message_failed\"
                         echo ; grep -H '^depends=' \"$file\"
                         if el_confirm '\nTry again ignoring defined dependencies?' ; then
-                            if makedeb \"$file\" ; then
+                            if makedeb -d \"$file\" ; then
                                 is_build=1
                             else
                                 echo ; echo FAILED ; sleep 30
@@ -190,7 +190,7 @@ run_compiler(){
                             printf \"\n%s\n\" \"$message_failed\"
                             echo ; grep -H '^depends=' \"$file\"
                             if el_confirm '\nTry again ignoring defined dependencies?' ; then
-                                if makedeb \"$file\" ; then
+                                if makedeb -d \"$file\" ; then
                                     is_build=1
                                 else
                                     echo ; echo FAILED ; sleep 30

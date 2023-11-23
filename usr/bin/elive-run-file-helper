@@ -404,12 +404,12 @@ main(){
                 unset mime
 
                 # PKGBUILD
-                if echo "$file" | grep -qsi "PKGBUILD" ; then
+                if echo "$( basename "$file" )" | grep -qs "^PKGBUILD$" ; then
                     mime="text/PKGBUILD"
                 fi
 
                 # flatpak
-                if echo "$file" | grep -qsi "\.flatpakref" ; then
+                if echo "$( basename "$file" )" | grep -qsi "\.flatpakref$" ; then
                     # install dep
                     if ! el_dependencies_check "flatpak" ; then
                         el_dependencies_install "flatpak|gnome-software-plugin-flatpak"
@@ -417,13 +417,13 @@ main(){
                 fi
 
                 # edje files are octets
-                if echo "$file" | grep -qsi "\.edj" ; then
+                if echo "$( basename "$file" )" | grep -qsi "\.edj$" ; then
                     if edje_player -G "$file" | head -5 | grep -qs "group.*in file" ; then
                         mime="application/edje"
                     fi
                 fi
                 # edc files are text/plain
-                if echo "$file" | grep -qsi "\.edc" ; then
+                if echo "$( basename "$file" )" | grep -qsi "\.edc$" ; then
                     mime="text/edje"
                 fi
 
@@ -434,7 +434,7 @@ main(){
                     fi
                 fi
                 if [[ -z "$mime" ]] ; then
-                    if echo "$file" | grep -qsi ".*\.run" ; then
+                if echo "$( basename "$file" )" | grep -qsi "\.run$" ; then
                         mime="text/x-shellscript"
                     fi
                 fi
@@ -445,8 +445,11 @@ main(){
                 fi
 
                 if [[ -z "$mime" ]] ; then
-                    $precmd xdg-open "$file"
-                    exit
+                    if [[ -x "$( which scite )" ]] ; then
+                        el_debug "fallback to open file from scite"
+                        scite "$file"
+                        exit
+                    fi
                 fi
                 ;;
         esac
@@ -501,7 +504,10 @@ main(){
                 fi
                 # run a default launcher in any of the cases!
                 if [[ -x "/usr/bin/thunar" ]] ; then
-                    $precmd xdg-open "$file"
+                    #$precmd xdg-open "$file"  # do not use this option, it ends in a loop
+                    el_debug "fallback to open file directory"
+                    thunar "$( dirname "$file" )"
+                    exit
                 fi
                 ;;
         esac

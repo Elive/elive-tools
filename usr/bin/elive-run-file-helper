@@ -128,48 +128,77 @@ run_compiler(){
         if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "PKGBUILD files are meant to build a package, do you want do build it?" )" ; then
 
             # deps
-            if ! el_dependencies_check "makedeb" ; then
-                export MAKEDEB_RELEASE=makedeb
+            if ! el_dependencies_check "makedeb" 2>/dev/null ; then
                 if [[ -x "$( which urxvt )" ]] ; then
-                    $precmd urxvt -e bash -c "$(wget -qO - 'https://shlink.makedeb.org/install')"
+                    $precmd gksu urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
+                    set +e
+                    export MAKEDEB_RELEASE=makedeb
+                    curl -Ls 'https://shlink.makedeb.org/install' | sed -e 's|^.*die.*not allowed.*root user.*$|true|g' > /tmp/.${USER}-script.sh
+                    chmod +x /tmp/.${USER}-script.sh
+                    /tmp/.${USER}-script.sh
+                    rm -f /tmp/.${USER}-script.sh
+                    sleep 2
+                    "
+
+                    #"$(wget -qO - 'https://shlink.makedeb.org/install')"
                 else
                     if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
-                        $precmd terminology -e "$(wget -qO - 'https://shlink.makedeb.org/install')"
+                        $precmd gksu terminology -e "source /usr/lib/elive-tools/functions ;
+                        set +e
+                        export MAKEDEB_RELEASE=makedeb
+                        curl -Ls 'https://shlink.makedeb.org/install' | sed -e 's|^.*die.*not allowed.*root user.*$|true|g' > /tmp/.${USER}-script.sh
+                        chmod +x /tmp/.${USER}-script.sh
+                        /tmp/.${USER}-script.sh
+                        rm -f /tmp/.${USER}-script.sh
+                        sleep 2
+                        "
                     fi
                 fi
             fi
 
-            el_notify normal gtk-dialog-info "Remember" "$( eval_gettext "If the build fails due to a missing dependency, you can simply edit the PKGBUILD file to change or remove the msising dependencies." )"
+            el_notify soft gtk-dialog-info "Remember" "$( eval_gettext "If the build fails due to a missing dependency, you can simply edit the PKGBUILD file to change or remove the msising dependencies." )"
 
 
             # build
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd urxvt -e bash -c "source /usr/lib/elive-tools/functions ;
-                    if ! makedeb -sri \"$file\" ; then
-                        echo ; echo FAILED ;
-                        echo ; grep -H '^depends=' \"$file\" ;
-                        if el_confirm 'Try again ignoring defined dependencies?' ; then
-                            if ! makedeb -sri \"$file\" ; then
-                                echo ; echo FAILED ; sleep 10 ;
-                            fi ;
-                        fi ;
+                    if makedeb -s \"$file\" ; then
+                        is_build=1
                     else
-                        echo ; echo DONE ; sleep 2 ;
-                    fi"
+                        echo ; echo FAILED
+                        echo ; grep -H '^depends=' \"$file\"
+                        if el_confirm 'Try again ignoring defined dependencies?' ; then
+                            if makedeb -s \"$file\" ; then
+                                is_build=1
+                            else
+                                echo ; echo FAILED ; sleep 10
+                            fi
+                        fi
+                    fi
+                    if ((is_build)) ; then
+                        el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'
+                    fi
+                    "
             else
                 if readlink -f /etc/altenatives/x-terminal-emulator | grep -Fqs "terminology" ; then
                     $precmd terminology -e "source /usr/lib/elive-tools/functions ;
-                        if ! makedeb -sri \"$file\" ; then
-                            echo ; echo FAILED ;
-                            echo ; grep -H '^depends=' \"$file\" ;
-                            if el_confirm 'Try again ignoring defined dependencies?' ; then
-                                if ! makedeb -sri \"$file\" ; then
-                                    echo ; echo FAILED ; sleep 10 ;
-                                fi ;
-                            fi ;
+                        if makedeb -s \"$file\" ; then
+                            is_build=1
                         else
-                            echo ; echo DONE ; sleep 2 ;
-                        fi"
+                            echo ; echo FAILED
+                            echo ; grep -H '^depends=' \"$file\"
+                            if el_confirm 'Try again ignoring defined dependencies?' ; then
+                                if makedeb -s \"$file\" ; then
+                                    is_build=1
+                                else
+                                    echo ; echo FAILED ; sleep 10
+                                fi
+                            fi
+                        fi
+                        if ((is_build)) ; then
+                            el_notify normal logo-elive 'Package build' 'Package is built. You can install it now with double-click the file.'
+                        fi
+                        "
                 fi
             fi
 

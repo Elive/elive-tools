@@ -173,7 +173,7 @@ run_compiler(){
                             if makedeb \"$file\" ; then
                                 is_build=1
                             else
-                                echo ; echo FAILED ; sleep 10
+                                echo ; echo FAILED ; sleep 30
                             fi
                         fi
                     fi
@@ -193,7 +193,7 @@ run_compiler(){
                                 if makedeb \"$file\" ; then
                                     is_build=1
                                 else
-                                    echo ; echo FAILED ; sleep 10
+                                    echo ; echo FAILED ; sleep 30
                                 fi
                             fi
                         fi

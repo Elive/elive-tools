@@ -72,7 +72,7 @@ main(){
 
     # make a blurred version for the login manager
     if touch /var/tmp/wallpaper/wallpaper.jpg 2>/dev/null ; then
-        convert "$file" -blur 0x20 -brightness-contrast -20x5 "/var/tmp/wallpaper/wallpaper.jpg"
+        convert "$file" -blur 0x30 -brightness-contrast -8x2 "/var/tmp/wallpaper/wallpaper.jpg"
     fi
 
 }

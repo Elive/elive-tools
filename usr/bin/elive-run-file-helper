@@ -144,7 +144,7 @@ run_compiler(){
 
 
             local message_failed
-            message_failed="$( printf "$( eval_gettext "FAILED: If the build failed due to a missing dependency, you should install them first, or edit the PKGBUILD file manually if needed to change or remove them:" )" "" )"
+            message_failed="$( printf "$( eval_gettext "FAILED: If the build failed due to a missing dependency, you should install them first. Remember that more compatible PKGBUILDs can be found at mpr.makedeb.org. You can also edit the PKGBUILD file manually if needed to change or remove them:" )" "" )"
 
 
             # build

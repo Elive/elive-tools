@@ -91,15 +91,40 @@ main(){
     # save a copy of the voice
     if ! ((is_played)) ; then
         # create new audio file
-        echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
-        # play it
-        play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
-        is_played=1
+        if [[ -n "$OPENAI_API_KEY" ]] && [[ -x "$( which elive-assistant )" ]] ; then
+            file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+            # rate limit?
+            if [[ ! -s "$file" ]] ; then
+                sleep 2 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                if [[ ! -s "$file" ]] ; then
+                    sleep 10 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                    if [[ ! -s "$file" ]] ; then
+                        sleep 30 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                        if [[ ! -s "$file" ]] ; then
+                            sleep 1m ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                        fi
+                    fi
+                fi
+            fi
 
-        # save bigger cache and compressed
+            if [[ -s "$file" ]] ; then
+                mv -f "$file" "$HOME/.cache/el_speak/${text_filename}.mp3"
+                lame --quiet --decode "$HOME/.cache/el_speak/${text_filename}.mp3" - | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+                is_played=1
+            fi
+        else
+            echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
+
+            # play it
+            play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+            is_played=1
+
+            # save bigger cache and compressed
+            lame --quiet -q 7 "$HOME/.cache/el_speak/${text_filename}.wav" "$HOME/.cache/el_speak/${text_filename}.mp3"
+        fi
+
         cd "$HOME/.cache/el_speak"
-        lame --quiet -q 7 "$HOME/.cache/el_speak/${text_filename}.wav" "$HOME/.cache/el_speak/${text_filename}.mp3"
-        ls -1tr *mp3 | head -n "-120" | xargs rm -f
+        ls -1tr *mp3 | head -n "-200" | xargs rm -f
         rm -f "$HOME/.cache/el_speak/"*.wav
     fi
 

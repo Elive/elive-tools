@@ -76,24 +76,33 @@ main(){
 
     #echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
 
-    # save a copy of the voice
-    if ! [[ -s "$HOME/.cache/el_speak/${text_filename}.wav" ]] ; then
-        echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
-    fi
-    # if we have the voice, play it, with effects
+    # play if we have it in cache, with effects
     if [[ -s "$HOME/.cache/el_speak/${text_filename}.wav" ]] ; then
         play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+        is_played=1
+    else
+        if [[ -s "$HOME/.cache/el_speak/${text_filename}.mp3" ]] ; then
+            # play -q -t mp3 "$HOME/.cache/el_speak/${text_filename}.mp3" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+            lame --quiet --decode "$HOME/.cache/el_speak/${text_filename}.mp3" - | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+            is_played=1
+        fi
     fi
 
-    # cleanup space
-    cd "$HOME/.cache/el_speak"
-    # update: the next command not works with some characters, so the next is the alternative:
-    #ls -1tr | head -n "-40" | xargs rm -f
-    count=0
-    while IFS= read -r -d ' ' && IFS= read -r -d '' filename; do
-        (( ++count > 40 )) && printf '%s\0' "$filename"
-    done < <(find . -maxdepth 1 -type f -iname '*'wav -printf '%T@ %P\0' | sort -g -z) \
-        | xargs -0 rm -f --
+    # save a copy of the voice
+    if ! ((is_played)) ; then
+        # create new audio file
+        echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
+        # play it
+        play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 4  2>/dev/null
+        is_played=1
+
+        # save bigger cache and compressed
+        cd "$HOME/.cache/el_speak"
+        lame --quiet -q 7 "$HOME/.cache/el_speak/${text_filename}.wav" "$HOME/.cache/el_speak/${text_filename}.mp3"
+        ls -1tr *mp3 | head -n "-120" | xargs rm -f
+        rm -f "$HOME/.cache/el_speak/"*.wav
+    fi
+
 
     #echo "$text" >> /tmp/.$(basename $0)-${USER}-log.txt
 
@@ -104,7 +113,7 @@ main(){
 #
 #  MAIN
 #
-el_dependencies_check "text2wave|play|sox|iconv"
+el_dependencies_check "text2wave|play|sox|iconv|lame"
 
 if ((is_stdin)) ; then
     main "$@"

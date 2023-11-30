@@ -122,10 +122,15 @@ main(){
     EL_DEBUG=0 elive-skel upgrade .local/share/applications/defaults.list
     EL_DEBUG=0 elive-skel upgrade .local/share/applications/mimeapps.list
 
+    EL_DEBUG=0 elive-skel upgrade .config/smplayer
+
     # cleanups
     rm -fr ~/.elementary ~/.config/elementary 1>/dev/null 2>&1
     rm -fr ~/.xsession-errors 1>/dev/null 2>&1
     rm -fr ~/.config/Thunar/uca.xml 1>/dev/null 2>&1
+
+    # restart audio configurations
+    touch ~/.asoundrc-reconfigureme
 
     # sync
 

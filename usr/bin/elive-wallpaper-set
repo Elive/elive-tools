@@ -120,6 +120,7 @@ main(){
         kill -9 $pids 2>/dev/null || true
 
         convert "$file" -blur 0x30 -brightness-contrast -8x2 "/var/tmp/wallpaper/wallpaper.jpg"
+        chmod a+w "/var/tmp/wallpaper/wallpaper.jpg"
     fi
 
 }

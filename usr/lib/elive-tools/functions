@@ -749,7 +749,7 @@ EOF
         if el_check_sudo_automated ; then
             for i in 1 2
             do
-                if sudo -H bash "$temp" ; then
+                if sudo -H -n bash "$temp" ; then
                     unset is_failed
                     break
                 else
@@ -851,9 +851,9 @@ el_aptget_update(){
         else
             if el_check_sudo_automated ; then
                 if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] && ! ((is_quiet)) && [[ -n "$guitool" ]] ; then
-                    { sudo -E apt-get update || sudo -E apt-get update ; } | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
+                    sudo -H -n apt-get update || sudo -H -n apt-get update | $guitool --progress --pulsate --percentage=0 --auto-close --text="$message_updating"
                 else
-                    sudo -E apt-get update || sudo -E apt-get update
+                    sudo -H -n apt-get update || sudo -H -n apt-get update
                 fi
             else
                 if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]]  ; then
@@ -1308,54 +1308,63 @@ el_check_sudo_automated(){
 #===============================================================================
 el_sudo(){
     # pre {{{
-    local args is_failed
+    local args is_failed returned
     el_security_function_loop || return 0
 
     args="$@"
     el_check_variables "args"
 
     el_set_display_variables
+    returned=0
 
     # }}}
     if el_check_sudo_automated 2>/dev/null 1>&2 ; then
         sudo -H -n "$@"
+        returned=$?
     else
 
         # try to run with automated sudo (without-prompt) first:
-        if ! sudo -H -n "$@" ; then
-            if [[ "${DISPLAY}" = ":0.0" ]] || [[ "${DISPLAY}" = ":0" ]] ; then
-                if ! el_dependencies_check gksu ; then
-                    el_dependencies_install "gksu"
+        if [[ "${DISPLAY}" = ":0.0" ]] || [[ "${DISPLAY}" = ":0" ]] ; then
+            if ! el_dependencies_check gksu ; then
+                el_dependencies_install "gksu"
+            fi
+
+            # multiple gksu attempts
+            for i in 1 2
+            do
+                gksu "$@"
+                returned=$?
+
+                if [[ "$returned" = 0 ]] ; then
+                    unset is_failed
+                    break
+                else
+                    is_failed=1
                 fi
+            done
 
-                # multiple gksu attempts
-                for i in 1 2
-                do
-                    if gksu "$@" ; then
-                        unset is_failed
-                        break
-                    else
-                        is_failed=1
-                    fi
-                done
+            if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
+                timeout 40 $guitool --error # --text="${SOURCE}: $( eval_gettext "Wrong password" )"
+            fi
+        else
+            if ((is_interactive)) ; then
+                el_info "Insert Admin Password to run: $*"
 
-                if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-                    timeout 40 $guitool --error # --text="${SOURCE}: $( eval_gettext "Wrong password" )"
+                sudo -H "$@"
+                returned=$?
+
+                if ! [[ "$returned" = 0 ]] ; then
+                    su -c "$@" root
+                    returned=$?
                 fi
             else
-                el_info "Insert Admin Password to run: $*"
-                if ! sudo -H "$@" ; then
-                    if ! su -c "$@" root ; then
-                        is_failed=1
-                    fi
-                fi
+                el_error "unable to run el_sudo because we are not in interactive mode"
+                returned=1
             fi
         fi
     fi
 
-    if ((is_failed)) ; then
-        return 1
-    fi
+    return "$returned"
 
 }
 #===  FUNCTION  ================================================================
@@ -3643,7 +3652,7 @@ el_aptget(){
         TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get "$@"
     else
         if el_check_sudo_automated ; then
-            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo -E apt-get "$@"
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  sudo -H -n apt-get "$@"
         else
             if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 if ! el_dependencies_check gksu ; then

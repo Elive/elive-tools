@@ -288,9 +288,9 @@ run_script(){
         if [[ -s "/etc/sudoers.d/sudo_nopasswd_packagers_$USER" ]] ; then
             # auto sudo
             if ((is_root_wanted)) ; then
-                $precmd urxvt -hold -e bash -c "gksu $file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
+                $precmd gksu urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
             else
-                $precmd urxvt -hold -e bash -c "$file ; sudo -E apt-get -f install ; echo ; echo ; echo ${message_done}"
+                $precmd urxvt -hold -e bash -c "$file ; el_sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         else
             # no sudo

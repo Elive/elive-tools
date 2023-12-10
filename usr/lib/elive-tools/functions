@@ -1140,18 +1140,13 @@ el_package_upgrade_fast(){
                 fi
             fi
         else
-            el_sudo -E dpkg -i *deb
-            el_sudo -E dpkg --configure -a
+            el_sudo bash -c "dpkg -i *deb ; dpkg --configure -a"
 
             if el_aptget -f install -q=2 -y ; then
                 el_debug "updated packages successfully: $@"
                 failed=0
             else
-                el_sudo -E dpkg --configure -a
-                el_sudo -E apt-get -f install -q=2 -y
-                # try again
-                el_sudo -E dpkg -i *deb
-                el_sudo -E dpkg --configure -a
+                el_sudo bash -c "dpkg --configure -a ; apt-get -f install -q=2 -y ; dpkg -i *deb ; dpkg --configure -a"
 
                 if el_aptget -f install -q=2 -y ; then
                     el_debug "updated packages successfully: $@"

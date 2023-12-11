@@ -124,7 +124,7 @@ main(){
         fi
 
         cd "$HOME/.cache/el_speak"
-        ls -1tr *mp3 | head -n "-200" | xargs rm -f
+        ls -1tr *mp3 | head -n "-500" | xargs rm -f
         rm -f "$HOME/.cache/el_speak/"*.wav
     fi
 

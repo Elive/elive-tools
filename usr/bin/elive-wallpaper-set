@@ -122,15 +122,15 @@ main(){
         fi
 
         if [[ "$( identify "$file" | tr ' ' '\n' | grep -E "[[:digit:]]+x[[:digit:]]+" | sort -u -V | head -1 | sed -e 's|x.*$||g' )" -gt 2000 ]] ; then
-            convert -resize "2000x2000" "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
+            convert -limit time 300 -resize "2000x2000" "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
         else
             cp "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
         fi
 
 
 
-        convert "/tmp/.$(basename $SOURCE)-${USER}1.jpg" -blur 0x30 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
-        convert "/tmp/.$(basename $SOURCE)-${USER}2.jpg" -brightness-contrast -8x2 "/tmp/.$(basename $SOURCE)-${USER}3.jpg"
+        convert "/tmp/.$(basename $SOURCE)-${USER}1.jpg" -blur 0x30 -limit time 600 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
+        convert "/tmp/.$(basename $SOURCE)-${USER}2.jpg" -brightness-contrast -8x2 -limit time 300 "/tmp/.$(basename $SOURCE)-${USER}3.jpg"
         mv -f "/tmp/.$(basename $SOURCE)-${USER}3.jpg" "/var/tmp/wallpaper/wallpaper.jpg"
         chmod a+w "/var/tmp/wallpaper/wallpaper.jpg"
         rm -f "/tmp/.$(basename $SOURCE)-${USER}"*jpg

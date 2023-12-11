@@ -84,6 +84,8 @@ main(){
             continue
         fi
 
+        file="$( readlink -f "$file" )"
+
         # e16
         if [[ -n "$EROOT" ]] ; then
             name="$( echo "$file" | sed -e 's|^.*/||g' -e 's|\.*$||g' -e 's| |_|g' )"

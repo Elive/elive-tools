@@ -117,11 +117,21 @@ main(){
     if touch /var/tmp/wallpaper/wallpaper.jpg 2>/dev/null ; then
         # killall convert || killall -9 convert
         pids="$( ps u -C convert | grep -E "(blur|var/tmp/wallpaper|$(basename $SOURCE)-${USER})" | awk '{print $2}' | tr '\n' ' ' )"
-        kill -9 $pids 2>/dev/null || true
+        if [[ -n "$pids" ]] ; then
+            kill -9 $pids 2>/dev/null || true
+        fi
 
-        convert "$file" -blur 0x30 "/tmp/.$(basename $SOURCE)-${USER}.jpg"
-        convert "/tmp/.$(basename $SOURCE)-${USER}.jpg" -brightness-contrast -8x2 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
-        mv -f "/tmp/.$(basename $SOURCE)-${USER}2.jpg" "/var/tmp/wallpaper/wallpaper.jpg"
+        if [[ "$( identify "$file" | tr ' ' '\n' | grep -E "[[:digit:]]+x[[:digit:]]+" | sort -u -V | head -1 | sed -e 's|x.*$||g' )" -gt 2000 ]] ; then
+            convert -resize "2000x2000" "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
+        else
+            cp "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
+        fi
+
+
+
+        convert "/tmp/.$(basename $SOURCE)-${USER}1.jpg" -blur 0x30 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
+        convert "/tmp/.$(basename $SOURCE)-${USER}2.jpg" -brightness-contrast -8x2 "/tmp/.$(basename $SOURCE)-${USER}3.jpg"
+        mv -f "/tmp/.$(basename $SOURCE)-${USER}3.jpg" "/var/tmp/wallpaper/wallpaper.jpg"
         chmod a+w "/var/tmp/wallpaper/wallpaper.jpg"
         rm -f "/tmp/.$(basename $SOURCE)-${USER}"*jpg
     fi

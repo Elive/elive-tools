@@ -116,10 +116,11 @@ main(){
     # make a blurred version for the login manager
     if touch /var/tmp/wallpaper/wallpaper.jpg 2>/dev/null ; then
         # killall convert || killall -9 convert
-        pids="$( ps u -C convert | grep -E "(blur|var/tmp/wallpaper)" | awk '{print $2}' | tr '\n' ' ' )"
+        pids="$( ps u -C convert | grep -E "(blur|var/tmp/wallpaper|$(basename $SOURCE)-${USER})" | awk '{print $2}' | tr '\n' ' ' )"
         kill -9 $pids 2>/dev/null || true
 
-        convert "$file" -blur 0x30 -brightness-contrast -8x2 "/var/tmp/wallpaper/wallpaper.jpg"
+        convert "$file" -blur 0x30 -brightness-contrast -8x2 "/tmp/.$(basename $SOURCE)-${USER}.jpg"
+        mv -f "/tmp/.$(basename $SOURCE)-${USER}.jpg" "/var/tmp/wallpaper/wallpaper.jpg"
         chmod a+w "/var/tmp/wallpaper/wallpaper.jpg"
     fi
 

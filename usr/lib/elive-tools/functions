@@ -1159,7 +1159,7 @@ el_package_upgrade_fast(){
             fi
         fi
     else
-        return 1
+        failed=1
     fi
 
     cd "$dirprev"

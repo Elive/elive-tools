@@ -188,6 +188,8 @@ el_notify(){
             ;;
     esac
 
+    [[ "$time" -lt 2 ]] && time=2
+
     # convert time to milliseconds
     time="$(( $time * 1000 ))"
 

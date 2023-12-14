@@ -118,7 +118,9 @@ main(){
     # make a blurred version for the login manager
     if touch /var/tmp/wallpaper/wallpaper.jpg 2>/dev/null ; then
         if ! el_dependencies_check "convert-7" ; then
-            el_dependencies_install "imagemagick-7"
+            if ! el_dependencies_install "imagemagick-7" ; then
+                el_error "unable to install version 7 of imagemagick"
+            fi
         fi
         # killall convert-7 || killall -9 convert-7
         pids="$( ps u -C convert-7 | grep -E "(blur|var/tmp/wallpaper|$(basename $SOURCE)-${USER})" | awk '{print $2}' | tr '\n' ' ' )"

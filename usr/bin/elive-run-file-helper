@@ -290,7 +290,7 @@ run_script(){
             if ((is_root_wanted)) ; then
                 $precmd gksu urxvt -hold -e bash -c "$file ; apt-get -f install ; echo ; echo ; echo ${message_done}"
             else
-                $precmd urxvt -hold -e bash -c "$file ; el_sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
+                $precmd urxvt -hold -e bash -c "$file ; source /usr/lib/elive-tools/functions ; el_sudo apt-get -f install ; echo ; echo ; echo ${message_done}"
             fi
         else
             # no sudo

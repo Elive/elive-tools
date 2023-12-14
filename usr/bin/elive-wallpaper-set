@@ -117,22 +117,25 @@ main(){
 
     # make a blurred version for the login manager
     if touch /var/tmp/wallpaper/wallpaper.jpg 2>/dev/null ; then
-        # killall convert || killall -9 convert
-        pids="$( ps u -C convert | grep -E "(blur|var/tmp/wallpaper|$(basename $SOURCE)-${USER})" | awk '{print $2}' | tr '\n' ' ' )"
+        if ! el_dependencies_check "convert-7" ; then
+            el_dependencies_install "imagemagick-7"
+        fi
+        # killall convert-7 || killall -9 convert-7
+        pids="$( ps u -C convert-7 | grep -E "(blur|var/tmp/wallpaper|$(basename $SOURCE)-${USER})" | awk '{print $2}' | tr '\n' ' ' )"
         if [[ -n "$pids" ]] ; then
             kill -9 $pids 2>/dev/null || true
         fi
 
         if [[ "$( identify "$file" | tr ' ' '\n' | grep -E "[[:digit:]]+x[[:digit:]]+" | sort -u -V | head -1 | sed -e 's|x.*$||g' )" -gt 2000 ]] ; then
-            convert -limit time 300 -resize "2000x2000" "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
+            convert-7 -limit time 300 -resize "2000x2000" "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
         else
             cp "$file" "/tmp/.$(basename $SOURCE)-${USER}1.jpg"
         fi
 
 
 
-        convert "/tmp/.$(basename $SOURCE)-${USER}1.jpg" -blur 0x30 -limit time 600 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
-        convert "/tmp/.$(basename $SOURCE)-${USER}2.jpg" -brightness-contrast -8x2 -limit time 300 "/tmp/.$(basename $SOURCE)-${USER}3.jpg"
+        convert-7 "/tmp/.$(basename $SOURCE)-${USER}1.jpg" -blur 0x30 -limit time 600 "/tmp/.$(basename $SOURCE)-${USER}2.jpg"
+        convert-7 "/tmp/.$(basename $SOURCE)-${USER}2.jpg" -brightness-contrast -8x2 -limit time 300 "/tmp/.$(basename $SOURCE)-${USER}3.jpg"
         mv -f "/tmp/.$(basename $SOURCE)-${USER}3.jpg" "/var/tmp/wallpaper/wallpaper.jpg"
         chmod a+w "/var/tmp/wallpaper/wallpaper.jpg"
         rm -f "/tmp/.$(basename $SOURCE)-${USER}"*jpg

@@ -713,9 +713,14 @@ if ! apt-get install -y $depends ; then
 
     if ! apt-get install -y $depends ; then
         apt-get -f install ; el_aptget_update force ; apt-get install $depends
+        ret=\$?
     fi
 fi
-echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+if ((ret)) ; then
+    return \$ret
+else
+    echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+fi
 "
 
 
@@ -728,11 +733,18 @@ export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEB
 if ! apt-get install -y $depends ; then
     el_aptget_update force
     apt-get -f install
+
     if ! apt-get install -y $depends ; then
         apt-get -f install ; el_aptget_update force ; apt-get install $depends
+        ret=\$?
     fi
 fi
-echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+if ((ret)) ; then
+    return \$ret
+else
+    echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+fi
+
 " root
 
     else

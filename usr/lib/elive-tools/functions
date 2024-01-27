@@ -206,10 +206,9 @@ el_notify(){
         fi
 
         # run notification daemon if not running already
-        if ! [[ -n "$E_START" ]] ; then
+        if [[ -n "$EROOT" ]] ; then
             if ! pidof "notification-daemon" 1>/dev/null 2>&1 ; then
-                ( /usr/lib/notification-daemon/notification-daemon & )
-                sleep 2
+                notification-daemon-restarter
             fi
         fi
 

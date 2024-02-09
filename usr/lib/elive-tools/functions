@@ -3147,7 +3147,7 @@ el_request_donation(){
     fi
 
     [[ -s /etc/elive/settings ]] && source /etc/elive/settings
-    if ((premium_user)) ; then
+    if ((is_premium_user)) ; then
         return 0
     fi
 

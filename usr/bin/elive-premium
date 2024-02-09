@@ -19,6 +19,10 @@ ssh_key_check(){
     fi
 }
 
+github_login_required(){
+    el_notify_user "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation to join the Elive-Premium github organization in order to view this page." )"
+}
+
 github_access_check(){
     local result is_cloned
 
@@ -152,18 +156,23 @@ main(){
     el_info "Elivim. An amazing framework for the NeoVim editor"
     if el_confirm "$( eval_gettext "Do you want to install the Elive Premium configuration for Elivim / Neovim?" )" ; then
         el_info "$( eval_gettext "Follow the instructions on the terminal." )"
+
+        # github_login_required 
+        # web-launcher "https://github.com/Elive-Premium/elive-for-servers"
+
         el_dependencies_install "neovim|git|python3-venv|fonts-noto-color-emoji|ripgrep|nodejs|npm|gcc"
         git clone git@github.com:Elive-Premium/Elivim /tmp/elivim-$$ --depth 1 && /tmp/elivim-$$/elivim --reinstall ; rm -rf /tmp/elivim-$$
     fi
 
     # el_info "Elive AI. Handy tools to use AI in your system"
-    # if el_confirm "$( eval_gettext "Do you want to install elive-assistant with many AI features?" )" ; then
+    # if el_confirm "$( eval_gettext "Do you want to install elive-assistant with its many AI features?" )" ; then
     #     el_dependencies_install "elive-assistant"
     # fi
 
     el_info "Elive for Servers, enhancer and more..."
     if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Select yes for more information." )" ; then
         el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
+        github_login_required 
         web-launcher "https://github.com/Elive-Premium/elive-for-servers"
     fi
 

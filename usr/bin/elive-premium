@@ -20,18 +20,18 @@ ssh_key_check(){
 }
 
 github_access_check(){
-    local result is_failed
+    local result is_cloned
 
     rm -rf "/tmp/${USER}-elivepremium-test.git" || true
 
     # check github access
-    if ! timeout 30 git clone git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
-        is_failed=1
+    if timeout 30 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
+        is_cloned=1
     fi
 
     rm -rf "/tmp/${USER}-elivepremium-test.git" || true
 
-    if ((is_failed)) ; then
+    if ! ((is_cloned)) ; then
         el_error "$( eval_gettext "You don't have access to the Elive Premium Github repository, please your SSH key to your Github account." )"
         # el_info "$( eval_gettext "Instructions: You need to add your SSH key to your Github account, you can do it from the following link:" )"
 
@@ -44,9 +44,11 @@ github_access_check(){
         fi
     fi
 
-    if ! timeout 30 git clone git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
-        el_error "$( eval_gettext "You still don't have access to the Elive Premium Github repository. Make sure you already have received and accepted the invitation to join it. Exiting..." )"
-        exit 1
+    if ! ((is_cloned)) ; then
+        if ! timeout 30 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
+            el_error "$( eval_gettext "You still don't have access to the Elive Premium Github repository. Make sure you already have received and accepted the invitation to join it. Exiting..." )"
+            exit 1
+        fi
     fi
 }
 
@@ -87,11 +89,22 @@ main(){
     # }}}
 
     if ! ((is_premium_user)) ; then
+
+        el_info "$( eval_gettext "To be an Elive Preimum user, you need to be a Patreon supporter of Elive." )"
+        if ! el_confirm "$( eval_gettext "Do you already know the benefits and extra features of Elive Premium?" )" ; then
+            web-launcher "https://www.elivecd.org/premium/"
+        fi
+        if el_confirm "$( eval_gettext "Do you want to open the Patreon page to become Premium?" )" ; then
+            web-launcher "https://www.patreon.com/elive"
+        fi
+
         local message_email
         message_email="$( printf "$( eval_gettext "Insert your Email used in your Patreon account." )" "" )"
 
         el_info "$message_email"
         read patreon_email
+
+        echo "" 1>&2
     fi
 
     # get premium status
@@ -110,7 +123,7 @@ main(){
 
     # verify
     if ! ((is_premium_user)) ; then
-        el_error "$( eval_gettext "This Email is not found to be a Premium user. Please use the same one assigned in your Patreon account." )"
+        el_error "$( eval_gettext "This Email is not found to be a Premium user. Try using the same one assigned in your Patreon account." )"
         el_info "$( eval_gettext "Instructions: If your Patreon account has a different email configured you must change it. Note that this email will be the one used to access to the Github Premium section too." )"
         exit
     fi
@@ -118,15 +131,23 @@ main(){
     ssh_key_check
     github_access_check
 
-    echo
+    echo "" 1>&2
     el_info "*** Premium Features ready ***"
+    echo "" 1>&2
 
     # show them
+    # first run a normal window so that the CSS/JS of the website will load correctly
+    web-launcher \
+        web-launcher "https://github.com/Elive-Premium"
+        $NULL
+    sleep 2
+
     web-launcher \
         "https://www.elivecd.org/premium/elive-for-servers/" \
-        "https://www.elivecd.org/premium/ai/" \
         "https://www.elivecd.org/premium/elivim-neovim-framework/" \
         $NULL
+        # "https://www.elivecd.org/premium/ai/" \
+
 
     el_info "Elivim. An amazing framework for the NeoVim editor"
     if el_confirm "$( eval_gettext "Do you want to install the Elive Premium configuration for Elivim / Neovim?" )" ; then
@@ -135,10 +156,10 @@ main(){
         git clone git@github.com:Elive-Premium/Elivim /tmp/elivim-$$ --depth 1 && /tmp/elivim-$$/elivim --reinstall ; rm -rf /tmp/elivim-$$
     fi
 
-    el_info "Elive AI. Handy tools to use AI in your system"
-    if el_confirm "$( eval_gettext "Do you want to install elive-assistant with many AI features?" )" ; then
-        el_dependencies_install "elive-assistant"
-    fi
+    # el_info "Elive AI. Handy tools to use AI in your system"
+    # if el_confirm "$( eval_gettext "Do you want to install elive-assistant with many AI features?" )" ; then
+    #     el_dependencies_install "elive-assistant"
+    # fi
 
     el_info "Elive for Servers, enhancer and more..."
     if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Select yes for more information." )" ; then

@@ -13,14 +13,14 @@ ssh_key_check(){
     # check ssh ID key
     if [[ ! -s ~/.ssh/id_rsa.pub ]] && [[ ! -s ~/.ssh/id_ed25519.pub ]] && [[ ! -s ~/.ssh/id_ecdsa.pub ]] ; then
         el_warning "$( eval_gettext "You don't have a SSH key configured, please create one and add it to your Github account in order to have access to some Elive Premium features." )"
-        if el_confirm "$( eval_gettext "Do you want to create a new key now? Otherwise you need to import your existing keys into your:" ) ~/.ssh/id_rsa.pub" ; then
+        if el_confirm "$( eval_gettext "Do you want to create a new SSH key now? Otherwise you need to import your existing keys into your:" ) ~/.ssh/id_rsa.pub" ; then
             ssh-keygen -t ed25519 -C "$patreon_email"
         fi
     fi
 }
 
 github_login_required(){
-    el_notify_user "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation to join the Elive-Premium github organization in order to view this page." )"
+    el_notify_user "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation of joining the Elive-Premium github organization in order to view this page." )"
 }
 
 github_access_check(){
@@ -36,7 +36,7 @@ github_access_check(){
     rm -rf "/tmp/${USER}-elivepremium-test.git" || true
 
     if ! ((is_cloned)) ; then
-        el_error "$( eval_gettext "You don't have access to the Elive Premium Github repository, please your SSH key to your Github account." )"
+        el_error "$( eval_gettext "You don't have access to the Elive Premium Github repository, for that first add your SSH key to your Github account." )"
         # el_info "$( eval_gettext "Instructions: You need to add your SSH key to your Github account, you can do it from the following link:" )"
 
         # copy keys to clipboard
@@ -94,7 +94,7 @@ main(){
 
     if ! ((is_premium_user)) ; then
 
-        el_info "$( eval_gettext "To be an Elive Preimum user, you need to be a Patreon supporter of Elive." )"
+        el_info "$( eval_gettext "To be an Elive Premium user, you need to join the Patreon of Elive." )"
         if ! el_confirm "$( eval_gettext "Do you already know the benefits and extra features of Elive Premium?" )" ; then
             web-launcher "https://www.elivecd.org/premium/"
         fi
@@ -127,7 +127,7 @@ main(){
 
     # verify
     if ! ((is_premium_user)) ; then
-        el_error "$( eval_gettext "This Email is not found to be a Premium user. Try using the same one assigned in your Patreon account." )"
+        el_error "$( eval_gettext "This Email is not from a Premium user. Try using the same one assigned in your Patreon account." )"
         el_info "$( eval_gettext "Instructions: If your Patreon account has a different email configured you must change it. Note that this email will be the one used to access to the Github Premium section too." )"
         exit
     fi
@@ -154,7 +154,7 @@ main(){
 
 
     el_info "Elivim. An amazing framework for the NeoVim editor"
-    if el_confirm "$( eval_gettext "Do you want to install the Elive Premium configuration for Elivim / Neovim?" )" ; then
+    if el_confirm "$( eval_gettext "Do you want to install the Elivim framework of Neovim?" )" ; then
         el_info "$( eval_gettext "Follow the instructions on the terminal." )"
 
         # github_login_required 
@@ -170,7 +170,7 @@ main(){
     # fi
 
     el_info "Elive for Servers, enhancer and more..."
-    if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Select yes for more information." )" ; then
+    if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Continue to know more information." )" ; then
         el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
         github_login_required 
         web-launcher "https://github.com/Elive-Premium/elive-for-servers"

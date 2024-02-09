@@ -60,7 +60,6 @@ github_access_check(){
 
 main(){
     # pre {{{
-    local var
 
     [[ -s /etc/elive/settings ]] && source /etc/elive/settings
 
@@ -89,6 +88,8 @@ main(){
         exit 1
     fi
 
+    is_premium_new=0
+
 
     # }}}
 
@@ -114,16 +115,22 @@ main(){
     # get premium status
     patreon_email_checksum="$( echo "$patreon_email" | sha1sum | awk '{print $1}' )"
     if curl -Ls -m 10 -A "Mozilla/5.0" https://www.elivecd.org/files/patreon_members.txt | grep -qs "^${patreon_email_checksum}$" ; then
-        is_premium_user=1
+        is_premium_new=1
+    else
+        is_premium_new=0
+    fi
+
+    # update values
+    if [[ "$is_premium_new" != "$is_premium_user" ]] ; then
+        el_info "Insert your admin password to save the configuration"
         gksu bash -c "source /usr/lib/elive-tools/functions ;
         sed -i '/^patreon_email=/d' '/etc/elive/settings' 2>/dev/null || true
         echo 'patreon_email=\"$patreon_email\"' >> /etc/elive/settings
         sed -i '/^is_premium_user=/d' '/etc/elive/settings' 2>/dev/null || true
-        echo 'is_premium_user=\"1\"' >> /etc/elive/settings
+        echo 'is_premium_user=\"${is_premium_new}\"' >> /etc/elive/settings
         "
-    else
-        unset is_premium_user
     fi
+    is_premium_user="$is_premium_new"
 
     # verify
     if ! ((is_premium_user)) ; then
@@ -172,7 +179,7 @@ main(){
     el_info "Elive for Servers, enhancer and more..."
     if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Continue to know more information." )" ; then
         el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
-        github_login_required 
+        github_login_required
         web-launcher "https://github.com/Elive-Premium/elive-for-servers"
     fi
 

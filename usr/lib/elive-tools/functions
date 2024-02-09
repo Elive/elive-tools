@@ -1346,7 +1346,7 @@ el_sudo(){
             # multiple gksu attempts
             for i in 1 2
             do
-                gksu "$@"
+                gksu $@
                 returned=$?
 
                 if [[ "$returned" = 0 ]] ; then

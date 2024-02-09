@@ -408,7 +408,7 @@ ResultActive=yes
 EOF
 
                     el_dependencies_check "gksu"
-                    gksu "cp /tmp/.$( basename $0 )-${USER}.txt /var/lib/polkit-1/localauthority/10-vendor.d/10-elive-user-${USER}.pkla"
+                    gksu cp /tmp/.$( basename $0 )-${USER}.txt "/var/lib/polkit-1/localauthority/10-vendor.d/10-elive-user-${USER}.pkla"
                 fi
             fi
         fi

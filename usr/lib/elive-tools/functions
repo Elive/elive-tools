@@ -209,12 +209,13 @@ el_notify(){
         if [[ -n "$EROOT" ]] ; then
             if ! pidof "notification-daemon" 1>/dev/null 2>&1 ; then
                 notification-daemon-restarter
+                LC_ALL=C sleep 0.3
             fi
-        fi
 
-        # check that it working otherwise restart daemon, this is needed otherwise "action" based notifications will block the application being stuck
-        if ! timeout 5 notify-send -e -t 1 "." 2>/dev/null ; then
-            notification-daemon-restarter
+            # check that it working otherwise restart daemon, this is needed otherwise "action" based notifications will block the application being stuck
+            if ! timeout 5 notify-send -e -t 1 "." 2>/dev/null ; then
+                notification-daemon-restarter
+            fi
         fi
 
         notify-send ${extra_args} -t "$time" -i "$icon" "$title" "$message" "$@"

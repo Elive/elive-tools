@@ -125,7 +125,7 @@ run_compiler(){
     # PKGBUILD files
     if echo "$file" | grep -qs ".*PKGBUILD$" ; then
 
-        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "PKGBUILD files are meant to build a package, do you want do build it?" )" ; then
+        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "PKGBUILD files are meant to build a package, proceed?" )" ; then
 
             # deps
             if ! el_dependencies_check "makedeb" 2>/dev/null ; then

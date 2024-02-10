@@ -19,6 +19,16 @@ ssh_key_check(){
     fi
 }
 
+premium_status_get(){
+    # get premium status
+    patreon_email_checksum="$( echo "$patreon_email" | sha1sum | awk '{print $1}' )"
+    if curl -Ls -m 10 -A "Mozilla/5.0" https://www.elivecd.org/files/patreon_members.txt | grep -qs "^${patreon_email_checksum}$" ; then
+        is_premium_new=1
+    else
+        is_premium_new=0
+    fi
+}
+
 github_login_required(){
     el_notify_user "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation of joining the Elive-Premium github organization in order to view this page." )"
 }
@@ -98,8 +108,11 @@ main(){
 
     # }}}
 
-    if ! ((is_premium_user)) ; then
+    if [[ -n "$patreon_email" ]] ; then
+        premium_status_get
+    fi
 
+    if ! ((is_premium_new)) ; then
         el_info "$( eval_gettext "To be an Elive Premium user, you need to join the Patreon of Elive." )"
         if ! el_confirm "$( eval_gettext "Do you already know the benefits and extra features of Elive Premium?" )" ; then
             web-launcher "https://www.elivecd.org/premium/"
@@ -115,15 +128,10 @@ main(){
         read patreon_email
 
         echo "" 1>&2
+
+        premium_status_get
     fi
 
-    # get premium status
-    patreon_email_checksum="$( echo "$patreon_email" | sha1sum | awk '{print $1}' )"
-    if curl -Ls -m 10 -A "Mozilla/5.0" https://www.elivecd.org/files/patreon_members.txt | grep -qs "^${patreon_email_checksum}$" ; then
-        is_premium_new=1
-    else
-        is_premium_new=0
-    fi
 
     # update values
     if [[ "$is_premium_new" != "$is_premium_user" ]] ; then

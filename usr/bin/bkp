@@ -118,18 +118,15 @@ do_work(){
     # go back
     cd "$target"
 
-    if el_confirm "Delete the working state?" ; then
-        do_sudo rm -rf "${tmpdir}"
-    else
-        if el_confirm "Do you want to run a meld with the original directory?" ; then
-            if ! el_dependencies_check meld ; then
-                if ! el_dependencies_install meld ; then
-                    el_error "Install required dependencies"
-                fi
+    if el_confirm "Do you want to run meld with your previous working state?" ; then
+        if ! el_dependencies_check meld ; then
+            if ! el_dependencies_install meld ; then
+                el_error "Install required dependencies"
             fi
-            meld "${tmpdir}" .
         fi
+        meld "${tmpdir}" .
     fi
+    do_sudo rm -rf "${tmpdir}"
 
 }
 

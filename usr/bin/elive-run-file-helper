@@ -387,11 +387,7 @@ main(){
                 fi
 
                 if [[ -z "$mime" ]] ; then
-                    if [[ -x "$( which scite )" ]] ; then
-                        el_debug "fallback to open file from scite"
-                        scite "$file"
-                        exit
-                    fi
+                    mime="text/plain"
                 fi
                 ;;
         esac
@@ -416,6 +412,12 @@ main(){
             "text/PKGBUILD")
                 run_compiler "user" "$file"
                 exit
+                ;;
+            "text/plain")
+                if [[ -x "$( which scite )" ]] ; then
+                    scite "$file"
+                    exit
+                fi
                 ;;
             "application/zlib"|"application/x-bzip2")
                 if echo "$file" | grep -qsi "\.dmg$" ; then

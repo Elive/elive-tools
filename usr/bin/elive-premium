@@ -14,7 +14,7 @@ ssh_key_check(){
     if [[ ! -s ~/.ssh/id_rsa.pub ]] && [[ ! -s ~/.ssh/id_ed25519.pub ]] && [[ ! -s ~/.ssh/id_ecdsa.pub ]] ; then
         el_warning "$( eval_gettext "You don't have a SSH key configured, please create one and add it to your Github account in order to have access to some Elive Premium features." )"
         if el_confirm "$( eval_gettext "Do you want to create a new SSH key now? Otherwise you need to import your existing keys into your:" ) ~/.ssh/id_rsa.pub" ; then
-            ssh-keygen -t ed25519 -C "$patreon_email"
+            ssh-keygen -f ~/.ssh/id_rsa -C "$patreon_email"
         fi
     fi
 }
@@ -51,15 +51,26 @@ github_access_check(){
         # el_info "$( eval_gettext "Instructions: You need to add your SSH key to your Github account, you can do it from the following link:" )"
 
         # copy keys to clipboard
-        if cat ~/.ssh/id_rsa.pub ~/.ssh/id_ed25519.pub ~/.ssh/id_ecdsa.pub 2>/dev/null | xclip -i ; then
+        if cat ~/.ssh/id_rsa.pub 2>/dev/null | xclip -i -selection clipboard ; then
             el_info "SSH Pub Key copied to clipboard (copy-paste)"
         else
             el_info "Copy the contents of your ~/.ssh/id_*.pub file and add it to your Github account"
         fi
 
-        if el_confirm "$( eval_gettext "Do you want to open the Github SSH key configuration page to add it now?" )"; then
-            web-launcher "https://github.com/settings/ssh/new"
-        fi
+        el_info "Press Enter to copy-paste your SSH key to your Github account"
+        read nothing
+        ( web-launcher "https://github.com/settings/ssh/new" & )
+
+        # copy it again just in case
+        for i in $(seq 3) ; do
+            sleep 5
+            cat ~/.ssh/id_rsa.pub 2>/dev/null | xclip -i -selection clipboard
+        done
+
+        sleep 4
+        echo
+        el_info "Press Enter when you have your SSH added correctly in order to continue..."
+        read nothing
     fi
 
     if ! ((is_cloned)) ; then
@@ -158,18 +169,21 @@ main(){
 
     if ! ((is_premium_new)) ; then
         el_info "$( eval_gettext "To be an Elive Premium user, you need to join the Patreon of Elive." )"
-        if ! el_confirm "$( eval_gettext "Do you already know the benefits and extra features of Elive Premium?" )" ; then
+        if ! el_confirm "$( eval_gettext "Do you want to see the actual benefits of Elive Premium?" )" ; then
             web-launcher "https://www.elivecd.org/premium/"
         fi
-        if el_confirm "$( eval_gettext "Do you want to open the Patreon page to become Premium?" )" ; then
+        if el_confirm "$( eval_gettext "Do you want to become a Premium member now?" )" ; then
             web-launcher "https://www.patreon.com/elive"
         fi
 
         local message_email
-        message_email="$( printf "$( eval_gettext "Insert your Email used in your Patreon account." )" "" )"
+        message_email="$( printf "$( eval_gettext "Insert your Email used in your Patreon or associated with your Premium account." )" "" )"
 
         el_info "$message_email"
         read patreon_email
+        read -r patreon_email <<< "$patreon_email"
+        patreon_email="$( echo "${patreon_email,,}" )"
+
 
         echo "" 1>&2
 

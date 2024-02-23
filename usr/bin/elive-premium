@@ -71,6 +71,50 @@ github_access_check(){
     fi
 }
 
+premium_elivim(){
+    # Elivim
+    el_info "Elivim. An amazing framework for the NeoVim editor"
+    if el_confirm "$( eval_gettext "Do you want to install the Elivim framework of Neovim?" )" ; then
+        el_info "$( eval_gettext "Follow the instructions on the terminal." )"
+
+        # github_login_required 
+        # web-launcher "https://github.com/Elive-Premium/elive-for-servers"
+
+        el_dependencies_install "neovim|git|python3-venv|fonts-noto-color-emoji|ripgrep|nodejs|npm|gcc"
+        git clone git@github.com:Elive-Premium/Elivim /tmp/elivim-$$ --depth 1 && /tmp/elivim-$$/elivim --reinstall ; rm -rf /tmp/elivim-$$
+    fi
+}
+
+premium_assistant(){
+    # Assistant
+    el_info "Elive AI. Handy tools to use AI in your system"
+    if el_confirm "$( eval_gettext "Do you want to install elive-assistant with its many AI features?" )" ; then
+        el_dependencies_install "elive-assistant"
+    fi
+}
+
+premium_gptuuu(){
+    # gptuuu
+    el_info "GPT Uncensored, Unbiased, Untracked"
+    if el_confirm "$( eval_gettext "Do you want to install a local AI conversation system in your machine?" )" ; then
+        el_info "$( eval_gettext "Follow the instructions on the terminal." )"
+
+        el_dependencies_install "git"
+        git clone git@github.com:Elive-Premium/gptuuu /tmp/gptuuu-$$ --depth 1 && /tmp/gptuuu-$$/installer.sh ; rm -rf /tmp/elivim-$$
+    fi
+}
+
+premium_servers(){
+    # Servers
+    el_info "Elive for Servers, enhancer and more..."
+    if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Continue to know more information." )" ; then
+        el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
+        github_login_required
+        web-launcher "https://github.com/Elive-Premium/elive-for-servers"
+    fi
+}
+
+
 
 
 main(){
@@ -159,7 +203,29 @@ main(){
     el_info "*** Premium Features ready ***"
     echo "" 1>&2
 
-    # show them
+    case "$1" in
+        elivim|neovim)
+            premium_elivim
+            exit
+            ;;
+        assistant|ai)
+            premium_assistant
+            exit
+            ;;
+        gptuuu|gpt-uuu)
+            premium_gptuuu
+            exit
+            ;;
+        servers|server)
+            premium_servers
+            exit
+            ;;
+        *)
+            el_error "Unknown installer $1"
+            ;;
+    esac
+
+    # show all of them
     # first run a normal window so that the CSS/JS of the website will load correctly
     web-launcher \
         web-launcher "https://github.com/Elive-Premium"
@@ -172,30 +238,11 @@ main(){
         $NULL
         # "https://www.elivecd.org/premium/ai/" \
 
-
-    el_info "Elivim. An amazing framework for the NeoVim editor"
-    if el_confirm "$( eval_gettext "Do you want to install the Elivim framework of Neovim?" )" ; then
-        el_info "$( eval_gettext "Follow the instructions on the terminal." )"
-
-        # github_login_required 
-        # web-launcher "https://github.com/Elive-Premium/elive-for-servers"
-
-        el_dependencies_install "neovim|git|python3-venv|fonts-noto-color-emoji|ripgrep|nodejs|npm|gcc"
-        git clone git@github.com:Elive-Premium/Elivim /tmp/elivim-$$ --depth 1 && /tmp/elivim-$$/elivim --reinstall ; rm -rf /tmp/elivim-$$
-    fi
-
-    # el_info "Elive AI. Handy tools to use AI in your system"
-    # if el_confirm "$( eval_gettext "Do you want to install elive-assistant with its many AI features?" )" ; then
-    #     el_dependencies_install "elive-assistant"
-    # fi
-
-    el_info "Elive for Servers, enhancer and more..."
-    if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Continue to know more information." )" ; then
-        el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
-        github_login_required
-        web-launcher "https://github.com/Elive-Premium/elive-for-servers"
-    fi
-
+    # launch each one:
+    premium_elivim
+    premium_assistant
+    premium_gptuuu
+    premium_servers
 
 
 }

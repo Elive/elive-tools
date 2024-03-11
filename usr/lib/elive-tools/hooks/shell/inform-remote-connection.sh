@@ -55,7 +55,7 @@ fi
 if [[ "$want_exit" != "yes" ]] ; then
     #echo -e "collecting remote data..." 1>&2
     if [[ -s "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" ]] ; then
-        SSH_REMOTE_DATA="$( cat "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" )"
+        SSH_REMOTE_DATA="$( cat "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}" 2>/dev/null )"
     else
         SSH_REMOTE_DATA="$( showmylocation "$SSH_REMOTE_IP" )"
         echo "$SSH_REMOTE_DATA" > "/tmp/.ssh_remote_data-${USER}:${SSH_REMOTE_IP}"
@@ -78,7 +78,7 @@ if [[ -n "$SSH_REMOTE_DATA" ]] && [[ "$want_exit" != "yes" ]] ; then
     # get local data
     #echo -e "collecting local data..." 1>&2
     if [[ -s "/tmp/.ssh_local_data-${USER}" ]] ; then
-        SSH_LOCAL_DATA="$( cat "/tmp/.ssh_local_data-${USER}" )"
+        SSH_LOCAL_DATA="$( cat "/tmp/.ssh_local_data-${USER}" 2>/dev/null )"
     else
         SSH_LOCAL_DATA="$( showmylocation )"
         echo "$SSH_LOCAL_DATA" > "/tmp/.ssh_local_data-${USER}"

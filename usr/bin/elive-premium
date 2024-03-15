@@ -179,10 +179,10 @@ main(){
 
     if ! ((is_premium_new)) ; then
         el_info "$( eval_gettext "To be an Elive Premium user, you need to join the Patreon of Elive." )"
-        if ! el_confirm "$( eval_gettext "Do you want to see the actual benefits of Elive Premium?" )" ; then
+        if ! el_confirm "$( eval_gettext "Do you want to see the features and benefits of being an Elive Premium user?" )" ; then
             web-launcher "https://www.elivecd.org/premium/"
         fi
-        if el_confirm "$( eval_gettext "Do you want to become a Premium member now?" )" ; then
+        if el_confirm "$( eval_gettext "Do you want to become a Premium user now?" )" ; then
             web-launcher "https://www.patreon.com/elive"
         fi
 

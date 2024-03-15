@@ -445,6 +445,16 @@ EOF
     # also select which features (apps) we want to have by default:
     if [[ -n "$EROOT" ]] ; then
         unset menu result line
+        local message_compositor
+        message_compositor="$( printf "$( eval_gettext "Compositor: Enables transparencies and make the dock bar look better" )" "" )"
+        local message_conky
+        message_conky="$( printf "$( eval_gettext "Conky: resources visualizer gadget for desktop" )" "" )"
+        local message_sound
+        message_sound="$( printf "$( eval_gettext "Activate desktop sound effects" )" "" )"
+        local message_dock
+        message_dock="$( printf "$( eval_gettext "cairo-dock: A multiple feature dock for your desktop" )" "" )"
+        local message_hexchat
+        message_hexchat="$( printf "$( eval_gettext "IRC Chat: The Elive Chat channel in IRC" )" "" )"
 
         # always enable notifications features (notify-send) by default:
         if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
@@ -459,14 +469,14 @@ EOF
             menu+=("FALSE")
         fi
         menu+=("compositor")
-        menu+=("Compositor: Enables transparencies and make dock look better")
+        menu+=("${message_compositor}")
 
 
         # conky
         if [[ -x "$(which 'conky' )" ]] ; then
             menu+=("TRUE")
             menu+=("conky")
-            menu+=("Conky: resources visualizer gadget for desktop")
+            menu+=("${message_conky}")
         fi
 
         # desktop sound effects
@@ -477,14 +487,14 @@ EOF
             menu+=("FALSE")
         fi
         menu+=("soundeffects")
-        menu+=("$( eval_gettext "Activate desktop sound effects" )")
+        menu+=("${message_sound}")
 
 
         # cairo-dock
         if [[ -x "$(which 'cairo-dock' )" ]] ; then
             menu+=("TRUE")
             menu+=("cairo-dock")
-            menu+=("cairo-dock: A multiple feature dock for your desktop")
+            menu+=("${message_dock}")
 
             # add the installer icon in live mode
             if ((is_live)) ; then
@@ -502,7 +512,7 @@ EOF
         # include hexchat by default (going back to old times?)
         menu+=("FALSE")
         menu+=("hexchat")
-        menu+=("IRC Chat: The Elive Chat channel in IRC")
+        menu+=("${message_hexchat}")
 
 
 

@@ -122,7 +122,7 @@ load_driver(){
     fi
 
     # always load the drm module otherwise it will not work
-    nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|peermem).ko" | grep "nvidia.*drm.ko" )"
+    nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|peermem).ko" | grep "nvidia.*drm.ko" )"
     for i in $nvidia_modules
     do
         i="$( basename "${i%.ko}" )"
@@ -135,7 +135,7 @@ load_driver(){
     unset nvidia_modules
 
     if ! lsmod | grep -qs "^nvidia" ; then
-        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*'ko | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm|peermem).ko" )"
+        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm|peermem).ko" )"
 
         if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
             for i in $nvidia_modules
@@ -1244,13 +1244,13 @@ EOF
     fi
 
     # check if at least one (kernel) driver was compiled
-    if find "/lib/modules/" -type f -name '*'nvidia'*'ko | grep -qs "/updates/dkms/nvidia" ; then
+    if find "/lib/modules/" -type f -name '*nvidia*ko*' | grep -qs "/updates/dkms/nvidia" ; then
         is_driver_compiled_some=1
     else
         unset is_driver_compiled_some
     fi
 
-    if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+    if find "/lib/modules/$(uname -r)/updates" -type f -name '*nvidia*ko*' | grep -qs "update.*/nvidia" ; then
         is_driver_compiled_kernel=1
     else
         unset is_driver_compiled_kernel
@@ -1289,13 +1289,13 @@ EOF
         fi
 
         # check if at least one (kernel) driver was compiled
-        if find "/lib/modules/" -type f -name '*'nvidia'*'ko | grep -qs "/updates/dkms/nvidia" ; then
+        if find "/lib/modules/" -type f -name '*nvidia*ko*' | grep -qs "/updates/dkms/nvidia" ; then
             is_driver_compiled_some=1
         else
             unset is_driver_compiled_some
         fi
 
-        if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+        if find "/lib/modules/$(uname -r)/updates" -type f -name '*nvidia*ko*' | grep -qs "update.*/nvidia" ; then
             is_driver_compiled_kernel=1
         else
             unset is_driver_compiled_kernel
@@ -1328,7 +1328,7 @@ EOF
     if ! ((is_driver_compiled_kernel)) ; then
 
         clear ; echo
-        NOREPORTS=1 el_error "Driver compilation seems to have failed:\n$(find /lib/modules/ -type f -iname '*'nvidia'*'ko | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" )"
+        NOREPORTS=1 el_error "Driver compilation seems to have failed:\n$(find /lib/modules/ -type f -iname '*nvidia*ko*' | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" )"
         sleep 4
 
         local message_warning_install_failed
@@ -1377,7 +1377,7 @@ EOF
     # load module {{{
     # reload devices just in case
     if ((is_mode_simulate)) ; then
-        if find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*'ko | grep -qs "update.*/nvidia" ; then
+        if find "/lib/modules/$(uname -r)/updates" -type f -name '*nvidia*ko*' | grep -qs "update.*/nvidia" ; then
             message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
         else
             message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' | grep -v "typec_nvidia" )"

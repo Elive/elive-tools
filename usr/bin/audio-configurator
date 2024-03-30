@@ -205,6 +205,7 @@ main(){
         fi
         if [[ "$arg" = "--quiet" ]] ; then
             is_quiet_mode=1
+            QUIET="--quiet"
             shift
         fi
         if [[ "$arg" = "--no-messages" ]] ; then
@@ -485,7 +486,7 @@ EOF
         if ! ((is_quiet_mode)) ; then
             # normal run by gui should always want to have volumes configured
             rm -f "${HOME}/.config/setvolume"
-            ( setvolume defaults & )
+            ( setvolume $QUIET defaults & )
 
             $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase or decrease the volume, use your keyboard hotkeys, f they do not work, you can set your own hotkeys. You also have a volume application in the Sound menu, or you can scroll your mouse wheel in the audio gadget on your desktop gadget." )" || true
         fi

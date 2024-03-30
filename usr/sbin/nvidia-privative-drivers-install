@@ -924,7 +924,7 @@ interactive_ask_driver_version(){
     fi
 
     # optimus extra packages
-    if ((is_optimus)) ; then
+    if ((is_optimus)) && ! ((is_optimus_onlynvidia)) ; then
         _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"
     fi
 
@@ -1024,6 +1024,7 @@ EOF
                 true
                 unset is_optimus_onlynvidia
                 unset is_xorg_template_wanted
+                rm -f /tmp/.nvidia_optimus
                 touch /tmp/.nvidia_optimus_conf_onlynvidia
                 ;;
         esac

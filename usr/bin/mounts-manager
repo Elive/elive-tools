@@ -1049,7 +1049,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid filesystem devtype
+    local dev uuid filesystem devtype mountpoint
     el_security_function_loop 10 || return 0
 
     dev="$1"
@@ -1121,7 +1121,14 @@ el_mount(){
         #fi
     fi
 
-
+    # fsck the disk in case is dirty and not mounted
+    mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+    if ! [[ -n "$mountpoint" ]] ; then
+        if tune2fs -l "$dev" | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
+            el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
+            fsck -yf "$dev"
+        fi
+    fi
 
     # try to mount
     udisks_mount "$dev" "$@"

@@ -3817,7 +3817,7 @@ fi
 
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
-if [[ -n "$NOCOLOR" ]] || ! ((is_interactive)) ; then
+if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
     el_c_n=""
     el_c_r=""
     el_c_r2=""

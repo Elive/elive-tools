@@ -1667,7 +1667,8 @@ el_check_is_shell(){
 #===============================================================================
 el_explain(){
     # pre {{{
-    if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
+    # if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
+    if ! [[ "${EL_DEBUG}" -ge 2 ]] ; then
         return 0
     fi
 

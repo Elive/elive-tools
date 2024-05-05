@@ -4,10 +4,35 @@ source /usr/lib/elive-tools/functions
 #EL_REPORTS="1"
 #el_make_environment
 
+
+waiter(){
+    # watcher of the command, with space after the command, of course
+    #while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "([[:digit:]] ${watcher} |[[:digit:]] ${watcher}$|[[:digit:]] .*bin/${watcher} |[[:digit:]] .*bin/${watcher}$)"
+    while pidof -zcxq "$watcher"
+    # warning: next command cuts the 'command' name if is longer than 15 chars, so it cannot work with these ones
+    #while ps axk comm o comm,args | grep -qs "^${watcher}.*${watcher} "
+    do
+        is_waiting=1
+
+        if [[ "${counter}" -gt "60" ]] ; then
+            minutes="$(( $counter / 60 ))"
+        fi
+
+        if [[ -n "$minutes" ]] ; then
+            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$minutes minutes]     "
+        else
+            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$counter seconds]     "
+        fi
+
+
+        sleep ${check_delay}
+        counter="$(( $counter + ${check_delay} ))"
+    done
+
+}
+
 main(){
     # pre {{{
-    local  watcher seconds check_delay minutes
-
     if [[ ! -t 0 ]] ; then
         is_stdin=1
     fi
@@ -37,27 +62,12 @@ main(){
     # put a new line
     echo -e ""
 
-    # watcher of the command, with space after the command, of course
-    #while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "([[:digit:]] ${watcher} |[[:digit:]] ${watcher}$|[[:digit:]] .*bin/${watcher} |[[:digit:]] .*bin/${watcher}$)"
-    while pidof -zcxq "$watcher"
-    # warning: next command cuts the 'command' name if is longer than 15 chars, so it cannot work with these ones
-    #while ps axk comm o comm,args | grep -qs "^${watcher}.*${watcher} "
-    do
-        if [[ "${counter}" -gt "60" ]] ; then
-            minutes="$(( $counter / 60 ))"
-        fi
-
-        if [[ -n "$minutes" ]] ; then
-            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$minutes minutes]     "
-        else
-            echo -en "\r\033[KProcess ${watcher} still running, waiting... [$counter seconds]     "
-        fi
-
-
-        sleep ${check_delay}
-        counter="$(( $counter + ${check_delay} ))"
-    done
-
+    waiter
+    # if process were waiting, make a pause first and verify it again
+    if ((is_waiting)) ; then
+        sleep 3
+        waiter
+    fi
     # run our command
     # "$@"
 

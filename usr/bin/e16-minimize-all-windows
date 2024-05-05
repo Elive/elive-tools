@@ -1,0 +1,45 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+# . gettext.sh
+# TEXTDOMAIN="elive-tools"
+# export TEXTDOMAIN
+
+
+main(){
+    # pre {{{
+    local var
+
+    # }}}
+    # NOTE: to iconify the entire desktop, you can use:  eesh desk clear on
+
+    screen="$( LC_ALL=C eesh desk ? )"
+    screen="${screen%/*}"
+    screen="${screen##* }"
+    read -r screen <<< "$screen"
+
+    desk="$( LC_ALL=C eesh area ? )"
+    desk="${desk##*:}"
+    read -r desk <<< "$desk"
+
+    while read -ru 3 window_id
+    do
+        # el_array_member_add "$window_id" "${windows_to_iconify[@]}" ; windows_to_iconify=("${_out[@]}")
+            eesh wop "${window_id}" iconify
+    done 3<<< "$( eesh window_list all | grep "${screen} : ${desk}" | awk '{print $1}' | grep "x" )"
+
+    # if [[ -n "${windows_to_iconify[@]}" ]] ; then
+    #     for i in "${windows_to_iconify[@]}" ; do
+    #         eesh wop "${i}" iconify
+    #     done
+    # fi
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -452,9 +452,9 @@ EOF
         local message_sound
         message_sound="$( printf "$( eval_gettext "Activate desktop sound effects" )" "" )"
         local message_dock
-        message_dock="$( printf "$( eval_gettext "cairo-dock: A multiple feature dock for your desktop" )" "" )"
+        message_dock="$( printf "$( eval_gettext "cairo-dock: A multiple featured dock bar for your desktop" )" "" )"
         local message_hexchat
-        message_hexchat="$( printf "$( eval_gettext "IRC Chat: The Elive Chat channel in IRC" )" "" )"
+        message_hexchat="$( printf "$( eval_gettext "IRC Chat: The Elive Chat channel" )" "" )"
 
         # always enable notifications features (notify-send) by default:
         if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then

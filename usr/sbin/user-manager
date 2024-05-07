@@ -627,7 +627,7 @@ user_add(){
 
 ###########################################################################
 user_del(){
-    local uid user userlist line pid
+    local uid user userlist line pid processes
 
     while read -ru 3 line
     do
@@ -662,13 +662,21 @@ user_del(){
     translated_message="$( printf "$( eval_gettext "Do you wish to remove all %s files of the %s user?" )" "$DHOME/$username" "$username" )"
 
     # before to delete an user, all the processes needs to be closed or it will fail
-    for i in 1 2 3 4 5
-    do
-        while read -ru 3 pid
-        do
-            kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
-        done 3<<< "$( LC_ALL="$EL_LC_EN" ps aux | grep -E "^${username}\s+" | awk '{print $2}' )"
-    done
+    #for i in 1 2 3 4 5
+    #do
+        #while read -ru 3 pid
+        #do
+            #kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
+        #done 3<<< "$( LC_ALL="$EL_LC_EN" ps aux | grep -E "^${username}\s+" | awk '{print $2}' )"
+    #done
+    killall -u "${username}" || true
+    killall -u "${username}" || true
+    killall -u "${username}" -9 || true
+    # show if any remaining process:
+    processes="$( ps h -u "${username}" || true )"
+    if [[ -n "$processes" ]] ; then
+        el_warning "posible remaining processes:\n$processes"
+    fi
 
     if $guitool --question --text="$translated_message" ; then
         $USERDEL -r "$username" 2>"${temp_error}" || exit 1

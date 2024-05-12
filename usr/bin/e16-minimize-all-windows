@@ -28,7 +28,7 @@ main(){
     do
         # el_array_member_add "$window_id" "${windows_to_iconify[@]}" ; windows_to_iconify=("${_out[@]}")
             eesh wop "${window_id}" iconify
-    done 3<<< "$( eesh window_list all | grep "${screen} : ${desk}" | awk '{print $1}' | grep "x" )"
+    done 3<<< "$( eesh window_list all | grep "${screen} : ${desk}" | awk '{print $1}' | grep "x" | tac )"
 
     # if [[ -n "${windows_to_iconify[@]}" ]] ; then
     #     for i in "${windows_to_iconify[@]}" ; do

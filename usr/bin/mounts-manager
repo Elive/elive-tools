@@ -1130,6 +1130,12 @@ el_mount(){
         fi
     fi
 
+    # check if already mounted
+    if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        echo "$dev mounted in: $(get_mountpoint "$dev" )"
+        return 0
+    fi
+
     # try to mount
     udisks_mount "$dev" "$@"
 

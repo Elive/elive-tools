@@ -1122,9 +1122,9 @@ el_mount(){
     fi
 
     # fsck the disk in case is dirty and not mounted
-    mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+    mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
     if ! [[ -n "$mountpoint" ]] ; then
-        if tune2fs -l "$dev" | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
+        if tune2fs -l "$dev" 2>/dev/null | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
             el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
             fsck -yf "$dev"
         fi
@@ -1245,7 +1245,7 @@ el_mount(){
             if [[ "$mode" = "recursive" ]] ; then
                 return 1
             else
-                if tune2fs -l "$dev" | grep -iqs "^Filesystem state:.*errors" ; then
+                if tune2fs -l "$dev" 2>/dev/null | grep -iqs "^Filesystem state:.*errors" ; then
                     el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
                     fsck -yf "$dev"
                     $FUNCNAME "$dev" "recursive"
@@ -1312,15 +1312,15 @@ gvfs_umount(){
 }
 
 check_device(){
-    local device
-    device="$1"
+    local dev
+    dev="$1"
 
     if ((is_wheezy)) ; then
-        if LC_ALL="$EL_LC_EN" udisks --show-info "$device" 2>&1 | grep -Fqs "Cannot find device with major:minor" ; then
+        if LC_ALL="$EL_LC_EN" udisks --show-info "$dev" 2>&1 | grep -Fqs "Cannot find device with major:minor" ; then
             restart_daemons
         fi
     else
-        if ! udisksctl info -b "$device" 1>/dev/null 2>&1 ; then
+        if ! udisksctl info -b "$dev" 1>/dev/null 2>&1 ; then
             restart_daemons
         fi
     fi

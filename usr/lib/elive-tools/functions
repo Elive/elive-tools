@@ -460,6 +460,8 @@ el_make_environment(){ # make ready our environment (source variables and functi
         #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
         #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
         export PS4='+ [$(basename ${SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+    else
+        export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
     fi
 
     # XDG default directories

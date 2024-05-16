@@ -1068,7 +1068,7 @@ el_mount(){
     fi
 
     if [[ "$dev" != "/dev/"* ]] || [[ ! -b "$dev" ]] ; then
-        el_error "Argument passed to $FUNCNAME is not a device: $dev"
+        NOREPORTS=1 el_error "Argument passed to $FUNCNAME is not a device: $dev"
         return 1
     fi
     # redirect to the correct device if we found it easly

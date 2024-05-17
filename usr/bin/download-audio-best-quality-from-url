@@ -79,6 +79,7 @@ main(){
             mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
             if yt-dlp \
                 -i -x --embed-metadata \
+                -o \"%(id)s.%(ext)s\" \
                 \"$@\" ; then
                 is_downloaded=1
             else

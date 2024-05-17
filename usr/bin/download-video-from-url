@@ -78,6 +78,7 @@ main(){
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     -f mp4 --embed-metadata --embed-chapters \
+                    -o \"%(id)s.%(ext)s\" \
                     \"$@\" ; then
                     is_downloaded=1
                     break

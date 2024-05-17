@@ -763,15 +763,12 @@ EOF
         bash "$temp"
     else
         if el_check_sudo_automated ; then
-            for i in 1 2
-            do
-                if sudo -H -n bash "$temp" ; then
-                    unset is_failed
-                    break
-                else
-                    is_failed=1
-                fi
-            done
+            if sudo -H -n bash "$temp" ; then
+                unset is_failed
+                break
+            else
+                is_failed=1
+            fi
         else
             # deps
             if ! el_dependencies_check gksu ; then
@@ -1366,8 +1363,13 @@ el_sudo(){
             if ((is_interactive)) ; then
                 el_info "Insert Admin Password to run: $*"
 
-                sudo -H "$@"
-                returned=$?
+                if groups | grep -qsw "sudo" ; then
+                    sudo -H "$@"
+                    returned=$?
+                else
+                    # simulate a fail to use "su -c" instead
+                    returned=1
+                fi
 
                 if ! [[ "$returned" = 0 ]] ; then
                     su -c "$@" root
@@ -2147,7 +2149,7 @@ el_group_add(){
         # multiple gksu attempts
         for i in 1 2
         do
-            if gksu "adduser $USER $group" ; then
+            if gksu adduser $USER $group ; then
                 unset is_failed
                 break
             else
@@ -2171,7 +2173,7 @@ el_group_add(){
             # multiple gksu attempts
             for i in 1 2
             do
-                if gksu "adduser $USER $group" ; then
+                if gksu adduser $USER $group ; then
                     unset is_failed
                     break
                 else
@@ -3681,7 +3683,7 @@ el_aptget(){
                 if ! el_dependencies_check gksu ; then
                     el_dependencies_install "gksu"
                 fi
-                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get "$@"
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get $@
             else
                 #su -c "TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get $@" root
                 urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $@' root"

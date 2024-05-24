@@ -729,7 +729,7 @@ if [[ -x "\$( which urxvt )" ]] ; then
 source /usr/lib/elive-tools/functions
 export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
 
-if ! apt-get install -y $depends ; then
+if ! apt-get install --reinstall -y $depends ; then
     el_aptget_update force
     apt-get -f install
 
@@ -752,7 +752,7 @@ else
 source /usr/lib/elive-tools/functions
 export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
 
-if ! apt-get install -y $depends ; then
+if ! apt-get install --reinstall -y $depends ; then
     el_aptget_update force
     apt-get -f install
 

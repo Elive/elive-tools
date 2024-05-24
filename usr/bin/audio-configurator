@@ -316,7 +316,7 @@ main(){
                 fi
                 #fi
             else
-                el_debug "we selected the card '$selection' from the list (amount of tracks :: card):\n$( echo "$array_cards" | sort -u )"
+                el_debug "we selected the card '$selection' from the list. From these 'amount of tracks :: card' results:\n$( echo "$array_cards" | sort -u )"
             fi
 
             # update: this message became useless especially after using pulseaudio

@@ -63,14 +63,14 @@ reconfigure_applications(){
                 fi
             done 3<<< "$( cat "$HOME/.asoundrc")"
         else
-            mic="$( grep "^defaults\.pcm\.card" "$HOME/.asoundrc" | sed -e 's|^.*defaults.pcm.card ||g' | tail -1 )"
+            mic="$( grep "^defaults\.pcm\.card" "$HOME/.asoundrc" | sed -e 's|^.*defaults.pcm.card ||g' | sed -e '/^$/d' | tail -1 )"
             el_debug "mic is set to default card: $mic"
         fi
 
         # configure
         if [[ -n "$mic" ]] ; then
-            num="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | head -1 | awk '{print $1}' )"
-            name="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | head -1 | sed -e 's|^.* - ||g' )"
+            num="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | sed -e '/^$/d' | head -1 | awk '{print $1}' )"
+            name="$( cat "$asound_cards" | grep -E "\[${mic}\s*\]" | sed -e '/^$/d' | head -1 | sed -e 's|^.* - ||g' )"
             if [[ -n "$name" ]] && [[ -n "$num" ]] ; then
                 sed -i -e "s|NameCaptureCard=.*|NameCaptureCard=\"[hw:${num},0] ${name}\"|g" "$HOME/.config/vokoscreen/vokoscreen.conf"
             fi
@@ -125,7 +125,7 @@ select_card_multiple(){
     # set auto mode unless we have an USB/DAC audio card, also because we may want the mic from elsewhere
     if [[ "${#menu[@]}" -eq 2 ]] && ! ((has_usb_audio)) ; then
     #if [[ "${#menu[@]}" -eq 2 ]] ; then
-        selection="$( echo "${menu[0]}" | head -1 )"
+        selection="$( echo "${menu[0]}" | sed -e '/^$/d' | head -1 )"
         el_debug "only one card found: $selection | switching to auto mode"
         is_auto_mode=1
     else
@@ -139,7 +139,7 @@ select_card_multiple(){
     if ((is_buster)) || ((is_wheezy)) ; then
         selection="$selection"
     else
-        selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | awk '{print $1}' | head -1 )"
+        selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | sed -e '/^$/d' | awk '{print $1}' | head -1 )"
     fi
 
     if [[ "${selection}" = "cancel" ]] ; then
@@ -299,10 +299,10 @@ main(){
 
             # select the card that has most tracks
             # first detect the max number of tracks
-            selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
+            selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
 
             # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | head -1 | sed -e 's|^.* :: ||g' )"
+            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e 's|^.* :: ||g' -e '/^$/d' | head -1 )"
             #selection_id="${selection%% :: *}"
             #selection_name="${selection##* :: }"
             #
@@ -312,7 +312,7 @@ main(){
                 if ((is_buster)) || ((is_wheezy)) ; then
                     selection="DAC"
                 else
-                    selection="$( grep -E "\[\s*DAC\s*\]" "$asound_cards" | awk '{print $1}' | head -1 )"
+                    selection="$( grep -E "\[\s*DAC\s*\]" "$asound_cards" | sed -e '/^$/d' | awk '{print $1}' | head -1 )"
                 fi
                 #fi
             else
@@ -414,10 +414,10 @@ main(){
 
                 # select the card that has most tracks
                 # first detect the max number of tracks
-                selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
+                selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$d/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | head -1 )"
 
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | head -1  )"
+                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | head -1 )"
 
                 mic="$selection"
             fi
@@ -439,7 +439,7 @@ main(){
             if ((is_buster)) || ((is_wheezy)) ; then
                 mic="$mic"
             else
-                mic="$( grep -E "\[\s*${mic}\s*\]" "$asound_cards" | awk '{print $1}' | tail -1 )"
+                mic="$( grep -E "\[\s*${mic}\s*\]" "$asound_cards" | awk '{print $1}' | sed -e '/^$/d' | tail -1 )"
             fi
 
             cat >> "${HOME}/.asoundrc" << EOF

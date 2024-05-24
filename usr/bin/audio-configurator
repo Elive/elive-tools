@@ -294,6 +294,7 @@ main(){
 
                 # make an array of the number of tracks :: name card
                 array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" | wc -l ) :: $name"
+                el_debug "Tracks for $name\n$( LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" )"
 
             done 3<<< "$( echo "$list_cards" | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"
 
@@ -405,6 +406,7 @@ main(){
                     if LC_ALL=C amixer 2>/dev/null | grep -qsi "Simple mixer control.*'.*Mic" ; then
                         el_debug "the card $line is a good candidate for the extra microphone configuration"
                         array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer 2>/dev/null | grep -Fi "Simple mixer control" | wc -l ) :: $line"
+                        el_debug "Tracks for $line\n$( LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" )"
                     fi
 
                 done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"

@@ -2606,22 +2606,22 @@ el_report_to_elive(){
             # ignore reports for more than X days old
             # 2 weeks after a beta release should be enough to fix any bugs! (1 week to download version + 1 days of download/misc)
             if LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
-                if ! el_check_version_development_is_days_recent 10 ; then
+                if ! el_check_version_development_is_days_recent 12 ; then
                     return 0
                 fi
             else
-                if ! el_check_version_development_is_days_recent 20 ; then
+                if ! el_check_version_development_is_days_recent 24 ; then
                     return 0
                 fi
             fi
         else
             # stable versions will need more time
             if LC_ALL=C grep -Fqs "boot=live" /proc/cmdline ; then
-                if ! el_check_version_is_days_recent 20 ; then
+                if ! el_check_version_is_days_recent 24 ; then
                     return 0
                 fi
             else
-                if ! el_check_version_is_days_recent 60 ; then
+                if ! el_check_version_is_days_recent 90 ; then
                     return 0
                 fi
             fi

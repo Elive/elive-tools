@@ -3213,7 +3213,11 @@ el_config_get(){
     # pre {{{
     local tmp_conf_f source
     #tmp_conf_f="/tmp/.$(basename $0)_${USER}_configs.sh"
-    source="$( readlink -f "$SOURCE" )"
+    source="$( readlink -f "$SOURCE" 2>/dev/null || true )"
+    if [[ ! -e "$source" ]] ; then
+        el_debug "ignoring config because of a broken source '$source' location from '$(pwd)' dir"
+        return
+    fi
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     # }}}
@@ -3262,7 +3266,11 @@ el_config_save(){
     # }}}
 
     local tmp_conf_f source
-    source="$( readlink -f "$SOURCE" )"
+    source="$( readlink -f "$SOURCE" 2>/dev/null || true )"
+    if [[ ! -e "$source" ]] ; then
+        el_debug "ignoring config because of a broken source '$source' location from '$(pwd)' dir"
+        return
+    fi
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     if [[ -z "$@" ]] ; then
@@ -3322,7 +3330,11 @@ el_config_restart(){
     # pre {{{
     local tmp_conf_f source
 
-    source="$( readlink -f "$SOURCE" )"
+    source="$( readlink -f "$SOURCE" 2>/dev/null || true )"
+    if [[ ! -e "$source" ]] ; then
+        el_debug "ignoring config because of a broken source '$source' location from '$(pwd)' dir"
+        return
+    fi
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
     # }}}

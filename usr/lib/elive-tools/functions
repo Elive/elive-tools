@@ -1,4 +1,24 @@
 #!/bin/bash
+# INFO signals:
+#
+# 1 HUP: loss of terminal
+# 2 INT: is ^C
+# 3 QUIT: ^d quit from keyboard
+# 4 ILL: illegal instruction
+# 5 TRAP: breakpoints
+# 6 ABRT: abort
+# 7 BUS: hardware problem
+# 8 FPE: wrong math operation
+# 9 KILL: uncatcheable / unstopable
+# 10 USR1: customizable
+# 13 PIPE: broken pipe
+# 14 ALMR: timers
+# 15 TERM: termination
+# 17 CHLD: children monitor
+# 20 TSTP: ^z
+# 24 XCPU: too much cpu consumption
+# 28 WINCH: window resize
+
 ##TEXTDOMAIN="elive-tools" # disabled on purpose for compatibility, do not enable
 
 if [[ -n "$ZSH_VERSION" ]] ; then

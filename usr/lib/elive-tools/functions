@@ -1,6 +1,7 @@
 #!/bin/bash
 # INFO signals:
 #
+# 0 EXIT: when program finishes (already used here)
 # 1 HUP: loss of terminal
 # 2 INT: is ^C
 # 3 QUIT: ^d quit from keyboard

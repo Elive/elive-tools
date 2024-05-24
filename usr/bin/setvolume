@@ -215,6 +215,9 @@ get_meter(){
             fi
 
         else
+            # update the tool first, in case that there's fixes
+            NOREPORTS=1 el_package_upgrade_fast 180 force "elive-tools"
+
             export is_already_configured=1
 
             if grep -Fqs "boot=live" /proc/cmdline ; then

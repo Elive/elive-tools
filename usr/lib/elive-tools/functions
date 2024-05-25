@@ -1115,7 +1115,9 @@ el_package_upgrade_fast(){
         case "$mode" in
             force)
                 # different version
-                if [[ "$installed" != "$candidate" ]] ; then
+                if [[ "$installed" = "$candidate" ]] ; then
+                    el_debug "no new version found for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
+                else
                     el_debug "downloading candidate for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url} "
                     is_download=1
                 fi
@@ -1124,6 +1126,8 @@ el_package_upgrade_fast(){
                 if dpkg --compare-versions "$installed" lt "$candidate" ; then
                     el_debug "new version for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
                     is_download=1
+                else
+                    el_debug "no new version found for ${package}, installed '$installed' vs candidate '${candidate}': ${package_url}"
                 fi
                 ;;
             *)

@@ -208,10 +208,18 @@ get_meter(){
     if [[ -z "$meter" ]] ; then
 
         if ((is_already_configured)) ; then
+            # debug
+            el_error "No meters found to configure volumes, is your audio card working?:\nset_volume result with PCM,0:  $(amixer -q set PCM "2%-" 2>&1 )\nset_volume result with PCM,1:  $(amixer -q set PCM,1 "2%-" 2>&1 )\nset_volume result with Master,0:  $(amixer -q set Master "2%-" 2>&1 )\n\nlist (amixer scontrols):\n$list\namixer scontrols:  $(amixer scontrols)\n|$(cat /proc/asound/cards)|\ncat ~./.asoundrc :\n$(cat "$HOME/.asoundrc" )"
+            el_warning "trying to reconfigure:\n$( EL_DEBUG=3 audio-configurator --quiet --smart --auto --no-messages 2>&1 )"
+
+            # notify user
             if ! ((is_quiet_mode)) ; then
-                el_error "No meters found to configure volumes, is your audio card working?:\nset_volume result with PCM,0:  $(amixer -q set PCM "2%-" 2>&1 )\nset_volume result with PCM,1:  $(amixer -q set PCM,1 "2%-" 2>&1 )\nset_volume result with Master,0:  $(amixer -q set Master "2%-" 2>&1 )\n\nlist (amixer scontrols):\n$list\namixer scontrols:  $(amixer scontrols)\n|$(cat /proc/asound/cards)|\ncat ~./.asoundrc :\n$(cat "$HOME/.asoundrc" )"
-                el_warning "trying to reconfigure:\n$( EL_DEBUG=3 audio-configurator --quiet --smart --auto --no-messages 2>&1 )"
                 el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There's no playback channel found in your volumes. You can reconfigure your audio card from your applications menu." )"
+            fi
+
+            # always show to the user configure his audio card because he needs it working!
+            if grep -Fqs "boot=live" /proc/cmdline ; then
+                audio-configurator
             fi
 
         else

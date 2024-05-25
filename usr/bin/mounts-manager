@@ -1334,7 +1334,8 @@ main(){
     # }}}
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) options:" echo -e "Basic partitions / mountpoins features:"
+        echo -e "Usage: $(basename $BASH_SOURCE) options:"
+        echo -e "Basic partitions / mountpoins features:"
         echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
         echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
         echo -e "--mount dev [args]  : mount a device, args must be in udisks format:"

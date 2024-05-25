@@ -488,10 +488,6 @@ main(){
             fi
         fi
 
-        if [[ -z "$item_human_label" ]] ; then
-            item_human_label="(no name)"
-        fi
-
         if [[ -n "$item_filesystem" ]] ; then
             if [[ "$item_filesystem" = "vfat" ]] ; then
                 if LC_ALL=C fdisk -l "${item%%[0-9]*}" 2>/dev/null | grep -qs "^${1}.*EFI " ; then
@@ -549,6 +545,10 @@ main(){
                 el_debug "marking ${item} as unusable because is shows like an extended partition"
                 item_is_usable=0
             fi
+        fi
+
+        if [[ -z "$item_human_label" ]] ; then
+            item_human_label="(no name)"
         fi
 
         # only show mountable partitions ? {{{

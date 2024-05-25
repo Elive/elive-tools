@@ -103,12 +103,11 @@ refresh_partition_table(){
 #===============================================================================
 chroot_layers_mount(){
     # pre {{{
-    local dir id dirid mode is_mode_bind
+    local dir id mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return 0
 
     dir="${1%%/}"
-    dirid="${dir//\//%}"
     id="$2"
     mode="$3"
     if ! el_check_variables "dir|id" || ! el_check_dirs "$dir" ; then
@@ -138,17 +137,17 @@ chroot_layers_mount(){
     mkdir -p "$dir/dev/pts"
     if ((is_mode_bind)) ; then
         #mount --bind "/dev" "${dir}/dev"
-        mount dev-$id -t devtmpfs "${dir}/dev" || true
+        mount "dev-$id" -t devtmpfs "${dir}/dev" || true
         mount --bind "/dev/pts" "${dir}/dev/pts"
-        mount -t tmpfs devshm-$id "${dir}/dev/shm"
+        mount -t tmpfs "devshm-$id" "${dir}/dev/shm"
     else
         # mount a tmpfs of type dev first, we need thigns like /dev/null working:
-        mount dev-$id -t devtmpfs "${dir}/dev" || true
+        mount "dev-$id" -t devtmpfs "${dir}/dev" || true
 
         if ((is_wheezy)) ; then
-            mount devpts-$id -t devpts "${dir}/dev/pts" || true
+            mount "devpts-$id" -t devpts "${dir}/dev/pts" || true
         else
-            mount devpts-$id -t devpts -o newinstance,noexec,nosuid,gid=5,mode=620 "${dir}/dev/pts" || true
+            mount "devpts-$id" -t devpts -o newinstance,noexec,nosuid,gid=5,mode=620 "${dir}/dev/pts" || true
         fi
     fi
 
@@ -160,7 +159,7 @@ chroot_layers_mount(){
         mkdir -p "$dir/etc"
         ln -s /proc/mounts "${dir}/etc/mtab"
     else
-        mount proc-$id -t proc "${dir}/proc" || true
+        mount "proc-$id" -t proc "${dir}/proc" || true
     fi
 
     # selinux
@@ -170,7 +169,7 @@ chroot_layers_mount(){
             if ((is_mode_bind)) ; then
                 mount --bind "/selinux" "${dir}/selinux"
             else
-                mount selinuxfs-$id -t selinuxfs "${dir}/selinux" || true
+                mount "selinuxfs-$id" -t selinuxfs "${dir}/selinux" || true
             fi
         fi
     else
@@ -179,7 +178,7 @@ chroot_layers_mount(){
             if ((is_mode_bind)) ; then
                 mount --bind "/sys/fs/selinux" "${dir}/sys/fs/selinux"
             else
-                mount selinuxfs-$id -t selinuxfs "${dir}/sys/fs/selinux" || true
+                mount "selinuxfs-$id" -t selinuxfs "${dir}/sys/fs/selinux" || true
             fi
         fi
     fi
@@ -189,7 +188,7 @@ chroot_layers_mount(){
     if ((is_mode_bind)) ; then
         mount --bind "/sys" "${dir}/sys"
     else
-        mount sysfs-$id -t sysfs "${dir}/sys" || true
+        mount "sysfs-$id" -t sysfs "${dir}/sys" || true
     fi
 
     # efivars sysfs
@@ -198,7 +197,7 @@ chroot_layers_mount(){
         if ((is_mode_bind)) ; then
             mount --bind "/sys/firmware/efi/efivars" "${dir}/sys/firmware/efi/efivars"
         else
-            mount efivarfs-$id -t efivarfs "${dir}/sys/firmware/efi/efivars" || true
+            mount "efivarfs-$id" -t efivarfs "${dir}/sys/firmware/efi/efivars" || true
         fi
     fi
 
@@ -322,12 +321,11 @@ chroot_layers_mount(){
 #===============================================================================
 chroot_layers_umount(){
     # pre {{{
-    local dir id dirid mode is_mode_bind
+    local dir id mode is_mode_bind
     el_debug
     el_security_function_loop 10 || return 0
 
     dir="${1%%/}"
-    dirid="${dir//\//%}"
     id="$2"
     mode="$3"
 
@@ -552,7 +550,7 @@ chroot_layers_umount(){
 #===============================================================================
 get_mountpoint(){
     # pre {{{
-    local dev is_mounted mountpoint is_temporally_mounted filesystem
+    local dev mountpoint filesystem
     el_debug
     el_security_function_loop 10 || return 0
 
@@ -597,7 +595,7 @@ get_mountpoint(){
         mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
         # dev state test
         if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-            el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+            el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
         fi
     fi
 
@@ -620,7 +618,7 @@ get_mountpoint(){
                 mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
                 # dev state test
                 if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$dev" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
                 fi
             fi
 
@@ -772,7 +770,7 @@ check_is_mounted(){
             mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
             # dev state test
             if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b "$device" | grep -F 'MountPoints:' ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
+                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$device' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
             fi
 
             if [[ -n "$mountpoint" ]] ; then
@@ -841,7 +839,7 @@ el_umount(){
             # is a wap what we try to umount ?
             if LC_ALL="$EL_LC_EN" file -s "$device" | grep -Fqs "swap file" ; then
                 swapoff "$device" 2>/dev/null
-                el_debug "Umounted (swap): $@"
+                el_debug "Umounted (swap): $*"
                 return 0
             fi
             # if we are not mounted, nothing more to do
@@ -901,7 +899,7 @@ el_umount(){
                 fi
             done
 
-            el_debug "Umounted: $@"
+            el_debug "Umounted: $*"
             return 0
         fi
 
@@ -929,7 +927,7 @@ el_umount(){
                 fi
             done
 
-            el_debug "Umounted: $@"
+            el_debug "Umounted: $*"
             return 0
         fi
 
@@ -950,7 +948,7 @@ el_umount(){
                 fi
             done
 
-            el_debug "Umounted: $@"
+            el_debug "Umounted: $*"
             return 0
         fi
 
@@ -977,7 +975,7 @@ el_umount(){
                     fi
                 done
 
-                el_debug "Umounted (forced): $@"
+                el_debug "Umounted (forced): $*"
                 return 0
             fi
 
@@ -999,7 +997,7 @@ el_umount(){
                     fi
                 done
 
-                el_debug "Umounted (forced): $@"
+                el_debug "Umounted (forced): $*"
                 return 0
             fi
 
@@ -1018,7 +1016,7 @@ el_umount(){
                     fi
                 done
 
-                el_debug "Umounted (forced): $@"
+                el_debug "Umounted (forced): $*"
                 return 0
             fi
         fi
@@ -1027,7 +1025,7 @@ el_umount(){
             el_debug "unable to umount $dev for ${mountpoint}, I'm upset now"
             return 1
         else
-            el_debug "Umounted (forced): $@"
+            el_debug "Umounted (forced): $*"
             el_warning "well, finally umounted"
             # special dir created by this own tool, we don't need it anymore
             for dir in  /mnt/*_elive
@@ -1049,7 +1047,7 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid filesystem devtype mountpoint
+    local dev uuid filesystem mountpoint
     el_security_function_loop 10 || return 0
 
     dev="$1"
@@ -1114,6 +1112,7 @@ el_mount(){
 
         # get type
         # UPDATE: do not enable, LVM2 devices shows as "disk" but they are mountable, so we should refer them by their uuid or fs
+        # lcal devtype
         #devtype="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "DEVTYPE=" | sed -e 's|^.*DEVTYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         #if [[ "$devtype" = "disk" ]] ; then
             #el_debug "Unable to mount $dev because is a disk type"
@@ -1123,7 +1122,7 @@ el_mount(){
 
     # fsck the disk in case is dirty and not mounted
     mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
-    if ! [[ -n "$mountpoint" ]] ; then
+    if [[ -z "$mountpoint" ]] ; then
         if tune2fs -l "$dev" 2>/dev/null | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
             el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
             fsck -yf "$dev"
@@ -1335,8 +1334,7 @@ main(){
     # }}}
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) options:"
-        echo -e "Basic partitions / mountpoins features:"
+        echo -e "Usage: $(basename $BASH_SOURCE) options:" echo -e "Basic partitions / mountpoins features:"
         echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
         echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
         echo -e "--mount dev [args]  : mount a device, args must be in udisks format:"

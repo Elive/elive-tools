@@ -26,7 +26,7 @@ get_all_partitions_list(){
         fi
     done
     # debug:
-    el_debug "Partitions get in traditional mode as from /dev/[sh]d[a-z][0-9]*: ${partitions_raw[@]}"
+    el_debug "Partitions get in traditional mode as from /dev/[sh]d[a-z][0-9]*: ${partitions_raw[*]}"
 
     # }}}
     # LVM support {{{
@@ -36,7 +36,7 @@ get_all_partitions_list(){
         do
             # remove extra leading blank chars
             read -r pvname <<< "$pvname"
-            [[ ! -b "${pvname}" ]] && continue || true
+            [[ ! -b "${pvname}" ]] && continue
             # remove partition from our list if is part of a group
             el_array_member_unset "${pvname}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
             el_debug "Removed ${pvname} from our list of partitions because it is part of a Physical Volume (LVM2) set"
@@ -47,7 +47,7 @@ get_all_partitions_list(){
         #do
             ## remove extra leading blank chars
             #read -r lvname <<< "$lvname"
-            #[[ ! -b "${lvname}" ]] && continue || true
+            #[[ ! -b "${lvname}" ]] && continue
             #el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
             #el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
         #done
@@ -60,7 +60,7 @@ get_all_partitions_list(){
         do
             # remove extra leading blank chars
             read -r lvname <<< "$lvname"
-            [[ ! -b "${lvname}" ]] && continue || true
+            [[ ! -b "${lvname}" ]] && continue
             el_array_member_add "${lvname}" "${partitions_lvm2_lv[@]}" ; partitions_lvm2_lv=("${_out[@]}")
             el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
         done 3<<< "$( LVM_SUPPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name,lv_name | sed "s|-|--|g;s|^[[:space:]]*\(.*\):\(.*\)$|/dev/mapper/\1-\2|" )"
@@ -79,14 +79,14 @@ get_all_partitions_list(){
             #for dev in $( cat /proc/mdstat | grep "^${raid} :" | tr ' ' '\n' | grep "\[[[:digit:]]\]" | sed 's|\[.*$||g' )
             for dev in $( LC_ALL="$EL_LC_EN" mdadm --detail "/dev/${raid}"  | grep "active sync.*/dev/" | sed -e 's|^.*/dev/|/dev/|g' )
             do
-                [[ ! -b "${dev}" ]] && continue || true
+                [[ ! -b "${dev}" ]] && continue
                 el_array_member_unset "${dev}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
                 el_debug "Removed ${dev} from our list of partitions because it is part of a (software) RAID set [unit]"
                 unset dev
             done
 
             # remove the raid item too
-            [[ ! -b "/dev/${raid}" ]] && continue || true
+            [[ ! -b "/dev/${raid}" ]] && continue
             el_array_member_unset "/dev/${raid}" "${partitions_raw[@]}" ; partitions_raw=("${_out[@]}")
             el_debug "Removed /dev/${raid} from our list of partitions because it is part of a (software) RAID set [set]"
 
@@ -95,7 +95,7 @@ get_all_partitions_list(){
 
             for part in /dev/md/${raidname}p*
             do
-                [[ ! -b "${part}" ]] && continue || true
+                [[ ! -b "${part}" ]] && continue
                 el_array_member_add "${part}" "${partitions_soft_raid[@]}" ; partitions_soft_raid=("${_out[@]}")
                 el_debug "Adding (soft-RAID) $part to our partitions list"
             done
@@ -112,7 +112,7 @@ get_all_partitions_list(){
         bios_raid_list="$( LC_ALL="$EL_LC_EN" /sbin/dmraid -r 2>/dev/null | grep -vE "^(no raid disks|no block devices found)$" | sed 's|\",.*$||g' | sed 's|:\ .*\"| |g')"
 
         if [[ -n "$bios_raid_list" ]] ; then
-            echo "$bios_raid_list" > /tmp/.bios_raid_list-$USER
+            echo "$bios_raid_list" > "/tmp/.bios_raid_list-$USER"
 
             while read -r bios_raid_disk
             do
@@ -121,34 +121,43 @@ get_all_partitions_list(){
                 # /dev/sda jmicron_GRAID
                 for bios_raid_partition in "$bios_raid_disk"
                 do
+                    [[ -z "$bios_raid_partition" ]] && continue
+
                     bios_raid_partition_id="$( echo "$bios_raid_partition" | awk '{print $2}' )"
+                    [[ -z "$bios_raid_partition_id" ]] && continue
+
                     for bios_raid_partition_real in /dev/mapper/${bios_raid_partition_id}*
                     do
-                        if test -b ${bios_raid_partition_real}
-                        then
+                        [[ -z "$bios_raid_partition_real" ]] && continue
+
+                        if [[ -b "${bios_raid_partition_real}" ]] ; then
                             unset mounted
                             bios_raid_partition_remove="$( echo "$bios_raid_partition" | awk '{print $1}' )"
                             bios_raid_partition_add="${bios_raid_partition_real}"
                             for bios_raid_partition_remove_number in ${bios_raid_partition_remove}*
                             do
-                                [[ "$bios_raid_partition_remove_number" = "${bios_raid_partition_remove}" ]] && continue || true
-                                [[ ! -b ${bios_raid_partition_remove_number} ]] && continue || true
-                                mkdir -p /tmp/.mount_tests_$$
+                                [[ "$bios_raid_partition_remove_number" = "${bios_raid_partition_remove}" ]] && continue
+                                [[ ! -b ${bios_raid_partition_remove_number} ]] && continue
+
                                 if [[ ! "$mounted" = "yes" ]] ; then
-                                    mount $bios_raid_partition_add /tmp/.mount_tests_$$ 2>/dev/null && mounted=yes
+                                    mkdir -p "/tmp/.mount_tests_$$"
+                                    if mount "$bios_raid_partition_add" "/tmp/.mount_tests_$$" 2>/dev/null ; then
+                                        mounted=yes
+                                        umount "/tmp/.mount_tests_$$" 2>/dev/null
+                                    fi
+                                    rmdir "/tmp/.mount_tests_$$"
                                 fi
-                                umount /tmp/.mount_tests_$$ 2>/dev/null
-                                rmdir /tmp/.mount_tests_$$
                                 if [[ "$mounted" = "yes" ]] ; then
                                     listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove_number}||g" )"
                                 else
                                     break
                                 fi
                             done
+
                             [[ ! "$mounted" = "yes" ]] && break
                             listpartitions="$( echo ${listpartitions} | sed "s|${bios_raid_partition_remove}||g" )"
-                            if ! echo -e "${listpartitions}" | grep -Fqs "${bios_raid_partition_add}"
-                            then
+
+                            if ! echo -e "${listpartitions}" | grep -Fqs "${bios_raid_partition_add}" ; then
                                 listpartitions="${listpartitions} ${bios_raid_partition_add}"
                             fi
                         fi
@@ -156,9 +165,9 @@ get_all_partitions_list(){
                     unset bios_raid_partition_remove bios_raid_partition_add
                 done
                 unset bios_raid_partition
-            done < /tmp/.bios_raid_list-$USER
+            done < "/tmp/.bios_raid_list-$USER"
 
-            rm -f /tmp/.bios_raid_list-$USER
+            rm -f "/tmp/.bios_raid_list-$USER"
 
             # TODO: deleteme, betatesting
             #el_request_report_bug "Not a bug (maybe?) but the -lister tool detected that you have a fake-raid (dmraid) system on your computer, unfortunately we cannot betatest this feature because we have not the hardware with it. Please, can you let us know if actually lists or not your RAID  correctly ? For that just send an email to thanatermesis@elivecd.org , Thank you :)"
@@ -191,8 +200,8 @@ get_all_partitions_list(){
 
 main(){
     # pre {{{
-    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions disk partition raidname partitions partitions_fake_raid partitions_soft_raid partitions_lvm2_lv partitions_raw arg
-    #local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line disk
+    local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line listpartitions partition raidname partitions partitions_fake_raid partitions_soft_raid partitions_lvm2_lv partitions_raw arg
+    #local bios_raid_disk bios_raid_list bios_raid_partition_add bios_raid_partition_id bios_raid_partition_remove item_dm_name item_filesystem item_human_label item_human_size item_is_usable item_label item_size item_type item_uuid line 
 
     # ways to get partitions:
     # lsblk -f
@@ -304,7 +313,7 @@ main(){
         fi
     done
 
-    el_debug "items: \"${partitions_all[@]}\""
+    el_debug "items: \"${partitions_all[*]}\""
     for item in "${partitions_all[@]}"
         #for item in "${partitions_raw[@]}"
     do
@@ -607,7 +616,7 @@ main(){
 
     for item in "${partitions[@]}"
     do
-        [[ -z "${item}" ]] && continue || true
+        [[ -z "${item}" ]] && continue
         #echo -e "$item"
 
         if ! printf "%s\n" "$item" ; then
@@ -739,36 +748,36 @@ get_filesystem_file(){
 get_filesystem_sfdisk(){
     local ret
     if [[ "$1" = /dev/nvme* ]] ; then
-        ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
+        ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
         if [[ -z "$ret" ]] ; then
-            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+            ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
         fi
     else
         if [[ "$1" = /dev/mmcblk* ]] ; then
-            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
-                ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
             fi
         else
-            ret="$(sfdisk ${sfdisk_print_id} $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
         fi
     fi
 
     # force mode
     if [[ -z "$ret" ]] ; then
         if [[ "$1" = /dev/nvme* ]] ; then
-            ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
+            ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
-                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
             fi
         else
             if [[ "$1" = /dev/mmcblk* ]] ; then
-                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
+                ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
                 if [[ -z "$ret" ]] ; then
-                    ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
+                    ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
                 fi
             else
-                ret="$(sfdisk --force ${sfdisk_print_id} $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
+                ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed 's/[0-9]/ &/') 2>/dev/null )"
             fi
         fi
     fi

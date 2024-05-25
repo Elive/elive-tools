@@ -8,7 +8,7 @@ main(){
     filename="$1"
     shift
 
-    find . -iname '*'$filename'*' "$@"
+    find . -iname '*'"$filename"'*' "$@"
 }
 
 #

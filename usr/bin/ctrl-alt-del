@@ -10,8 +10,6 @@ export TEXTDOMAIN
 
 main(){
     # pre {{{
-    local var
-
     if ! el_dependencies_check "gksu" ; then
         el_dependencies_install "gksu"
     fi

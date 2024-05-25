@@ -326,14 +326,11 @@ main(){
             #fi
 
         else
-            if select_card_multiple ; then
-                is_multiple_cards=1
-            else
+            if ! select_card_multiple ; then
                 if [[ -s "$HOME/.asoundrc" ]] ; then
                     # exit because is interactive and user canceled
                     exit
                 else
-                    unset is_multiple_cards
                     $guitool --warning --text="$( eval_gettext "You have not selected any audio card so nothing will be configured. To let Elive pick the best choice for you run this command:" ): $(basename $0) --auto"
                     exit
                     #is_auto_mode=1

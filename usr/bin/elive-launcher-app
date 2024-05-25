@@ -33,7 +33,7 @@ main(){
         fi
     fi
 
-    if ! [ -n "$is_launcher_used" ] ; then
+    if [ -z "$is_launcher_used" ] ; then
         #echo -E "Please install first a launcher, like 'ulauncher' or 'kupfer'" 1>&2
         notify-send -e -t 10000 -i error "Dependencies missing" "Please install first a launcher,\nlike 'ulauncher' or 'kupfer'"
         exit 1

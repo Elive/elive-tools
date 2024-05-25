@@ -20,7 +20,7 @@ el_c_underline="\033[4m" # Underline 'color' effect  (orig. underline)
 el_c_italic="\033[3m" # Italic 'color' effect
 el_c_bold="\033[1m" # Bold 'color' effect
 
-: ${EL_DEBUG:="0"} # debug default level
+: "${EL_DEBUG:="0"}" # debug default level
 
 set -e
 
@@ -83,7 +83,7 @@ check_files_owner_compatibility(){
 do_sudo(){
     # run something as sudo, but if fails warn it
     if ! $SUDO_MODE "$@" ; then
-        el_error "Unable to run \"$@\""
+        el_error "Unable to run \"$*\""
         el_info "this could be caused by lack of permissions in the files, a solution is to configured a NOPASSWD mode of sudo for your user and this will will use it"
         return 1
     else

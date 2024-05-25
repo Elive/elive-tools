@@ -5,7 +5,7 @@ EL_REPORTS="1"
 #el_make_environment
 
 #trap "exit_ok" 0
-trap "exit_error" 1 2 3 5 6 9 14 15 ERR TERM
+trap "exit_error" 1 2 3 5 6 14 15 ERR TERM
 
 exit_error(){
     rm -f "$dest/$( basename "$file" )"

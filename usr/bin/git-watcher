@@ -751,7 +751,7 @@ EOF
             echo "$git_username" > "$shared_personal_d/username.txt"
 
             # save gravatar too, w00t!
-            curl -s "http://www.gravatar.com/avatar/"$( echo -n "$git_email" | awk '{print tolower($0)}' | tr -d '\n ' | md5sum --text | tr -d '\- ' )"?s=64&d=404" > "$shared_personal_d/gravatar.png"
+            curl -s "http://www.gravatar.com/avatar/$( echo -n "$git_email" | awk '{print tolower($0)}' | tr -d '\n ' | md5sum --text | tr -d '\- ' )?s=64&d=404" > "$shared_personal_d/gravatar.png"
             if ! file "$shared_personal_d/gravatar.png" | grep -qsi "image" ; then
                 rm -f "$shared_personal_d/gravatar.png"
             fi
@@ -1156,8 +1156,8 @@ show_states(){
 
             if [[ "$_branch_working" = "$branch_working" ]] \
                 && [[ "$_branch_watch" = "$branch_watch" ]] \
-                && [[ "$_options_before" = "${options_extra_git_before[@]//\//%}" ]] \
-                && [[ "$_options_after" = "${options_extra_git_after[@]//\//%}" ]] \
+                && [[ "$_options_before" = "${options_extra_git_before[*]//\//%}" ]] \
+                && [[ "$_options_after" = "${options_extra_git_after[*]//\//%}" ]] \
                 ; then
                 echo -e "${el_c_g} $_commits_remaining | $_branch_watch | $_branch_working | $_options_before | $_options_after | $_dir_sources  ${el_c_y}${el_c_n}"
             else
@@ -1293,7 +1293,7 @@ do_count_commits(){
         echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
 
         # precache the full commits list in a variable
-        commits_list="$( command git log --format=format:'%H' "${options_extra_git_before[@]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" )"
+        commits_list="$( command git log --format=format:'%H' "${options_extra_git_before[*]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[*]}" )"
 
         # pre-statistics a bit: show the amount of commits between branches
         while read -ru 3 line
@@ -1378,7 +1378,7 @@ do_cherry_pick_menu(){
             ;;
         d)  # show patch
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-            GIT_PAGER=cat command git diff --cached
+            GIT_PAGER=cat  command git diff --cached
             command git status
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             # return back to main menu
@@ -1625,7 +1625,7 @@ do_compare_before_after(){
     local commits _commit_id commit_id commits_amount
     el_debug
 
-    commits="$@"
+    commits="$*"
     commits="${commits//,/ }"
 
     commits_amount="$( echo "$commits" | wc -w )"
@@ -1653,8 +1653,8 @@ do_compare_before_after(){
     else
         _commit_id="$( echo "$commits_list" | grep -B 1 "${commit_first}" | head -1 )"
 
-        command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 8 "${commit_first:0:12}"
-        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}', '${#commits_history[@]} -gt $commits_amount' , is this correct?" ; then
+        command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[*]}" "$branch_working".."$branch_watch" "${options_extra_git_after[*]}" | grep --color -C 8 "${commit_first:0:12}"
+        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}', '${#commits_history[*]} -gt $commits_amount' , is this correct?" ; then
             return 1
         fi
     fi
@@ -2124,7 +2124,7 @@ options_main_interact(){
 
             # first:  list around nearest
             el_explain 0 "(commits from oldest to newest)"
-            command git log --oneline --abbrev=12 "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | tac | grep --color -C 20 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 "${options_extra_git_before[*]}" "$branch_working".."$branch_watch" "${options_extra_git_after[*]}" | tac | grep --color -C 20 "${commit_id:0:12}"
 
             el_explain 0 "Give a list of spaces-separated commits to cherry-pick in earlier-order"
             el_explain 0 "Use the 'listing-nearest' feature to show more commits. Empty value will skip the action"
@@ -2252,8 +2252,8 @@ options_main_interact(){
         a)  #  list around nearest
             el_explain 0 "nearest commits to your actual position in our working branch:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_working\"..\"$branch_watch\" "${options_extra_git_after[@]}" | grep --color -C 25 \"${commit_id:0:12}\""
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_working".."$branch_watch" "${options_extra_git_after[@]}" | grep --color -C 25 "${commit_id:0:12}"
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[*]}" \"$branch_working\"..\"$branch_watch\" "${options_extra_git_after[*]}" | grep --color -C 25 \"${commit_id:0:12}\""
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[*]}" "$branch_working".."$branch_watch" "${options_extra_git_after[*]}" | grep --color -C 25 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2264,9 +2264,9 @@ options_main_interact(){
         A)  # list Around nearest commits full
             el_explain 0 "nearest commits to your actual position in the watching branch history:"
 
-            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" \"$branch_watch\" | grep --color -C 25 \"${commit_id:0:12}\""
+            el_explain 2 "command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[*]}" \"$branch_watch\" | grep --color -C 25 \"${commit_id:0:12}\""
 
-            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[@]}" "$branch_watch" | grep --color -C 25 "${commit_id:0:12}"
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' "${options_extra_git_before[*]}" "$branch_watch" | grep --color -C 25 "${commit_id:0:12}"
 
             el_explain 0 "list showed from newest to oldest"
 
@@ -2520,8 +2520,8 @@ main(){
     # append keyword in conf file if we have it
     working_directory_identifier="$( pwd | sed -e 's|/|%|g' )"
     # XXX update show_states too if you change this:
-    repo_id="${working_directory_identifier}::${branch_watch}::${branch_working}::${options_extra_git_before[@]//\//%}::${options_extra_git_after[@]//\//%}"
-    repo_id_shared="${branch_watch}::${branch_working}::${options_extra_git_before[@]//\//%}::${options_extra_git_after[@]//\//%}"
+    repo_id="${working_directory_identifier}::${branch_watch}::${branch_working}::${options_extra_git_before[*]//\//%}::${options_extra_git_after[*]//\//%}"
+    repo_id_shared="${branch_watch}::${branch_working}::${options_extra_git_before[*]//\//%}::${options_extra_git_after[*]//\//%}"
     conf_repo_d="${conf_d}/${repo_id}"
 
     mkdir -p "$conf_repo_d/flags"
@@ -2701,7 +2701,7 @@ main(){
 
     # debug
     if [[ "${EL_DEBUG}" -ge "2" ]] ; then
-        el_explain 2 "git log __"${options_extra_git_before[@]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[@]}""
+        el_explain 2 "git log __"${options_extra_git_before[*]}" --reverse __${branch_working}__..__${branch_watch}__ __"${options_extra_git_after[*]}""
     fi
 
     if ! ((is_travel_wanted)) ; then

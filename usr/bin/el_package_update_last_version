@@ -15,7 +15,7 @@ usage(){
 
 main(){
     # pre {{{
-    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version is_mode_force arg args packages
+    local packagename line package_version_installed package_version_newer_found_maybe url_package_dir url_repository version is_mode_force arg
 
 
     # Usage

@@ -112,7 +112,7 @@ module_ecomorph_unload(){
     # pre {{{
     local module address
 
-    if [[ -n "$EROOT" ]] ; then
+    if [[ ! -n "$E_START" ]] ; then
         return 0
     fi
 
@@ -333,7 +333,7 @@ configure_multiscreens(){
             # note: never restart E because we also run this tool from the E restart, so it could end into a loop
             true
             # re-load the bar to the correct new desktop
-            if ! [[ -n "$EROOT" ]] ; then
+            if [[ -n "$E_START" ]] ; then
                 if enlightenment_remote -module-list 2>/dev/null | grep --color=never "^engage -- Enabled" ; then
                     enlightenment_remote -module-disable "engage"
                     enlightenment_remote -module-enable "engage"

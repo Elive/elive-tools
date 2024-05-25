@@ -431,7 +431,7 @@ user_add(){
     read -r userpass <<< "$userpass"
     read -r user_email <<< "$user_email"
 
-    username_bak="$username"
+    # username_bak="$username"
     # cleanup to valid username
     username="${username// /_}"
     # do not enable this, is buggy, also, lots of users may want to have an username with their non-ascii characters from other languages
@@ -513,7 +513,7 @@ user_add(){
     rm -f "${temp_error}"
 
     if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" 2>"$temp_error"  ; then
-        $USERDEL -r "$username" 2>"${temp_error}" || true 
+        $USERDEL -r "$username" 2>/dev/null 1>&2 || true 
         $guitool --error --text="$( eval_gettext "Unable to create your user. Try using English characters only" ). $(cat "$temp_error" | sed -e 's|useradd: ||g' )"
         el_warning "Unable to create user: $(cat "$temp_error" )"
         return 1
@@ -716,7 +716,7 @@ pass_change(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( echo "root ${userlist[@]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user to change its password" )" || echo cancel )"
+    username="$( echo "root ${userlist[*]}" | tr ' ' '\n' | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user to change its password" )" || echo cancel )"
     if [[ "$username" = "cancel" ]] || [[ -z "$username" ]] ; then
         $guitool --error
         exit 1

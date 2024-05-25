@@ -482,6 +482,9 @@ main(){
 
                 item_human_size="${item_human_size#0}"
                 item_human_size="${item_human_size#0}"
+
+                # set a default value to not break the output
+                [[ -z "$item_human_size" ]] && item_human_size="unknown"
             fi
         fi
 

@@ -1140,14 +1140,14 @@ el_package_upgrade_fast(){
     done
 
     # install all downloaded packages
-    if ls *deb  1>/dev/null 2>&1 ; then
-        el_debug "going to install:\n$( ls -1 *deb )"
+    if ls ./*deb  1>/dev/null 2>&1 ; then
+        el_debug "going to install:\n$( ls -1 ./*deb )"
 
         # wait for unlock
         el_aptget check 1>/dev/null
 
         if [[ "$UID" = 0 ]] ; then
-            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i *deb 1>/dev/null
+            TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i ./*deb 1>/dev/null
             TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
             if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
@@ -1163,7 +1163,7 @@ el_package_upgrade_fast(){
 
 
                 # try to install again
-                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i *deb 1>/dev/null
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg -i ./*deb 1>/dev/null
                 TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
                 if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
@@ -1941,7 +1941,7 @@ el_warning(){
 
     # }}}
     # get the list of function names array {{{
-    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+    if { [[ -z "$NOREPORTS" ]] && [[ -z "$NOREPORT" ]] && [[ -z "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
 
         counter="${#FUNCNAME[*]}"
         count=0
@@ -2033,7 +2033,7 @@ el_error(){
 
     # }}}
     # get the list of function names array {{{
-    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+    if { [[ -z "$NOREPORTS" ]] && [[ -z "$NOREPORT" ]] && [[ -z "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -2172,7 +2172,7 @@ el_group_add(){
 
         if ((is_failed)) && [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             local message_wrong_password
-            message_wrong_password="$( printf "$( eval_gettext "Wrong password" )" "" )"
+            message_wrong_password="$( eval_gettext "Wrong password" )"
 
             timeout 40 $guitool --error # --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_wrong_password" )"
         fi

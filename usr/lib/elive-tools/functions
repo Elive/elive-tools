@@ -44,7 +44,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # if we are in console (out of X) we should always exit
     if ((is_console)) ; then
         if ((is_debug)) ; then
-            echo -e "we are NOT in console, exiting '$FUNCNAME' ..." 1>&2
+            echo -e "we are NOT in console, exiting '${FUNCNAME[0]}' ..." 1>&2
         fi
         return 0
     fi
@@ -97,7 +97,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # fetch dbus address to we can use things like notify-send or dbus-send
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
-        export DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+        DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+        export DBUS_SESSION_BUS_ADDRESS
     fi
 
     if [[ -z "${E_IPC_SOCKET}" ]] && [[ -n "${e_ipc_socket}" ]] ; then
@@ -152,7 +153,7 @@ el_notify(){
     local time title message icon words mode extra_args
 
     if [[ -z "$4" ]] ; then
-        el_error "Function usage: $FUNCNAME (soft|nor|imp|crit) 'icon' 'title' 'message'  - (icon example: 'logo-elive')"
+        el_error "Function usage: ${FUNCNAME[0]} (soft|nor|imp|crit) 'icon' 'title' 'message'  - (icon example: 'logo-elive')"
         return 1
     fi
 
@@ -511,7 +512,7 @@ el_make_environment(){ # make ready our environment (source variables and functi
 el_title_set(){ # set the Title on the actual Window
 
     el_set_display_variables
-    echo -ne '\033]0;'$@'\007'
+    echo -ne "\033]0;$*\007"
 
 }
 
@@ -786,7 +787,6 @@ EOF
         if el_check_sudo_automated ; then
             if sudo -H -n bash "$temp" ; then
                 unset is_failed
-                break
             else
                 is_failed=1
             fi
@@ -818,7 +818,7 @@ EOF
                     el_info "Installing Dependencies"
 
                     if su -c "$temp" root ; then
-                        break
+                        unset is_failed
                     fi
                 else
                     el_error "unable to run $temp, we don't have gksu, graphical system, or even a terminal where to do it"
@@ -975,18 +975,18 @@ el_package_upgrade_fast(){
     mode="$1"
     shift
 
-    tmpdir="/tmp/.$(basename $0)_${FUNCNAME}_${USER}"
+    tmpdir="/tmp/.$(basename $0)_${FUNCNAME[0]}_${USER}"
     failed=0
 
-    if [[ -z "$@" ]] ; then
-        NOREPORTS=1 el_error "Wrong parameters given, should be: $FUNCNAME timeout mode packages"
+    if [[ -z "$*" ]] ; then
+        NOREPORTS=1 el_error "Wrong parameters given, should be: ${FUNCNAME[0]} timeout mode packages"
         return 1
     fi
 
     # }}}
     dirprev="$(pwd)"
     mkdir -p "$tmpdir"
-    cd "$tmpdir"
+    cd "$tmpdir" || return 1
 
     if ! el_verify_internet 2>/dev/null 1>&2 ; then
         el_debug "no internet found, ignoring"
@@ -1071,7 +1071,7 @@ el_package_upgrade_fast(){
         # example:  /home/thana/packages/mirror-elive/elive/pool/main/e/elive-tools/elive-tools_3.8.9+0.0.1+git3118fc936-6buster11_all.deb
         case "$url" in
             "file:///"*)
-                package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package_}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
+                package_url="${url#file://}${url_subdir}$( ls -1 "${url#file://}${url_subdir}" | grep "${package}_.*${distro}.*${arch}\.deb" | sort -uV | tail -1 )"
                 if ! [[ -s "$package_url" ]] ; then
                     el_error "unable to get the 'package_url' for package '${package}' in file:/// mode:\n$( ls "${url#file://}${url_subdir}" | grep "${package}.*\.deb" )"
                     failed=1
@@ -1127,7 +1127,7 @@ el_package_upgrade_fast(){
                 fi
                 ;;
             *)
-                el_warning "unknown mode $mode for $FUNCNAME"
+                el_warning "unknown mode $mode for ${FUNCNAME[0]}"
                 ;;
         esac
 
@@ -1151,7 +1151,7 @@ el_package_upgrade_fast(){
             TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
             if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
-                el_debug "updated packages successfully: $@"
+                el_debug "updated packages successfully: $*"
                 failed=0
             else
                 sleep 10
@@ -1167,7 +1167,7 @@ el_package_upgrade_fast(){
                 TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  dpkg --configure -a
 
                 if TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  el_aptget -f install -q=2 -y ; then
-                    el_debug "updated packages successfully: $@"
+                    el_debug "updated packages successfully: $*"
                     failed=0
                 else
                     failed=1
@@ -1177,13 +1177,13 @@ el_package_upgrade_fast(){
             el_sudo bash -c "dpkg -i *deb ; dpkg --configure -a"
 
             if el_aptget -f install -q=2 -y ; then
-                el_debug "updated packages successfully: $@"
+                el_debug "updated packages successfully: $*"
                 failed=0
             else
                 el_sudo bash -c "dpkg --configure -a ; apt-get -f install -q=2 -y ; dpkg -i *deb ; dpkg --configure -a"
 
                 if el_aptget -f install -q=2 -y ; then
-                    el_debug "updated packages successfully: $@"
+                    el_debug "updated packages successfully: $*"
                     failed=0
                 else
                     failed=1
@@ -1194,7 +1194,7 @@ el_package_upgrade_fast(){
         failed=1
     fi
 
-    cd "$dirprev"
+    cd "$dirprev" || el_warning "prev dir doesnt exist anymore: $dirprev"
     rm -rf "$tmpdir"
 
     # exit with the validated status
@@ -1221,7 +1221,7 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
                 found_no="yes"
             fi
         else
-            if [[ ! -n "${!_var}" ]] ; then
+            if [[ -z "${!_var}" ]] ; then
                 NOREPORTS=1 el_error "Variable '$_var' is not set, func: ${FUNCNAME[1]}"
                 found_no="yes"
             fi
@@ -1244,7 +1244,7 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
     local _var found_no
 
     if [[ -z "$1" ]] ; then
-        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
+        echo -e "E: ${FUNCNAME[0]} called without parameters (nothing to check?)" 1>&2
 
         return 1
     fi
@@ -1274,7 +1274,7 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
     local found_no line
 
     if [[ -z "$1" ]] ; then
-        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
+        echo -e "E: ${FUNCNAME[0]} called without parameters (nothing to check?)" 1>&2
 
         return 1
     fi
@@ -1299,10 +1299,10 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 #   check if dir has files
 #-------------------------------------------------------------------------------
 el_check_dir_has_files(){
-    local dir f files
+    local dir files
 
     if [[ -z "$1" ]] ; then
-        echo -e "E: $FUNCNAME called without parameters (nothing to check?)" 1>&2
+        echo -e "E: ${FUNCNAME[0]} called without parameters (nothing to check?)" 1>&2
         return 1
     fi
 
@@ -1414,14 +1414,7 @@ el_sudo(){
 #===============================================================================
 el_check_translations_required(){
     # pre {{{
-    local textdomaindir stat percentage_untranslated is_translation_required mode
-
-
-    if [[ -n "$TEXTDOMAINDIR" ]] ; then
-        textdomaindir="$TEXTDOMAINDIR"
-    else
-        textdomaindir="/usr/share/locale"
-    fi
+    local stat percentage_untranslated is_translation_required mode
 
     # dont annoy users in the stable released
     if ! el_check_version_development ; then
@@ -1430,7 +1423,7 @@ el_check_translations_required(){
 
     mode="$1"
     if [[ -z "$mode" ]] ; then
-        el_warning "deprecated use of $FUNCNAME from ${FUNCNAME[1]} without the \$mode var set"
+        el_warning "deprecated use of ${FUNCNAME[0]} from ${FUNCNAME[1]} without the \$mode var set"
     fi
 
     # }}}
@@ -1443,7 +1436,6 @@ el_check_translations_required(){
         el_flag add "translation_required_${TEXTDOMAIN}"
 
         # deprecated location
-        #stat="${textdomaindir}/${LANG%%_*}/statistics/${TEXTDOMAIN}.txt"
         stat="/var/cache/elive-translations/statistics/${LANG%%_*}/${TEXTDOMAIN}.txt"
 
         if [[ -s "${stat}" ]] ; then
@@ -1697,11 +1689,11 @@ el_explain(){
         return 0
     fi
 
-    local funclevel spaced verbose_level message trace_message trace_col
+    local funclevel spaced verbose_level message
 
     verbose_level="$1"
     shift
-    message="$@"
+    message="$*"
 
     # show only if we are on this verbose level
     if ! [[ "${EL_DEBUG}" -ge "$verbose_level" ]] ; then
@@ -1797,16 +1789,16 @@ el_debug(){
     fi
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
     # check if we have the variable set, because we need to use it (so this may not work in ZSH)
-    if [[ -z "${BASH_SOURCE[@]}" ]] && ! el_check_is_shell ; then
+    if [[ -z "${BASH_SOURCE[*]}" ]] && ! el_check_is_shell ; then
         return 0
     fi
 
     local count counter funcnames sourcenames_arr arg sourcename message
-    message="$@"
+    message="$*"
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -1835,10 +1827,10 @@ el_debug(){
 
         sourcename="$( readlink -f "$0" || true )"
         if [[ -n "$sourcenames_arr" ]] ; then
-            if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
-                sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+            if [[ "${sourcenames_arr[*]}" = "$sourcename >"* ]] ; then
+                sourcenames_arr="$( echo "${sourcenames_arr[*]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             else
-                sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
+                sourcenames_arr="$sourcename $( echo "${sourcenames_arr[*]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             fi
             sourcenames_arr="${sourcenames_arr% }"
             sourcenames_arr="${sourcenames_arr#> }"
@@ -1851,11 +1843,11 @@ el_debug(){
     # }}}
     # show debug {{{
 
-    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         if [[ -n "$message" ]] ; then
-            echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
+            echo -e "${el_c_c}D: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_c}$message${el_c_n}" 1>&2
         else
-            echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
+            echo -e "${el_c_gr}C: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}]${el_c_n}" 1>&2
         fi
     else
         if [[ -n "$message" ]] ; then
@@ -1882,7 +1874,7 @@ el_info(){
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -1912,7 +1904,7 @@ el_info(){
 
         sourcename="$( readlink -f "$0" || true )"
         if [[ -n "$sourcenames_arr" ]] ; then
-            if [[ "${sourcenames_arr[@]}" = "$sourcename >"* ]] ; then
+            if [[ "${sourcenames_arr*@]}" = "$sourcename >"* ]] ; then
                 sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             else
                 sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
@@ -1928,8 +1920,8 @@ el_info(){
     # }}}
     # show info {{{
 
-    if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-        echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+        echo -e "${el_c_c2}I: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_c2}$message${el_c_n}" 1>&2
     else
         echo -e "${el_c_c2}I: ${el_c_c2}$message${el_c_n}" 1>&2
     fi
@@ -1945,11 +1937,11 @@ el_info(){
 el_warning(){
     # pre {{{
     local count counter funcnames sourcenames_arr arg message is_noreports
-    message="$@"
+    message="$*"
 
     # }}}
     # get the list of function names array {{{
-    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
 
         counter="${#FUNCNAME[*]}"
         count=0
@@ -1976,7 +1968,7 @@ el_warning(){
             fi
         done
         if [[ -n "$sourcenames_arr" ]] ; then
-            if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+            if [[ "${sourcenames_arr[*]}" = "$0 >"* ]] ; then
                 sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             else
                 sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
@@ -1994,15 +1986,15 @@ el_warning(){
 
     if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 1 ]] ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
             else
                 echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
             fi
         fi
     fi
 
-    if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] ; then
         # set colors for our reports
         local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2
         el_c_gr="\033[1;30m" # Gray color
@@ -2023,7 +2015,7 @@ el_warning(){
         el_c_w2="\033[0;37m" # White strong
         el_c_n="\033[0;39m" # Normal color  (orig: normal)
 
-        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_y2}$message${el_c_n}"
+        el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames} ] ${el_c_y2}$message${el_c_n}"
     fi
 
     # }}}
@@ -2037,11 +2029,11 @@ el_warning(){
 el_error(){
     # pre {{{
     local count counter funcnames sourcenames_arr arg message
-    message="$@"
+    message="$*"
 
     # }}}
     # get the list of function names array {{{
-    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+    if { [[ ! -n "$NOREPORTS" ]] && [[ ! -n "$NOREPORT" ]] && [[ ! -n "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -2067,7 +2059,7 @@ el_error(){
             fi
         done
         if [[ -n "$sourcenames_arr" ]] ; then
-            if [[ "${sourcenames_arr[@]}" = "$0 >"* ]] ; then
+            if [[ "${sourcenames_arr[*]}" = "$0 >"* ]] ; then
                 sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             else
                 sourcenames_arr="$0 $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
@@ -2086,8 +2078,8 @@ el_error(){
 
     if ((is_interactive)) ; then
         if [[ "${EL_DEBUG}" -ge 0 ]] ; then
-            if [[ -n "${BASH_SOURCE[@]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
+            if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
             else
                 echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
             fi
@@ -2098,7 +2090,7 @@ el_error(){
         fi
     fi
 
-    if [[ -n "${BASH_SOURCE[@]}" ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] ; then
         # set colors for our reports
         local el_c_n el_c_r el_c_r2 el_c_g el_c_g2 el_c_y el_c_y2 el_c_m el_c_m2 el_c_c el_c_c2 el_c_b el_c_b2 el_c_gr el_c_gr2
         el_c_gr="\033[1;30m" # Gray color
@@ -2120,7 +2112,7 @@ el_error(){
         el_c_n="\033[0;39m" # Normal color  (orig: normal)
 
         # always report warnings with debug (function calls)
-        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
+        el_report_to_elive "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames} ] ${el_c_r}$message${el_c_n}"
     fi
 
     # }}}
@@ -2504,13 +2496,13 @@ el_step_requires_fixme(){
 
     # }}}
     el_check_dirs "${dir}"
-    cd "$dir"
+    cd "$dir" || el_warning "dir doesnt exist: $dir"
 
     if ((is_interactive)) ; then
         echo -e "\n"
         #el_warning "Experimental or uncomplete code:"
         echo -e "We have set a breakpoint here, report to Elive this message if needed:"
-        echo -e "${FUNCNAME} for $0"
+        echo -e "${FUNCNAME[0]} for $0"
         echo -e "Function: ${FUNCNAME[1]}  |  Line: $LINENO"
         if [[ -n "$message" ]] ; then
             el_explain 0 "message: XX${message}XX"
@@ -2520,7 +2512,7 @@ el_step_requires_fixme(){
         el_explain 0 "Type '__exit__' for continue..."
         $SHELL -l || true
     else
-        cd "${prev_dir}"
+        cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
         el_set_display_variables
         local _dummy
         _dummy="$( eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you deem it necessary. Exiting..." )"
@@ -2530,7 +2522,7 @@ el_step_requires_fixme(){
         exit 1
     fi
 
-    cd "${prev_dir}"
+    cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
 
 }
 
@@ -2675,7 +2667,7 @@ el_report_to_elive(){
     # }}}
 
 
-    message="$@"
+    message="$*"
     # remove special chars like colors, don't depend on colors-remove:
     message_stripped="$( echo -e "$@" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" )"
 
@@ -2990,7 +2982,7 @@ el_request_report_bug(){
     el_debug
     el_security_function_loop || return 0
 
-    message="$@"
+    message="$*"
     el_check_variables "message"
 
     el_set_display_variables
@@ -3021,7 +3013,7 @@ el_request_report_bug(){
     local execution_stack
     execution_stack="$( pstree -A -l -n -s $$ )"
     execution_stack="$( echo "$execution_stack" | sed -e 's|^init---||g' -e 's|^.*lightdm---||g' -e 's|---pstree||g' -e 's|---enlightenment---|---|g' -e 's|---ck-launch-sessi||g' -e's|-+-ck-launch-sessi||g' -e 's|---enlightenment_s||g' -e 's|---e_wrapper---e_wrapper|---e_wrapper|g' -e 's|---el_report_to_elive||g' )"
-    el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
+    el_report_to_elive "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames} (${execution_stack})] ${el_c_r}$message${el_c_n}"
 
     # - use el_report_to_elive }}}
     # we don't need anything more since the new tool # TODO: remove old code
@@ -3036,10 +3028,10 @@ el_request_report_bug(){
 
         #if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             #local _dummy
-            #_dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
+            #_dummy="$( printf "$( eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "${BASH_LINENO[0]}" )"
 
             #local message_report_bug
-            #message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "$BASH_LINENO" )"
+            #message_report_bug="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "We found something that we want to be informed about its details, it may be a problem in Elive or a simple state that we want to know, since it happened to you it can happen to anybody and we want to make Elive as much stable as possible, please take 1 minute to report this message to our developers:<b>\n\n%s\n\n(file: %s, function: %s, line: %s)</b>\n\nCan you please send us now about your recent problem found ?" )" "$message" "${BASH_SOURCE[1]}" "${FUNCNAME[1]}" "${BASH_LINENO[0]}" )"
 
             #if $guitool --question --text="$message_report_bug" ; then
                 #if [[ -x /usr/bin/firefox ]] ; then
@@ -3276,13 +3268,13 @@ el_config_save(){
     fi
     tmp_conf_f="${HOME}/.config/elive/elive-tools/el_config/${source//\//%%}_conf.sh"
 
-    if [[ -z "$@" ]] ; then
-        el_error "$FUNCNAME called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
+    if [[ -z "$*" ]] ; then
+        el_error "${FUNCNAME[0]} called without parameter, (name of variable to save). by ${FUNCNAME[1]}"
         return 1
     fi
 
     if ! declare -p "$@" 1>/dev/null 2>&1 ; then
-        el_error "$FUNCNAME called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
+        el_error "${FUNCNAME[0]} called with a wrong parameter (empty varilable?), use only the name of variable to save. by ${FUNCNAME[1]}"
         return 1
     fi
 
@@ -3314,7 +3306,7 @@ el_config_save(){
     done
 
     if [[ "$( declare -p "$@" | wc -l )" -gt 1 ]] ; then
-        el_warning "saving variables with more than one line give problems, dont use it in your code or improve the function: $@"
+        el_warning "saving variables with more than one line give problems, dont use it in your code or improve the function: $*"
     fi
 
     # append configuration, and save the variable as global so it can work outside this function
@@ -3449,7 +3441,7 @@ el_architecture(){
     if [[ -n "$arch" ]] ; then
         echo "$arch"
     else
-        el_error "unable to know (args '$@' ) the architecture '${arch}' for this machine, uname -m '$(uname -m)', file -Lb /bin/ls '$( file -Lb /bin/ls 2>&1 )'"
+        el_error "unable to know (args '$*' ) the architecture '${arch}' for this machine, uname -m '$(uname -m)', file -Lb /bin/ls '$( file -Lb /bin/ls 2>&1 )'"
         return 1
     fi
 
@@ -3477,7 +3469,7 @@ el_get_machine_id(){
     fi
 
     if ! [[ "$UID" = 0 ]] ; then
-        el_error "$FUNCNAME must be run with privileges"
+        el_error "${FUNCNAME[0]} must be run with privileges"
         return 1
     fi
 
@@ -3718,10 +3710,10 @@ el_aptget(){
                 if ! el_dependencies_check gksu ; then
                     el_dependencies_install "gksu"
                 fi
-                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get $@
+                TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  gksu apt-get $*
             else
                 #su -c "TERM=linux DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true  apt-get $@" root
-                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $@' root"
+                urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get $*' root"
             fi
         fi
     fi
@@ -3734,19 +3726,19 @@ el_aptget(){
 # DEPRECATED FUNCTIONS TO FALLBACK:
 ###################################################################
 el_notify_user(){
-    el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
+    el_warning "Deprecated function ${FUNCNAME[0]} by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
     el_notify "normal" "logo-elive" "$1" "$2"
 }
 el_notify_user_important(){
-    el_warning "Deprecated function $FUNCNAME by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
+    el_warning "Deprecated function ${FUNCNAME[0]} by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
     el_notify "critical" "logo-elive" "$1" "$2"
 }
 el_check_translations_required_notify(){
-    el_error "deprecated function $FUNCNAME from elive-tools functions from $SOURCE $0, use el_check_translations_required instead"
+    el_error "deprecated function ${FUNCNAME[0]} from elive-tools functions from $SOURCE $0, use el_check_translations_required instead"
 }
 el_check_dependencies(){
     # compatibility
-    el_warning "$FUNCNAME is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
+    el_warning "${FUNCNAME[0]} is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
     el_dependencies_check "$@"
 }
 
@@ -3793,14 +3785,14 @@ if [[ -n "$TERM" ]] ; then
                 if [[ -d "/usr/share/e16" ]] ; then
                     export EROOT=/usr/share/e16
                 else
-                    el_warning "$FUNCNAME - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/share/e16 directory"
+                    el_warning "${FUNCNAME[0]} - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/share/e16 directory"
                 fi
             else
                 if pgrep -U "$UID" -f enlightenment_start 1>/dev/null ; then
                     if [[ -e "/usr/bin/enlightenment_start" ]] ; then
                         export E_START="/usr/bin/enlightenment_start"
                     else
-                        el_warning "$FUNCNAME - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/bin/enlightenment_start executable"
+                        el_warning "${FUNCNAME[0]} - ${FUNCNAME[1]}: seems like our user is running e16 as desktop but there is not /usr/bin/enlightenment_start executable"
                     fi
                 fi
             fi

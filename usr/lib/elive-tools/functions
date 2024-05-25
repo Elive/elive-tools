@@ -60,8 +60,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     #fi
 
     if [[ -z "${DISPLAY}" ]] ; then
-        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-${USER}@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+        if command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
+            display="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
 
             # cleanups
             display="/tmp/${display##* /tmp/}"
@@ -86,9 +86,9 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # e17 not running or not fetch, let's try an alternative to fetch the display value
     if [[ -z "${DISPLAY}" ]] ; then
-        display="$( ps -u $(id -u) -o pid= | \
+        display="$( ps -u "$(id -u)" -o pid= | \
             while read pid; do
-                cat /proc/$pid/environ 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+                cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
             done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
 
         DISPLAY="${display}"
@@ -114,7 +114,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if ((is_terminal)) && [[ "$UID" != 0 ]] && [[ -z "$SSH_CONNECTION" ]] ; then
         # only show the error if we have a graphical system running by the user
-        if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
+        if command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
             if [[ -z "${DISPLAY}" ]] ; then
                 el_warning "Variable DISPLAY is not set, so we will not have access to the local graphical system"
             fi
@@ -349,7 +349,7 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
             continue
         fi
 
-        if [[ $(cat /sys/class/net/$interface/carrier 2>/dev/null ) = 1 ]]; then
+        if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null ) = 1 ]]; then
             if [[ "${EL_DEBUG}" -gt "3" ]] ; then
                 el_debug "carrier for $interface marks that we are connected"
             fi
@@ -861,9 +861,9 @@ el_aptget_update(){
     if ((want_update)) ; then
         # only run update if we have not updated already 4 hours ago
         local _dummy
-        _dummy="$( printf "$( eval_gettext "Updating list of packages" )" )"
+        _dummy="$( eval_gettext "Updating list of packages" )"
         # note: to have translated the next message we need a different declaration ^ so that the string is considered into the including for translate (without TEXTDOMAIN)
-        message_updating="$( printf "$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )" )"
+        message_updating="$( TEXTDOMAIN="elive-tools" eval_gettext "Updating list of packages" )"
 
         if ! el_verify_internet 2>/dev/null 1>&2 ; then
             sleep 5
@@ -2300,7 +2300,7 @@ el_security_function_loop(){
         recursives_allowed="$1"
     fi
 
-    funclevels="$(( ${#FUNCNAME[*]} - 2 ))"
+    funclevels="$(( ${#FUNCNAME[@]} - 2 ))"
     funclevel="${funclevels}"
 
     if [[ -n "$recursives_allowed" ]] ; then
@@ -3358,7 +3358,7 @@ el_config_restart(){
 #===============================================================================
 el_ram_usage_show(){
     # pre {{{
-    local arg used total free
+    local arg used total
 
     arg="$1"
 
@@ -3673,7 +3673,7 @@ el_apt_package_version_get(){
 #   apt-get wrapper with lock feature
 #-------------------------------------------------------------------------------
 el_aptget(){
-    local is_waiting i j is_shown
+    local i j is_shown
     i=0
 
     tput sc
@@ -3693,7 +3693,6 @@ el_aptget(){
                 is_shown=1
             fi
         fi
-        is_waiting=1
 
         sleep 0.5
         ((i=i+1))
@@ -3926,14 +3925,17 @@ source /etc/adduser.conf 2>/dev/null || true
 # set the user's home, sometimes, like if we are in an init script, the home points to /
 if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
     if [[ "$UID" = "0" ]] || [[ "$USER" = "root" ]] ; then
-        export HOME="/root"
+        HOME="/root"
+        export HOME
     else
-        export HOME="$DHOME/$(id -un)"
+        HOME="$DHOME/$(id -un)"
+        export HOME
     fi
 fi
 
 if [[ -z "$USER" ]] ; then
-    export USER="$(id -un)"
+    USER="$(id -un)"
+    export USER
 fi
 
 

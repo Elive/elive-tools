@@ -1,0 +1,228 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+#. gettext.sh
+#TEXTDOMAIN=""
+#export TEXTDOMAIN
+
+# comment when not used
+#xinput_demo(){
+    #echo -e "
+    #⎡ Virtual core pointer                    	id=2	[master pointer  (2)]
+#⎜   ↳ Virtual core XTEST pointer              	id=4	[slave  pointer  (2)]
+#⎜   ↳ Melfas LGD AIT Touch Controller         	id=9	[slave  pointer  (2)]
+#⎜   ↳ Melfas LGD AIT Touch Controller Mouse   	id=10	[slave  pointer  (2)]
+#⎜   ↳ SynPS/2 Synaptics TouchPad              	id=19	[slave  pointer  (2)]
+#⎜   ↳ TPPS/2 IBM TrackPoint                   	id=20	[slave  pointer  (2)]
+#⎜   ↳ INSTANT USB Keyboard Consumer Control   	id=12	[slave  pointer  (2)]
+#⎜   ↳ Genius Wireless Device                  	id=15	[slave  pointer  (2)]
+    #↳ AT Translated Set 2 keyboard            	id=18	[slave  keyboard (2)]
+#⎜   ↳ Genius Wireless Device Consumer Control 	id=16	[slave  pointer  (2)]
+#⎣ Virtual core keyboard                   	id=3	[master keyboard (2)]
+    #↳ Virtual core XTEST keyboard             	id=5	[slave  keyboard (3)]
+    #↳ Power Button                            	id=6	[slave  keyboard (3)]
+    #↳ Video Bus                               	id=7	[slave  keyboard (3)]
+    #↳ Sleep Button                            	id=8	[slave  keyboard (3)]
+    #↳ ThinkPad Extra Buttons                  	id=21	[slave  keyboard (3)]
+    #↳ INSTANT USB Keyboard                    	id=11	[slave  keyboard (3)]
+    #↳ INSTANT USB Keyboard Consumer Control   	id=13	[slave  keyboard (3)]
+    #↳ INSTANT USB Keyboard System Control     	id=14	[slave  keyboard (3)]
+    #↳ Genius Wireless Device Consumer Control 	id=17	[slave  keyboard (3)]
+    #↳ Genius Wireless Device System Control   	id=22	[slave  keyboard (3)]
+    #↳ Genius Wireless Device                  	id=23	[slave  keyboard (3)]
+    #↳ Tronsmart Element Mega (AVRCP)          	id=24	[slave  keyboard (3)]
+#"
+#}
+
+main(){
+    # pre {{{
+    local input
+
+    # Usage
+    if [[ -z "${1}" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) input"
+        echo -e "  where input is one of:  keyboard, touchpad, mouse"
+        exit 1
+    fi
+
+    input="$1"
+
+    # }}}
+
+    case "$input" in
+        "touchpad")
+            # Update: doesn't works:
+            #if synclient -l | grep -qsi "TouchpadOff.*=.*0" ; then
+                #el_debug "disabling touchpad"
+                #synclient TouchpadOff=1
+            #else
+                #el_debug "enabling touchpad"
+                #synclient TouchpadOff=0
+            #fi
+            if xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
+                is_disabled=1
+            fi
+
+            # get conf in order to know where to reattach deactivated keyboards
+            el_config_get
+
+            while read -ru 3 line
+            do
+                id="$( echo "$line" | tr ' ' '\n' | grep -E "^\s*id=" | awk '{print $1}' | sed -e 's|^id=||g' | tail -1 )"
+                read -r id <<< "$id"
+
+                master="$( echo "$line" | tr ' ' '\n' | grep -E "\(.*\)\]" | awk '{print $1}' | sed -e 's|^(||g' -e 's|).*$||g' | tail -1 )"
+                read -r master <<< "$master"
+
+                if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
+
+                    if ((is_disabled)) ; then
+                        if [[ -z "$master" ]] ; then
+                             for i in "${conf_master_of_ids[@]}" ; do
+                                 master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
+                                 [[ -n "$master" ]] && break
+                             done
+                        fi
+
+                        # activate
+                        el_debug "re-activating id '$id' from master '$master'"
+                        xinput reattach "$id" "$master"
+
+                        # forget this conf
+                        el_array_member_unset "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                        el_config_save "conf_master_of_ids"
+                    else
+                        # always create a new conf to delete old entries
+                        if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
+                            # deactivate
+                            el_debug "deactivating id '$id' from master '$master'"
+                            xinput float "$id"
+
+                            # important, save the master value in order to be used later if we want to reattach
+                            el_array_member_add "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                            el_config_save "conf_master_of_ids"
+                        fi
+                    fi
+                fi
+            done 3<<< "$( xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+
+            ;;
+
+        "mouse")
+            # list of possible mouse devices from: xinput list:
+            if xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
+                is_disabled=1
+            fi
+
+            # get conf in order to know where to reattach deactivated keyboards
+            el_config_get
+
+            while read -ru 3 line
+            do
+                id="$( echo "$line" | tr ' ' '\n' | grep -E "^\s*id=" | awk '{print $1}' | sed -e 's|^id=||g' | tail -1 )"
+                read -r id <<< "$id"
+
+                master="$( echo "$line" | tr ' ' '\n' | grep -E "\(.*\)\]" | awk '{print $1}' | sed -e 's|^(||g' -e 's|).*$||g' | tail -1 )"
+                read -r master <<< "$master"
+
+                if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
+
+                    if ((is_disabled)) ; then
+                        if [[ -z "$master" ]] ; then
+                             for i in "${conf_master_of_ids[@]}" ; do
+                                 master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
+                                 [[ -n "$master" ]] && break
+                             done
+                        fi
+
+                        # activate
+                        el_debug "re-activating id '$id' from master '$master'"
+                        xinput reattach "$id" "$master"
+
+                        # forget this conf
+                        el_array_member_unset "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                        el_config_save "conf_master_of_ids"
+                    else
+                        # always create a new conf to delete old entries
+                        if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
+                            # deactivate
+                            el_debug "deactivating id '$id' from master '$master'"
+                            xinput float "$id"
+
+                            # important, save the master value in order to be used later if we want to reattach
+                            el_array_member_add "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                            el_config_save "conf_master_of_ids"
+                        fi
+                    fi
+                fi
+            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+
+            ;;
+
+        "keyboard")
+            if xinput list | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
+                is_disabled=1
+            #else
+                ## when activated, always save a new conf in order to clean up possible older ones
+                #el_config_restart
+            fi
+
+            # betatest only: , also replace the looping input line
+            #list="$( xinput_demo )"
+
+            # get conf in order to know where to reattach deactivated keyboards
+            el_config_get
+
+            while read -ru 3 line
+            do
+                id="$( echo "$line" | tr ' ' '\n' | grep -E "^\s*id=" | awk '{print $1}' | sed -e 's|^id=||g' | tail -1 )"
+                read -r id <<< "$id"
+
+                master="$( echo "$line" | tr ' ' '\n' | grep -E "\(.*\)\]" | awk '{print $1}' | sed -e 's|^(||g' -e 's|).*$||g' | tail -1 )"
+                read -r master <<< "$master"
+
+                if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
+
+                    if ((is_disabled)) ; then
+                        if [[ -z "$master" ]] ; then
+                             for i in "${conf_master_of_ids[@]}" ; do
+                                 master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
+                                 [[ -n "$master" ]] && break
+                             done
+                        fi
+
+                        # activate keyboard
+                        el_debug "re-activating keyboard id '$id' from master '$master'"
+                        xinput reattach "$id" "$master"
+
+                        # forget this conf
+                        el_array_member_unset "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                        el_config_save "conf_master_of_ids"
+                    else
+                        # always create a new conf to delete old entries
+                        if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
+                            # deactivate keyboard
+                            el_debug "deactivating keyboard id '$id' from master '$master'"
+                            xinput float "$id"
+
+                            # important, save the master value in order to be used later if we want to reattach
+                            el_array_member_add "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
+                            el_config_save "conf_master_of_ids"
+                        fi
+                    fi
+                fi
+            #done 3<<< "$( echo "$list" | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" 2>&1 )"
+            done 3<<< "$( xinput list | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" 2>&1 )"
+            ;;
+    esac
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

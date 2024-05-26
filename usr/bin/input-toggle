@@ -52,6 +52,64 @@ main(){
     # }}}
 
     case "$input" in
+        "touchpad-on")
+            # get conf in order to know where to reattach deactivated keyboards
+            el_config_get
+
+            while read -ru 3 line
+            do
+                id="$( echo "$line" | tr ' ' '\n' | grep -E "^\s*id=" | awk '{print $1}' | sed -e 's|^id=||g' | tail -1 )"
+                read -r id <<< "$id"
+
+                master="$( echo "$line" | tr ' ' '\n' | grep -E "\(.*\)\]" | awk '{print $1}' | sed -e 's|^(||g' -e 's|).*$||g' | tail -1 )"
+                read -r master <<< "$master"
+
+                if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
+
+                    if [[ -z "$master" ]] ; then
+                        for i in "${conf_master_of_ids_touchpad[@]}" ; do
+                            master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
+                            [[ -n "$master" ]] && break
+                        done
+                            fi
+
+                        # activate
+                        el_debug "re-activating id '$id' from master '$master'"
+                        xinput reattach "$id" "$master"
+                    fi
+            done 3<<< "$( xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+            ;;
+
+        "touchpad-off")
+            # get conf in order to know where to reattach deactivated keyboards
+            el_config_get
+
+            while read -ru 3 line
+            do
+                id="$( echo "$line" | tr ' ' '\n' | grep -E "^\s*id=" | awk '{print $1}' | sed -e 's|^id=||g' | tail -1 )"
+                read -r id <<< "$id"
+
+                master="$( echo "$line" | tr ' ' '\n' | grep -E "\(.*\)\]" | awk '{print $1}' | sed -e 's|^(||g' -e 's|).*$||g' | tail -1 )"
+                read -r master <<< "$master"
+
+                if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
+
+                    # always create a new conf to delete old entries
+                    if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
+                        # deactivate
+                        el_debug "deactivating id '$id' from master '$master'"
+                        xinput float "$id"
+
+                        # important, save the master value in order to be used later if we want to reattach
+                        el_array_member_add "$master $id" "${conf_master_of_ids_touchpad[@]}" ; conf_master_of_ids_touchpad=("${_out[@]}")
+                        el_config_save "conf_master_of_ids_touchpad"
+                    fi
+                fi
+            done 3<<< "$( xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+
+            ;;
+
+
         "touchpad")
             # Update: doesn't works:
             #if synclient -l | grep -qsi "TouchpadOff.*=.*0" ; then

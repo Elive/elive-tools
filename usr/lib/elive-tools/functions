@@ -1908,7 +1908,7 @@ el_info(){
 
         sourcename="$( readlink -f "$0" || true )"
         if [[ -n "$sourcenames_arr" ]] ; then
-            if [[ "${sourcenames_arr*@]}" = "$sourcename >"* ]] ; then
+            if [[ "${sourcenames_arr[*]}" = "$sourcename >"* ]] ; then
                 sourcenames_arr="$( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"
             else
                 sourcenames_arr="$sourcename $( echo "${sourcenames_arr[@]}" | tr ' ' '\n' | tac | tr '\n' ' ' )"

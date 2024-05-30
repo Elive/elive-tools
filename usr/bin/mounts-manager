@@ -586,13 +586,20 @@ get_mountpoint(){
         is_udisksctl_unavailable=1
     fi
 
+    if ((is_udisksctl_unavailable)) ; then
+        mountpoint="$( cat /proc/mounts | awk -v dev="$dev" '{if ($1 == dev) print $2}' | tail -1 )"
+        if ! [[ -d "$mountpoint" ]] ; then
+            mountpoint="$( LC_ALL="$EL_LC_EN" mount | grep -Fqs "$dev on " )"
+        fi
+    fi
+
     #mountpoint="$( udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     # we should never use LC_ALL because UTF-8 mountpoint names will break, but we need to grep for "mount paths:" so just use this option if we don't have other choice
     # update: EL_LC_EN points to en_US.UTF-8
     #if [[ -z "$mountpoint" ]] ; then
         #mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     #fi
-    if ! ((is_udisksctl_unavailable)) ; then
+    if ! ((is_udisksctl_unavailable)) && [[ -z "$mountpoint" ]] ; then
         if ((is_wheezy)) ; then
             mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
         else
@@ -602,10 +609,10 @@ get_mountpoint(){
                 el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
             fi
         fi
-    fi
 
-    read -r mountpoint <<< "$mountpoint"
-    mountpoint="$( readlink -f "$mountpoint" )"
+        read -r mountpoint <<< "$mountpoint"
+        mountpoint="$( readlink -f "$mountpoint" )"
+    fi
 
     # not mounted ? mount it first
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -944,10 +951,11 @@ el_umount(){
 
 
         if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            command umount "$mountpoint" || command umount "$device"
+            command umount "$mountpoint" || command umount "$device" || el_sudo umount "$device"
         else
-            command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2
+            command umount "$mountpoint" 2>/dev/null 1>&2 || command umount "$device" 2>/dev/null 1>&2 || el_sudo umount "$device" 2>/dev/null 1>&2
         fi
+
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
             el_debug "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
         else

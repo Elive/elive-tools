@@ -3849,6 +3849,8 @@ if [[ -n "$FORCE_INTERACTIVE" ]] ; then
     esac
 fi
 
+# set a default useful debug PS
+export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
 if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then

@@ -582,6 +582,9 @@ get_mountpoint(){
         fi
     fi
 
+    if LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
+        is_udisksctl_unavailable=1
+    fi
 
     #mountpoint="$( udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     # we should never use LC_ALL because UTF-8 mountpoint names will break, but we need to grep for "mount paths:" so just use this option if we don't have other choice
@@ -589,13 +592,15 @@ get_mountpoint(){
     #if [[ -z "$mountpoint" ]] ; then
         #mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
     #fi
-    if ((is_wheezy)) ; then
-        mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
-    else
-        mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
-        # dev state test
-        if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-            el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+    if ! ((is_udisksctl_unavailable)) ; then
+        if ((is_wheezy)) ; then
+            mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+        else
+            mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+            # dev state test
+            if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
+                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+            fi
         fi
     fi
 
@@ -612,23 +617,25 @@ get_mountpoint(){
         if el_mount "$dev" 1>/dev/null ; then
 
             # get data again
-            if ((is_wheezy)) ; then
-                mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
-            else
-                mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
-                # dev state test
-                if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+            if ! ((is_udisksctl_unavailable)) ; then
+                if ((is_wheezy)) ; then
+                    mountpoint="$( LC_ALL="$EL_LC_EN" udisks --show-info "$dev" | grep -F "mount paths:" | sed -e 's|^.*mount paths:||g' )"
+                else
+                    mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+                    # dev state test
+                    if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
+                        el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$dev' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" )"
+                    fi
                 fi
-            fi
 
-            # remove extra leading blank chars
-            read -r mountpoint <<< "$mountpoint"
-            mountpoint="$(readlink -f "$mountpoint" )"
+                # remove extra leading blank chars
+                read -r mountpoint <<< "$mountpoint"
+                mountpoint="$(readlink -f "$mountpoint" )"
 
-            # umount it
-            if [[ -n "$mountpoint" ]] ; then
-                el_umount "$mountpoint" 1>/dev/null
+                # umount it
+                if [[ -n "$mountpoint" ]] ; then
+                    el_umount "$mountpoint" 1>/dev/null
+                fi
             fi
         fi
     fi
@@ -767,21 +774,25 @@ check_is_mounted(){
             el_warning "unable to determine if $device is mounted or not, assuming is not"
             return 1
         else
-            mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
-            # dev state test
-            if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
-                el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$device' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
-            fi
+            if ! LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
+                mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+                # dev state test
+                if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
+                    el_warning "multiple mountpoints found? from $(basename $0) and selected '$mountpoint', (udisksctl info -b '$device' | grep -F 'MountPoints:' ):  $( udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" )"
+                fi
 
-            if [[ -n "$mountpoint" ]] ; then
-                echo "Mounted"
-                return 0
-            else
-                echo "Not mounted"
-                return 1
+                if [[ -n "$mountpoint" ]] ; then
+                    echo "Mounted"
+                    return 0
+                else
+                    echo "Not mounted"
+                    return 1
+                fi
             fi
         fi
     fi
+
+    el_error "unknown mounted state for $arg"
 
 }
 #===  FUNCTION  ================================================================
@@ -1082,8 +1093,21 @@ el_mount(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
-        restart_daemons
+    # pre check to know if is already mounted
+    #if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
+        #echo "$dev mounted in: $(get_mountpoint "$dev" )"
+        #return 0
+    #fi
+
+    if LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
+        is_udisksctl_unavailable=1
+    fi
+
+
+    if ! ((is_udisksctl_unavailable)) ; then
+        if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
+            restart_daemons
+        fi
     fi
 
 
@@ -1121,11 +1145,13 @@ el_mount(){
     fi
 
     # fsck the disk in case is dirty and not mounted
-    mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
-    if [[ -z "$mountpoint" ]] ; then
-        if tune2fs -l "$dev" 2>/dev/null | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
-            el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
-            fsck -yf "$dev"
+    if ! ((is_udisksctl_unavailable)) ; then
+        mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
+        if [[ -z "$mountpoint" ]] ; then
+            if tune2fs -l "$dev" 2>/dev/null | grep -iqsE "(^Filesystem state:.*errors|not clean)" ; then
+                el_info "Needed filesystem reparation for '$dev', running 'fsck -yf' to it, please be patient..."
+                fsck -yf "$dev"
+            fi
         fi
     fi
 
@@ -1136,7 +1162,9 @@ el_mount(){
     fi
 
     # try to mount
-    udisks_mount "$dev" "$@"
+    if ! ((is_udisksctl_unavailable)) ; then
+        udisks_mount "$dev" "$@"
+    fi
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -1149,7 +1177,9 @@ el_mount(){
     refresh_partition_table "$dev"
 
     # try to mount
-    udisks_mount "$dev" "$@"
+    if ! ((is_udisksctl_unavailable)) ; then
+        udisks_mount "$dev" "$@"
+    fi
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -1162,7 +1192,9 @@ el_mount(){
     refresh_partition_table "$dev"
 
     # try to mount
-    udisks_mount "$dev" "$@"
+    if ! ((is_udisksctl_unavailable)) ; then
+        udisks_mount "$dev" "$@"
+    fi
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -1176,7 +1208,9 @@ el_mount(){
     #fsck -a "$dev"
 
     # try to mount
-    udisks_mount "$dev" "$@"
+    if ! ((is_udisksctl_unavailable)) ; then
+        udisks_mount "$dev" "$@"
+    fi
 
     # check if mounted
     if check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
@@ -1263,6 +1297,10 @@ el_mount(){
 }
 
 udisks_dump(){
+    if ((is_udisksctl_unavailable)) ; then
+        return 1
+    fi
+
     if ((is_wheezy)) ; then
         udisks --dump
     else
@@ -1274,6 +1312,10 @@ udisks_mount(){
     local dev
     dev="$1"
     shift
+
+    if ((is_udisksctl_unavailable)) ; then
+        return 1
+    fi
 
     if ((is_wheezy)) ; then
         if [[ "$EL_DEBUG" -ge 3 ]] ; then
@@ -1314,12 +1356,16 @@ check_device(){
     local dev
     dev="$1"
 
+    if ((is_udisksctl_unavailable)) ; then
+        return
+    fi
+
     if ((is_wheezy)) ; then
         if LC_ALL="$EL_LC_EN" udisks --show-info "$dev" 2>&1 | grep -Fqs "Cannot find device with major:minor" ; then
             restart_daemons
         fi
     else
-        if ! udisksctl info -b "$dev" 1>/dev/null 2>&1 ; then
+        if ! udisksctl info -b "$dev" 1>/dev/null ; then
             restart_daemons
         fi
     fi

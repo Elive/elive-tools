@@ -27,11 +27,13 @@ check_udisks_service(){
         el_dependencies_check "udisksctl"
     fi
 
-    if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+    # if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+    if [[ "$( LC_ALL="$EL_LC_EN" udisksctl dump 2>&1 | wc -l )" -lt 10 ]] ; then
         restart_daemons
     fi
 
-    if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+    # if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+    if [[ "$( LC_ALL="$EL_LC_EN" udisksctl dump 2>&1 | wc -l )" -lt 10 ]] ; then
         is_udisksctl_unavailable=1
     fi
 

@@ -965,7 +965,7 @@ el_umount(){
             fi
         else
             # note: atm this seems like to not work
-            udisksctl unmount -p "$mountpoint" # 1>/dev/null 2>&1
+            udisksctl unmount -p "$mountpoint" --no-user-interaction # 1>/dev/null 2>&1
         fi
 
 
@@ -1366,9 +1366,9 @@ udisks_mount(){
         fi
     else
         if [[ "$EL_DEBUG" -ge 3 ]] ; then
-            timeout 60 udisksctl mount -b "$dev" "$@"
+            timeout 60 udisksctl mount -b "$dev" --no-user-interaction "$@"
         else
-            timeout 60 udisksctl mount -b "$dev" "$@" 1>/dev/null
+            timeout 60 udisksctl mount -b "$dev" --no-user-interaction "$@" 1>/dev/null
         fi
     fi
 }

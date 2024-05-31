@@ -20,6 +20,22 @@ sync(){
     fi
 }
 
+check_udisks_service(){
+    if ((is_wheezy)) ; then
+        el_dependencies_check "udisks"
+    else
+        el_dependencies_check "udisksctl"
+    fi
+
+    if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+        restart_daemons
+    fi
+
+    if LC_ALL="$EL_LC_EN" udisksctl info -b "$1" 2>&1 | grep -qs "Error looking up object" ; then
+        is_udisksctl_unavailable=1
+    fi
+
+}
 #===  FUNCTION  ================================================================
 #          NAME:  restart_daemons
 #   DESCRIPTION:  Restarts udisks and polkit when we found an error trying to use the disk
@@ -31,6 +47,15 @@ restart_daemons(){
     el_debug
     el_security_function_loop 20 || return 0
 
+    # is systemd or sysvinit?
+    if pidof -cq systemd ; then
+        is_systemd=1
+    else
+        if ! [[ -e "/var/lib/dpkg/info/sysvinit-core.list" ]] ; then
+            is_systemd=1
+        fi
+    fi
+
     # }}}
     # restart daemons {{{
     if [[ "$UID" = 0 ]] ; then
@@ -38,18 +63,26 @@ restart_daemons(){
         killall udisksd 2>/dev/null || killall -9 udisksd 2>/dev/null || true
         killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
 
-        { /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-        { /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-        { /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        if ((is_systemd)) ; then
+            systemctl restart udisks2.service polkit.service  2>/dev/null || true
+        else
+            { /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            { /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            { /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+        fi
     else
         if el_check_sudo_automated ; then
             sudo killall udisks-daemon 2>/dev/null || sudo killall -9 udisks-daemon 2>/dev/null || true
             sudo killall udisksd 2>/dev/null || sudo killall -9 udisksd 2>/dev/null || true
             sudo killall polkitd 2>/dev/null || sudo killall -9 polkitd 2>/dev/null || true
 
-            { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-            { sudo /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-            { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            if ((is_systemd)) ; then
+                sudo systemctl restart udisks2.service polkit.service  2>/dev/null || true
+            else
+                { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+                { sudo /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+                { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            fi
         else
             el_info "Is needed to restart some polkitd services, run again this tool from root"
         fi
@@ -582,9 +615,7 @@ get_mountpoint(){
         fi
     fi
 
-    if LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
-        is_udisksctl_unavailable=1
-    fi
+    check_udisks_service "$dev"
 
     if ((is_udisksctl_unavailable)) ; then
         mountpoint="$( cat /proc/mounts | awk -v dev="$dev" '{if ($1 == dev) print $2}' | tail -1 )"
@@ -781,7 +812,9 @@ check_is_mounted(){
             el_warning "unable to determine if $device is mounted or not, assuming is not"
             return 1
         else
-            if ! LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
+            check_udisks_service "$device"
+
+            if ! ((is_udisksctl_unavailable)) ; then
                 mountpoint="$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | tail -1 )"
                 # dev state test
                 if [[ "$( LC_ALL="$EL_LC_EN" udisksctl info -b "$device" | grep -iE "^\s+MountPoints:\s+" | sed -e 's|^.*MountPoints:\s*||g' | wc -l )" -gt 1 ]] ; then
@@ -1107,9 +1140,7 @@ el_mount(){
         #return 0
     #fi
 
-    if LC_ALL="$EL_LC_EN" udisksctl info -b "$dev" 2>&1 | grep -qs "Error looking up object" ; then
-        is_udisksctl_unavailable=1
-    fi
+    check_udisks_service "$dev"
 
 
     if ! ((is_udisksctl_unavailable)) ; then

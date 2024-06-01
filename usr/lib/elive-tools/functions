@@ -2545,6 +2545,10 @@ el_report_to_elive(){
             return 0
         fi
     fi
+    # ignore all thanatest reports
+    if grep -qs "thanatests" /proc/cmdline ; then
+        return
+    fi
 
     local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f source limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint
     el_security_function_loop || return 0

@@ -91,8 +91,7 @@ restart_daemons(){
     fi
 
     # we need to wait a bit, seems like udisks dont read anything if we don't
-    sync
-    sleep 1
+    sync ; sleep 2
 
     if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
         sleep 1
@@ -128,7 +127,7 @@ refresh_partition_table(){
     else
         partprobe "${dev%%[0-9]*}" 2>/dev/null || true
     fi
-    sync
+    sync ; sleep 1
 }
 #===  FUNCTION  ================================================================
 #          NAME:  chroot_layers_mount
@@ -577,6 +576,34 @@ chroot_layers_umount(){
 
 }
 
+get_uuid(){
+    local uuid dev
+    dev="$1"
+
+    set -x
+    for i in $( seq 4 )
+    do
+        uuid="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
+        fi
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL="$EL_LC_EN" lsblk -rino PATH,TYPE,UUID | awk -v item="${dev}" '{ if (($1 == item) && ($2 ~ /(part|crypt|lvm|disk|md|raid)/ ) ) print $3}' )"
+        fi
+        if [[ -z "$uuid" ]] ; then
+            uuid="$( LC_ALL="$EL_LC_EN" lsblk -d -rino UUID "$dev" | head -1 )"
+        fi
+
+        if [[ -n "$uuid" ]] ; then
+            echo "$uuid"
+            break
+        fi
+
+        sleep 1
+    done
+    set +x
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  get_mountpoint
 #   DESCRIPTION:  get the mountpoint of a device
@@ -682,11 +709,8 @@ get_mountpoint(){
 
     # get the uuid to know if this dev is mountable (we cannot mount /dev/sda for example, or not-formatted (without uuid) partitions)
     if [[ -z "$mountpoint" ]] && ! check_is_mounted "$dev" 2>/dev/null 1>&2 ; then
-        # get the uuid
-        #uuid="$( udevadm info --query=all --name="$dev" | grep "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        #if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        #fi
+        # get uuid
+        uuid="$( get_uuid "$dev" )"
 
         if [[ -z "$uuid" ]] ; then
             #el_debug "Unable to mount $dev because has not an uuid"
@@ -1166,10 +1190,9 @@ el_mount(){
         fi
 
         # get uuid
-        uuid="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        fi
+        uuid="$( get_uuid "$dev" )"
+
+
         if [[ -z "$uuid" ]] ; then
             el_debug "Unable to mount $dev because has not an uuid"
             return 1
@@ -1265,11 +1288,8 @@ el_mount(){
     if [[ "$UID" = 0 ]] ; then
         refresh_partition_table "$dev"
 
-        # get UUID
-        uuid="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        if [[ -z "$uuid" ]] ; then
-            uuid="$( LC_ALL="$EL_LC_EN" udevadm info --query=all --name="$dev" | grep -F "ID_FS_UUID=" | sed -e 's|^.*UUID=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
-        fi
+        # get uuid
+        uuid="$( get_uuid "$dev" )"
 
         filesystem="$( udevadm info --query=all --name="$dev" | grep -F "ID_FS_TYPE=" | sed -e 's|^.*TYPE=||g' | grep "[[:alnum:]]" | sed -e '/^$/d' | tail -1 )"
         if [[ -z "$filesystem" ]] ; then
@@ -1338,10 +1358,6 @@ el_mount(){
 }
 
 udisks_dump(){
-    if ((is_udisksctl_unavailable)) ; then
-        return 1
-    fi
-
     if ((is_wheezy)) ; then
         udisks --dump
     else

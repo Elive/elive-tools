@@ -2550,7 +2550,7 @@ el_report_to_elive(){
         return
     fi
 
-    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f source limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint
+    local message message_stripped return_status id eliveversion execution_stack architecture tmp_conf_f source limit_reports_amount limit_reports_seconds buf messages_extra tool counter fingerprint custom
     el_security_function_loop || return 0
     # max 5 reports per tool
     limit_reports_amount=6
@@ -2743,6 +2743,13 @@ el_report_to_elive(){
         "D: "*)  return_status=4  ; ;;
     esac
 
+    if grep -qs "MACHINE_VIRTUAL=" "/etc/elive/machine-profile" ; then
+        custom="machine_virtual"
+    else
+        custom="machine_real"
+    fi
+
+
     if [[ -z "$id" ]] ; then
         id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' | tail -1 )"
     fi
@@ -2781,11 +2788,11 @@ el_report_to_elive(){
         waitfor "$( basename "$tool" )"
 
         # send
-        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::$(whoami)::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "     stack: $execution_stack" ; echo -ne "\0" ; } | timeout 4 $tool www.elivecd.org 60008 -w 4 1>/dev/null 2>&1 ; then
+        if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::$(whoami)::${conf_send_debug_reports_email}::${return_status}::${custom}::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "     stack: $execution_stack" ; echo -ne "\0" ; } | timeout 4 $tool www.elivecd.org 60008 -w 4 1>/dev/null 2>&1 ; then
             true
 
             LC_ALL="$EL_LC_EN" sleep 1
-            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::$(whoami)::${conf_send_debug_reports_email}::${return_status}::::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "      stack: $execution_stack" ; echo -ne "\0" ; } | timeout 8 $tool www.elivecd.org 60008 -w 8 1>/dev/null 2>&1 ; then
+            if ! { echo -e "ELIVE_DATA_TYPE: 1.0::${id}::transfer::text::reports::0::$(whoami)::${conf_send_debug_reports_email}::${return_status}::${custom}::${architecture}::${eliveversion}::${SOURCE}::" ; echo -e "${message}${messages_extra}" ; echo "      stack: $execution_stack" ; echo -ne "\0" ; } | timeout 8 $tool www.elivecd.org 60008 -w 8 1>/dev/null 2>&1 ; then
                 true
 
                 #LC_ALL="$EL_LC_EN" sleep 1

@@ -3405,7 +3405,7 @@ el_ram_usage_show(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_architecture
 #   DESCRIPTION:  returns the architecture
-#    PARAMETERS:  $1 = host | kernel, $2 = file to use to know arch (host mode only)
+#    PARAMETERS:  $1 = host | kernel, $2 = file to use to know arch (host mode only), $3 = format (normal|gnu)
 #       RETURNS:  string
 #===============================================================================
 el_architecture(){
@@ -3421,6 +3421,14 @@ el_architecture(){
         file="$1"
         shift
     fi
+
+    if [[ -n "$1" ]] ; then
+        format="$1"
+        shift
+    else
+        format="normal"
+    fi
+
 
     # defaults
     if [[ -z "$file" ]] ; then
@@ -3445,10 +3453,16 @@ el_architecture(){
     # convert
     case "$arch" in
         x86-64|x86_64|amd64|64bit)
-            arch="amd64"
+            case "$format" in
+                gnu)   arch="x86_64-linux-gnu"  ; ;;
+                *)     arch="amd64"             ; ;;
+            esac
             ;;
         *80386|i386|i486|i586|i686)
-            arch="i386"
+            case "$format" in
+                gnu)   arch="i386-linux-gnu"  ; ;;
+                *)     arch="i386"             ; ;;
+            esac
             ;;
     esac
 

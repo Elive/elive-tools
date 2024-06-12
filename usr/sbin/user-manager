@@ -98,39 +98,33 @@ pass_verify(){
     fi
 
     # request valid chars {{{
-    if printf "%s" "$userpass" | grep -qs '\\' ; then
-        $guitool --error --text="$( eval_gettext "You cannot use the slash character, use a different password" )"" (\\)."
-        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
-    fi
-    if printf "%s" "$userpass" | grep -qs '\\' ; then
-        unset userpass
-    fi
+    for i in $(seq 6)
+    do
+        if printf "%s" "$userpass" | grep -qs '\\' ; then
+            $guitool --error --text="$( eval_gettext "You cannot use the slash character, use a different password" )"" (\\)."
+            userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+        fi
 
-    if printf "%s" "$userpass" | grep -qs -- "-" ; then
-        $guitool --error --text="$( eval_gettext "You cannot use this character, use a different password:" )"" (-)."
-        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
-    fi
-    if printf "%s" "$userpass" | grep -qs -- "-" ; then
-        unset userpass
-    fi
+        if printf "%s" "$userpass" | grep -qs -- "-" ; then
+            $guitool --error --text="$( eval_gettext "You cannot use this character, use a different password:" )"" (-)."
+            userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+        fi
 
+        if printf "%s" "$userpass" | grep -qs "'" ; then
+            $guitool --error --text="$( eval_gettext "You cannot use quotes. Choose a different password." )"" (')."
+            userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+        fi
 
-    if printf "%s" "$userpass" | grep -qs "'" ; then
-        $guitool --error --text="$( eval_gettext "You cannot use quotes. Choose a different password." )"" (')."
-        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
-    fi
-    if printf "%s" "$userpass" | grep -qs "'" ; then
-        unset userpass
-    fi
+        if printf "%s" "$userpass" | grep -qs '`' ; then
+            $guitool --error --text="$( eval_gettext "You cannot use quotes. Choose a different password." )"" (\`)."
+            userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+        fi
 
-    if printf "%s" "$userpass" | grep -qs '"' ; then
-        $guitool --error --text="$( eval_gettext "You cannot use the double-quote character, use a different password" )"" (\")."
-        userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
-    fi
-
-    if printf "%s" "$userpass" | grep -qs '"' ; then
-        unset userpass
-    fi
+        if printf "%s" "$userpass" | grep -qs '"' ; then
+            $guitool --error --text="$( eval_gettext "You cannot use the double-quote character, use a different password" )"" (\")."
+            userpass="$( $guitool --entry --hide-text --text="$( eval_gettext "Insert a password for your computer." )" )"
+        fi
+    done
 }
 
 ###########################################################################

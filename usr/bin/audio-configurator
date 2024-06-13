@@ -17,24 +17,26 @@ exit_error(){
     rm -f "$lockfile"
 }
 
-if [[ -r "$lockfile" ]] ; then
-    PROCCESS="$(cat $lockfile)"
-else
-    PROCCESS=" "
-fi
-if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
-    echo -e "E: $(basename "$0" ) already running"
-    exit
-else
-    echo $$ > "$lockfile"
+if ! [[ -n "$IGNORE_LOCK" ]] ; then
+    if [[ -r "$lockfile" ]] ; then
+        PROCCESS="$(cat $lockfile)"
+    else
+        PROCCESS=" "
+    fi
+    if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+        echo -e "E: $(basename "$0" ) already running"
+        exit
+    else
+        echo $$ > "$lockfile"
+    fi
+
+    # SET the lock file
+    echo "$$" > "$lockfile"
 fi
 
 # traps needs to be after the lock verification, in order to not remove it when we are already running
 trap "exit_ok" EXIT
 trap "exit_error" 1 3 5 6 14 15 ERR TERM
-
-# SET the lock file
-echo "$$" > "$lockfile"
 
 
 # end lock system }}}
@@ -317,7 +319,7 @@ main(){
                 fi
                 #fi
             else
-                el_debug "we selected the card '$selection' from the list. From these 'amount of tracks :: card' results:\n$( echo "$array_cards" | sort -u )"
+                el_debug "we selected the card '$selection' from the list. From these 'amount-of-tracks :: card' results:\n$( echo "$array_cards" | sort -u )"
             fi
 
             # update: this message became useless especially after using pulseaudio

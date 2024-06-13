@@ -215,13 +215,15 @@ get_meter(){
             # notify user
             if ! ((is_quiet_mode)) ; then
                 el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There's no playback channel found in your volumes. You can reconfigure your audio card from your applications menu." )"
-                if zenity --question --text="$( eval_gettext "Your machine is a very rare case where Elive was not able to detect your audio card. It will be REALLY helpful for us if you message us via the IRC chat or the Forums to help us to fix this issue, because we don't have the hardware on which it fails like in your case. Would you like to help us to make Elive working with your hardware for every other user?" )" ; then
-                    (
-                        web-launcher "https://www.elivecd.org/live-chat" &
-                        sleep 30
-                        zenity --info --text="$( eval_gettext "Please contact Thanatermesis so he can help you." )" &
-                    )
-                fi
+            fi
+
+            # TODO report / help debug TEMPORAL
+            if zenity --question --text="$( eval_gettext "Your machine is a very rare case where Elive was not able to detect your audio card. It will be REALLY helpful for us if you message us via the IRC chat or the Forums to help us to fix this issue, because we don't have the hardware on which it fails like in your case. Would you like to help us to make Elive working with your hardware for every other user?" )" ; then
+                (
+                    web-launcher "https://www.elivecd.org/live-chat" &
+                    sleep 30
+                    zenity --info --text="$( eval_gettext "Please contact Thanatermesis so he can help you." )" &
+                )
             fi
 
             # always show to the user configure his audio card because he needs it working!

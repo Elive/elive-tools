@@ -209,8 +209,7 @@ get_meter(){
 
         if ((is_already_configured)) ; then
             # debug
-            el_error "No meters found to configure volumes, is your audio card working?:\nset_volume result with PCM,0:  $(amixer -q set PCM "2%-" 2>&1 )\nset_volume result with PCM,1:  $(amixer -q set PCM,1 "2%-" 2>&1 )\nset_volume result with Master,0:  $(amixer -q set Master "2%-" 2>&1 )\n\nlist (amixer scontrols):\n$list\namixer scontrols:  $(amixer scontrols)\n|$(cat /proc/asound/cards)|\ncat ~./.asoundrc :\n$(cat "$HOME/.asoundrc" )"
-            el_warning "trying to reconfigure:\n$( EL_DEBUG=3 audio-configurator --quiet --smart --auto --no-messages 2>&1 )"
+            el_error "No meters found to configure volumes, is your audio card working?:\nset_volume result with PCM,0:  $(amixer -q set PCM "2%-" 2>&1 )\nset_volume result with PCM,1:  $(amixer -q set PCM,1 "2%-" 2>&1 )\nset_volume result with Master,0:  $(amixer -q set Master "2%-" 2>&1 )\n\nlist (amixer scontrols):\n$list\namixer scontrols:  $(amixer scontrols)\n|$(cat /proc/asound/cards)|\ncat ~./.asoundrc :\n$(cat "$HOME/.asoundrc" )\n\ntrying to reconfigure with more debug:\n$( EL_DEBUG=3 audio-configurator --quiet --smart --auto --no-messages 2>&1 )"
 
             # notify user
             if ! ((is_quiet_mode)) ; then
@@ -218,13 +217,13 @@ get_meter(){
             fi
 
             # TODO report / help debug TEMPORAL
-            if zenity --question --text="$( eval_gettext "Your machine is a very rare case where Elive was not able to detect your audio card. It will be REALLY helpful for us if you message us via the IRC chat or the Forums to help us to fix this issue, because we don't have the hardware on which it fails like in your case. Would you like to help us to make Elive working with your hardware for every other user?" )" ; then
-                (
-                    web-launcher "https://www.elivecd.org/live-chat" &
-                    sleep 30
-                    zenity --info --text="$( eval_gettext "Please contact Thanatermesis so he can help you." )" &
-                )
-            fi
+            # if zenity --question --text="$( eval_gettext "Your machine is a very rare case where Elive was not able to detect your audio card. It will be REALLY helpful for us if you message us via the IRC chat or the Forums to help us to fix this issue, because we don't have the hardware on which it fails like in your case. Would you like to help us to make Elive working with your hardware for every other user?" )" ; then
+            #     (
+            #         web-launcher "https://www.elivecd.org/live-chat" &
+            #         sleep 30
+            #         zenity --info --text="$( eval_gettext "Please contact Thanatermesis so he can help you." )" &
+            #     )
+            # fi
 
             # always show to the user configure his audio card because he needs it working!
             if grep -Fqs "boot=live" /proc/cmdline ; then

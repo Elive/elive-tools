@@ -44,17 +44,32 @@ main(){
 
     # }}}
 
-    while read -ru 3 file
+    while read -ru 3 line
     do
-        dest="${to}/$( dirname "${file#*/}" )"
+        file="$line"
+        if [[ ! -s "$file" ]] ; then
+            el_warning "file '$file' doesn't exist, skipping..."
+        fi
 
-        if [[ -s "$dest/$( basename "$file" )" ]] ; then
-            el_explain 0 "skipping $(basename "$file" )"
+        filename="$( basename "$file" )"
+        if [[ -n "$from" ]] && [[ "$from" != "." ]] ; then
+            dirname="$( echo "$line" | sed -e "s|^.*${from}||g" -e 's|^/||g' )"
+        else
+            dirname="$( echo "$line" | sed -e 's|^/||g' )"
+        fi
+        dirname="${dirname%/*}"
+
+        dest="${to}/${dirname}"
+        destfile="${dest}/${filename}"
+
+        if [[ -s "$destfile" ]] ; then
+            el_explain 0 "skipping '$file'"
             continue
         fi
 
         mkdir -p "$dest"
         rm -f "$logs"
+
 
         rate="$( eyeD3 --no-color "$file" 2>/dev/null | strings | grep -F "kb/s" | sed -e 's|^.*\[ ||g' -e 's|kb/s .*$||g' -e 's|~||g' )"
 
@@ -66,25 +81,25 @@ main(){
             # v4 for a much more quality (flac converter)
             precache "$file" 1>/dev/null
 
-            lame --vbr-new -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"  1>"$logs" 2>&1
+            lame --vbr-new -V 3 -q 0 "$file" -o "$destfile"  1>"$logs" 2>&1
             returned="$?"
 
             if grep -qsE "(Aborting layer . decode|illegal bit allocation value)" "$logs" ; then
-                el_explain 0 "  MPEG-3 mode force: $(basename "$file" )"
-                lame --vbr-new --mp3input -V 3 -q 0 "$file" -o "$dest/$( basename "$file" )"  1>"$logs" 2>&1
+                el_explain 0 "  MPEG-3 mode force: $file"
+                lame --vbr-new --mp3input -V 3 -q 0 "$file" -o "$destfile"  1>"$logs" 2>&1
                 returned="$?"
             fi
 
             if [[ "$returned" != 0 ]] ; then
                 NOREPORTS=1 el_warning "error converting, using back original file..."
-                cp -f "$file" "$dest"
+                cp -f "$file" "${destfile}"
                 continue
             fi
 
             # file is bigger than original AND file is bigger than 800 kb (which should be broken in conversion) --> copy back the original one
-            size_dest="$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )"
+            size_dest="$( du -s "$destfile" | awk '{print $1}' )"
             size_orig="$( du -s "$file" | awk '{print $1}' )"
-            size_dest_mb="$( du -hs "$dest/$( basename "$file" )" | awk '{print $1}' )"
+            size_dest_mb="$( du -hs "$destfile" | awk '{print $1}' )"
             size_orig_mb="$( du -hs "$file" | awk '{print $1}' )"
 
             # make it at least 200k smaller or ignore
@@ -93,16 +108,14 @@ main(){
             el_debug "orig ${size_orig_mb} vs dest ${size_dest_mb} (${size_dest_extra})"
 
             if [[ "$size_dest_extra" -lt "$size_orig" ]] \
-                && [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
-                # add a visual mark (ls) to see that we have converted it
-                #chmod +x "$dest/$( basename "$file" )"
+                && [[ "$( du -s "$destfile" | awk '{print $1}' )" -gt 800 ]] ; then
                 #el_explain 0 "  compressed from '${size_orig}' KB to '${size_dest}' KB "
                 reduced_percent="$( echo "( $size_dest / $size_orig ) * 100" | bc -l | sed -e 's|\..*$||g' )"
                 #el_explain 0 "  reduced at ${reduced_percent} %, from '${size_orig}' KB to '${size_dest}' KB "
                 el_explain 0 "  reduced "$(( 100 - ${reduced_percent} ))" %, from '${size_orig_mb}' to '${size_dest_mb}' "
                 continue
             else
-                if [[ "$( du -s "$dest/$( basename "$file" )" | awk '{print $1}' )" -gt 800 ]] ; then
+                if [[ "$( du -s "$destfile" | awk '{print $1}' )" -gt 800 ]] ; then
                     el_explain 0 "  oops, resulting file was bigger, using copy instead"
                 else
                     NOREPORTS=1 el_warning "Less than 800 kb, maybe broken file, copying back the original one"
@@ -111,7 +124,7 @@ main(){
             fi
 
         else
-            el_explain 0 "Using original file (already good sized): copied back '$(basename "$file" )'"
+            el_explain 0 "Using original file (already good sized): copied back '$filename'"
             cp -f "$file" "$dest"
         fi
     done 3<<< "$( find "$from" -type f -iname '*'.mp3 | sed -e 's|^\./||g' )"

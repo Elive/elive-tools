@@ -46,6 +46,16 @@ main(){
 
     # }}}
 
+    # check for invalid files and report it before to proceed
+    invalid_files="$( find "$from" -type f \( -iname '*.wav' -o -iname '*.flac' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.wma' \) )"
+    if [[ -n "$invalid_files" ]] ; then
+        echo "$invalid_files"
+        el_warning "There are invalid files in the source directory, please remove them before to proceed"
+        exit 1
+    fi
+
+
+    # conver all the files
     while read -ru 3 line
     do
         file="$line"
@@ -56,10 +66,14 @@ main(){
         to="$to_orig"
         filename="$( basename "$file" )"
 
-        if [[ -n "$from" ]] && [[ "$from" != "." ]] ; then
-            dirname="$( echo "$line" | sed -e "s|^.*${from}||g" -e 's|^/||g' )"
+        if [[ "$from" = "." ]] || [[ "$( echo "$line" | tr '/' '\n' | wc -l )" -eq 1 ]] ; then
+            dirname=""
         else
-            dirname="$( echo "$line" | sed -e 's|^/||g' )"
+            if [[ -n "$from" ]] && [[ "$from" != "." ]] ; then
+                dirname="$( echo "$line" | sed -e "s|^.*${from}/||g" )"
+            else
+                dirname="$( echo "$line" | sed -e 's|^/||g' )"
+            fi
         fi
         dirname="${dirname%/*}"
 
@@ -70,7 +84,8 @@ main(){
         fi
 
         dest="${to}/${dirname}"
-        destfile="${dest}/${filename}"
+        destfile="${dest%/}/${filename}"
+
 
         if [[ -s "$destfile" ]] ; then
             el_explain 0 "skipping '$file'"

@@ -29,6 +29,8 @@ main(){
     to="${1%/}"
     shift
 
+    to_orig="$to"
+
     if ! el_dependencies_check "lame" ; then
         el_dependencies_install lame
     fi
@@ -51,13 +53,21 @@ main(){
             el_warning "file '$file' doesn't exist, skipping..."
         fi
 
+        to="$to_orig"
         filename="$( basename "$file" )"
+
         if [[ -n "$from" ]] && [[ "$from" != "." ]] ; then
             dirname="$( echo "$line" | sed -e "s|^.*${from}||g" -e 's|^/||g' )"
         else
             dirname="$( echo "$line" | sed -e 's|^/||g' )"
         fi
         dirname="${dirname%/*}"
+
+        if [[ -d "$to" ]] ; then
+            if [[ "$( basename "$from" )" != "$( basename "$to" )" ]] ; then
+                to="${to}/$( basename "$from" )"
+            fi
+        fi
 
         dest="${to}/${dirname}"
         destfile="${dest}/${filename}"

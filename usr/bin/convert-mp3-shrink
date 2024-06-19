@@ -54,7 +54,6 @@ main(){
         exit 1
     fi
 
-
     # conver all the files
     while read -ru 3 line
     do
@@ -66,8 +65,12 @@ main(){
         to="$to_orig"
         filename="$( basename "$file" )"
 
-        if [[ "$from" = "." ]] || [[ "$( echo "$line" | tr '/' '\n' | wc -l )" -le 2 ]] ; then
-            dirname=""
+        if [[ "$from" = "." ]] ; then
+            from=""
+        fi
+
+        if [[ "$( echo "$line" | tr '/' '\n' | wc -l )" -le 2 ]] ; then
+            dirname="$line"
         else
             if [[ -n "$from" ]] && [[ "$from" != "." ]] ; then
                 dirname="$( echo "$line" | sed -e "s|^.*${from}/||g" )"
@@ -80,6 +83,7 @@ main(){
         if [[ -d "$to" ]] ; then
             if [[ "$( basename "$from" )" != "$( basename "$to" )" ]] ; then
                 to="${to}/$( basename "$from" )"
+                to="${to%/}"
             fi
         fi
 

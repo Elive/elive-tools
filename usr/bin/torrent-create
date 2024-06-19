@@ -221,13 +221,13 @@ main(){
         ( transmission-gtk "/tmp/${name}.torrent" 2>/dev/null & )
 
         echo -e "..." 1>&2
-        NOREPORTS=1 el_warning "$( eval_gettext "You must restart Transmission after it correctly verified the local data, for some reason seems like a restart is needed in order to correctly share the metadata to other users" )"
+        NOREPORTS=1 el_warning "$( eval_gettext "You must restart Transmission after it correctly verified the local data, for some reason, sometimes seems like a restart is needed in order to correctly share the metadata to other users" )"
 
     else
         gui_error "$( eval_gettext "Directory for download torrents from Transmission is not available, create it first, then run transmission with the file:" )\n/tmp/${name}.torrent"
     fi
 
-    gui_info "$( eval_gettext "Your files are being shared via torrent now. Transmission torrent is using a copy of your original data for it" )"
+    gui_info "$( eval_gettext "Your files are being shared via torrent now. For them you are using a copy of your original data for it" )"
 
 }
 

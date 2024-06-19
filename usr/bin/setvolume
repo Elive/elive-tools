@@ -227,7 +227,7 @@ get_meter(){
 
             # notify user
             if ! ((is_quiet_mode)) ; then
-                el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There's no playback channel found in your volumes. You can reconfigure your audio card from your applications menu." )"
+                el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There's no audio playback channel found in your volumes. You must reconfigure your audio card from your applications menu." )"
             fi
 
             # TODO report / help debug TEMPORAL

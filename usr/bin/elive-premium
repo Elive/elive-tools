@@ -54,17 +54,21 @@ git_github_conf(){
     fi
 
     if [[ -z "$( command git config --get user.email )" ]] ; then
-        el_info "Insert your email"
-        read email
-        if [[ -n "$email" ]] ; then
-            git config --global user.email "$email"
+        if [[ -n "$patreon_email" ]] ; then
+            git config --global user.email "$patreon_email"
         else
-            read -p "Insert your email: " email
+            el_info "Insert your email"
+            read email
             if [[ -n "$email" ]] ; then
                 git config --global user.email "$email"
             else
-                el_error "You need to insert your email in order to continue"
-                exit 1
+                read -p "Insert your email: " email
+                if [[ -n "$email" ]] ; then
+                    git config --global user.email "$email"
+                else
+                    el_error "You need to insert your email in order to continue"
+                    exit 1
+                fi
             fi
         fi
     fi
@@ -93,6 +97,15 @@ github_access_check(){
 
     # check github access
     echo -e "Testing access to the Elive Premium Github repository..." 1>&2
+    el_warning "$( eval_gettext "Important: if you have a 'permission denied' error on this step, contact Thanatermesis so he can solve the issue" )"
+
+    # fix possible permission issues with .ssh
+    chown -R "$USER":"$USER" ~/.ssh
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/*
+    chmod 644 ~/.ssh/*.pub
+    chmod o-w ~
+
     if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
         is_cloned=1
     fi

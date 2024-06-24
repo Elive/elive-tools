@@ -3445,7 +3445,7 @@ el_architecture(){
             arch="$( file -Lb "$file" | sed -e 's|, version .*$||g' -e 's|^.*, ||g' )"
             ;;
         *)
-            el_error "argument missing, select one: host, kernel"
+            el_error "argument missing, select one: host, kernel [normal|gnu]"
             return 1
             ;;
     esac

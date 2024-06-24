@@ -33,6 +33,55 @@ github_login_required(){
     el_notify "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation of joining the Elive-Premium github organization in order to view this page." )"
 }
 
+git_github_conf(){
+    local username token email
+
+    if [[ -z "$( command git config --get github.user )" ]] ; then
+        el_info "Insert your Github username"
+        read username
+        if [[ -n "$username" ]] ; then
+            git config --global github.user "$username"
+        else
+            el_info "Insert your Github username"
+            read username
+            if [[ -n "$username" ]] ; then
+            git config --global github.user "$username"
+            else
+                el_error "You need to insert your Github username in order to continue"
+                exit 1
+            fi
+        fi
+    fi
+
+    if [[ -z "$( command git config --get user.email )" ]] ; then
+        el_info "Insert your email"
+        read email
+        if [[ -n "$email" ]] ; then
+            git config --global user.email "$email"
+        else
+            read -p "Insert your email: " email
+            if [[ -n "$email" ]] ; then
+                git config --global user.email "$email"
+            else
+                el_error "You need to insert your email in order to continue"
+                exit 1
+            fi
+        fi
+    fi
+
+
+    # if [[ -z "$( command git config --get github.token )" ]] ; then
+    #     el_info "Insert your Github token"
+    #     read token
+    #     if [[ -n "$token" ]] ; then
+    #         git config --global github.token "$token"
+    #     else
+    #         el_error "You need to insert your Github token in order to continue"
+    #         exit 1
+    #     fi
+    # fi
+}
+
 github_access_check(){
     local result is_cloned
 
@@ -221,6 +270,7 @@ main(){
     fi
 
     ssh_key_check
+    git_github_conf
     github_access_check
 
     echo "" 1>&2

@@ -29,6 +29,20 @@ premium_status_get(){
     fi
 }
 
+usage(){
+    echo "Usage: $0 [elivim|assistant|gptuuu|servers]"
+    echo
+    echo "  elivim      Install the Elivim framework for Neovim"
+    echo "  assistant   Install the Elive AI assistant"
+    echo "  gptuuu      Install the GPT Uncensored, Unbiased, Untracked"
+    echo "  servers     Install the Elive for Servers enhancer"
+    echo
+
+    if el_confirm "$( eval_gettext "Do you want to know more about the elive-premium features?" )" ; then
+        ( web-launcher "https://www.elivecd.org/premium/" & )
+    fi
+}
+
 github_login_required(){
     el_notify "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged on Github and having accepted the invitation of joining the Elive-Premium github organization in order to view this page." )"
 }
@@ -106,14 +120,14 @@ github_access_check(){
     chmod 644 ~/.ssh/*.pub
     chmod o-w ~
 
-    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
+    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" 2>/dev/null ; then
         is_cloned=1
     fi
 
     rm -rf "/tmp/${USER}-elivepremium-test.git" || true
 
     if ! ((is_cloned)) ; then
-        el_error "$( eval_gettext "You don't have access to the Elive Premium Github repository, for that first add your SSH key to your Github account." )"
+        el_warning "$( eval_gettext "You don't have access to the Elive Premium Github repository, for that first add your SSH key to your Github account." )"
         # el_info "$( eval_gettext "Instructions: You need to add your SSH key to your Github account, you can do it from the following link:" )"
 
         # copy keys to clipboard
@@ -308,14 +322,15 @@ main(){
             exit
             ;;
         *)
-            el_error "Unknown installer $1"
+            usage
+            exit
             ;;
     esac
 
     # show all of them
     # first run a normal window so that the CSS/JS of the website will load correctly
     web-launcher \
-        web-launcher "https://github.com/Elive-Premium"
+        "https://github.com/Elive-Premium"
         $NULL
     sleep 2
 

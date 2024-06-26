@@ -47,12 +47,14 @@ main(){
         el_dependencies_check ecryptfs-utils
     fi
 
+    if [[ ! -d "$MOUNTPOINT" ]] ; then
+        mkdir -p "$MOUNTPOINT"
+        echo -e "This directory will be mounted with all the contents from your encrypted data in ~/.private_encrypted/ when you run the command 'encrypt-privatedir'." > "$MOUNTPOINT/README-encrypted.txt"
+    fi
     if [[ ! -d "$ENCRYPTED_DIR" ]] ; then
         mkdir -p "$ENCRYPTED_DIR"
     fi
-    if [[ ! -d "$MOUNTPOINT" ]] ; then
-        mkdir -p "$MOUNTPOINT"
-    fi
+
     # if ! el_check_sudo_automated ; then
     #     el_warning "$( eval_gettext "This tool requires automated sudo" )"
     #     exit 1

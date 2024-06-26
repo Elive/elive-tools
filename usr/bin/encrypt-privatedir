@@ -1,0 +1,87 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+# INFO signals:
+# 0 EXIT: when program finishes (already used here)
+# 1 HUP: loss of terminal
+# 2 INT: is ^C
+# 3 QUIT: ^d quit from keyboard
+# 4 ILL: illegal instruction
+# 5 TRAP: breakpoints
+# 6 ABRT: abort
+# 7 BUS: hardware problem
+# 8 FPE: wrong math operation
+# 9 KILL: uncatcheable / unstopable
+# 10 USR1: customizable
+# 13 PIPE: broken pipe
+# 14 ALMR: timers
+# 15 TERM: termination
+# 17 CHLD: children monitor
+# 20 TSTP: ^z
+# 24 XCPU: too much cpu consumption
+# 28 WINCH: window resize
+trap "exit_error"  HUP INT QUIT ABRT SEGV PIPE ALRM TERM
+trap "exit_ok"  EXIT
+
+exit_ok(){
+    sudo umount "$MOUNTPOINT" 2>/dev/null || true
+}
+exit_error(){
+    el_error "$?"
+    exit_ok
+}
+
+# set -e
+
+main(){
+    MOUNTPOINT=~/.private
+    ENCRYPTED_DIR=~/.private_encrypted
+
+    # checks
+    if [[ ! /var/lib/dpkg/info/ecryptfs-utils.list ]] ; then
+        el_dependencies_check ecryptfs-utils
+    fi
+
+    if [[ ! -d "$ENCRYPTED_DIR" ]] ; then
+        mkdir -p "$ENCRYPTED_DIR"
+    fi
+    if [[ ! -d "$MOUNTPOINT" ]] ; then
+        mkdir -p "$MOUNTPOINT"
+    fi
+    # if ! el_check_sudo_automated ; then
+    #     el_warning "$( eval_gettext "This tool requires automated sudo" )"
+    #     exit 1
+    # fi
+
+    # mount / umount
+    if mountpoint -q "$MOUNTPOINT" ; then
+        echo "Unmounting $MOUNTPOINT..."
+        sudo umount "$MOUNTPOINT"
+
+    else
+        echo "Mounting $ENCRYPTED_DIR to $MOUNTPOINT..."
+        sudo mount -t ecryptfs "$ENCRYPTED_DIR" "$MOUNTPOINT" -o ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_enable_filename_crypto,ecryptfs_passthrough=n,ecryptfs_key_type=passphrase,ecryptfs_sig=3c6a6d3b6fed1b60,ecryptfs_fnek_sig=3c6a6d3b6fed1b60,key=passphrase,quiet
+
+        el_info "$( eval_gettext "You are in a new shell in a directory where the contents will be encrypted back when you logout from this shell." )"
+
+        cd "$MOUNTPOINT"
+        $SHELL -l
+        cd
+
+        echo "Unmounting $MOUNTPOINT..."
+        sudo umount "$MOUNTPOINT"
+    fi
+}
+
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -19,6 +19,9 @@ main(){
         exit 1
     fi
 
+    if ! el_dependencies_check "gdb" ; then
+        el_dependencies_install gdb
+    fi
 
     logfile="$1"
     shift
@@ -26,6 +29,17 @@ main(){
     shift
     if ! [[ -x "$executable" ]] && [[ -x "$( which "$executable" )" ]] ; then
         executable="$( which "$executable" )"
+    fi
+
+    if [[ "$executable" = *"/e16" ]] ; then
+        if ! dpkg -l | grep -qsE "^ii\s+e16-dbg\s+" ; then
+            el_dependencies_install e16-dbg
+        fi
+    fi
+    if [[ "$executable" = *"/enlightenment"* ]] ; then
+        if ! dpkg -l | grep -qsE "^ii\s+enlightenment-dbgsym\s+" ; then
+            el_dependencies_install enlightenment-dbgsym
+        fi
     fi
 
     # }}}

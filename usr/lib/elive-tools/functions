@@ -50,7 +50,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # from enlightenment values {{{
-    local display e_ipc_socket pid
+    local display e_ipc_socket e_ipc_file pid file
 
     # unset XAUTHORITY if is not from our user (bugs when we "su otheruser")
     # update: we should never unset the XAUTHORITY, verify that this was really wrong before..
@@ -59,50 +59,50 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         #unset XAUTHORITY
     #fi
 
-    if [[ -z "${DISPLAY}" ]] ; then
-        if [[ -z "$display" ]] && command ls --color=none /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
-        fi
-        if [[ -z "$display" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
-            display="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
-        fi
-        if [[ -n "$display" ]] ; then
+    # E17 mode:
+    if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
+        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+        e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
+        export E_IPC_SOCKET="${e_ipc_file%-*}"
+    fi
+    # E26+ mode:
+    if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
+        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+        e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
+        export E_IPC_SOCKET="${e_ipc_file%\|*}"
+    fi
 
-            # cleanups
-            display="/tmp/${display##* /tmp/}"
-            #display="${display%|*}"
-            #display="${display%|*}"
-
-            if [[ -z "$display" ]] ; then
-                el_warning "unable to get display values from running enlightenment session"
+    # force re-set of the display
+    if [[ -z "${DISPLAY}" ]] || [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] \
+        || { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
+        || { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
+        ; then
+        # set display
+        if [[ -z "${DISPLAY}" ]] ; then
+            if [[ -n "$E_IPC_SOCKET" ]] ; then
+                pid="$( basename "$E_IPC_SOCKET" )"
+                pid="${pid%|*}"
+                display="$( ps e -p "$pid" | grep DISPLAY | tr ' ' '\n' | grep DISPLAY | sed -e 's|^.*=:||g' | tail -1 )"
+                [[ -n "$display" ]] && export DISPLAY=":$display"
             fi
+        fi
+        if [[ -z "${DISPLAY}" ]] ; then
+            display="$( ps -u "$(id -u)" -o pid= | \
+                while read pid; do
+                    cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+                done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
 
-            e_ipc_socket="${display}"
-
-            #display="${display##*disp-}"
-            display="$( basename "${display}" )"
-            display="${display%-*}"
-            display="${display#*|}"
-
-            if [[ -z "${DISPLAY}" ]] ; then
-                DISPLAY="${display}"
-                export DISPLAY
-            fi
+            [[ -n "$display" ]] && export DISPLAY=":$display"
         fi
     fi
 
-    # e17 not running or not fetch, let's try an alternative to fetch the display value
-    if [[ -z "${DISPLAY}" ]] ; then
-        display="$( ps -u "$(id -u)" -o pid= | \
-            while read pid; do
-                cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
-            done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
-
-        DISPLAY="${display}"
-        export DISPLAY
-    fi
+    display="${DISPLAY#:}"
+    display="${display%.*}"
 
     # fetch dbus address to we can use things like notify-send or dbus-send
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
+        source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
+    fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
         DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
     fi
@@ -113,10 +113,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export DBUS_SESSION_BUS_ADDRESS
     fi
 
-    if [[ -z "${E_IPC_SOCKET}" ]] && [[ -n "${e_ipc_socket}" ]] ; then
-        E_IPC_SOCKET="${e_ipc_socket}"
-        export E_IPC_SOCKET
-    fi
     # END from enlightenment values }}}
     # xauthority {{{
     if [[ -n "$DISPLAY" ]] && [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then

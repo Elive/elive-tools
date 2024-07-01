@@ -37,7 +37,7 @@ fi
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
-    local display e_ipc_socket e_ipc_file pid file is_debug
+    local display e_ipc_socket e_ipc_file pid file is_debug buf
 
     if [[ "$1" = "debug" ]] ; then
         is_debug=1
@@ -73,45 +73,117 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # force re-set of the display
-    if [[ -z "${DISPLAY}" ]] || [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] \
-        || { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
-        || { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
-        ; then
-        # set display
-        if [[ -z "${DISPLAY}" ]] ; then
-            if [[ -n "$E_IPC_SOCKET" ]] ; then
-                pid="$( basename "$E_IPC_SOCKET" )"
-                pid="${pid%|*}"
-                display="$( ps e -p "$pid" | grep DISPLAY | tr ' ' '\n' | grep DISPLAY | sed -e 's|^.*=:||g' | tail -1 )"
-                [[ -n "$display" ]] && export DISPLAY=":$display"
-            fi
-        fi
-        if [[ -z "${DISPLAY}" ]] ; then
-            display="$( ps -u "$(id -u)" -o pid= | \
-                while read pid; do
-                    cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
-                done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
-
+    unset DISPLAY
+    #if [[ -z "${DISPLAY}" ]] || [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] \
+        #|| { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
+        #|| { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
+        #; then
+    # set display
+    if [[ -z "${DISPLAY}" ]] ; then
+        if [[ -n "$E_IPC_SOCKET" ]] ; then
+            pid="$( basename "$E_IPC_SOCKET" )"
+            pid="${pid%|*}"
+            display="$( ps e -p "$pid" | grep DISPLAY | tr ' ' '\n' | grep DISPLAY | sed -e 's|^.*=:||g' | tail -1 )"
             [[ -n "$display" ]] && export DISPLAY=":$display"
         fi
+    fi
+    # get from w
+    if [[ -z "${DISPLAY}" ]] ; then
+        display="$( w -hs | awk -v user="$USER" '{ if (($1 == user) && ($5 ~ /(\/e16|xinit|enlightenment_start)/ )) print $3}' | grep "^:" | tail -1 )"
+        [[ -n "$display" ]] && export DISPLAY="$display"
+    fi
+    # Find Xorg or X process
+    #pids=($(ps -C Xorg,X,xinit -o pid=))
+    ## Loop through each PID
+    #for pid in "${pids[@]}"; do
+        ## Remove leading/trailing whitespace
+        #pid=$(echo "$pid" | xargs)
+        #if [ -n "$pid" ]; then
+            ## Read environment of the X server process
+            #current_display="$(sed -zn 's/^DISPLAY=//p' /proc/$pid/environ 2>/dev/null)"
+            #if [[ -n "$current_display" ]]; then
+                #display="$current_display"
+                #break  # Exit loop if we find a valid DISPLAY
+            #fi
+        #fi
+        #[[ -n "$display" ]] && export DISPLAY=":$display"
+    #done
+    # If a valid DISPLAY was found, export it
+    #if [[ -n "$display" ]]; then
+        #export DISPLAY=":$display"
+    #fi
+    # original version:
+    #if [[ -z "${DISPLAY}" ]] ; then
+        #pid="$(ps -C Xorg,X,xinit -o pid= | head -n1)"
+        ## remove extra leading blank chars
+        #read -r pid <<< "$pid"
+        #if [ -n "$pid" ]; then
+            ## Read environment of the X server process
+            #display="$(sed -zn 's/^DISPLAY=//p' /proc/$pid/environ 2>/dev/null )"
+            #[[ -n "$display" ]] && export DISPLAY=":$display"
+        #fi
+    #fi
+    if [[ -z "${DISPLAY}" ]] ; then
+        display="$( ps -u "$(id -u)" -o pid= | \
+            while read pid; do
+                cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+            done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
+
+        [[ -n "$display" ]] && export DISPLAY="$display"
     fi
 
     display="${DISPLAY#:}"
     display="${display%.*}"
 
     # fetch dbus address to we can use things like notify-send or dbus-send
+    #unset DBUS_SESSION_BUS_ADDRESS
+
+    # test or invalidate
+    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
+    fi
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
+        buf="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+        if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
+            unset buf
+        fi
+        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
+    fi
+    # test or invalidate
+    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
+    fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
-        DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+    # test or invalidate
+    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
     fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
-        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER/bus"
+        buf="unix:path=/run/user/$UID/bus"
+        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
-        export DBUS_SESSION_BUS_ADDRESS
+    # test or invalidate
+    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
     fi
+    # Loop through all dbus socket files in /tmp and test them
+    if [[ -x "$( which enlightenment_remote )" ]] ; then
+        for socket in /tmp/dbus-*; do
+            if [[ -S "$socket" ]] ; then
+                export DBUS_SESSION_BUS_ADDRESS="unix:path=$socket"
+                if enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                    break
+                fi
+            fi
+        done
+    fi
+    # test or invalidate
+    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
+    fi
+
 
     # END from enlightenment values }}}
     # xauthority {{{

@@ -60,12 +60,18 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     #fi
 
     if [[ -z "${DISPLAY}" ]] ; then
-        if command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
+        if [[ -z "$display" ]] && command ls --color=none /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
+            display="$( command find /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+        fi
+        if [[ -z "$display" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
             display="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+        fi
+        if [[ -n "$display" ]] ; then
 
             # cleanups
             display="/tmp/${display##* /tmp/}"
-            display="${display%|*}"
+            #display="${display%|*}"
+            #display="${display%|*}"
 
             if [[ -z "$display" ]] ; then
                 el_warning "unable to get display values from running enlightenment session"
@@ -74,8 +80,9 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             e_ipc_socket="${display}"
 
             #display="${display##*disp-}"
-            display="$( basename ${display} )"
+            display="$( basename "${display}" )"
             display="${display%-*}"
+            display="${display#*|}"
 
             if [[ -z "${DISPLAY}" ]] ; then
                 DISPLAY="${display}"
@@ -98,6 +105,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # fetch dbus address to we can use things like notify-send or dbus-send
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
         DBUS_SESSION_BUS_ADDRESS="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+    fi
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$USER/bus"
+    fi
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
         export DBUS_SESSION_BUS_ADDRESS
     fi
 
@@ -114,7 +126,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     if ((is_terminal)) && [[ "$UID" != 0 ]] && [[ -z "$SSH_CONNECTION" ]] ; then
         # only show the error if we have a graphical system running by the user
-        if command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
+        if command ls --color=none /tmp/e-"${USER}"@*/*-* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
             if [[ -z "${DISPLAY}" ]] ; then
                 el_warning "Variable DISPLAY is not set, so we will not have access to the local graphical system"
             fi
@@ -122,7 +134,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
                 el_warning "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
             fi
             # only e17+
-            if command ls --color=none /tmp/e-${USER}@*/*-* 1>/dev/null 2>/dev/null ; then
+            if command ls --color=none /tmp/e-${USER}@*/*-* /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
                 if [[ -z "${E_IPC_SOCKET}" ]] ; then
                     if [[ "$UID" != 0 ]] ; then
                         el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"

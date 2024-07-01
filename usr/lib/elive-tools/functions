@@ -37,7 +37,8 @@ fi
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
-    local is_debug
+    local display e_ipc_socket e_ipc_file pid file is_debug
+
     if [[ "$1" = "debug" ]] ; then
         is_debug=1
     fi
@@ -50,7 +51,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # from enlightenment values {{{
-    local display e_ipc_socket e_ipc_file pid file
 
     # unset XAUTHORITY if is not from our user (bugs when we "su otheruser")
     # update: we should never unset the XAUTHORITY, verify that this was really wrong before..
@@ -115,7 +115,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # END from enlightenment values }}}
     # xauthority {{{
-    if [[ -n "$DISPLAY" ]] && [[ -z "$XAUTHORITY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
+    if [[ -n "$DISPLAY" ]] && [[ -e "$HOME/.Xauthority" ]] ; then
         XAUTHORITY="$HOME/.Xauthority"
         export XAUTHORITY
     fi

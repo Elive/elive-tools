@@ -35,8 +35,8 @@ main(){
     #urldefault="http://paste.openstack.org" # broken
     # we should use debian, it supports syntax, download, selection, username, etc
     #urldefault="http://paste.debian.net" # broken
-    #urldefault="dpaste.com" # works, but no syntax
-    urldefault="sprunge.us" # it works, but no syntax, but they can be downloaded and in any case its handy to have it working
+    urldefault="dpaste.com" # works, but no syntax
+    #urldefault="sprunge.us" # it works, but no syntax, but they can be downloaded and in any case its handy to have it working
     # TODO:  <Naglfar> try this: curl -F 'file=@-' https://ttm.sh
     # TODO:  <keyra_> Thanatermesis, memo for you: <TheTechRobo/#elive/2021-08-23 19:10>  in elivepaste, replace the pastebin with this? https://transfer.archivete.am/
     command="$@"
@@ -182,7 +182,7 @@ main(){
         url="$( echo "${buffer}" | pastebinit -b "$urldefault" -a "$user" -f "${syntax}" 2>/dev/null | head -1 )"
 
         # checks
-        if ! echo "${url}" | grep -Fq "http://" || [[ "${url}" = "$urldefault" ]] ; then
+        if ! echo "${url}" | grep -qsE "https?://" || [[ "${url}" = "$urldefault" ]] ; then
             el_error "URL not get correctly: $url"
             exit 1
         fi

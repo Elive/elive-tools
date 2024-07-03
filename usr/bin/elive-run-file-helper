@@ -68,8 +68,8 @@ run_edc_compile(){
     shift
 
     cd "$(dirname "$file" )"
-    if [[ -s "build.sh" ]] && grep -qs "edje_cc" build.sh ; then
-        if bash build.sh ; then
+    if [[ -s "build.sh" ]] && grep -qsi "edje_cc" build.sh ; then
+        if ! bash build.sh ; then
             logs="$( bash build.sh 2>&1 )"
             $guitool --error --text="$logs" 2>/dev/null
             return 1

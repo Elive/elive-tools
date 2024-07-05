@@ -327,7 +327,7 @@ sudoers_user(){
             "$ADDUSER" -q "$username" "sudo" 1>/dev/null || true
             ;;
         del)
-            "$DELUSER" "$username" "sudo" 1>/dev/null || true
+            "$DELUSER" "$username" "sudo" 1>/dev/null 2>&1 || true
             ;;
     esac
 

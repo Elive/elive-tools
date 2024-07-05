@@ -74,10 +74,17 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # force re-set of the display
     unset DISPLAY
-    #if [[ -z "${DISPLAY}" ]] || [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] \
-        #|| { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
-        #|| { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
-        #; then
+    # if we are not from a remote connection with the display set remotely, then
+    # if we have more than one desktop opened
+    if ! { { [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] ; } && { [[ "$DISPLAY" = *"10"* ]] || [[ "$DISPLAY" = *"localhost"* ]] ; } ; } ; then
+        if { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
+            || { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
+            || [[ "$( pidof e16 | wc -w )" -gt 1 ]] \
+            || [[ "$( pidof enlighenment | wc -w )" -gt 1 ]] \
+            ; then
+                unset DISPLAY
+        fi
+    fi
     # set display
     if [[ -z "${DISPLAY}" ]] ; then
         if [[ -n "$E_IPC_SOCKET" ]] ; then

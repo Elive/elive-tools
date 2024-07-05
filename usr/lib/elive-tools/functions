@@ -73,7 +73,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # force re-set of the display
-    unset DISPLAY
     # if we are not from a remote connection with the display set remotely, then
     # if we have more than one desktop opened
     if ! { { [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] ; } && { [[ "$DISPLAY" = *"10"* ]] || [[ "$DISPLAY" = *"localhost"* ]] ; } ; } ; then

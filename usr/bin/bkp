@@ -155,7 +155,8 @@ do_snap(){
     shift
 
     if ! [[ "$( df --output=fstype . | tail -n 1 )" = "btrfs" ]] ; then
-        NOREPORTS=1  el_error "This feature only works over BTRFS"
+        NOREPORTS=1  el_error "This feature only works with BTRFS, so it requires COW to work."
+        return
     fi
 
     if [[ -d "${target}.snapshot" ]] ; then

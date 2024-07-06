@@ -531,7 +531,7 @@ main(){
                 fi
                 shift
                 ;;
-            snap|x|-x|--snap)
+            snap|x|-x|--snap|snapshot|--snapshot)
                 do_snap "${target}"
                 shift
                 ;;

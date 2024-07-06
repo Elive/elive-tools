@@ -91,7 +91,9 @@ get_disk_from_partition_complex(){
 
     # finally print it, if not did before
     if [[ -b "$device" ]] ; then
-        device="$( get_disk_from_partition "$device" )"
+        if [[ "$device" = "$part" ]] ; then
+            device="$( get_disk_from_partition "$device" )"
+        fi
         echo "$device"
         #el_debug "device get from a '/dev/mapper' type: $device"
     fi

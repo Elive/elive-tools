@@ -750,13 +750,13 @@ get_filesystem_file(){
 
 get_filesystem_sfdisk(){
     local ret
-    if [[ "$1" = /dev/nvme* ]] ; then
+    if [[ "$1" = /dev/nvme*p* ]] ; then
         ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
         if [[ -z "$ret" ]] ; then
             ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
         fi
     else
-        if [[ "$1" = /dev/mmcblk* ]] ; then
+        if [[ "$1" = /dev/mmcblk*p* ]] || [[ "$1" = /dev/md*p* ]] ; then
             ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
                 ret="$(sfdisk "${sfdisk_print_id}" $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
@@ -768,13 +768,13 @@ get_filesystem_sfdisk(){
 
     # force mode
     if [[ -z "$ret" ]] ; then
-        if [[ "$1" = /dev/nvme* ]] ; then
+        if [[ "$1" = /dev/nvme*p* ]] ; then
             ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed 's/n[0-9]/ &/') 2>/dev/null )"
             if [[ -z "$ret" ]] ; then
                 ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed -e 's/n[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"
             fi
         else
-            if [[ "$1" = /dev/mmcblk* ]] ; then
+            if [[ "$1" = /dev/mmcblk*p* ]] || [[ "$1" = /dev/md*p* ]] ; then
                 ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed 's/p[0-9]/ &/') 2>/dev/null )"
                 if [[ -z "$ret" ]] ; then
                     ret="$(sfdisk --force "${sfdisk_print_id}" $( echo "$1" | sed -e 's/p[0-9]/ &/' -e 's| p| |g' ) 2>/dev/null )"

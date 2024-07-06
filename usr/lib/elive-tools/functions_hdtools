@@ -1,0 +1,179 @@
+#!/bin/bash
+#
+#===  FUNCTION  ================================================================
+#          NAME:  get_disk_from_partition_complex
+#   DESCRIPTION:  get the disk value for a partition given
+#    PARAMETERS:  $1 = partition
+#       RETURNS:  disk device
+#===============================================================================
+get_disk_from_partition_complex(){
+    # pre {{{
+    local part vg_name line device devname pv_name
+
+    #el_debug "\targs '$*'"
+
+    part="$1"
+    # just for fallback
+    #device="$1"
+
+    el_check_variables "part"
+
+    # }}}
+
+    # XXX TIP: to know which /dev/mapper/* device is from we can use:
+    # dmsetup deps -o blkdevname
+    #    elive_vg-root_lv: 1 dependencies	: (dm-0)
+    #    elive_vg-swap_lv: 1 dependencies	: (dm-0)
+    #    nvme0n1p3_crypt: 1 dependencies: (nvme0n1p3)
+
+    # valid disk values
+    if echo "$part" | grep -v "/dev/mapper/" | grep -qsE "((xvd|sd|hd|vd)[a-z]|nvme[[:digit:]]+n[[:digit:]]+|mmcblk[[:digit:]]+|md[[:digit:]]+|md[[:digit:]]+p[[:digit:]]+)" ; then
+        device="$( get_disk_from_partition "$part" )"
+    fi
+
+    # ventoy
+    if [[ "$part" = "/dev/mapper/ventoy" ]] && [[ ! -b "$device" ]] ; then
+        device="$( EL_DEBUG=0 partitions-list --show-raw --show-disks --show-all | awk -v FS="::" '{if ($4 == "ventoy" && $3 == "exfat" ) print $1 }' | tail -1 )"
+        if [[ -b "$device" ]] ; then
+            device="$( get_disk_from_partition_complex "$device" )"
+            if [[ -b "$device" ]] ; then
+                echo "$device"
+                return 0
+            fi
+        fi
+    fi
+
+    # lvs / cryptsetup
+    if echo "$part" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
+        vg_name="$( LC_ALL="$EL_LC_EN" LVM_SUPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name "$part" 2>/dev/null || true )"
+        if [[ -n "$vg_name" ]] ; then
+            while read -ru 3 line
+            do
+                if [[ "$line" = "PV Name"* ]] ; then
+                    pv_name="$( echo "$line" | sed -e 's|^.*/dev/|/dev/|g' )"
+                fi
+
+                if [[ "$line" = "VG Name"*${vg_name} ]] ; then
+                    device="$pv_name"
+                    break
+                fi
+
+            done 3<<< "$( LC_ALL="$EL_LC_EN" pvdisplay -m 2>/dev/null )"
+        fi
+
+        # decode cryptsetup info
+        if [[ -n "$device" ]] ; then
+            # it may be an encrypted one in any case, so lets translate it
+            if LC_ALL="$EL_LC_EN" cryptsetup status "$device" 2>/dev/null | grep -qs "type:.*LUKS" ; then
+                device="$( LC_ALL="$EL_LC_EN" cryptsetup status "$device" | grep "device:" | sed -e 's|^.*device:||g' )"
+                # remove extra leading blank chars
+                read -r device <<< "$device"
+            fi
+        fi
+    fi
+
+    # other /dev/mapper/ cases:
+    if echo "$part" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
+        devname="$( LC_ALL="$EL_LC_EN" dmsetup deps -o blkdevname "$part" | grep "1 dependencies" | sed -e 's|^.*: (||g' -e 's|).*$||g' )"
+        if [[ -b "/dev/$devname" ]] && [[ "/dev/$devname" != "/dev/sr"* ]] ; then
+            device="/dev/$devname"
+        else
+            if [[ -b "/dev/mapper/$devname" ]] ; then
+                device="/dev/mapper/$devname"
+            fi
+        fi
+    fi
+
+    # skip invalid disks
+    if [[ "$device" = "/dev/sr"* ]] ; then
+        return 0
+    fi
+
+    # finally print it, if not did before
+    if [[ -b "$device" ]] ; then
+        device="$( get_disk_from_partition "$device" )"
+        echo "$device"
+        #el_debug "device get from a '/dev/mapper' type: $device"
+    fi
+
+    if ! [[ -b "$device" ]] ; then
+        el_error "Unable to get disk device for $part"
+    fi
+
+}
+
+get_disk_from_partition(){
+    local disk partition is_disk_found line
+    partition="$1"
+
+    #el_debug "\targs '$*'"
+    sync ; LC_ALL=C sleep 0.2
+
+    if ! [[ -b "$partition" ]] ; then
+        el_error "incorrect partition given, not a block device: $partition\ndemo data:\nusing file: $(file $partition ), with -s: $(file -s $partition), with ls: $(ls -la $partition)"
+        return 0
+    fi
+
+    # its already a disk?
+    if lsblk -d -rino PATH | grep -qsFw "$partition" ; then
+        disk="$partition"
+        if [[ -b "$disk" ]] ; then
+            echo "$disk"
+            return 0
+        else
+            unset disk
+        fi
+    fi
+
+    #get from lsblk
+    while read -ru 3 line
+    do
+        unset is_disk_found
+
+        [[ "$line" = "/dev/loop"* ]] && continue
+        #if echo "$line" | grep -qs "${partition}" ; then
+        if echo "$partition" | grep -qs "${line}" ; then
+            is_disk_found=1
+        fi
+
+        if ((is_disk_found)) ; then
+            disk="$line"
+
+            if [[ -b "$disk" ]] ; then
+                # found!
+                echo "$disk"
+                #break
+                return 0
+            fi
+        fi
+    done 3<<< "$( lsblk -d -rino PATH | tac )"
+
+    # try fast mode
+    if [[ "$partition" = /dev/nvme* ]] || [[ "$partition" = /dev/mmcblk* ]] || [[ "$partition" = /dev/md*p* ]] ; then
+        disk="${partition%%p[0-9]*}"
+    else
+        disk="${partition%%[0-9]*}"
+    fi
+
+
+    if [[ -b "$disk" ]] ; then
+        echo "$disk"
+    else
+        if echo "$partition" | grep -qsE "[hsv]d[a-z][[:digit:]]+" ; then
+            disk="${partition%%[0-9]*}"
+
+            if [[ -b "$disk" ]] ; then
+                el_debug "assuming disk for $partition is ${disk}..."
+                echo "$disk"
+            else
+                # give the default parameter given, useful for trying to get device from live cdrom
+                echo "$partition"
+
+                el_error "Unable to get disk from partition: $partition"
+            fi
+        fi
+    fi
+}
+
+
+

@@ -279,7 +279,7 @@ do_get(){
         do_sudo rsync -aq --delete "${1}.get/" "${2}/"
         echo -e "\r\033[KRecovered      "
     else
-        do_sudo rsync -av --delete "${1}.get/" "${2}/"
+        do_sudo rsync -a --delete --info=flist0,name "${1}.get/" "${2}/"
     fi
 
     cd "${2}"

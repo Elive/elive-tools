@@ -173,7 +173,7 @@ do_snap(){
         NOREPORTS=1 el_error "Failed to create snapshot"
     fi
 
-    el_info "Snapshot created, exit from your SHELL when you finish"
+    el_info "Snapshot created, exit your SHELL when you finish"
     PROMPT_PREPEND="snapshot" $SHELL -l || true
 
     if el_confirm "Recover FROM snapshoted state?" ; then

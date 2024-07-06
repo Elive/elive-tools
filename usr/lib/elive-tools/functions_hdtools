@@ -154,7 +154,7 @@ get_disk_from_partition(){
     if [[ "$partition" = /dev/nvme*p* ]] || [[ "$partition" = /dev/mmcblk*p* ]] || [[ "$partition" = /dev/md*p* ]] ; then
         disk="${partition%%p[0-9]*}"
     else
-        if echo "$partition" | grep -qsE "^/dev/(nvme|md[[:digit:]][[:digit:]][[:digit:]]|mmcblk)" ; then
+        if echo "$partition" | grep -qsE "^/dev/(nvme|md[[:digit:]]{3}|mmcblk)" ; then
             disk="${partition}"
         else
             disk="${partition%%[0-9]*}"

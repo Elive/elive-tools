@@ -72,7 +72,7 @@ get_disk_from_partition_complex(){
         fi
 
         # decode result
-        device="$( get_disk_from_partition "$part" )"
+        device="$( get_disk_from_partition "$device" )"
     fi
 
     # other /dev/mapper/ cases:

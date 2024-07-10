@@ -70,6 +70,9 @@ get_disk_from_partition_complex(){
                 read -r device <<< "$device"
             fi
         fi
+
+        # decode result
+        device="$( get_disk_from_partition "$part" )"
     fi
 
     # other /dev/mapper/ cases:

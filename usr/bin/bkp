@@ -150,7 +150,7 @@ do_purge_olds(){
 
 
 do_snap(){
-    local target
+    local target is_login_wanted
     target="${1%/}"
     shift
 
@@ -160,13 +160,16 @@ do_snap(){
     fi
 
     if [[ -d "${target}.snapshot" ]] ; then
-        NOREPORTS=1 el_warning "directory ${target}.snapshot already exists"
-        if el_confirm "Do you want to remove it?" ; then
+        # NOREPORTS=1 el_warning "directory ${target}.snapshot already exists"
+        el_info "Snapshot already exist in '${target}.snapshot', doing a new snapshot..."
+        # if el_confirm "Do you want to remove it?" ; then
             $SUDO_MODE rm -rf "${target}.snapshot"
-        else
-            NOREPORTS=1 el_error "Aborted"
-            exit
-        fi
+        # else
+            # NOREPORTS=1 el_error "Aborted"
+            # exit
+        # fi
+    else
+        is_login_wanted=1
     fi
 
     if ! cp -a --reflink=always "${target}" "${target}.snapshot" ; then
@@ -174,7 +177,12 @@ do_snap(){
     fi
 
     el_info "Snapshot created, exit your SHELL when you finish"
-    PROMPT_PREPEND="snapshot" $SHELL -l || true
+    if ((is_login_wanted)) ; then
+        PROMPT_PREPEND="snapshot" $SHELL -l || true
+    else
+        # finish here because we come from a previous subshell
+        return 0
+    fi
 
     if el_confirm "Recover FROM snapshoted state?" ; then
         $SUDO_MODE rsync -a --delete --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"

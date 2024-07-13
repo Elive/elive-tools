@@ -17,7 +17,7 @@ suggest_emodule_flag_keyboard(){
     fi
 
     local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts. If you want fast switching between different language layouts, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
+    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts; if you want fast switching between different language layouts, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
 
     if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
         zenity --info --text="$message_suggestion_flag"
@@ -90,7 +90,7 @@ main(){
         message_asking="$( printf "$( eval_gettext "Do you want to add support for %s keyboard input to your Elive system?" )" "$language" )"
 
         local message_instructions
-        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings typing '%s' in the launcher. Or in %s. In the opened settings select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
+        message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
 
         # install
         if zenity --question --text="$message_asking" ; then
@@ -107,10 +107,10 @@ main(){
             export QT_IM_MODULE="ibus"
             export XMODIFIERS="@im=ibus"
             export ECORE_IMF_MODULE="ibus"
-            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type in any text here." )" || true
+            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type here to test." )" || true
 
             # final note
-            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find that there is a better alternative, report it to Elive, so it can be implemented and work for everybody." )" || true
+            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find a better alternative, please report it to Elive so it can be implemented and work for everyone." )" || true
         fi
 
         # add package in installed system

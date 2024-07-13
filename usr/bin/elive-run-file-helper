@@ -23,7 +23,7 @@ not_supported(){
 
 run_dmg(){
     local message_dmg
-    message_dmg="$( printf "$( eval_gettext "DMG files belong to MacOS systems. You cannot create or modify them in Linux, but you can open them so you can view or extract their content. Do you want to open it now?" )" "" )"
+    message_dmg="$( printf "$( eval_gettext "DMG files belong to MacOS systems. You cannot create or modify them in Linux, but you can open them to view or extract their content. Do you want to open it now?" )" "" )"
 
     if $guitool --question --text="$message_dmg" ; then
         filename="$( basename "$file" )"
@@ -134,7 +134,7 @@ run_edje(){
             $precmd cp -f "$file" "$HOME/.e/e17/themes/"
             # update: seems like it doesn't works?
             #enlightenment_remote -theme-set
-            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that they may not always be fully compatible, we suggest using the Elive theme for compatibility, stability, and having the most features." )"
+            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and the most features." )"
 
         fi
 
@@ -155,7 +155,7 @@ run_edje(){
     fi
 
     # still here? implement it
-    $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Tell us about this type of file in the Elive forums so we can implement it." )"
+    $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Please tell us about this type of file in the Elive forums so we can implement it." )"
 
     el_warning "Unknown EDJE purpose file: groups:\n$( edje_player -G "$file" )"
 }
@@ -191,7 +191,7 @@ run_compiler(){
 
 
             local message_failed
-            message_failed="$( printf "$( eval_gettext "FAILED: If the build failed due to a missing dependency, you should install them first. Remember that more compatible PKGBUILDs can be found at mpr.makedeb.org. You can also edit the PKGBUILD file manually if needed to change or remove them:" )" "" )"
+            message_failed="$( printf "$( eval_gettext "FAILED: If the build failed because of a missing dependency, install it first. Note that more compatible PKGBUILDs are available at mpr.makedeb.org. You can also manually edit the PKGBUILD file to add or remove dependencies as needed." )" "" )"
 
 
             # build
@@ -260,7 +260,7 @@ run_script(){
     fi
 
     # warn user
-    if ! $guitool --question --text="$( eval_gettext "You are going to execute a file, and since they can run arbitrary code on your machine, it is very important to know it comes from a well-known author or trusted source. Continue?" )" ; then
+    if ! $guitool --question --text="$( eval_gettext "You are about to execute a file. Since it can run arbitrary code on your machine, it is crucial to know it comes from a well-known author or trusted source. Continue?" )" ; then
         return 0
     fi
 
@@ -272,7 +272,7 @@ run_script(){
     #fi
 
     if ! [[ "$UID" = 0 ]] ; then
-        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver to your system. We suggest first trying to run the file without admin privileges." )" ; then
+        if $guitool --question --cancel-label="$( eval_gettext "No" )" --ok-label="$( eval_gettext "Yes" )" --text="$( eval_gettext "Do you need administrator privileges to run this file? This is commonly needed if you are trying to install software or a driver to your system. We suggest first trying to run the file without administrator privileges." )" ; then
             is_root_wanted=1
         fi
     fi
@@ -290,7 +290,7 @@ run_script(){
 
     # nvidia installer?
     if echo "$file" | grep -qsi "NVIDIA.*\.run$" ; then
-        if $guitool --question --text="$( eval_gettext "Elive includes a much better and cleaner installer for the Nvidia drivers. Do you want to run it instead of the official Nvidia installer?" )" ; then
+        if $guitool --question --text="$( eval_gettext "Elive offers a better, cleaner Nvidia driver installer. Would you prefer to use this instead of the official Nvidia installer?" )" ; then
             if [[ -x "$( which urxvt )" ]] ; then
                 $precmd gksu urxvt -e bash -c '/usr/sbin/nvidia-privative-drivers-install'
             else
@@ -309,7 +309,7 @@ run_script(){
             options_appimage="--no-sandbox ${options_appimage}"
         fi
         local message_appimage_important
-        message_appimage_important="$( printf "$( eval_gettext "Important: The next time you double-click the .AppImage file, it will automatically run from your user. If you want to run it again with specific options, right-click on it and select: 'Open with -> Elive Run Helper'." )" "" )"
+        message_appimage_important="$( printf "$( eval_gettext "Important: The next time you double-click the .AppImage file, it will automatically run from your user. If you wish to run it again with specific options, right-click and select: 'Open with -> Elive Run Helper'." )" "" )"
 
         # not needed, will popup later
         #$guitool --info --text="$message_appimage_important"
@@ -485,10 +485,10 @@ main(){
                 run_e16 "theme" "$file"
                 ;;
             "application/x-iso9660-image")
-                $guitool --info --text="$( eval_gettext "This is an ISO image file, you can burn it to a DVD or a USB device; Elive includes its own tool to record correctly USBs. You can also mount it and view its contents by right-clicking the file, which is also an Elive feature." )"
+                $guitool --info --text="$( eval_gettext "This is an ISO image file; you can burn it to a DVD or a USB device. Elive includes its own tool to record USBs correctly. You can also mount it and view its contents by right-clicking the file, which is also an Elive feature." )"
                 ;;
             "regular file, no read permission")
-                $guitool --error --text="$( eval_gettext "You have no read permission for this file. If you need to read it, open your file manager in Admin mode by right-clicking on its directory, then you can change the read permissions of the file you want to use." )"
+                $guitool --error --text="$( eval_gettext "You don't have read permission for this file. To read it, open your file manager in Admin mode by right-clicking its directory, then change the file's read permissions." )"
                 ;;
             *)
                 # already supported by default list (they just works using thunar), tested with starting by application/

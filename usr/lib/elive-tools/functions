@@ -1542,7 +1542,7 @@ el_check_translations_required(){
 
         case "$mode" in
             report)
-                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help to improve the Elive translations. Everybody will enjoy Elive correctly translated into your language too!" )"
+                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improve the Elive translations. Everybody will enjoy Elive correctly translated into your language too!" )"
                 ;;
         esac
 
@@ -2605,9 +2605,9 @@ el_step_requires_fixme(){
         cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
         el_set_display_variables
         local _dummy
-        _dummy="$( eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you deem it necessary. Exiting..." )"
+        _dummy="$( eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting..." )"
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code found, report this to the Elive forums if you deem it necessary. Exiting..." )"
+            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting..." )"
         fi
         exit 1
     fi
@@ -2784,7 +2784,7 @@ el_report_to_elive(){
             if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
                 local message_ask_email
                 # note: don't use "'" char in the messages or the functions will fail when using it with ZSH
-                message_ask_email="$( printf "$( eval_gettext "Error found in %s, insert your email if you want to inform Elive about it, so we can fix the bugs automatically. We will only contact you in case it is an important problem or if we need more details." )" "$(basename $0)" )"
+                message_ask_email="$( printf "$( eval_gettext "Error found in %s. Insert your email if you wish to inform Elive about this, allowing us to fix bugs automatically. We will contact you only if it's an important issue or if we need further details." )" "$(basename $0)" )"
                 conf_send_debug_reports_email="$( timeout 240 $guitool --entry --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$message_ask_email" )" )"
 
                 # set conf
@@ -3281,7 +3281,7 @@ el_request_donation(){
     _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and continue improving it?" )"
 
     local _dummy3
-    _dummy3="$( eval_gettext "Making a donation only takes you one or two minutes and it guarantees that there will be more greatly improved versions of Elive in the future!" )"
+    _dummy3="$( eval_gettext "Making a donation only takes a minute or two and ensures there will be more greatly improved versions of Elive in the future!" )"
 
     # show it
     #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )" || true

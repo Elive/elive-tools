@@ -122,7 +122,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "You are using software-based rendering for your desktop, which is very stable. You can try to switch to the hardware-accelerated option (GL mode) which will make your desktop faster and smoother, especially for video rendering. But is IMPORTANT TO KNOW that the hardware-accelerated can be unstable, it all depends on your graphic card and its drivers, the only way to know if works well for you is by trying it, but remember that if you have desktop errors can be due to it, so you can switch back to software mode then." )" )"
+                message_gl="$( printf "$( eval_gettext "You are using software-based rendering for your desktop, which is very stable. You can try switching to the hardware-accelerated option (GL mode) for a faster and smoother desktop, especially for video rendering. However, it is important to know that hardware-accelerated rendering can be unstable; it depends on your graphic card and its drivers. The only way to know if it works well for you is by trying it. If you experience desktop errors, it might be due to this, so you can switch back to software mode." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -131,12 +131,12 @@ main(){
             2)
                 if [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     local message_vbox
-                    message_vbox="$( printf "$( eval_gettext "The hardware acceleration mode may not work correctly in a virtual machine." )" "" )"
+                    message_vbox="$( printf "$( eval_gettext "Hardware acceleration might not function properly in a virtual machine." )" "" )"
                     zenity --warning --text="$message_vbox"
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feels smoother, it also improves video playback speed and usability. If the drivers of your graphic card are not stable enough, can cause bugs in your desktop, visual artifacts, or a broken state. Fixing that will require switching to software mode in the compositor options or disabling the acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feels smoother, improving video playback speed and usability. If your graphics card drivers are not stable, it can cause bugs, visual artifacts, or a broken state. Fixing this may require switching to software mode in the compositor options or disabling acceleration in a new desktop configuration." )" )"
 
                     zenity --info --text="$message_gl" || true
 
@@ -145,7 +145,7 @@ main(){
                         true
                     else
                         local message_vsync_disabled
-                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for the compositor (vertical synchronization). This option allows you to play smoother videos and without horizontal lines. Go to the options panel, and in the panel, go to the compositor settings" )" "vsync" )"
+                        message_vsync_disabled="$( printf "$( eval_gettext "You did not select the %s option for the compositor (vertical synchronization). This option allows you to play smoother videos without horizontal lines. Go to the options panel and then to the compositor settings." )" "vsync" )"
                         zenity --info --text="$message_vsync_disabled" || true
                     fi
                 fi

@@ -110,7 +110,7 @@ do_list(){
                 local message_unable_title
                 message_unable_title="$( printf "$( eval_gettext "Unable to run an autostart application" )" "" )"
                 local message_unable_description
-                message_unable_description="$( printf "$( eval_gettext "You have an autostart application that could not be run. You must install this application or remove it from your list:" )" "" )"
+                message_unable_description="$( printf "$( eval_gettext "An autostart application failed to run. You must install it or remove it from your startup list:" )" "" )"
 
                 notify-send -e -u critical -t 14000 -i gnome-searchtool "$message_unable_title" "$message_unable_description\n\n~/.e16/startup-applications.list\n\nFAILED: ${unable_executable}"
 

@@ -41,7 +41,7 @@ main(){
     menu+=("$( eval_gettext "Lock your desktop" )")
 
     menu+=("userswitch")
-    menu+=("$( eval_gettext "Switch user" )")
+    menu+=("$( eval_gettext "Switch to another user" )")
 
     menu+=("logout")
     menu+=("$( eval_gettext "Logout" )")
@@ -76,7 +76,7 @@ main(){
                 dm-tool switch-to-greeter
                 exit
             else
-                zenity --error --text="$( eval_gettext "You are not using Lightdm, in order to switch between user desktops you need to use the Lightdm login manager, install this package if you don't have it." )"
+                zenity --error --text="$( eval_gettext "You are not using Lightdm. To switch between user desktops, you need to use the Lightdm login manager. Install this package if you don't have it." )"
             fi
             ;;
         "logout")
@@ -123,7 +123,7 @@ main(){
             LC_ALL=C sleep 0.2
 
             local message_volume
-            message_volume="$( printf "$( eval_gettext "The audio configuration and volume have been reset. Now, please run your desired applications again." )" "" )"
+            message_volume="$( printf "$( eval_gettext "Audio configuration and volume have been reset. Please restart your applications." )" "" )"
 
             el_notify soft stock_volume "Audio Configuration Resetted" "$message_volume"
 

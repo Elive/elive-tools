@@ -243,7 +243,7 @@ main(){
 
         el_debug "no audio cards found"
 
-        $guitool --warning --text="$( eval_gettext "No audio cards were detected on your computer. We suggest trying a different kernel version to test if it does have drivers for your audio card." )"
+        $guitool --warning --text="$( eval_gettext "No audio cards were detected on your computer. We suggest trying a different kernel version to see if it includes drivers for your audio card." )"
 
         exit
     fi
@@ -333,7 +333,7 @@ main(){
                     # exit because is interactive and user canceled
                     exit
                 else
-                    $guitool --warning --text="$( eval_gettext "You have not selected any audio card so nothing will be configured. To let Elive pick the best choice for you run this command:" ): $(basename $0) --auto"
+                    $guitool --warning --text="$( eval_gettext "No audio card selected; nothing will be configured. Run this command to let Elive choose the best option:" ): $(basename $0) --auto"
                     exit
                     #is_auto_mode=1
                 fi
@@ -489,7 +489,7 @@ EOF
             rm -f "${HOME}/.config/setvolume"
             ( setvolume $QUIET defaults & )
 
-            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase or decrease the volume, use your keyboard hotkeys, f they do not work, you can set your own hotkeys. You also have a volume application in the Sound menu, or you can scroll your mouse wheel in the audio gadget on your desktop gadget." )" || true
+            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase or decrease the volume, use your keyboard hotkeys. If they do not work, you can set your own hotkeys. You also have a volume application in the Sound menu, or you can scroll your mouse wheel in the audio gadget on your desktop gadget." )" || true
         fi
 
     fi

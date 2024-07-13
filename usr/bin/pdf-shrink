@@ -221,7 +221,7 @@ main(){
         sleep 2
     fi
 
-    $guitool --info --text="$( eval_gettext "Files converted, please verify that they work correctly" )" || true
+    $guitool --info --text="$( eval_gettext "Files converted; please verify they work correctly." )" || true
 
 
 }

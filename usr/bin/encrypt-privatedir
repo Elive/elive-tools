@@ -43,8 +43,8 @@ main(){
     ENCRYPTED_DIR=~/.private_encrypted
 
     # checks
-    if [[ ! /var/lib/dpkg/info/ecryptfs-utils.list ]] ; then
-        el_dependencies_check ecryptfs-utils
+    if [[ ! -e /var/lib/dpkg/info/ecryptfs-utils.list ]] ; then
+        el_dependencies_install ecryptfs-utils
     fi
 
     if [[ ! -d "$MOUNTPOINT" ]] ; then

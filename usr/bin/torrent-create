@@ -87,7 +87,7 @@ main(){
 
     # check torrent downloads directory
     if [[ -z "$download_dir" ]] ; then
-        gui_error "$( eval_gettext "Please first run the application 'Transmission' and configure the downloads directory." )"
+        gui_error "$( eval_gettext "First, run the 'Transmission' application and configure the downloads directory." )"
         exit 1
     fi
     if ! el_check_dirs "$download_dir" ; then
@@ -96,7 +96,7 @@ main(){
         fi
     fi
     if ! el_check_dirs "$download_dir" ; then
-        gui_error "$( eval_gettext "Directory for download torrents from Transmission is not available, configure it in Transmission first" )"
+        gui_error "$( eval_gettext "Directory for downloading torrents from Transmission is not available, configure it in Transmission first" )"
         ( transmission-gtk & )
         exit 1
     fi
@@ -167,7 +167,7 @@ main(){
         # updated good list of trackers: https://github.com/ngosang/trackerslist
 
         #if gui_confirm "Going to use a more complete list of trackers, this will make probably your torrent contents public, do you want to continue?" ; then
-        if gui_confirm "$( eval_gettext "This torrent will be shared probably public since we are not using private-trackers. Do you want to continue?" )" ; then
+        if gui_confirm "$( eval_gettext "This torrent will likely be shared publicly since we are not using private trackers. Do you want to continue?" )" ; then
             transmission-create \
                 -c "Made in Elive Linux, the best OS ever, using the automated CLI tool '$(basename $0)'" \
                 -t "https://privtracker.com/p3r6p4hrhw51no4e/announce" \
@@ -217,14 +217,14 @@ main(){
 
     # run transmission to start seeding it
     if [[ -d "$( grep \"download-dir\" ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' )"  ]] ; then
-        el_info "$( eval_gettext "Starting Transmission to seed your torrent..." )"
+        el_info "$( eval_gettext "Starting Transmission to seed your torrent file..." )"
         ( transmission-gtk "/tmp/${name}.torrent" 2>/dev/null & )
 
         echo -e "..." 1>&2
-        NOREPORTS=1 el_warning "$( eval_gettext "You must restart Transmission after it correctly verified the local data, for some reason, sometimes seems like a restart is needed in order to correctly share the metadata to other users" )"
+        NOREPORTS=1 el_warning "$( eval_gettext "After Transmission verifies local data, restart it to properly share metadata with other users." )"
 
     else
-        gui_error "$( eval_gettext "Directory for download torrents from Transmission is not available, create it first, then run transmission with the file:" )\n/tmp/${name}.torrent"
+        gui_error "$( eval_gettext "Directory for downloading torrents from Transmission is not available, create it first, then run transmission with the file:" )\n/tmp/${name}.torrent"
     fi
 
     gui_info "$( eval_gettext "Your files are being shared via torrent now. For them you are using a copy of your original data for it" )"

@@ -22,7 +22,7 @@ main(){
 
 
 
-    message_report_info_elive="$( printf "$( eval_gettext "Use the next page to report the issue. Tell us all the details we need to know to reproduce and fix it. For debating an issue use our forums instead." )" "" )"
+    message_report_info_elive="$( printf "$( eval_gettext "Use the next page to report the issue. Tell us all the details we need to know to reproduce and fix it. For debating an issue, use our forums instead." )" "" )"
 
 
     #$guitool --info --text="$message_intro"
@@ -44,7 +44,7 @@ main(){
             web-launcher "https://bugs.elivecd.org"
             ;;
         desktop)
-            $guitool --info --text="$( eval_gettext "You are using the Enlightenment desktop, which is nicely customized by Elive. Make sure that the issue is not caused by Elive specifically. You can ask for assistance in our forums, and then after you can either report the issue to Elive or to the Enlightenment desktop developers" )"
+            $guitool --info --text="$( eval_gettext "You are using the Enlightenment desktop, which is nicely customized by Elive. Ensure the issue is not specific to Elive. You can ask for assistance in our forums, and afterward, you can report the issue to Elive or to the Enlightenment desktop developers." )"
             if $guitool --question --cancel-label="No" --text="$( eval_gettext "Do you want to report the issue to the Enlightenment (your desktop) developers? Select NO if you want to report it to Elive instead." )" ; then
                 if [[ -n "$EROOT" ]] ; then
                     $guitool --info --text="Important: Make sure you have a login or register. Select Maniphest to report the issue. Select 'Create Task' in the corner. Be descriptive in the title and details. Assign it to 'raster' so the author can be informed about it, set the Tag to 'enlightenment-git'." &
@@ -59,7 +59,7 @@ main(){
             fi
             ;;
         application)
-            $guitool --info --text="$( eval_gettext "First, you need to know if the application is from Debian or packaged by Elive itself. Check that by using 'apt-cache policy packagename' and see from which repository it came. If it's from Debian you should report the issue to Debian itself, making sure first the issue is not caused by a predefined user configuration from Elive. If the application was packaged by Elive you should report it to the author of the application directly on its project website, as Elive generally builds its packages from the original and updated sources. You can also use our forums for more help." )"
+            $guitool --info --text="$( eval_gettext "First, determine if the application is from Debian or packaged by Elive. Check using 'apt-cache policy packagename' to see which repository it comes from. If it's from Debian, report the issue to Debian, ensuring it's not due to Elive's predefined user configuration. If packaged by Elive, report it to the application's project site. Elive typically builds packages from original sources. Use our forums for further assistance." )"
             ;;
         help)
             web-launcher "https://forum.elivelinux.org/c/system/bugs/33"
@@ -70,7 +70,7 @@ main(){
     esac
 
     # bye
-    $guitool --info --text="$( eval_gettext "Thanks for your collaboration." )"
+    $guitool --info --text="$( eval_gettext "Thank you for your collaboration." )"
 }
 
 #

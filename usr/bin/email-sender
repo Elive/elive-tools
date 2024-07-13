@@ -194,7 +194,7 @@ do_email_send(){
                 else
                     # reconfigure or exit {{{
                     local message_reconfigure
-                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email. Reconfigure it?" )" "" )"
 
                     if ! $guitool --question --text="$message_reconfigure" ; then
                         # we don't want to reconfigure, so just exit
@@ -242,7 +242,7 @@ do_email_send(){
                 else
                     # reconfigure or exit {{{
                     local message_reconfigure
-                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+                    message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email. Reconfigure it?" )" "" )"
 
                     if ! $guitool --question --text="$message_reconfigure" ; then
                         # we don't want to reconfigure, so just exit
@@ -304,7 +304,7 @@ do_validate_sending(){
 
     case "$email_account_type" in
         Dreamhost)
-            $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue after you verified it." )"
+            $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue once verified." )"
             if $guitool --question --text="$( eval_gettext "Does the sending of emails work correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
@@ -371,7 +371,7 @@ do_validate_sending(){
     # it was correctly configured previously
     if grep -qs "^email_password=" "$conf" ; then
         local message_reconfigure
-        message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email, reconfigure it?" )" "" )"
+        message_reconfigure="$( printf "$( eval_gettext "We have a problem sending email. Reconfigure it?" )" "" )"
 
         if ! $guitool --question --text="$message_reconfigure" ; then
             # we don't want to reconfigure, so just exit
@@ -398,7 +398,7 @@ do_validate_sending(){
     /etc/alternatives/x-www-browser "https://myaccount.google.com/u/0/signinoptions/two-step-verification/enroll-welcome" &
     sleep 3
     local message_lesssecure
-    message_lesssecure="$( printf "$( eval_gettext "You need 2-step verification enabled in your Google account first" )" )"
+    message_lesssecure="$( printf "$( eval_gettext "First, enable 2-step verification in your Google account." )" )"
     $guitool --info --text="$message_lesssecure"
 
     # configure less-secure apps (more)
@@ -415,7 +415,7 @@ do_validate_sending(){
     local message_try_or_exit
     message_try_or_exit="$( printf "$( eval_gettext "Try again?" )" )"
     local message_error_configuring_email
-    message_error_configuring_email="$( printf "$( eval_gettext "We are unable to configure mutt to use this account, try to run it manually with the command:" )" "  cd ~/.mutt/accounts ; mutt -F elive-sender" )"
+    message_error_configuring_email="$( printf "$( eval_gettext "We cannot configure mutt for this account. Try running it manually with the command:" )" "  cd ~/.mutt/accounts ; mutt -F elive-sender" )"
 
 
 
@@ -465,7 +465,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails you need to configure your email first. Do you want to do it now?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails, you need to configure your email first. Do you want to do it now?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then
@@ -488,7 +488,7 @@ do_configure(){
                 ;;
             other)
                 # TODO: implement a questions asking about the stmp / imap / ports addresses, all of them needed, it should simply work
-                $guitool --info --text="$( eval_gettext "This tool only supports (for now) the listed services available, if you want to use a different one you can improve the tool on our Git to include the needed configuration for your service. Exiting..." )"
+                $guitool --info --text="$( eval_gettext "This tool only supports (for now) the listed services available; if you want to use a different one, you can improve the tool on our Git to include the needed configuration for your service. Exiting..." )"
                 exit
                 ;;
             Gmail)
@@ -509,7 +509,7 @@ do_configure(){
 
         local message_invalid
         #message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use use a Gmail account, for example '%s', try again." )" "john.smith@gmail.com" )"
-        message_invalid="$( printf "$( eval_gettext "Invalid entry, you need to use an account of the listed services, for example '%s'. Try again." )" "john.smith@gmail.com" )"
+        message_invalid="$( printf "$( eval_gettext "Invalid entry, please use an account from the listed services, for example '%s'. Try again." )" "john.smith@gmail.com" )"
 
         # verify username inserted
         #if [[ "${email_account}" = "cancel" ]] || ! echo "$email_account" | grep -qs "@gmail." || ! echo "$email_account" | grep -qs "@gmail." ; then
@@ -557,7 +557,7 @@ do_configure(){
             imap_url="$( $guitool --entry --entry-text="mail.yourdomain.com" --text="$message_ask_imap_url" || echo "" )"
 
             if [[ -z "$smtp_url" ]] || [[ -z "$smtp_port" ]] || [[ -z "$imap_url" ]] ; then
-                $guitool --error --text="$( eval_gettext "Some values are missing. Aborting..." )"
+                $guitool --error --text="$( eval_gettext "Missing values. Aborting..." )"
                 exit 1
             fi
             ;;

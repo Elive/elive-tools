@@ -176,11 +176,13 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
     # Loop through all dbus socket files in /tmp and test them
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] ; then
-        for socket in /tmp/dbus-*; do
-            if [[ -S "$socket" ]] ; then
+        for socket in /tmp/dbus-* ; do
+            if test -S "$socket" ; then
                 export DBUS_SESSION_BUS_ADDRESS="unix:path=$socket"
                 if enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
                     break
+                else
+                    unset DBUS_SESSION_BUS_ADDRESS
                 fi
             fi
         done

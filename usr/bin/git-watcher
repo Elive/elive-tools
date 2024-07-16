@@ -5,7 +5,7 @@ EL_REPORTS="1"
 el_make_environment
 #set -v
 #set -T
-#set -x
+# set -x
 #set -e
 
 # TODO: alternative to bkp that should be faster, try git stage
@@ -1293,7 +1293,7 @@ do_count_commits(){
         echo -en "\r\033[K${el_c_b}Computing space time coordinates... ${el_c_n}"
 
         # precache the full commits list in a variable
-        commits_list="$( command git log --format=format:'%H' "${options_extra_git_before[*]}" --reverse "$branch_working".."$branch_watch" "${options_extra_git_after[*]}" )"
+        commits_list="$( command git log --format=format:'%H' ${options_extra_git_before[*]} --reverse "$branch_working".."$branch_watch" ${options_extra_git_after[*]} )"
 
         # pre-statistics a bit: show the amount of commits between branches
         while read -ru 3 line

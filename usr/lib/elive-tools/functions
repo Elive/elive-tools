@@ -145,7 +145,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     #unset DBUS_SESSION_BUS_ADDRESS
 
     # test or invalidate
-    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
@@ -156,14 +156,14 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
     # test or invalidate
-    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
@@ -171,11 +171,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
     # Loop through all dbus socket files in /tmp and test them
-    if [[ -x "$( which enlightenment_remote )" ]] ; then
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] ; then
         for socket in /tmp/dbus-*; do
             if [[ -S "$socket" ]] ; then
                 export DBUS_SESSION_BUS_ADDRESS="unix:path=$socket"
@@ -186,7 +186,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         done
     fi
     # test or invalidate
-    if [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
 

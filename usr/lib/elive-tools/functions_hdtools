@@ -8,15 +8,20 @@
 #===============================================================================
 get_disk_from_partition_complex(){
     # pre {{{
-    local part vg_name line device devname pv_name
+    local partition vg_name line device devname pv_name
 
     #el_debug "\targs '$*'"
 
-    part="$1"
+    partition="$1"
     # just for fallback
     #device="$1"
 
-    el_check_variables "part"
+    el_check_variables "partition"
+
+    if ! [[ -b "$partition" ]] && [[ -n "$partition" ]] ; then
+        el_error "incorrect partition given, not a block device: $partition\ndemo data:\nusing file: $(file $partition ), with -s: $(file -s $partition), with ls: $(ls -la $partition)"
+        return 0
+    fi
 
     # }}}
 
@@ -27,12 +32,12 @@ get_disk_from_partition_complex(){
     #    nvme0n1p3_crypt: 1 dependencies: (nvme0n1p3)
 
     # valid disk values
-    if echo "$part" | grep -v "/dev/mapper/" | grep -qsE "((xvd|sd|hd|vd)[a-z]|nvme[[:digit:]]+n[[:digit:]]+|mmcblk[[:digit:]]+|md[[:digit:]]+|md[[:digit:]]+p[[:digit:]]+)" ; then
-        device="$( get_disk_from_partition "$part" )"
+    if echo "$partition" | grep -v "/dev/mapper/" | grep -qsE "((xvd|sd|hd|vd)[a-z]|nvme[[:digit:]]+n[[:digit:]]+|mmcblk[[:digit:]]+|md[[:digit:]]+|md[[:digit:]]+p[[:digit:]]+)" ; then
+        device="$( get_disk_from_partition "$partition" )"
     fi
 
     # ventoy
-    if [[ "$part" = "/dev/mapper/ventoy" ]] && [[ ! -b "$device" ]] ; then
+    if [[ "$partition" = "/dev/mapper/ventoy" ]] && [[ ! -b "$device" ]] ; then
         device="$( EL_DEBUG=0 partitions-list --show-raw --show-disks --show-all | awk -v FS="::" '{if ($4 == "ventoy" && $3 == "exfat" ) print $1 }' | tail -1 )"
         if [[ -b "$device" ]] ; then
             device="$( get_disk_from_partition_complex "$device" )"
@@ -44,8 +49,8 @@ get_disk_from_partition_complex(){
     fi
 
     # lvs / cryptsetup
-    if echo "$part" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
-        vg_name="$( LC_ALL="$EL_LC_EN" LVM_SUPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name "$part" 2>/dev/null || true )"
+    if echo "$partition" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
+        vg_name="$( LC_ALL="$EL_LC_EN" LVM_SUPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name "$partition" 2>/dev/null || true )"
         if [[ -n "$vg_name" ]] ; then
             while read -ru 3 line
             do
@@ -76,8 +81,8 @@ get_disk_from_partition_complex(){
     fi
 
     # other /dev/mapper/ cases:
-    if echo "$part" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
-        devname="$( LC_ALL="$EL_LC_EN" dmsetup deps -o blkdevname "$part" | grep "1 dependencies" | sed -e 's|^.*: (||g' -e 's|).*$||g' )"
+    if echo "$partition" | grep -qs "/dev/mapper/" && [[ ! -b "$device" ]] ; then
+        devname="$( LC_ALL="$EL_LC_EN" dmsetup deps -o blkdevname "$partition" | grep "1 dependencies" | sed -e 's|^.*: (||g' -e 's|).*$||g' )"
         if [[ -b "/dev/$devname" ]] && [[ "/dev/$devname" != "/dev/sr"* ]] ; then
             device="/dev/$devname"
         else
@@ -94,7 +99,7 @@ get_disk_from_partition_complex(){
 
     # finally print it, if not did before
     if [[ -b "$device" ]] ; then
-        if [[ "$device" = "$part" ]] ; then
+        if [[ "$device" = "$partition" ]] ; then
             device="$( get_disk_from_partition "$device" )"
         fi
         echo "$device"
@@ -102,7 +107,7 @@ get_disk_from_partition_complex(){
     fi
 
     if ! [[ -b "$device" ]] ; then
-        el_error "Unable to get disk device for $part"
+        el_error "Unable to get disk device for $partition"
     fi
 
 }
@@ -114,7 +119,7 @@ get_disk_from_partition(){
     #el_debug "\targs '$*'"
     sync ; LC_ALL=C sleep 0.2
 
-    if ! [[ -b "$partition" ]] ; then
+    if ! [[ -b "$partition" ]] && [[ -n "$partition" ]] ; then
         el_error "incorrect partition given, not a block device: $partition\ndemo data:\nusing file: $(file $partition ), with -s: $(file -s $partition), with ls: $(ls -la $partition)"
         return 0
     fi

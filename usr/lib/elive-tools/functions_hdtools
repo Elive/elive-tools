@@ -10,11 +10,10 @@ get_disk_from_partition_complex(){
     # pre {{{
     local partition vg_name line device devname pv_name
 
+    # DEBUG enable for debug
     #el_debug "\targs '$*'"
 
     partition="$1"
-    # just for fallback
-    #device="$1"
 
     el_check_variables "partition"
 
@@ -77,7 +76,9 @@ get_disk_from_partition_complex(){
         fi
 
         # decode result
-        device="$( get_disk_from_partition "$device" )"
+        if [[ -b "$device" ]] ; then
+            device="$( get_disk_from_partition "$device" )"
+        fi
     fi
 
     # other /dev/mapper/ cases:

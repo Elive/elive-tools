@@ -253,7 +253,11 @@ el_pulseaudio(){
 
             # running ?
             if pidof -q pulseaudio ; then
-                return 0
+                if pulseaudio --check 2>/dev/null ; then
+                    return 0
+                else
+                    return 1
+                fi
             else
                 return 1
             fi
@@ -264,7 +268,7 @@ el_pulseaudio(){
                 if ((is_systemd)) ; then
                     systemctl --user start pulseaudio.service pulseaudio.socket
                 else
-                    ( pulseaudio --start & )
+                    ( pulseaudio -D  2>/dev/null 1>&2  & )
                 fi
             else
                 return 1
@@ -285,6 +289,7 @@ el_pulseaudio(){
         restart)
             $FUNCNAME stop
             $FUNCNAME start
+            sleep 2
             ;;
     esac
 

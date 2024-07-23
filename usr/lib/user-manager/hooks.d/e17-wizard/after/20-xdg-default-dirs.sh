@@ -533,14 +533,6 @@ main(){
     # update: not needed anymore, we don't ship them with our e17 in any case
     #rm -f "$HOME/home.desktop" "$HOME/root.desktop" "$HOME/tmp.desktop"
 
-    #
-    # Public Share
-    #
-
-    # Make the publicshare folder to be directly shared
-    # net usershare add NAME DIR COMMENT ACL GUEST
-    net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   2>/dev/null 1>&2 || true
-
     # mark a state flag so that we don't run this again
     # UPDATE: BUG FIXME: seems like if you switch between different languages, the directory contents are not migrated correctly (duplicated)
         # to fix this, better to do it after 3.0 & switching to version 1.2

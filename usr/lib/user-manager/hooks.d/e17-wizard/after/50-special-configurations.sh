@@ -122,6 +122,20 @@ main(){
         fi
     fi
 
+
+    #
+    # Public Share
+    #
+
+    # Make the publicshare folder to be directly shared
+    # net usershare add NAME DIR COMMENT ACL GUEST
+    if grep -Fqs "boot=live" /proc/cmdline ; then
+        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes
+    else
+        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   2>/dev/null 1>&2 || true
+    fi
+
+
     # if we are debugging give it a little pause to see what is going on
     #if grep -Fqs "debug" /proc/cmdline ; then
         #echo -e "debug: sleep 2" 1>&2

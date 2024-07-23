@@ -309,6 +309,8 @@ main(){
 
             done 3<<< "$( echo "$list_cards" | sed -e '/^$/d'  )"
 
+            array_cards="$( echo "${array_cards}" | sed -e '/^$/d' | sort -g )"
+
             # select the card that has most tracks
             # first detect the max number of tracks
             selection_number="$( echo "${array_cards}" | sed -e '/^$/d' | sort -ug | tac | psort -- -p ":: ThinkPadEC" -p ":: modem" -p ":: NVidia" -p ":: midi" -p ":: MIDI" -p ":: Webcam" -p ":: Dummy" -p ":: system" -p ":: HDMI" -p ":: Generic" | sed -e 's| :: .*$||g' -e '/^$/d' | head -n 1 )"
@@ -420,6 +422,8 @@ main(){
                     fi
 
                 done 3<<< "$( echo "$list_cards" | sed -e '/^$/d'  )"
+
+                array_cards="$( echo "${array_cards}" | sed -e '/^$/d' | sort -g )"
 
                 # restore
                 mv -f "$HOME/.asoundrc.bak" "$HOME/.asoundrc"

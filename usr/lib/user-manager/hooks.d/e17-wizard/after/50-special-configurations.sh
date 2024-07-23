@@ -129,10 +129,12 @@ main(){
 
     # Make the publicshare folder to be directly shared
     # net usershare add NAME DIR COMMENT ACL GUEST
+    net usershare delete "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" 2>/dev/null 1>&2 || true
+
     if grep -Fqs "boot=live" /proc/cmdline ; then
-        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes
+        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $( hostname ) computer" Everyone:r guest_ok=yes
     else
-        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $HOSTNAME computer" Everyone:r guest_ok=yes   2>/dev/null 1>&2 || true
+        net usershare add "${USER}_$( basename "$(xdg-user-dir PUBLICSHARE )" )" "$(xdg-user-dir PUBLICSHARE )" "$USER Public directory in $( hostname ) computer" Everyone:r guest_ok=yes   2>/dev/null 1>&2 || true
     fi
 
 

@@ -98,21 +98,13 @@ main(){
             ;;
         "resetaudio")
             # note: same code exists in elive-audio-fixes tool
-            if [[ -e /var/lib/dpkg/info/pulseaudio.list ]] ; then
-                if ((is_systemd)) ; then
-                    systemctl --user stop pulseaudio.service pulseaudio.socket
-                fi
-                killall -9 pulseaudio
-                rm -rf ~/.config/pulse/cookie ~/.pulse/* ~/.asoundrc 2>/dev/null || true
-                audio-configurator  --quiet --auto --smart
-                if ((is_systemd)) ; then
-                    systemctl --user start pulseaudio.service pulseaudio.socket
-                else
-                    ( pulseaudio --start & )
-                fi
-            else
-                audio-configurator  --quiet --auto --smart
-            fi
+            el_pulseaudio stop
+
+            rm -rf ~/.config/pulse/cookie ~/.pulse/* ~/.asoundrc 2>/dev/null || true
+
+            audio-configurator  --quiet --auto --smart
+
+            el_pulseaudio start
 
             # fix volumes
             rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2

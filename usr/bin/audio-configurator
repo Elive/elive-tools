@@ -169,6 +169,10 @@ main(){
             ;;
     esac
 
+    if el_pulseaudio check ; then
+        is_pulseaudio=1
+    fi
+
     # }}}
 
     # NOTE: this is a temporal tool, a lot of improvements will be made about this, so don't try to improve this one
@@ -266,6 +270,11 @@ main(){
         # more than one card found
         if ((is_auto_mode)) ; then
 
+            #always kill pulseaudio first, otherwise we cannot list the audio cards
+            if ((is_pulseaudio)) ; then
+                el_pulseaudio stop
+            fi
+
             el_dependencies_check "psort"
 
             # detect the optimal card based in their number of tracks
@@ -298,17 +307,15 @@ main(){
                 array_cards="$( echo -e "${array_cards}" ; LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" | wc -l ) :: $name"
                 el_debug "Tracks for $name\n$( LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" )"
 
-            done 3<<< "$( echo "$list_cards" | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+            done 3<<< "$( echo "$list_cards" | sed -e '/^$/d'  )"
 
             # select the card that has most tracks
             # first detect the max number of tracks
-            selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | tail -1 )"
+            selection_number="$( echo "${array_cards}" | sed -e '/^$/d' | sort -ug | tac | psort -- -p ":: ThinkPadEC" -p ":: modem" -p ":: NVidia" -p ":: midi" -p ":: MIDI" -p ":: Webcam" -p ":: Dummy" -p ":: system" -p ":: HDMI" -p ":: Generic" | sed -e 's| :: .*$||g' -e '/^$/d' | head -n 1 )"
 
             # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-            selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e 's|^.* :: ||g' -e '/^$/d' | tail -1 )"
-            #selection_id="${selection%% :: *}"
-            #selection_name="${selection##* :: }"
-            #
+            selection="$( echo "${array_cards}" | sed -e '/^$/d' | sort -ug | grep -F "${selection_number} :: " | psort -- -p ":: ThinkPadEC" -p ":: modem" -p ":: NVidia" -p ":: midi" -p ":: MIDI" -p ":: Webcam" -p ":: Dummy" -p ":: system" -p ":: HDMI" -p ":: Generic" | sed -e 's|^.* :: ||g' -e '/^$/d' | tail -n 1 )"
+
 
             if [[ "$preferenced" = "DAC" ]] ; then
                 # bullseye and up works with ID instead of name
@@ -389,6 +396,10 @@ main(){
         if ((is_auto_mode)) ; then
             if ((has_multiple_cards)) ; then
 
+                if ((is_pulseaudio)) ; then
+                    el_pulseaudio stop
+                fi
+
                 # backup for the loop
                 cp -f "$HOME/.asoundrc" "$HOME/.asoundrc.bak"
 
@@ -408,7 +419,7 @@ main(){
                         el_debug "Tracks for $line\n$( LC_ALL=C amixer 2>/dev/null | grep -i "Simple mixer control" )"
                     fi
 
-                done 3<<< "$( echo "$list_cards" | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d'  )"
+                done 3<<< "$( echo "$list_cards" | sed -e '/^$/d'  )"
 
                 # restore
                 mv -f "$HOME/.asoundrc.bak" "$HOME/.asoundrc"
@@ -418,7 +429,7 @@ main(){
                 selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$d/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | tail -1 )"
 
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
-                selection="$( echo "${array_cards}" | sort -g | grep -F "${selection_number} :: " | sed -e 's|^.* :: ||g' | psort -- -p "^ThinkPadEC" -p "^NVidia" -p "midi" -p "MIDI" -p "^VX-5000" -p "^VX5000" -p "^Webcam" -p "^Dummy" -p "^HDMI" -p "Generic" -p "system" -p "Modem" | sed -e '/^$/d' | tail -1 )"
+                selection="$( echo "${array_cards}" | sed -e '/^$/d' | sort -ug | grep -F "${selection_number} :: " | psort -- -p ":: ThinkPadEC" -p ":: modem" -p ":: NVidia" -p ":: midi" -p ":: MIDI" -p ":: Webcam" -p ":: Dummy" -p ":: system" -p ":: HDMI" -p ":: Generic" | sed -e 's|^.* :: ||g' -e '/^$/d' | tail -n 1 )"
 
                 mic="$selection"
             fi
@@ -482,6 +493,10 @@ EOF
         # ALWAYS reconfigure audios (and mic capture and all) after to have configured a new card
         # we need to create the PCM channel! it doesn't exist until we do it
         timeout 5 aplay /dev/null 2>/dev/null
+        if ((is_pulseaudio)) ; then
+            el_pulseaudio start
+        fi
+
         LC_ALL=C sleep 0.2
 
         if ! ((is_quiet_mode)) ; then

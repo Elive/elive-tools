@@ -229,6 +229,68 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_pulseaudio
+#   DESCRIPTION:  manages pulseaudio for user
+#    PARAMETERS:  $1 = check|start|stop|restart
+#       RETURNS:  in check mode, returns 0 if pulseaudio is running, 1 if not
+#===============================================================================
+el_pulseaudio(){
+    local mode is_pulseaudio
+
+    mode="$1"
+    shift
+
+    if [[ ! -e "/var/lib/dpkg/info/pulseaudio.list" ]] ; then
+        el_debug "pulseaudio is not installed"
+    fi
+
+    case "$mode" in
+        check)
+            # installed ?
+            if [[ ! -e "/var/lib/dpkg/info/pulseaudio.list" ]] ; then
+                return 1
+            fi
+
+            # running ?
+            if pidof -q pulseaudio ; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+
+        start)
+            if [[ -e "/var/lib/dpkg/info/pulseaudio.list" ]] ; then
+                if ((is_systemd)) ; then
+                    systemctl --user start pulseaudio.service pulseaudio.socket
+                else
+                    ( pulseaudio --start & )
+                fi
+            else
+                return 1
+            fi
+            ;;
+
+        stop)
+            if pidof -q pulseaudio ; then
+                if ((is_systemd))  ; then
+                    systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+                else
+                    pulseaudio --kill 2>/dev/null || true
+                fi
+                killall -9 pulseaudio 2>/dev/null || true
+            fi
+            ;;
+
+        restart)
+            $FUNCNAME stop
+            $FUNCNAME start
+            ;;
+    esac
+
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_notify
 #   DESCRIPTION:  send a notification to the user in a nice way
 #    PARAMETERS:  $1 = mode (normal|important|critical), $2 = title, $3 = message, $4 = icon, [$5 = button]
@@ -4064,6 +4126,16 @@ if LC_ALL=C grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
 else
     # warning: this can broke things by not being utf8
     EL_LC_EN="C"
+fi
+
+
+# systemd?
+if pidof -cq systemd ; then
+    is_systemd=1
+else
+    if ! [[ -e "/var/lib/dpkg/info/sysvinit-core.list" ]] ; then
+        is_systemd=1
+    fi
 fi
 
 

@@ -253,7 +253,9 @@ el_pulseaudio(){
 
             # running ?
             if pidof -q pulseaudio ; then
-                if pulseaudio --check 2>/dev/null ; then
+
+                if pulseaudio --check 2>/dev/null 1>&2 \
+                    || LC_ALL=C  pactl info 2>/dev/null | grep -qs "Server Name: pulseaudio" ; then
                     return 0
                 else
                     return 1

@@ -883,7 +883,7 @@ SOURCE=dummy
 
 echo -e "Installing Dependencies"
 
-if [[ -x "\$( which urxvt )" ]] ; then
+if [[ -x "\$( which urxvt )" ]] && [[ -n "\$DISPLAY" ]] ; then
     urxvt -T 'Installing Packages' -e bash -c "
 source /usr/lib/elive-tools/functions
 export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true

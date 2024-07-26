@@ -130,7 +130,6 @@ take_screenshot(){
             notify-send -e -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_drag_range}\n\n${message_hotkeys}"
             conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
             el_config_save "conf_notifications_amount"
-            sync
         fi
 
     fi
@@ -142,7 +141,6 @@ take_screenshot(){
             #notify-send -e -t ${notify_timeout} -i document-page-setup "$( eval_gettext "Elive Screenshot" )" "${message_window_delayed}"
             #conf_notifications_amount="$(( $conf_notifications_amount + 1 ))"
             #el_config_save "conf_notifications_amount"
-            #sync
         #fi
     #fi
 

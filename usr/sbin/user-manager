@@ -507,7 +507,7 @@ user_add(){
     rm -f "${temp_error}"
 
     if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" 2>"$temp_error"  ; then
-        $USERDEL -r "$username" 2>/dev/null 1>&2 || true 
+        $USERDEL -r "$username" 2>/dev/null 1>&2 || true
         $guitool --error --text="$( eval_gettext "Unable to create your user. Try using English characters only" ). $(cat "$temp_error" | sed -e 's|useradd: ||g' )"
         el_warning "Unable to create user: $(cat "$temp_error" )"
         return 1
@@ -752,11 +752,13 @@ autologin_conf(){
     done 3<<< "$( cat "/etc/passwd" )"
 
 
-    username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to log in with automatically." )" || echo cancel )"
+    if [[ -z "$username" ]] ; then
+        username="$( { echo "$message_disable_autologin" ; echo "${userlist[@]}" | tr ' ' '\n' ; } | $guitool --list --column="$( eval_gettext "User" )" --text="$( eval_gettext "Select the user that you want to log in with automatically." )" || echo cancel )"
+    fi
 
     # note: instead of check for a translated "disable", just check if the user exists (which stills valid)
     if [[ -z "$username" ]] || [[ "$username" = "cancel" ]] || ! cat /etc/passwd | awk -v FS=":" '{print $1}' | grep -qs "^${username}$" ; then
-        sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf"
+        sed -i -e 's|^\(autologin-user=.*\)|#\1|g' "/etc/lightdm/lightdm.conf" || true
         $guitool --info --text="$( eval_gettext "Auto-login disabled" )" || true
     else
         # enable autologin for user

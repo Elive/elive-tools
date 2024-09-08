@@ -378,7 +378,10 @@ main(){
 
         mime="$( LC_ALL="$EL_LC_EN" file -bi "$file" | sed -e 's|; charset.*$||g' )"
         [[ -z "$mime" ]] && continue
+
         el_debug "MIME: $mime"
+
+        [[ "$mime" = "inode/x-empty" ]] && continue
 
         # some fixes
         # XXX IMPORTANT: file --mime-type doesn't always include all the values, check in thunar properties "what name says the file type has" and then search it in the mimetype freedesktop database in /usr/share/mime/packages/freedesktop.org.xml

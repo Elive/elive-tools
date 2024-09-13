@@ -3567,7 +3567,8 @@ el_ram_usage_show(){
 #===============================================================================
 el_architecture(){
     # pre {{{
-    local arg arch file
+    local arg arch file args
+    args="$@"
 
     if [[ -n "$1" ]] ; then
         arg="$1"
@@ -3588,7 +3589,7 @@ el_architecture(){
 
 
     # defaults
-    if [[ -z "$file" ]] ; then
+    if [[ ! -e "$file" ]] ; then
         file="/bin/ls"
     fi
 
@@ -3609,7 +3610,7 @@ el_architecture(){
 
     # convert
     case "$arch" in
-        x86-64|x86_64|amd64|64bit)
+        "x86-64"|x86_64|amd64|64bit)
             case "$format" in
                 gnu)   arch="x86_64-linux-gnu"  ; ;;
                 *)     arch="amd64"             ; ;;
@@ -3627,7 +3628,7 @@ el_architecture(){
     if [[ -n "$arch" ]] ; then
         echo "$arch"
     else
-        el_error "unable to know (args '$*' ) the architecture '${arch}' for this machine, uname -m '$(uname -m)', file -Lb /bin/ls '$( file -Lb /bin/ls 2>&1 )'"
+        el_error "unable to know (args '$args' ) the architecture '${arch}' for this machine, uname -m '$(uname -m)', file -Lb /bin/ls '$( file -Lb /bin/ls 2>&1 )'"
         return 1
     fi
 

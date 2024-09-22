@@ -86,6 +86,7 @@ get_disk_from_partition_complex(){
         devname="$( LC_ALL="$EL_LC_EN" dmsetup deps -o blkdevname "$partition" | grep "1 dependencies" | sed -e 's|^.*: (||g' -e 's|).*$||g' )"
         if [[ -b "/dev/$devname" ]] && [[ "/dev/$devname" != "/dev/sr"* ]] ; then
             device="/dev/$devname"
+            device="$( get_disk_from_partition "$device" )"
         else
             if [[ -b "/dev/mapper/$devname" ]] ; then
                 device="/dev/mapper/$devname"

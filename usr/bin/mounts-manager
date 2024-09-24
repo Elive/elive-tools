@@ -519,7 +519,7 @@ chroot_layers_umount(){
     if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
         rm -f "${dir}/sbin/start-stop-daemon"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/start-stop-daemon
-        mv -f "$dir/sbin/start-stop-daemon.distrib" "$dir/sbin/start-stop-daemon" || true
+        mv -f "$dir/sbin/start-stop-daemon.distrib" "$dir/sbin/start-stop-daemon" 2>/dev/null || true
     fi
 
     # flash-kernel
@@ -553,7 +553,7 @@ chroot_layers_umount(){
 
     # resolv.conf
     if [[ -e "$dir/etc/resolv.conf.orig" ]] || [[ -L "$dir/etc/resolv.conf.orig" ]] ; then
-        mv -f "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf"
+        mv -f "$dir/etc/resolv.conf.orig" "$dir/etc/resolv.conf" 2>/dev/null || true
     fi
     if [[ -e "$dir/etc/resolv.conf.d" ]] ; then
         rm -f "$dir/etc/resolv.conf.d/original"

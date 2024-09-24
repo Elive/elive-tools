@@ -519,11 +519,14 @@ chroot_layers_umount(){
     if [[ -e "$dir/sbin/start-stop-daemon.distrib" ]] ; then
         rm -f "${dir}/sbin/start-stop-daemon"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/start-stop-daemon
+        mv -f "$dir/sbin/start-stop-daemon.distrib" "$dir/sbin/start-stop-daemon" || true
     fi
+
     # flash-kernel
     if [[ -e "$dir/usr/sbin/flash-kernel.distrib" ]] ; then
         rm -f "${dir}/usr/sbin/flash-kernel"
         chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/flash-kernel
+        mv -f "${dir}/usr/sbin/flash-kernel.distrib" "${dir}/usr/sbin/flash-kernel" 2>/dev/null || true
     fi
     # disable dpkg syncin
     rm -f "${dir}/etc/dpkg/dpkg.cfg.d/live-build"
@@ -533,12 +536,14 @@ chroot_layers_umount(){
     if [[ -e "$dir/usr/sbin/policy-rc.d.distrib" ]] ; then
         rm -f "${dir}/usr/sbin/policy-rc.d"
         chroot "$dir" dpkg-divert --rename --quiet --remove /usr/sbin/policy-rc.d
+        mv -f "${dir}/usr/sbin/policy-rc.d.distrib" "${dir}/usr/sbin/policy-rc.d" 2>/dev/null || true
     fi
 
     # upstart
     if [[ -e "$dir/sbin/initctl.distrib" ]] ; then
         rm -f "${dir}/sbin/initctl"
         chroot "$dir" dpkg-divert --rename --quiet --remove /sbin/initctl
+        mv -f "${dir}/sbin/initctl.distrib" "${dir}/sbin/initctl" 2>/dev/null || true
     fi
 
     # hosts file
@@ -563,6 +568,7 @@ chroot_layers_umount(){
     if [[ -e "$dir/bin/hostname.distrib" ]] ; then
         rm -f "${dir}/bin/hostname"
         chroot "$dir" dpkg-divert --rename --quiet --remove /bin/hostname
+        mv -f "${dir}/bin/hostname.distrib" "${dir}/bin/hostname" 2>/dev/null || true
     fi
 
     # machine-id for pulseaudio

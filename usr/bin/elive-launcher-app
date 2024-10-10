@@ -100,7 +100,13 @@ main(){
     else
         if ! [ -e "$tmp_lock" ] ; then
             if [ -n "$time_wait" ] ; then
-                ( el_debug "killing kupfer and ulauncher in '$time_wait' ..." ; sleep $time_wait ; killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ; rm -f "$tmp_lock" ) &
+                (
+                    [[ "$EL_DEBUG" -gt 2 ]] && echo -e "killing kupfer and ulauncher in '$time_wait' ..." 1>&2 ;
+                    sleep $time_wait ;
+                    killall kupfer ulauncher 1>/dev/null 2>&1 || killall -9 kupfer ulauncher 1>/dev/null 2>&1 ;
+                    rm -f "$tmp_lock"
+                ) &
+
                 # set the flag
                 echo $$ > "$tmp_lock"
             else

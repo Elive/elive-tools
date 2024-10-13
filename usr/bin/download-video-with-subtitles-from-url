@@ -82,7 +82,7 @@ main(){
         do
             if yt-dlp \
                 -f mp4 \
-                --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
+                --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=3 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
                     break
@@ -91,7 +91,7 @@ main(){
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     -f mp4 \
-                    --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
+                    --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=4 --compat-options no-keep-subs --convert-subs srt --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
                     \"$@\" ; then
                     is_downloaded=1
@@ -99,7 +99,7 @@ main(){
                 else
                     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                     if yt-dlp \
-                        -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=2 --compat-options no-keep-subs --embed-metadata --embed-chapters \
+                        -i --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=5 --compat-options no-keep-subs --embed-metadata --embed-chapters \
                         \"$@\" ; then
                         is_downloaded=1
                             break
@@ -130,7 +130,7 @@ main(){
     echo
     echo done
 
-    sleep 6
+    sleep 8
     " & )
 
 }

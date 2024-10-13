@@ -114,7 +114,7 @@ main(){
     echo
     echo done
 
-    sleep 6
+    sleep 8
     " & )
 
 }

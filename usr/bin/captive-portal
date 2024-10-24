@@ -1,0 +1,27 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
+main(){
+    local message_info
+    message_info="$( printf "$( eval_gettext "This tool will open the default captive portal web url in order to login and access to public networks which requires the login information in order to enable your internet." )" "" )"
+
+    $guitool --info --text="$message_info"
+
+
+    web-launcher "$( ip --oneline route get 1.1.1.1 | awk '{print $3}' | tail -1 )"
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :

@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Language and keyboard configurations
+Name[ru]=Конфигурации языка и клавиатуры
 Name[zh]=语言和键盘配置
 Name[az]=Dil və klaviatura konfiqurasiyaları
 Name[bg]=Езикови и клавиатурни конфигурации
@@ -42,6 +43,7 @@ Name[tr]=Dil ve klavye yapılandırmaları
 Name[uk]=Мова та конфігурації клавіатури
 Name[vi]=Cấu hình ngôn ngữ và bàn phím
 GenericName=Reconfigure your system's language and keyboard
+GenericName[ru]=Измените настройку языка и клавиатуры вашей системы.
 GenericName[zh]=重新配置系统的语言和键盘
 GenericName[az]=Sisteminizin dilini və klaviaturasını yenidən qurun
 GenericName[bg]=Преконфигурирайте езика и клавиатурата на вашата система

@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Desktop Size and Scale
+Name[ru]=Размер и масштаб рабочего стола
 Name[az]=İş masasının ölçüsü və miqyası
 Name[bg]=Размер и мащаб на работния плот
 Name[bn]=ডেস্কটপ সাইজ এবং স্কেল
@@ -42,6 +43,7 @@ Name[uk]=Розмір і масштаб робочого столу
 Name[vi]=Kích thước và tỷ lệ máy tính để bàn
 Name[zh]=桌面尺寸和比例
 GenericName=Configure the size and scale of your fonts and desktop elements
+GenericName[ru]=Настройте размер и масштаб шрифтов и элементов рабочего стола.
 GenericName[az]=Şriftlərinizin və iş masası elementlərinizin ölçüsünü və miqyasını konfiqurasiya edin
 GenericName[bg]=Конфигурирайте размера и мащаба на вашите шрифтове и елементи на работния плот
 GenericName[bn]=আপনার ফন্ট এবং ডেস্কটপ উপাদানগুলির আকার এবং স্কেল কনফিগার করুন

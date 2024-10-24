@@ -2,6 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Users manager
+Name[ru]=Менеджер пользователей
 Name[az]=İstifadəçilər meneceri
 Name[bg]=Мениджър на потребителите
 Name[bn]=ব্যবহারকারী ম্যানেজার
@@ -42,6 +43,7 @@ Name[uk]=Менеджер користувачів
 Name[vi]=Người quản lý người dùng
 Name[zh]=用户经理
 Comment=Configure and manage your users
+Comment[ru]=Настраивайте и управляйте своими пользователями
 Comment[az]=İstifadəçilərinizi konfiqurasiya edin və idarə edin
 Comment[bg]=Конфигурирайте и управлявайте своите потребители
 Comment[bn]=কনফিগার এবং আপনার ব্যবহারকারীদের পরিচালনা

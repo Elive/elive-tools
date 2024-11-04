@@ -3325,6 +3325,29 @@ el_user_email_get(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_user_desktop_active_get
+#   DESCRIPTION:  returns the name of the active user running the graphical system
+#       RETURNS:  username string
+#===============================================================================
+el_user_desktop_active_get(){
+    # pre {{{
+    local username
+
+    # }}}
+
+    # systemd
+    if ((is_systemd)) ; then
+        usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tail -1 )"
+    else
+        usename="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
+    fi
+
+    if [[ -n "$usenrame" ]] ; then
+        echo "$usenrame"
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_request_donation
 #   DESCRIPTION:  ask to the user to make a donation to elive
 #    PARAMETERS:  -

@@ -370,6 +370,7 @@ check_if_has_diverged(){
         echo -e "" 1>&2
         echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
         el_explain 0 "XXWarning: your branch has divergedXX"
+        el_explain 0 "This can happen if you rebased some commits, so you can push --force to your remote if nobody else got your previous commits"
         el_explain 0 "You should check your git history and status XXmanuallyXX, exit from this tool and do it by yourself"
         el_explain 0 "This can probably happen if only a __branch was updated__ without all of them, a good solution to try is to pull from the entire remote, like for example: __git pull --rebase origin__"
         echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -812,7 +813,7 @@ notify_success(){
         el_notify soft logo-elive "$(basename $0)" "Success"
     else
         if [[ -x "$( which paplay )" ]] ; then
-            paplay --volume=40000 /usr/share/sounds/elive/1up.wav &
+            paplay --volume=45000 /usr/share/sounds/elive/1up.wav &
         else
             if [[ -x "$( which aplay )" ]] ; then
                 aplay /usr/share/sounds/elive/1up.wav 1>/dev/null 2>&1 &
@@ -1358,13 +1359,13 @@ do_cherry_pick_menu(){
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
     option_show "s" "Show status"
     option_show "d" "Show actual diff"
-    option_show "n" "Abort / Next commit"
     option_show "m" "mergetool (auto / smart mode)"
     option_show "M" "mergetool (manual / human mode)"
-    option_show "h" "mergetool config"
-    option_show "l" "Login Shell (to do things manually)"
-    option_show "c" "Continue operation (cherry-pick) in progress"
-    option_show "f" "Finish - return to main menu even if uncomplete"
+    option_show "e" "Edit modified files"
+    option_show "l" "Login Shell"
+    option_show "f" "Finish - return to main menu in any state"
+    option_show "a" "Abort cherry-pick"
+    option_show "c" "Continue cherry-pick in progress / Next commit"
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
     read -N 1 option
@@ -1385,17 +1386,102 @@ do_cherry_pick_menu(){
             $FUNCNAME
 
             ;;
-        n|a) # shortcut to "a" too if we want to call it as "abort"
-            command git cherry-pick --abort
+        m)
+            # add the conf if doesn't exist yet
+            if ! grep -qs "mergetool.*meld-merge" "$HOME/.gitconfig" ; then
+                # Set the default merge tool and conflict style
+                git config --global merge.tool merge
+                git config --global merge.conflictstyle diff3
+                # add the good meld configuration for this mode
+                git config --global mergetool.meld-merge.cmd "meld \$REMOTE \$BASE \$LOCAL -o \$MERGED --auto-merge --diff \$REMOTE \$BASE --diff \$LOCAL \$BASE --diff \$REMOTE \$MERGED \$LOCAL"
+                # comment the code
+sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
+    ; When Merge (not rebase):\
+    ;   upstream updates | merged | my changes\
+    ;   - 2 tab:  my changes | old state\
+    ;   - 3 tab:  upstream updates | old state\
+    ; When Rebase: similar but in the inverse way (upstream VS my changes)\
+    ; INFO: is much better to use merge than rebase: because in rebase we need to resolve the conflicts in the same way, but we need to do it for each commit, so is much more work, "merge" instead shows the conflicts of the final result only and so to adapt it is much easier. Also, rebase rewrites the history and on merge I can always go back to see how it was the history before when it worked in previous versions of my modifications.\
+    ;' ~/.gitconfig
 
-            el_explain 0 "Aborted cherry-pick..."
-            LC_ALL=C sleep 1.2
 
+            fi
+
+            # run the mergetool
+            command git mergetool -t meld-merge
+
+            # show differences
+            GIT_PAGER=cat  command git diff --cached --ignore-all-space
+
+            # mergetool can success or not, so ask again what to do
+            $FUNCNAME
             ;;
-        c)
+
+        M)
+            if ! grep -qs "mergetool.*meld-manual" "$HOME/.gitconfig" ; then
+                # Set the default merge tool and conflict style
+                git config --global merge.tool merge
+                git config --global merge.conflictstyle diff3
+                # add the good meld configuration for this mode
+                git config --global mergetool.meld-manual.cmd "meld \$LOCAL \$MERGED \$REMOTE --output \$MERGED --diff \$BASE \$MERGED \$REMOTE --diff \$LOCAL \$BASE \$REMOTE --diff \$REMOTE \$BASE --diff \$LOCAL \$BASE"
+                # comment the code
+                sed -i '/\[mergetool "meld-manual"\]/!b; /\[mergetool "meld-manual"\]/a \
+    ; Note: This version ensures that no auto merges have been made, and it shows demos of the other differences in the merge attempt.\
+    ; It is much more difficult than the auto merge, and the auto merge should show enough information to avoid confusion,\
+    ; but this version ensures that **all** the differences are seen.\
+    ;\
+    ; Explanation:\
+    ; 1. TAB: Left is the original file, right is the changes to import. You should place them in the middle file.\
+    ; 2. TAB: Original content that tried to be merged into the middle.\
+    ; 3. TAB: Demo history of changes that should happen; left is the original file, right is the commit from.\
+    ; 4. TAB: Demo of what lacks from our commit to import into our half-merged contents.\
+    ; 5. TAB: Demo of what was tried to change (half-merged) in our local file.\
+    ;' ~/.gitconfig
+
+
+            fi
+
+            # run the mergetool
+            command git mergetool -t meld-manual
+
+            # show differences
+            GIT_PAGER=cat  command git diff --cached --ignore-all-space
+
+            # mergetool can success or not, so ask again what to do
+            $FUNCNAME
+            ;;
+
+        e)  # edit files
+            # TODO: enter in the specific lines if vim
+            if [[ -z "$EDITOR" ]] ; then
+                echo -e "Type the editor (command) that you want to use:"
+                read -e EDITOR
+            fi
+
+            # edit files
+            $EDITOR $( command git status --porcelain | awk '{print $2}' | paste -s -d " " - )
+
+            # update contents
+            command git add -u
+
+            # show differences
+            GIT_PAGER=cat  command git diff --cached --ignore-all-space
+
+            # mergetool can success or not, so ask again what to do
+            $FUNCNAME
+            ;;
+        l)
+            shell_start
+
+            $FUNCNAME
+            ;;
+        n|c)
             # TODO: improve this option, is not easy to find (far on the list, we need an option for "accepted merge" or similar, more intuitive)
             # TODO: check the options, we don't want to write a message probably, do we also want to use the option -x ?
-            if command git cherry-pick --continue ; then
+            if command git cherry-pick --continue --no-edit ; then
+                # fix possible whitespace issues
+                command git rebase --whitespace=fix HEAD~1
+
                 # store actual position for future calls of this tool
                 position_save
 
@@ -1412,103 +1498,24 @@ do_cherry_pick_menu(){
             else
                 $FUNCNAME
             fi
-            ;;
-        m)
-            # FIXME: my confs has been updated for BUSTER, this code needs to be updated and we need to add a detector of conf, that we will also add an auto conf creator for it (and so ignoring the 'h)' option)
-            # TODO: add an explanation of what is for each tab, you can found this info in my .gitconfig file
-            if grep -qs "mergetool.*meld-auto" "$HOME/.gitconfig" ; then
-                command git mergetool -t meld-auto
-                # mergetool can success or not, so ask again what to do
-            else
-                el_error "meld-auto conf for mergetool not found in your config, use the option 'h' first"
-            fi
-            $FUNCNAME
-            ;;
 
-        M)
-            if grep -qs "mergetool.*meld-manual" "$HOME/.gitconfig" ; then
-                command git mergetool -t meld-manual
-                # mergetool can success or not, so ask again what to do
-            else
-                el_error "meld-auto conf for mergetool not found in your config, use the option 'h' first"
-            fi
-            # mergetool can success or not, so ask again what to do
-            $FUNCNAME
-            ;;
-
-        h)
-            el_explain 0 "Unfortunately there's no way to run specific git mergetools without touch the confs, so first, add these lines to your .gitconfig:"
-            cat <<'EOF'
-[merge]
-# by default let's use meld-auto, if you need manual use "git mergetool -t meld-manual"
-tool = meld-auto
-conflictstyle = diff3
-
-[mergetool "meld-auto"]
-# cmd reference to the meld version 1.6 syntax1
-#cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $BASE $REMOTE $MERGED
-;# howto use the meld on this way: http://blog.wuwon.id.au/2010/09/painless-merge-conflict-resolution-in.html
-;# so you have in the first tab the differences between the base and the local work, in the second the base with the remote work, and in the last tab you have in the middle the state where you need to resolve and save the conflicts
-
-;# new method:
-; Explanation:
-; 1. TAB: merge is smart / automatically made and we can put remaining things from one or other side, resulting file is written
-; 2. TAB: original content tried to be merged in the middle
-; 3. TAB: demo history of changes that should happen, left is original file and right is commit from
-; 4. TAB: demo of what lacks from our commit to import into our half-merged contents
-; 5. TAB: demo of what was tried to change (half-merged) in our local file
-cmd = meld \
-    $BASE $LOCAL $REMOTE --auto-merge  --output $MERGED  \
-    --diff $LOCAL $MERGED $REMOTE  \
-    --diff $LOCAL $BASE $REMOTE \
-    --diff $REMOTE $BASE  \
-    --diff $LOCAL $BASE  \
-
-;# TIP: in meld run ^F for search the (??) expression, which is the conflict marks, and ^G for search the next one
-
-[mergetool "meld-manual"]
-;#cmd = meld --diff $BASE $LOCAL --diff $BASE $REMOTE --diff $LOCAL $MERGED $REMOTE
-;# new method:
-    ; Note: this version ensures that no auto merges has been made, and it shows demos of the other differences in the merge attempt, it is much more difficult than the auto and the auto should show enough information to not mix up things, but it ensures that all the differences are seen
-    ; Explanation:
-    ; 1. TAB: left is original file, right is changes to import, you should put them in the middle file
-    ; 2. TAB: original content tried to be merged in the middle
-    ; 3. TAB: demo history of changes that should happen, left is original file and right is commit from
-    ; 4. TAB: demo of what lacks from our commit to import into our half-merged contents
-    ; 5. TAB: demo of what was tried to change (half-merged) in our local file
-    cmd = meld \
-        $LOCAL $MERGED $REMOTE --output $MERGED  \
-        --diff $BASE $MERGED $REMOTE  \
-        --diff $LOCAL $BASE $REMOTE \
-        --diff $REMOTE $BASE  \
-        --diff $LOCAL $BASE  \
-
-#[mergetool "meld17"]
-# use this for Meld >=1.7
-# see http://stackoverflow.com/a/22911793/859591
-# second solution:
-#cmd = meld $LOCAL $MERGED $REMOTE
-# first solution:
-#cmd = meld $LOCAL $BASE $REMOTE --auto-merge
-# see entries for 1.7 in the old commented code
-
-EOF
-
-            echo -e "\nPress Enter to continue..." 1>&2
-            read nothing
-
-            # return to menu
-            $FUNCNAME
+            # show differences
+            GIT_PAGER=cat  command git show --pretty=format: --patch HEAD
 
             ;;
-        l)
-            shell_start
 
-            $FUNCNAME
-            ;;
         f)
             true
             ;;
+
+        a|z) # shortcut to "a" too if we want to call it as "abort"
+            command git cherry-pick --abort
+
+            el_explain 0 "Aborted cherry-pick..."
+            LC_ALL=C sleep 1.2
+
+            ;;
+
     esac
 
     # remove unwanted .orig files remaining
@@ -1535,6 +1542,9 @@ do_cherry_pick(){
 
     el_explain 0 "git cherry-pick --keep-redundant-commits -Xpatience -x -s '$commit_id'"
     if command git cherry-pick --keep-redundant-commits -Xpatience -x -s "$commit_id" ; then
+        # fix possible whitespace issues
+        command git rebase --whitespace=fix HEAD~1
+
         if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" = 0 ]] ; then
             # last import shows an empty diff, like it was already included in the history or is a useless commit for our branch
             el_explain 0 "\nXXWarning:XX seems like this commit didn't changed anything, probably because the code was already imported, you can keep it for historical purposes or you can remove it to have a more clean history."
@@ -1574,6 +1584,13 @@ do_cherry_pick(){
         do_cherry_pick_menu
     fi
 
+    # ammend the commit with the previous one and use the previous commit message
+    if [[ "$1" = "amend" ]] ; then
+        # keeps your changes in the staging area (index), so you can easily amend the commit.
+        command git reset --soft HEAD~1
+        command git commit -q --amend --no-edit
+    fi
+
 
     show_history
     LC_ALL=C sleep 0.4
@@ -1600,6 +1617,9 @@ do_cherry_pick_multiple(){
         el_explain 0 "command git cherry-pick --keep-redundant-commits -x -s $commits"
 
         if command git cherry-pick --keep-redundant-commits -x -s $commits  ; then
+            # fix possible whitespace issues
+            command git rebase --whitespace=fix HEAD~1
+
             notify_success
             el_explain 0 "__Successfully applied!__  Press Enter to continue"
             read nothing
@@ -1763,10 +1783,12 @@ options_main_interact(){
     option_show "S"         "Show Status info"
     option_show "h"         "Show history"
     option_show "d"         "Show diff"
+    option_show "D"         "Show diff of your last working commit"
     option_show "a"         "list Around nearest commits (on our working progress)"
     option_show "A"         "list Around nearest commits (from the watching branch)"
     option_show "i"         "Import this commit (cherry-pick)"
-    option_show "I"         "Import other or multiple commits (cherry-pick)"
+    option_show "I"         "Import this commit merging with the previous one (cherry-pick)"
+    option_show "o"         "Import other or multiple commits (cherry-pick)"
     if [[ -n "$user_input_backport_branches" ]] ; then
         option_show "b"         " > Backport to: $user_input_backport_branches"
     else
@@ -2065,6 +2087,19 @@ options_main_interact(){
             $FUNCNAME
 
             ;;
+
+        D)  # show diff
+            clear_screen default
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+            command git --no-pager show HEAD | lsdiff
+            echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
+
+            command git show --pretty=format: --patch HEAD
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
         e)  # edit files
             # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
@@ -2101,7 +2136,7 @@ options_main_interact(){
 
             ;;
         f)  # edit the last commit description
-            command git commit --amend
+            command git commit -q --amend
             # return back to main menu
             $FUNCNAME
             ;;
@@ -2121,6 +2156,16 @@ options_main_interact(){
             ;;
 
         I)  # cherry-pick
+            do_cherry_pick amend
+
+            # separator
+            echo -e "\n\n"
+
+            # go to next commit
+            return 0
+            ;;
+
+        o)  # cherry-pick
 
             # first:  list around nearest
             el_explain 0 "(commits from oldest to newest)"
@@ -2749,7 +2794,6 @@ main(){
                     el_explain 0 "git pull --rebase \"$remote_fetching_watch\" \"+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}\""
                     #command git pull --rebase "$remote_fetching_watch" "$branch_watch"  # buggy method
                     command git pull --quiet --rebase "$remote_fetching_watch" "+${branch_watch}:refs/remotes/${remote_fetching_watch}/${branch_watch}"
-                    check_if_has_diverged
 
                     # go back to our working one
                     el_explain 0 "git checkout $branch_working"

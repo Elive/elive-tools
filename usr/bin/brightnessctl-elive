@@ -1,5 +1,4 @@
 #!/bin/sh
-# source /usr/lib/elive-tools/functions
 
 # Check if the first argument is provided
 if [ -z "$1" ]; then
@@ -7,27 +6,41 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-# Get the current brightness level
-current_brightness="$(brightnessctl -m i | awk -F',' '{print $4}' | tr -d '%')"
+# Get the current brightness level in percentage and raw integer value
+current_brightness="$(brightnessctl -m i)"
+current_brightness_percent="$(echo "$current_brightness" | awk -F',' '{print $4}' | tr -d '%')"
+current_brightness_value="$(echo "$current_brightness" | awk -F',' '{print $3}')"
 
-# Define the increment based on the current brightness
-if [ "$current_brightness" -ge 50 ]; then
+# Define the increment based on the current brightness percentage
+if [ "$current_brightness_percent" -ge 50 ]; then
     increment=6
-elif [ "$current_brightness" -ge 20 ]; then
+elif [ "$current_brightness_percent" -ge 20 ]; then
     increment=4
-elif [ "$current_brightness" -ge 10 ]; then
+elif [ "$current_brightness_percent" -ge 10 ]; then
     increment=2
+elif [ "$current_brightness_percent" -lt 2 ]; then
+    # Special case: If brightness is below 2%, set increment to 0 and adjust using raw integer
+    increment=0
 else
     increment=1
 fi
 
 # Adjust the brightness based on the argument provided (up or down)
 if [ "$1" = "up" ]; then
-    sudo -n brightnessctl s ${increment}%+
+    if [ "$increment" -eq 0 ]; then
+        # Special case: Adjust brightness directly based on integer value
+        sudo -n brightnessctl s $((current_brightness_value + 1))
+    else
+        sudo -n brightnessctl s ${increment}%+
+    fi
 elif [ "$1" = "down" ]; then
-    sudo -n brightnessctl s ${increment}%-
+    if [ "$increment" -eq 0 ]; then
+        # Special case: Adjust brightness directly based on integer value
+        sudo -n brightnessctl s $((current_brightness_value - 1))
+    else
+        sudo -n brightnessctl s ${increment}%-
+    fi
 else
     echo "Invalid argument. Use 'up' or 'down'."
     exit 1
 fi
-

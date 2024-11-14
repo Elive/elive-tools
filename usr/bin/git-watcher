@@ -1475,7 +1475,7 @@ sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
 
             $FUNCNAME
             ;;
-        n|c)
+        c)
             # TODO: improve this option, is not easy to find (far on the list, we need an option for "accepted merge" or similar, more intuitive)
             # TODO: check the options, we don't want to write a message probably, do we also want to use the option -x ?
             if command git cherry-pick --continue --no-edit ; then
@@ -1514,6 +1514,14 @@ sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
             el_explain 0 "Aborted cherry-pick..."
             LC_ALL=C sleep 1.2
 
+            ;;
+
+        *)
+            # return back to main menu because you picked a wrong option accidentally
+            echo -e "wrong option?"
+            sleep 1
+            $FUNCNAME
+            return
             ;;
 
     esac
@@ -1786,6 +1794,7 @@ options_main_interact(){
     option_show "D"         "Show diff of your last working commit"
     option_show "a"         "list Around nearest commits (on our working progress)"
     option_show "A"         "list Around nearest commits (from the watching branch)"
+    option_show "v"         "Visualize (and edit) how the contents would change if we import them"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import this commit merging with the previous one (cherry-pick)"
     option_show "o"         "Import other or multiple commits (cherry-pick)"
@@ -1794,8 +1803,8 @@ options_main_interact(){
     else
         option_show "b"         "Backport to other branches too (define them as comma-separated)"
     fi
-    option_show "e"         "Edit the files affected by this commit (good to read all code)"
-    option_show "E"         "Edit (visualize) how the contents would change if we import it"
+    option_show "e"         "Edit the files affected by the last commit"
+    option_show "E"         "Edit visually the compared changes"
     option_show "f"         "Fix (edit) our last commit description (--amend)"
     option_show "F"         "Fix the history of last commits (rebase interactive)"
     option_show "m"         "Mark, adds a mark on this position, to review later"
@@ -1805,6 +1814,7 @@ options_main_interact(){
     option_show "G"         "Go to a counter position"
     option_show "u"         "Update working branch (pull --rebase)"
     option_show "U"         "Update watching branch (pull --rebase)"
+    option_show "P"         "Push changes"
 
     option_show "c"         "compile (make), useful for check if new code is compatible"
     if [[ -n "$user_input_command" ]] ; then
@@ -2101,7 +2111,6 @@ options_main_interact(){
 
             ;;
         e)  # edit files
-            # TODO: enter in the specific lines if vim
             if [[ -z "$EDITOR" ]] ; then
                 echo -e "Type the editor (command) that you want to use:"
                 read -e EDITOR
@@ -2110,6 +2119,13 @@ options_main_interact(){
             # edit files
             $EDITOR $(git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' | tr '\n' ' ' )
 
+            if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" -gt 0 ]] ; then
+                command git diff
+                if el_confirm "Save your modifications into the previous commit?" ; then
+                    command git add -u
+                    command git commit --amend --no-edit
+                fi
+            fi
 
             # show back the diff, we always want to see it again
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
@@ -2123,11 +2139,14 @@ options_main_interact(){
 
             ;;
 
-        E)  # edit (visualize) how the contents would change if we import it
+        E)  # edit files
             if do_compare_before_after "$commit_id" ; then
-                # compare files
-                diff -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | colordiff
-                meld "$tmpdir/sources-before" "$tmpdir/sources-after"
+                meld "$tmpdir/sources-after" "$( pwd )"
+            fi
+
+            if el_confirm "Run a git commit to save your changes?" ; then
+                command git add -u
+                command git commit
             fi
 
 
@@ -2139,11 +2158,25 @@ options_main_interact(){
             command git commit -q --amend
             # return back to main menu
             $FUNCNAME
+
             ;;
         F)  # edit the last history
             command git rebase --interactive "${branch_parent}"
             # return back to main menu
             $FUNCNAME
+
+            ;;
+        v)  # edit (visualize) how the contents would change if we import it
+            if do_compare_before_after "$commit_id" ; then
+                # compare files
+                diff -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | colordiff
+                meld "$tmpdir/sources-before" "$tmpdir/sources-after"
+            fi
+
+
+            # return back to main menu
+            $FUNCNAME
+
             ;;
         i)  # cherry-pick
             do_cherry_pick
@@ -2213,7 +2246,7 @@ options_main_interact(){
         m)
             el_explain 0 "TODO / mark added"
 
-            echo -e "\nMessage to include?  (blank = no message)"
+            echo -e "\nMessage to include?  (blank = ignore)"
             read -e _mark_message
 
             # create mark
@@ -2333,6 +2366,12 @@ options_main_interact(){
             ;;
         R)  # bkp
             EL_DEBUG=1 bkp --quiet get
+
+            # return back to main menu
+            $FUNCNAME
+            ;;
+        P)  # push
+            command git push
 
             # return back to main menu
             $FUNCNAME
@@ -2662,6 +2701,13 @@ main(){
     # last commit
     if [[ -s "$conf_commit_last_f" ]] ; then
         commit_id="$( tail -1 "$conf_commit_last_f" )"
+
+        # always know the parent commit of the actual one in order to avoid bugs like in the visualize feature run in the startup
+        commit_id_prev="$( git log "${commit_id}^1" -n 1 --format=%H )"
+        if [[ -n "$commit_id_prev" ]] ; then
+            el_array_member_add "$commit_id_prev" "${commits_history[@]}" ; commits_history=("${_out[@]}")
+        fi
+
         el_array_member_add "$commit_id" "${commits_history[@]}" ; commits_history=("${_out[@]}")
     fi
 
@@ -2933,6 +2979,9 @@ main(){
 #
 main "$@"
 
+exit $?
 
+#
 # vim: set foldmethod=marker :
+#
 

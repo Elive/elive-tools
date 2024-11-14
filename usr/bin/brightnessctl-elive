@@ -1,0 +1,33 @@
+#!/bin/sh
+# source /usr/lib/elive-tools/functions
+
+# Check if the first argument is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 {up|down}"
+    exit 1
+fi
+
+# Get the current brightness level
+current_brightness="$(brightnessctl -m i | awk -F',' '{print $4}' | tr -d '%')"
+
+# Define the increment based on the current brightness
+if [ "$current_brightness" -ge 50 ]; then
+    increment=6
+elif [ "$current_brightness" -ge 20 ]; then
+    increment=4
+elif [ "$current_brightness" -ge 10 ]; then
+    increment=2
+else
+    increment=1
+fi
+
+# Adjust the brightness based on the argument provided (up or down)
+if [ "$1" = "up" ]; then
+    sudo -n brightnessctl s ${increment}%+
+elif [ "$1" = "down" ]; then
+    sudo -n brightnessctl s ${increment}%-
+else
+    echo "Invalid argument. Use 'up' or 'down'."
+    exit 1
+fi
+

@@ -38,7 +38,7 @@ usage(){
     echo "  servers     Install the Elive for Servers enhancer"
     echo
 
-    if el_confirm "$( eval_gettext "Do you want to know more about the elive-premium features?" )" ; then
+    if el_confirm "$( eval_gettext "Do you want to know the elive-premium features?" )" ; then
         ( web-launcher "https://www.elivecd.org/premium/" & )
     fi
 }

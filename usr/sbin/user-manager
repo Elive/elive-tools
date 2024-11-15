@@ -379,7 +379,7 @@ user_add(){
         --field="$( eval_gettext "Configure a new user" ):LBL" "" \
         --field=":LBL" "" \
         --field="$( eval_gettext "Username (no spaces, short)" )" "$username" \
-        --field="$( eval_gettext "User's real name (for user experience)" )" "$username_real" \
+        --field="$( eval_gettext "User's real name" )" "$username_real" \
         --field="$( eval_gettext "Email (for Gravatar)" )" "$user_email" \
         --field="$( eval_gettext "Password to use" ):H" "$password" \
         --field="$( eval_gettext "Password confirmation" ):H" "$password" \
@@ -440,7 +440,7 @@ user_add(){
     username="${username%%+(-)}"
 
     if [[ -n "$answer" ]] && [[ "$username" != "$answer" ]] ; then
-        answer="$( $guitool --entry --entry-text="$username" --text="$( eval_gettext "Warning: Invalid username due to invalid characters. It has been converted to this one instead. Continue or choose another." )" )"
+        answer="$( $guitool --entry --entry-text="$username" --text="$( eval_gettext "Warning: Invalid username due to the presence of invalid characters. It has been converted to this one instead. Please continue or choose another." )" )"
         verify_result "$answer"
         username="$answer"
         username="${username// /_}"

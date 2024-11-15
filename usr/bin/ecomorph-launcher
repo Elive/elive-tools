@@ -507,7 +507,7 @@ main(){
 
             # wait and tell the user if still wants to use it
             local message_want_to_continue_using
-            message_want_to_continue_using="$( printf "$( eval_gettext "Special effects perform better and faster on some computers, but worse or slower on others. Keep the Ecomorph module enabled?" )" "" )"
+            message_want_to_continue_using="$( printf "$( eval_gettext "Special effects perform better and faster on some computers, but worse or slower on others. Do you want to keep the Ecomorph module enabled?" )" "" )"
 
             # wait 5 minutes before to ask if continue using it
             if ! grep -qs "boot=live" /proc/cmdline ; then

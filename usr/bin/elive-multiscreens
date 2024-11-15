@@ -212,13 +212,13 @@ configure_multiscreens(){
 
     if ((is_mode_previous_desktop)) ; then
         # big explaination too
-        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You are a step before the window manager started, meaning you don't have window buttons or other features yet - it can be confusing. FOLLOW these instructions CAREFULLY: Configure your screens as you wish to use them. Click apply to test your configuration by moving your mouse among the screens. Then click to save your configuration (important). Finally, exit the application through the menu (or using the CTRL+Q keys)" )"
+        timeout 120 $guitool --info --text="$( eval_gettext "IMPORTANT: You're just before the window manager starts, so you won't see window buttons or other features yet, which can be confusing, FOLLOW these instructions CAREFULLY: Set up your screens the way you want, click apply to test it by moving your mouse around, then save your configuration (this is important), and finally exit the application through the menu or by pressing CTRL+Q." )"
     fi
 
     # e16
     if [[ -n "$EROOT" ]] ; then
         if ! el_flag check multiscreens-e16-welcome ; then
-            $guitool --info --text="$( eval_gettext "The E16 desktop may not handle multiple screens as well as newer Enlightenment versions. Gadgets or windows might move to unexpected positions." )"
+            $guitool --info --text="$( eval_gettext "The E16 desktop might struggle with multiple screens unlike newer Enlightenment versions do, causing gadgets or windows to shift to unexpected places." )"
             el_flag add multiscreens-e16-welcome
         fi
     fi
@@ -243,7 +243,7 @@ configure_multiscreens(){
 
     # check and fix
     if [[ -z "$conf" ]] ; then
-        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any saved configurations, so Elive cannot implement your screens settings. Do you want to try again? You need to select the 'Save As' option." )" ; then
+        if timeout 180 $guitool --question --text="$( eval_gettext "You don't have any saved settings, so Elive can't load your screen configurations, do you want to try again? You need to choose the 'Save As' option." )" ; then
 
             # configure
             arandr
@@ -475,7 +475,7 @@ load_multiscreens_configuration(){
             if ((is_mode_delayed)) ; then
                 sleep 5
             fi
-            if timeout 120 $guitool --question --text="$( eval_gettext "You have a new screen configuration. Would you like to apply it?" )" ; then
+            if timeout 120 $guitool --question --text="$( eval_gettext "You have a new screen configuration. Would you like to load it?" )" ; then
 
                 # check and set primary screen {{{
                 if ! grep -qs " --primary" "$file" ; then

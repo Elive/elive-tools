@@ -218,7 +218,7 @@ interactive_ask_privative(){
             if [[ "${memory}" -lt "640000" ]] && ! ((is_mode_auto)) ; then
 
                 local message_low_memory
-                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM, and the installation of some big packages in live mode can fail because of this. Try installing Elive to your hard disk and then try installing these packages again, to avoid running out of memory. After you have installed Elive, you can boot with the boot parameter 'init 1' to avoid starting the graphical system and run this command '%s -a' to start the installation process again." )" "$(basename $0)" )"
+                message_low_memory="$( printf "$( eval_gettext "Your computer has low RAM, so installing big packages in live mode might fail, try installing Elive on your hard disk first and then install the packages again to prevent memory issues, after installing Elive, boot with the 'init 1' parameter to skip the graphical system and run the command '%s -a' to start the installation again." )" "$(basename $0)" )"
 
                 dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "Low Memory Computer" \
@@ -255,7 +255,7 @@ interactive_ask_privative(){
                 # checks if we can install it {{{
                 if ! echo "${_CMDLINE}" | LC_ALL=C grep -qsE "blacklist=radeon" && lsmod | grep -qs '^radeon' ; then
                     local message_reboot_and_select_privative
-                    message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the proprietary drivers, you must reboot and select that specific option from the boot menu. Or you can select any mode, but you need to press the Tab key to append the boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
+                    message_reboot_and_select_privative="$( printf "$( eval_gettext "To install the proprietary drivers, you must reboot and select that specific option from the boot menu. Or you can also use any boot mode, but then you need to press the Tab key to append the next boot parameter:" ) modprobe.blacklist=radeon modprobe.blacklist=radeonhd" "" )"
 
                     dialog --timeout 80 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                         --title "Free-Driver Option" \
@@ -270,7 +270,7 @@ interactive_ask_privative(){
                 # }}}
                 # remember that this is not stable {{{
                 local message_remember
-                message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try another option from the list, or use the open-source drivers. If none work stably, consider buying a better supported graphics card for your computer. Your computer, especially your filesystem, will thank you." )" "" )"
+                message_remember="$( printf "$( eval_gettext "If the selected driver doesn't work, try another option from the list or use the open-source drivers. If none of these work stably, consider purchasing a better-supported graphics card for your computer. Your computer, especially your filesystem, will thank you." )" "" )"
 
                 dialog --timeout 60 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" \
                     --title "If the install fails..." \
@@ -544,14 +544,14 @@ install_driver(){
 
         if modprobe fglrx 2>&1 | grep -qs "No supported display adapters" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers do not appear to support your graphics card model. Try other versions or consider using open-source drivers if that doesn't work." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The compiled drivers do not appear to support your graphics card model. Try other versions or consider using the open-source driver if that doesn't work." )" "" )"
 
         fi
 
         # module simply was not compiled
         if ! find "/lib/modules/$(uname -r)" -type f -iname '*'fglrx'*' | grep -qs "fglrx.ko" ; then
             sleep 4
-            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver did not compile successfully, typically due to using a too recent or too old kernel. Reboot and select a different kernel version from the boot menu. Also, consider trying open-source drivers as they might work." )" "" )"
+            message_unable_to_load="$( printf "$( eval_gettext "Error: The driver did not compile successfully. This is typically due to using a too recent or too old kernel. Reboot and select a different kernel version from the boot menu. Also, consider trying the open-source driver as it might work." )" "" )"
         fi
 
 

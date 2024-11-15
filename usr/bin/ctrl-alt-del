@@ -76,7 +76,7 @@ main(){
                 dm-tool switch-to-greeter
                 exit
             else
-                zenity --error --text="$( eval_gettext "You are not using Lightdm. To switch between user desktops, you need to use the Lightdm login manager. Install this package if you don't have it." )"
+                zenity --error --text="$( eval_gettext "You are not using Lightdm. To switch between different user desktops, you need to use the Lightdm login manager. Reinstall the package if you don't have it." )"
             fi
             ;;
         "logout")

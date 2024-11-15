@@ -1613,7 +1613,7 @@ el_check_translations_required(){
 
         case "$mode" in
             report)
-                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improve the Elive translations. Everybody will enjoy Elive correctly translated into your language too!" )"
+                el_notify normal gtranslator "$( eval_gettext "Elive Translations" )" "$( eval_gettext "This application is not fully translated to your language. You can use Eltrans to help improve the Elive translations, and then everybody will enjoy Elive correctly translated into your language too." )"
                 ;;
         esac
 
@@ -2676,9 +2676,9 @@ el_step_requires_fixme(){
         cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
         el_set_display_variables
         local _dummy
-        _dummy="$( eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting..." )"
+        _dummy="$( eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting now..." )"
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
-            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting..." )"
+            timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting now..." )"
         fi
         exit 1
     fi
@@ -3375,7 +3375,7 @@ el_request_donation(){
     _dummy2="$( eval_gettext "Do you want to donate to Elive so that we can keep it alive and continue improving it?" )"
 
     local _dummy3
-    _dummy3="$( eval_gettext "Making a donation only takes a minute or two and ensures there will be more greatly improved versions of Elive in the future!" )"
+    _dummy3="$( eval_gettext "Making a donation only takes a minute or two and ensures there will be more greatly improved versions of Elive in the future." )"
 
     # show it
     #$guitool --info --text="$( TEXTDOMAIN="elive-tools" eval_gettext "$_dummy" )" || true

@@ -122,7 +122,7 @@ main(){
         case "$value" in
             1)
                 local message_gl
-                message_gl="$( printf "$( eval_gettext "You are using software-based rendering for your desktop, which is very stable. You can try switching to the hardware-accelerated option (GL mode) for a faster and smoother desktop, especially for video rendering. However, it is important to know that hardware-accelerated rendering can be unstable; it depends on your graphic card and its drivers. The only way to know if it works well for you is by trying it. If you experience desktop errors, it might be due to this, so you can switch back to software mode." )" )"
+                message_gl="$( printf "$( eval_gettext "You're using stable software-based rendering for your desktop, but you can switch to hardware-accelerated rendering (GL mode) for better speed and smoother performance, especially with videos, just keep in mind that this can be unstable depending on your graphics card and drivers, you can always go back to software mode." )" )"
 
                 if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
                     zenity --info --text="$message_gl" || true
@@ -136,7 +136,7 @@ main(){
 
                 else
                     local message_gl
-                    message_gl="$( printf "$( eval_gettext "Hardware acceleration makes your desktop faster and feels smoother, improving video playback speed and usability. If your graphics card drivers are not stable, it can cause bugs, visual artifacts, or a broken state. Fixing this may require switching to software mode in the compositor options or disabling acceleration in a new desktop configuration." )" )"
+                    message_gl="$( printf "$( eval_gettext "Hardware acceleration speeds up your desktop and makes it feel smoother, enhancing video playback and usability, but if your graphics card drivers are unstable, it can lead to bugs or visual issues, and you might need to switch to software mode in the compositor options or turn off acceleration in a new desktop setup." )" )"
 
                     zenity --info --text="$message_gl" || true
 

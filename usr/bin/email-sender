@@ -304,7 +304,7 @@ do_validate_sending(){
 
     case "$email_account_type" in
         Dreamhost)
-            $guitool --info --text="$( eval_gettext "Open your email client and verify that you have a test email in your inbox. Continue once verified." )"
+            $guitool --info --text="$( eval_gettext "Open your email client and check that you have a test email in your inbox. Proceed once you have verified this." )"
             if $guitool --question --text="$( eval_gettext "Does the sending of emails work correctly?" )" ; then
                 # save our conf because we know that it works now
                 rm -f "$conf" 2>/dev/null
@@ -465,7 +465,7 @@ do_configure(){
     # }}}
     if [[ -z "$email_account" ]] ; then
         local message_intro
-        message_intro="$( printf "$( eval_gettext "To send emails, you need to configure your email first. Do you want to do it now?" )" "" )"
+        message_intro="$( printf "$( eval_gettext "To send emails, you need to configure it first. Do you want to do it now?" )" "" )"
 
         if ! ((is_message_showed_welcome)) ; then
             if $guitool --question --text="$message_intro" ; then

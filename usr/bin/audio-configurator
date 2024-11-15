@@ -508,7 +508,7 @@ EOF
             rm -f "${HOME}/.config/setvolume"
             ( setvolume $QUIET defaults & )
 
-            $guitool --info --text="$( eval_gettext "Your audio card has been set up. To increase or decrease the volume, use your keyboard hotkeys. If they do not work, you can set your own hotkeys. You also have a volume application in the Sound menu, or you can scroll your mouse wheel in the audio gadget on your desktop gadget." )" || true
+            $guitool --info --text="$( eval_gettext "Your audio card is ready, you can adjust the volume using keyboard shortcuts, and if those don't work, you can create your own, there's also a volume app in the Sound menu, or you can use the mouse wheel on the audio gadget on your desktop." )" || true
         fi
 
     fi

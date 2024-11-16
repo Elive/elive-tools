@@ -33,18 +33,20 @@ main(){
     current_brightness_value="$(echo "$current_brightness" | awk -F',' '{print $3}')"
 
     # Define the increment based on the current brightness percentage
-    if [ "$current_brightness_percent" -ge 50 ]; then
+    if [ "$current_brightness_percent" -gt 50 ]; then
+        increment=7
+    elif [ "$current_brightness_percent" -gt 30 ]; then
         increment=6
-    elif [ "$current_brightness_percent" -ge 30 ]; then
+    elif [ "$current_brightness_percent" -gt 10 ]; then
         increment=5
-    elif [ "$current_brightness_percent" -ge 10 ]; then
+    elif [ "$current_brightness_percent" -gt 5 ]; then
         increment=4
-    elif [ "$current_brightness_percent" -ge 5 ]; then
+    elif [ "$current_brightness_percent" -gt 2 ]; then
         increment=3
-    elif [ "$current_brightness_percent" -le 2 ]; then
-        # Special case: If brightness is less than or equal to 2%, set increment to 2
+    # Special cases:
+    elif [ "$current_brightness_percent" -gt 1 ]; then
         increment=2
-    elif [ "$current_brightness_percent" -le 1 ]; then
+    else
         # Special case: If brightness is less than or equal to 1%, set increment to 1
         increment=1
     fi

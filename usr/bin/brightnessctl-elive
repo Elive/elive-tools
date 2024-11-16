@@ -37,8 +37,10 @@ main(){
         increment=6
     elif [ "$current_brightness_percent" -ge 30 ]; then
         increment=5
-    elif [ "$current_brightness_percent" -ge 15 ]; then
+    elif [ "$current_brightness_percent" -ge 10 ]; then
         increment=4
+    elif [ "$current_brightness_percent" -ge 5 ]; then
+        increment=3
     elif [ "$current_brightness_percent" -le 2 ]; then
         # Special case: If brightness is less than or equal to 2%, set increment to 2
         increment=2

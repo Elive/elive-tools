@@ -2,7 +2,7 @@
 
 # Check if the first argument is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 {up|down}"
+    echo "Usage: $( basename $0 ) {up|down}"
     exit 1
 fi
 
@@ -24,6 +24,8 @@ elif [ "$current_brightness_percent" -lt 2 ]; then
 else
     increment=1
 fi
+
+el_debug "Current brightness: $current_brightness_percent% ($current_brightness_value), Increment assigned to: $increment"
 
 # Adjust the brightness based on the argument provided (up or down)
 if [ "$1" = "up" ]; then

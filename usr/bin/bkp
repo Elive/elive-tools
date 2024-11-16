@@ -290,6 +290,8 @@ do_get(){
         do_sudo rsync -a --delete --info=flist0,name "${1}.get/" "${2}/"
     fi
 
+    do_sudo rm -rf "${1}.get"
+
     cd "${2}"
 
 }

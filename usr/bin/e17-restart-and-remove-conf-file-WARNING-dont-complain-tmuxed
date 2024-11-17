@@ -1,4 +1,8 @@
 #!/bin/bash
+SOURCE="$0"
+# source /usr/lib/elive-tools/functions
+# EL_REPORTS="1"
+# el_make_environment
 
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
@@ -135,10 +139,26 @@ main(){
     # sync
 
     # finish the kill process
-    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd \
-        dbus-daemon gnome-keyring-daemon gvfsd at-spi-bus-launcher 2>/dev/null
-    # sync
-    #
+    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
+
+    sync
+    sleep 1
+
+    case "$@" in
+        e16|E16)
+            # upgrade confs
+            EL_DEBUG=0 elive-skel upgrade .e16
+            ;;
+        e17|E17)
+            # upgrade confs
+            rm -fr ~/.e
+            ;;
+    esac
+
+
+
+
+
 
     # just in case something is remaining
     wait

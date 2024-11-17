@@ -1108,8 +1108,9 @@ show_history(){
 
         command git log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -$lines
     else
-        el_explain 0 "Recent history in your working branch (newest to oldest):"
-        command git --no-pager log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -12
+        lines=16
+        el_explain 0 "Recent __${lines}__ history in your working branch (newest to oldest):"
+        command git --no-pager log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' --abbrev-commit --date=relative -${lines}
         # seems like we miss a newline:
         echo
 
@@ -1379,8 +1380,8 @@ do_cherry_pick_menu(){
             ;;
         d)  # show patch
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
-            GIT_PAGER=cat  command git diff --cached
             command git status
+            GIT_PAGER=cat  command git diff --cached
             echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
             # return back to main menu
             $FUNCNAME
@@ -1730,7 +1731,7 @@ do_compare_before_after(){
 
 # starts a temporal shell to manual work
 shell_start(){
-    el_explain 0 "Starting a login shell, use ^d or logout when you finish to return back here"
+    el_explain 0 "XXStarted login shellXX, use ^d or logout when you finish to return back here"
 
     $SHELL -l
 }
@@ -1789,7 +1790,7 @@ options_main_interact(){
     option_show "p"         "Prev commit" # history-based now
     option_show "s"         "Show commit summary"
     option_show "S"         "Show Status info"
-    option_show "h"         "Show history"
+    option_show "h"         "History show"
     option_show "d"         "Show diff"
     option_show "D"         "Show diff of your last working commit"
     option_show "a"         "list Around nearest commits (on our working progress)"

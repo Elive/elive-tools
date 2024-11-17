@@ -20,7 +20,11 @@ main(){
 
     # }}}
 
-    cd "$HOME/.e/e17/config/$E_CONF_PROFILE"
+    if [[ -d "$HOME/.e/e/config" ]] ; then
+        cd "$HOME/.e/e/config/$E_CONF_PROFILE"
+    else
+        cd "$HOME/.e/e17/config/$E_CONF_PROFILE"
+    fi
 
     enlightenment_remote -save
     sync

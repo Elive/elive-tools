@@ -34,7 +34,7 @@ main(){
 
     # Define the increment based on the current brightness percentage
     if [ "$current_brightness_percent" -gt 50 ]; then
-        increment=7
+        increment=8
     elif [ "$current_brightness_percent" -gt 30 ]; then
         increment=6
     elif [ "$current_brightness_percent" -gt 10 ]; then
@@ -42,25 +42,25 @@ main(){
     elif [ "$current_brightness_percent" -gt 5 ]; then
         increment=4
     elif [ "$current_brightness_percent" -gt 2 ]; then
-        increment=3
+        increment=2
     # Special cases:
     elif [ "$current_brightness_percent" -gt 1 ]; then
-        increment=2
+        increment=1
     else
         # Special case: If brightness is less than or equal to 1%, set increment to 1
-        increment=1
+        increment=0
     fi
 
     el_debug "Current brightness: $current_brightness_percent% ($current_brightness_value), Increment assigned to: $increment"
 
     # Adjust the brightness based on the argument provided (up or down)
     if [ "$1" = "up" ]; then
-        if [ "$increment" -eq 2 ]; then
+        if [ "$increment" -eq 1 ]; then
             # Special case: Adjust brightness directly based on integer value
             if ! sudo -n brightnessctl s $((current_brightness_value + 2)) ; then
                 error_show
             fi
-        elif [ "$increment" -eq 1 ]; then
+        elif [ "$increment" -eq 0 ]; then
             # Special case: Adjust brightness directly based on integer value
             if ! sudo -n brightnessctl s $((current_brightness_value + 1)) ; then
                 error_show
@@ -71,12 +71,12 @@ main(){
             fi
         fi
     elif [ "$1" = "down" ]; then
-        if [ "$increment" -eq 2 ]; then
+        if [ "$increment" -eq 1 ]; then
             # Special case: Adjust brightness directly based on integer value
             if ! sudo -n brightnessctl s $((current_brightness_value - 2)) ; then
                 error_show
             fi
-        elif [ "$increment" -eq 1 ]; then
+        elif [ "$increment" -eq 0 ]; then
             # Special case: Adjust brightness directly based on integer value
             if ! sudo -n brightnessctl s $((current_brightness_value - 1)) ; then
                 error_show

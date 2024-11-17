@@ -135,7 +135,8 @@ main(){
     # sync
 
     # finish the kill process
-    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd 2>/dev/null
+    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd \
+        dbus-daemon gnome-keyring-daemon gvfsd at-spi-bus-launcher 2>/dev/null
     # sync
     #
 

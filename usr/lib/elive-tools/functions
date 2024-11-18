@@ -2637,8 +2637,7 @@ el_array_print_per_line(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_step_requires_fixme
 #   DESCRIPTION:  temporal "step" to put in experimental/development code, only
-#    PARAMETERS:  $1 = dir to login (optional)
-#		  $2 = message (optional)
+#    PARAMETERS:  $1 = dir to login (optional), $2 = message (optional)
 #===============================================================================
 el_step_requires_fixme(){
     # pre {{{
@@ -2646,8 +2645,10 @@ el_step_requires_fixme(){
 
     dir="$1"
     shift
-    message="$1"
-    shift
+    if [[ -n "$1" ]] ; then
+        message="$1"
+        shift
+    fi
 
     prev_dir="$(pwd)"
 
@@ -2680,6 +2681,7 @@ el_step_requires_fixme(){
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             timeout 50 $guitool --warning --text="$( TEXTDOMAIN="elive-tools" eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting now..." )"
         fi
+        el_error "shell is not interactive, cannot run ${FUNCNAME}"
         exit 1
     fi
 

@@ -46,6 +46,8 @@ main(){
         if [ "$increment" -eq 1 ]; then
             # Special case: Adjust brightness directly based on integer value
             brightness="$(( $current_brightness_value * 2 ))"
+            [[ "$brightness" = "-"* ]] && brightness=1
+            [[ "$brightness" = "0" ]] && brightness=1
             if ! sudo -n brightnessctl s $brightness ; then
                 error_show
             fi
@@ -57,6 +59,7 @@ main(){
     elif [ "$1" = "down" ]; then
         if [ "$increment" -eq 1 ]; then
             # Special case: Adjust brightness directly based on integer value
+            [[ "$brightness" = "-"* ]] && brightness=1
             brightness="$(( $current_brightness_value / 2 ))"
             if ! sudo -n brightnessctl s $brightness ; then
                 error_show

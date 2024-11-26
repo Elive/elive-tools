@@ -91,11 +91,11 @@ main(){
         fi
     fi
 
-    if [[ -n "$EROOT" ]] ; then
-        tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
+    if [[ -n "$E_START" ]] ; then
+        tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
     else
-        if [[ -n "$E_START" ]] ; then
-            tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
+        if [[ -n "$EROOT" ]] ; then
+            tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
         fi
     fi
 

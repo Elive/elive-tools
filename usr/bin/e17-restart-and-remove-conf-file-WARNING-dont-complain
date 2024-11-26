@@ -63,9 +63,22 @@ main(){
     fi
     sync
     if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
-        el_error "$( eval_gettext "No running Enlightenment session found." )"
-        zenity --error --text="$( eval_gettext "No running Enlightenment session found." )"
-        exit
+        # try to detect running active desktop
+        if [[ "$USER" = "$( el_user_desktop_active_get )" ]] ; then
+            if ps ux | grep -vw grep | grep -iw e16 ; then
+                EROOT="yes"
+            else
+                if ps ux | grep -vw grep | grep -iw enlightenment ; then
+                    E_START="yes"
+                else
+
+                    # no running desktop found, show error
+                    el_error "$( eval_gettext "No running Enlightenment session found." )"
+                    zenity --error --text="$( eval_gettext "No running Enlightenment session found." )"
+                    exit
+                fi
+            fi
+        fi
     fi
 
     if [[ -n "$EROOT" ]] ; then

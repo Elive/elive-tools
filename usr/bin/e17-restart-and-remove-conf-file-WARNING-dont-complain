@@ -62,6 +62,16 @@ main(){
         exit
     fi
     sync
+    # detect the desktop if is set on XDG values
+    if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
+        if [[ "$XDG_SESSION_DESKTOP" = "enlightenment" ]] ; then
+            E_START="yes"
+        fi
+        if [[ "$XDG_SESSION_DESKTOP" = "e16" ]] ; then
+            EROOT="yes"
+        fi
+    fi
+
     if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
         # try to detect running active desktop
         if [[ "$USER" = "$( el_user_desktop_active_get )" ]] ; then

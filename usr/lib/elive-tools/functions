@@ -3339,7 +3339,7 @@ el_user_desktop_active_get(){
 
     # systemd
     if ((is_systemd)) ; then
-        usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tail -1 )"
+        usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
     else
         usename="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
     fi

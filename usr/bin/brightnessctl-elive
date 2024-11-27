@@ -32,6 +32,11 @@ main(){
     current_brightness_percent="$(echo "$current_brightness" | awk -F',' '{print $4}' | tr -d '%')"
     current_brightness_value="$(echo "$current_brightness" | awk -F',' '{print $3}')"
 
+    # Get the maximum brightness value
+    max_brightness="$(echo "$current_brightness" | awk -F',' '{print $5}')"
+    # Calculate the number of steps based on the maximum brightness value
+    brightness_steps="$(($max_brightness / 5))"
+
     # Define the increment based on the current brightness percentage
     if [ "$current_brightness_percent" -ge 10 ]; then
         increment=5
@@ -48,10 +53,12 @@ main(){
             brightness="$(( $current_brightness_value * 2 ))"
             [[ "$brightness" = "-"* ]] && brightness=1
             [[ "$brightness" = "0" ]] && brightness=1
+            el_debug "set brightness as int $brightness"
             if ! sudo -n brightnessctl s $brightness ; then
                 error_show
             fi
         else
+            el_debug "set brightness as +${increment}%"
             if ! sudo -n brightnessctl s +${increment}% ; then
                 error_show
             fi
@@ -61,10 +68,13 @@ main(){
             # Special case: Adjust brightness directly based on integer value
             [[ "$brightness" = "-"* ]] && brightness=1
             brightness="$(( $current_brightness_value / 2 ))"
+            [[ $brightness -gt $brightness_steps ]] && brightness="$(( $brightness_steps / 2 ))"
+            el_debug "set brightness as int $brightness"
             if ! sudo -n brightnessctl s $brightness ; then
                 error_show
             fi
         else
+            el_debug "set brightness as ${increment}%-"
             if ! sudo -n brightnessctl s ${increment}%- ; then
                 error_show
             fi

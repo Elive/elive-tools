@@ -83,6 +83,10 @@ main(){
         echo "Invalid argument. Use 'up' or 'down'."
         exit 1
     fi
+
+    if [[ -n "$EROOT" ]] ; then
+        yad --no-buttons --undecorated --text="<b>Brightness $(brightnessctl -m i | awk -F',' '{print $4}')</b>" --center --timeout=1 --image=display-brightness
+    fi
 }
 
 #

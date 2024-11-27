@@ -7,6 +7,27 @@ el_make_environment
 # TEXTDOMAIN="elive-tools"
 # export TEXTDOMAIN
 
+# Lock system (good one) {{{
+lockfile="/tmp/.$(basename $0)-${USER}.lock"
+
+if [[ -r "$lockfile" ]] ; then
+    PROCCESS="$(cat $lockfile)"
+else
+    PROCCESS=" "
+fi
+if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+    #el_error "$(basename $0) already running"
+    exit
+else
+    echo $$ > "$lockfile"
+fi
+
+# SET the lock file
+echo "$$" > "$lockfile"
+
+
+# end lock system }}}
+
 error_show() {
     local devices
     devices="$( brightnessctl -l | awk 'BEGIN {RS=""; FS="\n"} !/class.*leds/ {print $0}' )"
@@ -85,7 +106,7 @@ main(){
     fi
 
     if [[ -n "$EROOT" ]] ; then
-        yad --no-buttons --undecorated --text="<b>Brightness $(brightnessctl -m i | awk -F',' '{print $4}')</b>" --center --timeout=1 --image=display-brightness
+        ( yad --no-buttons --undecorated --text="<b>Brightness $(brightnessctl -m i | awk -F',' '{print $4}')</b>" --center --timeout=1 --image=display-brightness & )
     fi
 }
 

@@ -839,14 +839,19 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
     do
         unset found
 
-        for dir in ${PATH//:/ } /usr/local/sbin /usr/sbin /sbin
-        do
-            if test -x "${dir}/$check"
-            then
-                found=yes
-                break
-            fi
-        done
+        if command -v "$check" 1>/dev/null 2>&1 ; then
+            found=yes
+            break
+        else
+            for dir in ${PATH//:/ } /usr/local/sbin /usr/sbin /sbin
+            do
+                if test -x "${dir}/$check"
+                then
+                    found=yes
+                    break
+                fi
+            done
+        fi
 
         if [[ "$found" != "yes" ]] ; then
             NOREPORTS=1 el_error "Command '$check' for $(basename $0) not found, func: ${FUNCNAME[1]}"

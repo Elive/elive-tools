@@ -3334,24 +3334,82 @@ el_user_email_get(){
 #===  FUNCTION  ================================================================
 #          NAME:  el_user_desktop_active_get
 #   DESCRIPTION:  returns the name of the active user running the graphical system
+#    PARAMETERS:  $1 = mode (user|desktop)
 #       RETURNS:  username string
+#                 mode desktop: returns the strings "E16" or "Enlightenment"
 #===============================================================================
 el_user_desktop_active_get(){
     # pre {{{
-    local username
+    local username mode
+
+    mode="$1"
+    shift
+
+    if [[ -z "$mode" ]] ; then
+        el_error "mode must be set, using 'user' as default"
+        mode="user"
+    fi
+
 
     # }}}
 
-    # systemd
-    if ((is_systemd)) ; then
-        usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
-    else
-        usename="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
-    fi
+    case "$mode" in
+        user)
+            # systemd
+            if ((is_systemd)) ; then
+                usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
+            else
+                usename="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
+            fi
 
-    if [[ -n "$usenrame" ]] ; then
-        echo "$usenrame"
-    fi
+            if [[ -n "$usenrame" ]] ; then
+                echo "$usenrame"
+            fi
+            ;;
+        desktop)
+            # check
+            if [[ "$UID" -eq 0 ]] ; then
+                el_error "you must be a normal user to get the desktop user"
+                return 1
+            fi
+
+            # detect the desktop if is set on XDG values
+            if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
+                if [[ "$XDG_SESSION_DESKTOP" = "enlightenment" ]] ; then
+                    E_START="autodetected"
+                fi
+                if [[ "$XDG_SESSION_DESKTOP" = "e16" ]] ; then
+                    EROOT="autodetected"
+                fi
+            fi
+
+            if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
+                # try to detect running active desktop
+                if [[ "$USER" = "$( el_user_desktop_active_get user )" ]] ; then
+                    if ps ux | grep -vw grep | grep -iw e16 ; then
+                        EROOT="autodetected"
+                    else
+                        if ps ux | grep -vw grep | grep -iw enlightenment ; then
+                            E_START="autodetected"
+                        fi
+                    fi
+                fi
+            fi
+
+            # return the desktop
+            if [[ -n "$EROOT" ]] ; then
+                echo "E16"
+                unset EROOT
+                # export EROOT
+            fi
+            if [[ -n "$E_START" ]] ; then
+                echo "Enlightenment"
+                unset E_START
+                # export E_START
+            fi
+
+            ;;
+    esac
 }
 
 #===  FUNCTION  ================================================================

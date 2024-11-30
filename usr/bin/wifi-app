@@ -62,52 +62,57 @@ echo "$$" > "$lockfile"
 # end lock system }}}
 
 
+
 main(){
 
     user_active_desktop="$( el_user_desktop_active_get desktop )"
+
+    # Kill any running nm-applet instances (ignore errors)
+    killall nm-applet 2>/dev/null || true
+
 
     if [[ -n "$user_active_desktop" ]] ; then
         case "$user_active_desktop" in
             "E16")
                 EROOT="/usr/share/e16"
 
-                # Kill any running nm-applet instances (ignore errors)
-                killall nm-applet 2>/dev/null || true
-
                 # Start nm-applet in the background with the popup option
                 ( nm-applet --popup & )
 
-                # Wait for 6 minutes
-                count=0
-                while pidof nm-applet >/dev/null ; do
-                    sleep 10
-                    count="$((count+1))"
-                    [[ "$count" -ge 36 ]] && break
-                done
-
-                # Kill nm-applet again after the sleep (ignore errors)
-                killall nm-applet 2>/dev/null || true
                 ;;
             "Enlightenment")
                 E_START="1"
 
-                # Kill any running nm-applet instances (ignore errors)
-                killall nm-applet 2>/dev/null || true
+                # old trayer running? launch it directly
+                if pidof trayer 1>/dev/null 2>&1  ; then
+                    ( nm-applet --popup & )
+                else
+                    if ! el_flag check wifi-app-newtrayer && ! el_flag check wifi-app-oldtrayer ; then
+                        if $guitool --question --text="$( eval_gettext "Do you want to use the new Enlightenment Trayer instead of the traditional one?" )" ; then
+                            el_flag set wifi-app-newtrayer
 
-                # Start nm-applet in the background with the popup option
-                ( nm-applet --indicator & )
-                el_notify soft wifi "Wi-Fi" "$( eval_gettext "Select from the bottom-left corner the Wi-Fi network you want to connect." )"
+                        else
+                            if ! el_dependencies_check "trayer" ; then
+                                el_dependencies_install "trayer"
+                            fi
+                            el_flag set wifi-app-oldtrayer
+                        fi
+                    fi
 
-                # Wait for 6 minutes
-                count=0
-                while pidof nm-applet >/dev/null ; do
-                    sleep 10
-                    count="$((count+1))"
-                    [[ "$count" -ge 36 ]] && break
-                done
+                    if el_flag check wifi-app-newtrayer ; then
+                        # Start nm-applet in the background with the popup option
+                        ( nm-applet --indicator & )
+                        el_notify soft wifi "Wi-Fi" "$( eval_gettext "Select from the bottom-left corner the Wi-Fi network you want to connect." )"
+                    fi
 
-                # Kill nm-applet again after the sleep (ignore errors)
-                killall nm-applet 2>/dev/null || true
+                    if el_flag check wifi-app-oldtrayer ; then
+                        # Start nm-applet in the background with the popup option
+                        ( trayer --edge top --align left --widthtype request --heighttype request --transparent true --alpha 256 & )
+                        sleep 2
+                        ( nm-applet --popup & )
+                    fi
+                fi
+
                 ;;
             *)
                 el_error "$( eval_gettext "Unknown desktop found." ): $user_active_desktop"
@@ -115,7 +120,23 @@ main(){
                 exit
                 ;;
         esac
+
+    else
+        el_error "$( eval_gettext "No desktop found." )"
+        zenity --error --text="$( eval_gettext "No desktop found." )"
+        exit
     fi
+
+    # Wait for 6 minutes
+    count=0
+    while pidof nm-applet >/dev/null ; do
+        sleep 10
+        count="$((count+1))"
+        [[ "$count" -ge 36 ]] && break
+    done
+
+    # Kill nm-applet again after the sleep (ignore errors)
+    killall nm-applet 2>/dev/null || true
 
 
 }

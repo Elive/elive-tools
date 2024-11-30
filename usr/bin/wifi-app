@@ -1,5 +1,13 @@
 #!/bin/bash
+SOURCE="$0"
 source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
+
 
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
@@ -83,6 +91,7 @@ main(){
 
                 # Start nm-applet in the background with the popup option
                 ( nm-applet --indicator & )
+                el_notify soft wifi "Wi-Fi" "$( eval_gettext "Select from the bottom-left corner the Wi-Fi network you want to to connect." )"
 
                 # Wait for 6 minutes
                 sleep 6m

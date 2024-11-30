@@ -56,17 +56,49 @@ echo "$$" > "$lockfile"
 
 main(){
 
-    # Kill any running nm-applet instances (ignore errors)
-    killall nm-applet 2>/dev/null || true
+    user_active_desktop="$( el_user_desktop_active_get desktop )"
 
-    # Start nm-applet in the background with the popup option
-    ( nm-applet --popup & )
+    if [[ -n "$user_active_desktop" ]] ; then
+        case "$user_active_desktop" in
+            "E16")
+                EROOT="/usr/share/e16"
 
-    # Wait for 6 minutes
-    sleep 6m
+                # Kill any running nm-applet instances (ignore errors)
+                killall nm-applet 2>/dev/null || true
 
-    # Kill nm-applet again after the sleep (ignore errors)
-    killall nm-applet 2>/dev/null || true
+                # Start nm-applet in the background with the popup option
+                ( nm-applet --popup & )
+
+                # Wait for 6 minutes
+                sleep 6m
+
+                # Kill nm-applet again after the sleep (ignore errors)
+                killall nm-applet 2>/dev/null || true
+                ;;
+            "Enlightenment")
+                E_START="1"
+
+                # Kill any running nm-applet instances (ignore errors)
+                killall nm-applet 2>/dev/null || true
+
+                # Start nm-applet in the background with the popup option
+                ( nm-applet --indicator & )
+
+                # Wait for 6 minutes
+                sleep 6m
+
+                # Kill nm-applet again after the sleep (ignore errors)
+                killall nm-applet 2>/dev/null || true
+                ;;
+            *)
+                el_error "$( eval_gettext "Unknown desktop found." ): $user_active_desktop"
+                zenity --error --text="$( eval_gettext "Unknown desktop found." )"
+                exit
+                ;;
+        esac
+    fi
+
+
 }
 
 #

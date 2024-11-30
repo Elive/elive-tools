@@ -96,7 +96,7 @@ main(){
 
                 # Start nm-applet in the background with the popup option
                 ( nm-applet --indicator & )
-                el_notify soft wifi "Wi-Fi" "$( eval_gettext "Select from the bottom-left corner the Wi-Fi network you want to to connect." )"
+                el_notify soft wifi "Wi-Fi" "$( eval_gettext "Select from the bottom-left corner the Wi-Fi network you want to connect." )"
 
                 # Wait for 6 minutes
                 count=0

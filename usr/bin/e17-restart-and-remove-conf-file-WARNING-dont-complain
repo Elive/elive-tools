@@ -55,48 +55,38 @@ main(){
         esac
     done
 
-    user_active="$( el_user_desktop_active_get )"
+    user_active="$( el_user_desktop_active_get user )"
+    user_active_desktop="$( el_user_desktop_active_get desktop )"
+
     if [[ -z "$user_active" ]] ; then
         el_error "$( eval_gettext "No active user desktop found." )"
         zenity --error --text="$( eval_gettext "No active user desktop found." )"
         exit
     fi
     sync
-    # detect the desktop if is set on XDG values
-    if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
-        if [[ "$XDG_SESSION_DESKTOP" = "enlightenment" ]] ; then
-            E_START="yes"
-        fi
-        if [[ "$XDG_SESSION_DESKTOP" = "e16" ]] ; then
-            EROOT="yes"
-        fi
-    fi
 
-    if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
-        # try to detect running active desktop
-        if [[ "$USER" = "$( el_user_desktop_active_get )" ]] ; then
-            if ps ux | grep -vw grep | grep -iw e16 ; then
-                EROOT="yes"
-            else
-                if ps ux | grep -vw grep | grep -iw enlightenment ; then
-                    E_START="yes"
-                else
+    if [[ -n "$user_active_desktop" ]] ; then
+        case "$user_active_desktop" in
+            "E16")
+                EROOT="/usr/share/e16"
+                tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
+                ;;
+            "Enlightenment")
+                E_START="1"
+                tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
+                ;;
+            *)
+                el_error "$( eval_gettext "Unknown desktop found." ): $user_active_desktop"
+                zenity --error --text="$( eval_gettext "Unknown desktop found." )"
+                exit
+                ;;
+        esac
 
-                    # no running desktop found, show error
-                    el_error "$( eval_gettext "No running Enlightenment session found." )"
-                    zenity --error --text="$( eval_gettext "No running Enlightenment session found." )"
-                    exit
-                fi
-            fi
-        fi
-    fi
-
-    if [[ -n "$E_START" ]] ; then
-        tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
     else
-        if [[ -n "$EROOT" ]] ; then
-            tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
-        fi
+        # no running desktop found, show error
+        el_error "$( eval_gettext "No running Enlightenment session found." )"
+        zenity --error --text="$( eval_gettext "No running Enlightenment session found." )"
+        exit
     fi
 
 }

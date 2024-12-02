@@ -88,7 +88,7 @@ main(){
                     ( nm-applet --popup & )
                 else
                     if ! el_flag check wifi-app-newtrayer && ! el_flag check wifi-app-oldtrayer ; then
-                        if $guitool --question --text="$( eval_gettext "Do you want to use the new Enlightenment Trayer instead of the traditional one?" )" ; then
+                        if $guitool --question --text="$( eval_gettext "Do you want to use the new Systray instead of the traditional one?" )" ; then
                             el_flag set wifi-app-newtrayer
 
                         else

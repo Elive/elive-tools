@@ -130,9 +130,9 @@ main(){
     # Wait for 6 minutes
     count=0
     while pidof nm-applet >/dev/null ; do
-        sleep 10
+        sleep 5
         count="$((count+1))"
-        [[ "$count" -ge 36 ]] && break
+        [[ "$count" -ge 72 ]] && break
     done
 
     # Kill nm-applet again after the sleep (ignore errors)

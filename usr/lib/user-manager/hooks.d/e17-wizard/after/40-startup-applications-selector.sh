@@ -59,7 +59,7 @@ main(){
         is_thanatests=1
     fi
 
-    if grep -Fqs "keyboard: not found" /etc/elive-version ; then
+    if [[ -e /tmp/.no-keyboard ]] ; then
         is_keyboard_notfound=1
     fi
 

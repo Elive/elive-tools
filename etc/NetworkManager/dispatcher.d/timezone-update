@@ -236,6 +236,10 @@ main(){
         eth*|enp*|e*)
             is_lan=1
             ;;
+        lo)
+            # not needed to run on loopback
+            exit
+            ;;
         *)
             el_warning "unknown parameters (iface?) for $0: $@"
             ;;

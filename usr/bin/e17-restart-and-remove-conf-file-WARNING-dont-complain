@@ -84,8 +84,8 @@ main(){
 
     else
         # no running desktop found, show error
-        el_error "$( eval_gettext "No running Enlightenment session found." )"
-        zenity --error --text="$( eval_gettext "No running Enlightenment session found." )"
+        el_error "$( eval_gettext "No running E session found." )"
+        zenity --error --text="$( eval_gettext "No running E session found." )"
         exit
     fi
 

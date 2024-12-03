@@ -129,13 +129,17 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             #[[ -n "$display" ]] && export DISPLAY=":$display"
         #fi
     #fi
-    if [[ -z "${DISPLAY}" ]] ; then
-        display="$( ps -u "$(id -u)" -o pid= | \
-            while read pid; do
-                cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
-            done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
 
-        [[ -n "$display" ]] && export DISPLAY="$display"
+    # last resort / option to get a display value, but is not reliable, so only do it if we have any E* running:
+    if [[ -z "${DISPLAY}" ]] ; then
+        if pidof -q e16 enlightenment_start enlighenment ; then
+            display="$( ps -u "$(id -u)" -o pid= | \
+                while read pid; do
+                    cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+                done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
+
+            [[ -n "$display" ]] && export DISPLAY="$display"
+        fi
     fi
 
     display="${DISPLAY#:}"

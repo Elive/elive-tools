@@ -3386,10 +3386,10 @@ el_user_desktop_active_get(){
             if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
                 # try to detect running active desktop
                 if [[ "$USER" = "$( el_user_desktop_active_get user )" ]] ; then
-                    if ps ux | grep -vw grep | grep -iw e16 ; then
+                    if ps ux | grep -vw grep | grep -iwqs e16 ; then
                         EROOT="autodetected"
                     else
-                        if ps ux | grep -vw grep | grep -iw enlightenment ; then
+                        if ps ux | grep -vw grep | grep -iwqs enlightenment ; then
                             E_START="autodetected"
                         fi
                     fi

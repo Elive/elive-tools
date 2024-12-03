@@ -998,6 +998,132 @@ EOF
 }
 
 #-------------------------------------------------------------------------------
+#   Remove packages
+#-------------------------------------------------------------------------------
+el_dependencies_remove(){
+    local depends temp is_failed i list arch
+
+    depends="$( echo "$@" | tr '|' ' ' )"
+    el_set_display_variables
+
+    el_dependencies_check urxvt
+
+    arch="$( el_architecture host )"
+    for i in $depends
+    do
+        if [[ -e "/var/lib/dpkg/info/${i}.list" ]] || [[ -e "/var/lib/dpkg/info/${i}:${arch}.list" ]] ; then
+            list="$i $list"
+        fi
+    done
+    depends="$( echo "$list" )"
+
+    temp="/tmp/.$(basename $0)-${USER}-$$"
+    cat > "${temp}" << EOF
+#!/bin/bash
+SOURCE=dummy
+
+echo -e "Removing Packages"
+
+if [[ -x "\$( which urxvt )" ]] && [[ -n "\$DISPLAY" ]] ; then
+    urxvt -T 'Removing Packages' -e bash -c "
+source /usr/lib/elive-tools/functions
+export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
+
+apt-get -f install
+apt-get remove $depends
+ret=\$?
+
+if ((ret)) ; then
+    return \$ret
+else
+    echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+fi
+"
+
+
+else
+    if [[ -n "\$TERM" ]] ; then
+        su -c "
+source /usr/lib/elive-tools/functions
+export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true
+
+apt-get -f install
+apt-get remove $depends
+ret=\$?
+
+if ((ret)) ; then
+    return \$ret
+else
+    echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
+fi
+
+" root
+
+    else
+        el_error "unable to intall dependencies, we don't have access to urxvt or a terminal to do it"
+        sleep 6
+    fi
+fi
+
+EOF
+
+    chmod +x "${temp}"
+
+    if [[ "$UID" = 0 ]] ; then
+        bash "$temp"
+    else
+        if el_check_sudo_automated ; then
+            if sudo -H -n bash "$temp" ; then
+                unset is_failed
+            else
+                is_failed=1
+            fi
+        else
+            # deps
+            if ! el_dependencies_check gksu ; then
+                if [[ -x "$( which urxvt )" ]] ; then
+                    urxvt -e bash -c "echo -e 'Installing Dependencies' ; su -c 'TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update ; apt-get install -y gksu ; ' root"
+                else
+                    if ((is_interactive)) ; then
+                        su -c 'apt-get update ; TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get update ; apt-get install -y gksu ; ' root
+                    fi
+                fi
+            fi
+
+            if [[ -x "$( which gksu )" ]] ; then
+                # multiple gksu attempts
+                for i in 1 2
+                do
+                    if gksu "$temp" ; then
+                        unset is_failed
+                        break
+                    else
+                        is_failed=1
+                    fi
+                done
+            else
+                if ((is_interactive)) ; then
+                    el_info "Removing Dependencies"
+
+                    if su -c "$temp" root ; then
+                        unset is_failed
+                    fi
+                else
+                    el_error "unable to run $temp, we don't have gksu, graphical system, or even a terminal where to do it"
+                fi
+            fi
+        fi
+    fi
+
+    rm -f "${temp}"
+
+    if ((is_failed)) ; then
+        return 1
+    fi
+
+}
+
+#-------------------------------------------------------------------------------
 #   Run apt-get update
 #-------------------------------------------------------------------------------
 el_aptget_update(){

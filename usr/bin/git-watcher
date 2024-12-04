@@ -1663,8 +1663,8 @@ do_compare_before_after(){
     # }}}
 
     # remove the previously modified files
-    rm -rf "$tmpdir/sources-before" "$tmpdir/sources-after"
-    mkdir -p "$tmpdir/sources-before" "$tmpdir/sources-after"
+    rm -rf "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
+    mkdir -p "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
 
     # update temporal code copy
     el_explain 0 "Updating temporal copy on '${tmpdir_sources}'..."
@@ -1672,6 +1672,7 @@ do_compare_before_after(){
 
     # when we are on the first commit, we cannot fetch the previous state to compare, so consider this a correct state
     if [[ "${#commits_history[@]}" = "1" ]] && [[ "$commits_amount" = "1" ]] ; then
+        el_warning "We have tracked only one commit, so we cannot fetch the previous state to compare. SUGGESTION: go back and forth this commit before to run it again"
         return 0
     fi
 
@@ -1695,7 +1696,7 @@ do_compare_before_after(){
     for commit_id in ${commits} ; do
         while read -ru 3 file
         do
-            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-before"
+            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources_BEFORE"
         done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' )"
     done
 
@@ -1709,7 +1710,7 @@ do_compare_before_after(){
     for commit_id in ${commits} ; do
         while read -ru 3 file
         do
-            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources-after"
+            printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources_AFTER"
         done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' )"
     done
 
@@ -1720,7 +1721,7 @@ do_compare_before_after(){
     cd "$working_directory_d"
 
     # return result
-    if [[ "$( diff --color=never -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | lsdiff | wc -l )" -ge 1 ]] ; then
+    if [[ "$( diff --color=never -Naur "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" | lsdiff | wc -l )" -ge 1 ]] ; then
         return 0
     else
         echo -e "${el_c_b}No differences found${el_c_n}"
@@ -2142,7 +2143,7 @@ options_main_interact(){
 
         E)  # edit files
             if do_compare_before_after "$commit_id" ; then
-                meld "$tmpdir/sources-after" "$( pwd )"
+                meld "$tmpdir/sources_AFTER" "$( pwd )"
             fi
 
             if el_confirm "Run a git commit to save your changes?" ; then
@@ -2170,8 +2171,8 @@ options_main_interact(){
         v)  # edit (visualize) how the contents would change if we import it
             if do_compare_before_after "$commit_id" ; then
                 # compare files
-                diff -Naur "$tmpdir/sources-before" "$tmpdir/sources-after" | colordiff
-                meld "$tmpdir/sources-before" "$tmpdir/sources-after"
+                diff -Naur "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" | colordiff
+                meld "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
             fi
 
 

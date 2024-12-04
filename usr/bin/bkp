@@ -150,7 +150,7 @@ do_purge_olds(){
 
 
 do_snap(){
-    local target is_login_wanted
+    local target
     target="${1%/}"
     shift
 
@@ -168,8 +168,6 @@ do_snap(){
             # NOREPORTS=1 el_error "Aborted"
             # exit
         # fi
-    else
-        is_login_wanted=1
     fi
 
     if ! cp -a --reflink=always "${target}" "${target}.snapshot" ; then
@@ -177,11 +175,12 @@ do_snap(){
     fi
 
     el_info "Snapshot created, exit your SHELL when you finish"
-    if ((is_login_wanted)) ; then
-        PROMPT_PREPEND="snapshot" $SHELL -l || true
-    else
+    if [[ "$PROMPT_PREPEND" = "snapshot" ]] ; then
         # finish here because we come from a previous subshell
+        el_info "You are already in a snapshot shell, exit it to finish your snapshot state"
         return 0
+    else
+        PROMPT_PREPEND="snapshot" $SHELL -l || true
     fi
 
     if el_confirm "Recover FROM snapshoted state?" ; then

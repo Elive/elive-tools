@@ -1668,24 +1668,28 @@ do_compare_before_after(){
 
     # update temporal code copy
     el_explain 0 "Updating temporal copy on '${tmpdir_sources}'..."
-    rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
-
-    # when we are on the first commit, we cannot fetch the previous state to compare, so consider this a correct state
-    if [[ "${#commits_history[@]}" = "1" ]] && [[ "$commits_amount" = "1" ]] ; then
-        el_warning "We have tracked only one commit, so we cannot fetch the previous state to compare. SUGGESTION: go back and forth this commit before to run it again"
-        return 0
+    if el_check_dir_has_files "${tmpdir_sources%/}/" ; then
+        rsync -aq --delete "${working_directory_d%/}/" "${tmpdir_sources%/}/"
+    else
+        rm -rf "${tmpdir_sources%/}/" 1>/dev/null 2>&1 || true
+        cp -a --reflink=auto "${working_directory_d%/}/" "${tmpdir_sources%/}/"
     fi
 
     # get the before state
     cd "$tmpdir_sources"
-    if [[ "${#commits_history[@]}" -gt $commits_amount ]] ; then
-        _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 - $commits_amount ))]}"
+    if [[ "${#commits_history[@]}" = "1" ]] && [[ "$commits_amount" = "1" ]] ; then
+        # fetch the previous commit to the actual (unique) one in order to know the previous state
+        _commit_id="$( command git log --pretty=%P -n 1 "$( echo "${commits_history[@]}" | tail -n 1 )" | head -n 1 )"
     else
-        _commit_id="$( echo "$commits_list" | grep -B 1 "${commit_first}" | head -1 )"
+        if [[ "${#commits_history[@]}" -gt $commits_amount ]] ; then
+            _commit_id="${commits_history[$(( ${#commits_history[@]} - 1 - $commits_amount ))]}"
+        else
+            _commit_id="$( echo "$commits_list" | grep -B 1 "${commit_first}" | head -1 )"
 
-        command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[*]} "$branch_working".."$branch_watch" ${options_extra_git_after[*]} | grep --color -C 8 "${commit_first:0:12}"
-        if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}', '${#commits_history[*]} -gt $commits_amount' , is this correct?" ; then
-            return 1
+            command git log --oneline --abbrev=12 --graph --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%an%C(reset) %C(white)— %s%C(reset)%C(bold yellow)%d%C(reset)' ${options_extra_git_before[*]} "$branch_working".."$branch_watch" ${options_extra_git_after[*]} | grep --color -C 8 "${commit_first:0:12}"
+            if ! el_confirm "Warning: feature not fully tested: we are using the first commit "${commit_first}" of the list as ID to know the previous one in order to compare states SINCE this one: '${_commit_id}', '${#commits_history[*]} -gt $commits_amount' , is this correct?" ; then
+                return 1
+            fi
         fi
     fi
 
@@ -1797,6 +1801,7 @@ options_main_interact(){
     option_show "a"         "list Around nearest commits (on our working progress)"
     option_show "A"         "list Around nearest commits (from the watching branch)"
     option_show "v"         "Visualize (and edit) how the contents would change if we import them"
+    option_show "V"         "Visualize an Edit with auto merge"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import this commit merging with the previous one (cherry-pick)"
     option_show "o"         "Import other or multiple commits (cherry-pick)"
@@ -2143,7 +2148,7 @@ options_main_interact(){
 
         E)  # edit files
             if do_compare_before_after "$commit_id" ; then
-                meld "$tmpdir/sources_AFTER" "$( pwd )"
+                meld --diff "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$( pwd )"
             fi
 
             if el_confirm "Run a git commit to save your changes?" ; then
@@ -2174,6 +2179,34 @@ options_main_interact(){
                 diff -Naur "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" | colordiff
                 meld "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
             fi
+
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
+        V)  # edit files with auto merge
+            if do_compare_before_after "$commit_id" ; then
+                while read -ru 3 file
+                do
+                    [[ ! -s "$file" ]] && continue
+                    [[ ! -e "$file" ]] && continue
+                    file="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_BEFORE/||g" )"
+
+                    meld "$tmpdir/sources_BEFORE/$file" "$( pwd )/$file" "$tmpdir/sources_AFTER/$file" \
+                        --output "$( pwd )/$file" --auto-merge \
+                        --diff "$tmpdir/sources_BEFORE/$file" "$tmpdir/sources_AFTER/$file" \
+                        --diff "$tmpdir/sources_AFTER/$file" "$( pwd )/$file"
+
+
+                done 3<<< "$( find "${tmpdir}/sources_BEFORE" -type f )"
+                #meld --diff "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$( pwd )"
+            fi
+
+            #if el_confirm "Run a git commit to save your changes?" ; then
+                #command git add -u
+                #command git commit
+            #fi
 
 
             # return back to main menu
@@ -2705,7 +2738,8 @@ main(){
         commit_id="$( tail -1 "$conf_commit_last_f" )"
 
         # always know the parent commit of the actual one in order to avoid bugs like in the visualize feature run in the startup
-        commit_id_prev="$( git log "${commit_id}^1" -n 1 --format=%H )"
+        commit_id_prev="$( command git log "${commit_id}^1" -n 1 --format=%H )"
+        #commit_id_prev="$( command git log --pretty=%P -n 1 "${commit}" | head -n 1 )"
         if [[ -n "$commit_id_prev" ]] ; then
             el_array_member_add "$commit_id_prev" "${commits_history[@]}" ; commits_history=("${_out[@]}")
         fi

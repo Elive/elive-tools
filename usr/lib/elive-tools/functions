@@ -1004,7 +1004,7 @@ EOF
 #-------------------------------------------------------------------------------
 #   Remove packages
 #-------------------------------------------------------------------------------
-el_dependencies_remove(){
+el_package_remove(){
     local depends temp is_failed i list arch
 
     depends="$( echo "$@" | tr '|' ' ' )"

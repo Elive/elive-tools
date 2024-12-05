@@ -45,7 +45,7 @@ main(){
             eet -d e.cfg config e.cfg.src
 
             if ! grep -qs "value \"icon_theme\" string: \"gnome\";" e.cfg.src && [[ -s "/usr/share/icons/gnome/index.theme" ]] ; then
-                zenity --warning --text="$( eval_gettext "Your icons seem to be configured wrong, press OK to restart your desktop configuration" )"
+                zenity --warning --text="$( eval_gettext "Your desktop has not been correctly configured. So we will try again." )"
                 e17-restart-and-remove-conf-file-WARNING-dont-complain
             fi
 
@@ -55,6 +55,15 @@ main(){
         fi
     fi
 
+    # e26
+    if [[ "$E_HOME_DIR" = *"/.e/e" ]] ; then
+        if [[ -e "/tmp/.${USER}-e-wizard-finished.stamp" ]] ; then
+            rm -f "/tmp/.${USER}-e-wizard-finished.stamp"
+        else
+            zenity --warning --text="$( eval_gettext "Your desktop has not been correctly configured. So we will try again." )"
+            e17-restart-and-remove-conf-file-WARNING-dont-complain
+        fi
+    fi
 
     # if we are debugging give it a little pause to see what is going on
     #if grep -Fqs "debug" /proc/cmdline ; then

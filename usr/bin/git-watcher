@@ -1790,7 +1790,6 @@ options_main_interact(){
         echo -e "${el_c_b}-----------------------------------------------------${el_c_y}[$_counter_show/$counter_total]${el_c_b}-----${el_c_n}"
     fi
     echo -e "${el_c_y}   OPTIONS: ${el_c_n}"
-    #option_show "h"         "Help: how this tool works" # TODO add
     option_show "n"         "Next commit"
     option_show "p"         "Prev commit" # history-based now
     option_show "s"         "Show commit summary"
@@ -1800,8 +1799,6 @@ options_main_interact(){
     option_show "D"         "Show diff of your last working commit"
     option_show "a"         "list Around nearest commits (on our working progress)"
     option_show "A"         "list Around nearest commits (from the watching branch)"
-    option_show "v"         "Visualize (and edit) how the contents would change if we import them"
-    option_show "V"         "Visualize an Edit with auto merge"
     option_show "i"         "Import this commit (cherry-pick)"
     option_show "I"         "Import this commit merging with the previous one (cherry-pick)"
     option_show "o"         "Import other or multiple commits (cherry-pick)"
@@ -1812,6 +1809,9 @@ options_main_interact(){
     fi
     option_show "e"         "Edit the files affected by the last commit"
     option_show "E"         "Edit visually the compared changes"
+    option_show "v"         "Visualize (and edit) how the contents would change if we import them"
+    option_show "V"         "Visualize an Edit with auto merge"
+    option_show "H"         "Helper AI: get help from AI to import this commit"
     option_show "f"         "Fix (edit) our last commit description (--amend)"
     option_show "F"         "Fix the history of last commits (rebase interactive)"
     option_show "m"         "Mark, adds a mark on this position, to review later"
@@ -2200,13 +2200,94 @@ options_main_interact(){
 
 
                 done 3<<< "$( find "${tmpdir}/sources_BEFORE" -type f )"
-                #meld --diff "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$( pwd )"
             fi
 
-            #if el_confirm "Run a git commit to save your changes?" ; then
-                #command git add -u
-                #command git commit
-            #fi
+            if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" -gt 0 ]] ; then
+                if el_confirm "Run a git commit to save your changes?" ; then
+                    command git add -u
+                    command git commit
+                fi
+            fi
+
+
+            # return back to main menu
+            $FUNCNAME
+
+            ;;
+        H)  # edit files with auto merge
+            pwd="$(pwd)"
+
+            # dependencies
+            if ! el_dependencies_check "aider" ; then
+                el_error "Aider is not installed, install it first and configure it: pipx install aider-chat"
+            fi
+            if [[ -z "$ai_model" ]] ; then
+                el_info "Type the model you want to use:"
+                echo -e "
+  deepseek             | (middle quality, cheap)
+  sonnet               | (from Claude, very good quality, more expensive)
+  4o                   | (from OpenAI, good quality, average price)
+  o1-mini / o1-preview | (from OpenAI, very good quality, much more expensive)
+  "
+                read ai_model
+
+            fi
+            if do_compare_before_after "$commit_id" ; then
+                while read -ru 3 file
+                do
+                    [[ ! -s "$file" ]] && continue
+                    [[ ! -e "$file" ]] && continue
+                    file="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_AFTER/||g" )"
+                    ext="${file##*.}"
+
+                    # cleanup
+                    rm -rf "${tmpdir}/helper_ai"
+                    mkdir -p "${tmpdir}/helper_ai"
+
+                    # copy files
+                    cp -f "$tmpdir/sources_BEFORE/$file" "${tmpdir}/helper_ai/source_file_before.${ext}"
+                    cp -f "$tmpdir/sources_AFTER/$file" "${tmpdir}/helper_ai/source_file_after.${ext}"
+                    cp -f "$(pwd)/$file" "${tmpdir}/helper_ai/source_file_NEW_to_modify.${ext}"
+
+                    # prepare environment
+                    cd "$tmpdir/helper_ai"
+                    diff -Nau "source_file_before.${ext}" "source_file_after.${ext}" > "source_file_patch.diff"
+                    rm -f "source_file_before.${ext}" "source_file_after.${ext}"
+
+                    rm -rf .git
+                    git init .
+                    git add *
+                    git commit -m init
+
+                    aider \
+                        --code-theme monokai \
+                        --git \
+                        --lint-cmd 'c:cppcheck' \
+                        --no-attribute-author \
+                        --no-attribute-commit-message-author \
+                        --no-attribute-commit-message-committer \
+                        --no-auto-commits \
+                        --no-auto-test \
+                        --no-check-update \
+                        --no-gitignore \
+                        --yes \
+                        --${ai_model} \
+                        source_file*  \
+                        --message "I have an old source code modification that I want to import again in the new upstream code that changed a bit. My patch is the file 'source_file_patch.diff' and I need to implement these changes into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
+
+                        # --message "I have an old source code modification that I want to import again in the new upstream clean code. The original file was 'source_file_before.${ext}', my patch is the file 'source_file_patch.diff', they needss to be imported now into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
+
+
+                done 3<<< "$( find "${tmpdir}/sources_AFTER" -type f )"
+            fi
+            cd "$pwd"
+
+            if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" -gt 0 ]] ; then
+                if el_confirm "Run a git commit to save your changes?" ; then
+                    command git add -u
+                    command git commit
+                fi
+            fi
 
 
             # return back to main menu
@@ -2772,6 +2853,12 @@ main(){
                 check_if_has_diverged
             fi
         fi
+    fi
+
+    # fetch the branch if was not locally fetch yet
+    if ! command git branch | grep -qsE "\s*${branch_watch}$" ; then
+        command git checkout --quiet "$branch_watch"
+        command git checkout --quiet "$branch_working"
     fi
 
     # get username / email or assign them if they are not already added

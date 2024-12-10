@@ -1652,6 +1652,7 @@ do_cherry_pick_multiple(){
 do_compare_before_after(){
     # pre {{{
     local commits _commit_id commit_id commits_amount
+    unset file files
     el_debug
 
     commits="$*"
@@ -1663,8 +1664,8 @@ do_compare_before_after(){
     # }}}
 
     # remove the previously modified files
-    rm -rf "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
-    mkdir -p "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER"
+    rm -rf "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$tmpdir/sources_NEWCLEAN"
+    mkdir -p "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$tmpdir/sources_NEWCLEAN"
 
     # update temporal code copy
     el_explain 0 "Updating temporal copy on '${tmpdir_sources}'..."
@@ -1715,6 +1716,7 @@ do_compare_before_after(){
         while read -ru 3 file
         do
             printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources_AFTER"
+            el_array_member_add "$file" "${files[@]}" ; files=("${_out[@]}")
         done 3<<< "$( git --no-pager show "$commit_id" | lsdiff | sed -e 's|^a/||g' -e 's|^b/||g' )"
     done
 
@@ -1723,6 +1725,12 @@ do_compare_before_after(){
 
     # go back to original directory
     cd "$working_directory_d"
+
+    # make a copy of the new sources to include in the diff to always visualize them if we make (auto) modifications
+    while read -ru 3 file
+    do
+        printf "%s\n" "$file" | cpio --quiet -padu -- "$tmpdir/sources_NEWCLEAN"
+    done 3<<< "$( echo "${files[@]}")"
 
     # return result
     if [[ "$( diff --color=never -Naur "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" | lsdiff | wc -l )" -ge 1 ]] ; then
@@ -2147,8 +2155,10 @@ options_main_interact(){
             ;;
 
         E)  # edit files
+            el_info "Showing the diff between: sources_before, sources_after, sources_new"
             if do_compare_before_after "$commit_id" ; then
-                meld --diff "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$( pwd )"
+                meld --diff "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" "$( pwd )" \
+                    --diff "$tmpdir/sources_AFTER" "$( pwd )" "$tmpdir/sources_NEWCLEAN"
             fi
 
             if el_confirm "Run a git commit to save your changes?" ; then
@@ -2174,6 +2184,7 @@ options_main_interact(){
 
             ;;
         v)  # edit (visualize) how the contents would change if we import it
+            el_info "Showing the diff between the original sources and the modified ones (not actual new sources)"
             if do_compare_before_after "$commit_id" ; then
                 # compare files
                 diff -Naur "$tmpdir/sources_BEFORE" "$tmpdir/sources_AFTER" | colordiff
@@ -2186,6 +2197,7 @@ options_main_interact(){
 
             ;;
         V)  # edit files with auto merge
+            el_info "Showing a smart diff between the:  sources_Before, sources_After, and the sources_New with the automated merging\n  + includes tabs for: sources_Before vs sources_After\n  + sources_After vs sources_New\n  + sources_NewClean vs sources_New"
             if do_compare_before_after "$commit_id" ; then
                 while read -ru 3 file
                 do
@@ -2193,10 +2205,12 @@ options_main_interact(){
                     [[ ! -e "$file" ]] && continue
                     file="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_BEFORE/||g" )"
 
-                    meld "$tmpdir/sources_BEFORE/$file" "$( pwd )/$file" "$tmpdir/sources_AFTER/$file" \
+                    meld \
+                        "$tmpdir/sources_BEFORE/$file" "$( pwd )/$file"  "$tmpdir/sources_AFTER/$file"\
                         --output "$( pwd )/$file" --auto-merge \
+                        --diff "$tmpdir/sources_AFTER/$file" "$( pwd )/$file" \
                         --diff "$tmpdir/sources_BEFORE/$file" "$tmpdir/sources_AFTER/$file" \
-                        --diff "$tmpdir/sources_AFTER/$file" "$( pwd )/$file"
+                        --diff "$tmpdir/sources_NEWCLEAN/$file" "$( pwd )/$file"
 
 
                 done 3<<< "$( find "${tmpdir}/sources_BEFORE" -type f )"

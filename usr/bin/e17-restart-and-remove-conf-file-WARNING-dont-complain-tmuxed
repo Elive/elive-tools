@@ -95,7 +95,6 @@ main(){
         e17|E17)
             # E17+
             killall -s STOP enlightenment_start enlightenment ecomorph efreetd 2>/dev/null
-            sync
 
             # upgrade confs
             rm -fr ~/.e
@@ -107,7 +106,6 @@ main(){
             ;;
         e26|E26)
             # E26+
-            sync
             killall -s STOP enlightenment 2>/dev/null
 
             ;;
@@ -172,6 +170,10 @@ main(){
             ;;
         e26|E26)
             killall enlightenment  2>/dev/null
+            killall efreetd  2>/dev/null
+            killall enlightenment  2>/dev/null
+            sync
+            LC_ALL=C sleep 0.5
 
             # upgrade confs
             rm -fr ~/.e

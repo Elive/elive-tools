@@ -72,7 +72,6 @@ main(){
                 tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
                 ;;
             "E17")
-                E_START="1"
                 tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
                 ;;
             "E26")

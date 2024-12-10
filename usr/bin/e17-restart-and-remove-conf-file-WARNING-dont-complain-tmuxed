@@ -37,13 +37,17 @@ echo "$$" > "$lockfile"
 # end lock system }}}
 
 main(){
-    local pid
+    local pid desktop
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17"
+        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17|e26"
         exit 1
     fi
+
+    desktop="$1"
+    shift
+
 
     # play "breaking" sound
     if ! ((NOVOICE)) && ! ((SILENT)) && [[ -s "/usr/share/sounds/elive/glass-break.wav" ]] ; then
@@ -63,7 +67,7 @@ main(){
     cd ~ || exit 1
     sync
 
-    case "$@" in
+    case "$desktop" in
         e16|E16)
 
             elive-autostart-applications stop
@@ -145,7 +149,7 @@ main(){
     # sync
 
     # finish the kill process
-    case "$@" in
+    case "$desktop" in
         e16|E16)
             killall -9 e16 starte16 efreetd  2>/dev/null
 

@@ -108,7 +108,6 @@ main(){
                     if el_flag check wifi-app-oldtrayer ; then
                         # Start nm-applet in the background with the popup option
                         ( trayer --edge top --align left --widthtype request --heighttype request --transparent true --alpha 256 & )
-                        sleep 2
                         ( nm-applet --popup & )
                     fi
                 fi

@@ -3470,7 +3470,7 @@ el_user_email_get(){
 #===============================================================================
 el_user_desktop_active_get(){
     # pre {{{
-    local username mode
+    local username mode is_found
 
     mode="$1"
     shift
@@ -3503,39 +3503,49 @@ el_user_desktop_active_get(){
                 return 1
             fi
 
-            # detect the desktop if is set on XDG values
-            if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
-                if [[ "$XDG_SESSION_DESKTOP" = "enlightenment" ]] ; then
-                    E_START="autodetected"
-                fi
-                if [[ "$XDG_SESSION_DESKTOP" = "e16" ]] ; then
-                    EROOT="autodetected"
-                fi
+            # return the desktop
+            if ! ((is_found)) && [[ -n "$EROOT" ]] ; then
+                echo "E16"
+                unset EROOT
+                is_found=1
+            fi
+            if ! ((is_found)) &&  [[ -n "$E_START" ]] ; then
+                echo "E17"
+                unset E_START
+                is_found=1
+            fi
+            if ! ((is_found)) && [[ "$E_HOME_DIR" = *"/.e/e" ]] ; then
+                echo "E26"
+                is_found=1
             fi
 
-            if [[ -z "$EROOT" ]] && [[ -z "$E_START" ]] ; then
-                # try to detect running active desktop
-                if [[ "$USER" = "$( el_user_desktop_active_get user )" ]] ; then
-                    if ps ux | grep -vw grep | grep -iwqs e16 ; then
-                        EROOT="autodetected"
-                    else
-                        if ps ux | grep -vw grep | grep -iwqs enlightenment ; then
-                            E_START="autodetected"
+            if ! ((is_found)) ; then
+                # detect the desktop if is set on XDG values
+                if [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
+                    if [[ "$XDG_SESSION_DESKTOP" = "enlightenment" ]] ; then
+                        echo "E26"
+                        is_found=1
+                    fi
+                    if [[ "$XDG_SESSION_DESKTOP" = "e16" ]] ; then
+                        echo "E16"
+                        is_found=1
+                    fi
+                fi
+
+                if ! ((is_found)) ; then
+                    # try to detect running active desktop
+                    if [[ "$USER" = "$( el_user_desktop_active_get user )" ]] ; then
+                        if ps ux | grep -vw grep | grep -iwqs e16 ; then
+                            echo "E16"
+                            is_found=1
+                        else
+                            if ps ux | grep -vw grep | grep -iwqs enlightenment ; then
+                                echo "E26"
+                                is_found=1
+                            fi
                         fi
                     fi
                 fi
-            fi
-
-            # return the desktop
-            if [[ -n "$EROOT" ]] ; then
-                echo "E16"
-                unset EROOT
-                # export EROOT
-            fi
-            if [[ -n "$E_START" ]] ; then
-                echo "Enlightenment"
-                unset E_START
-                # export E_START
             fi
 
             ;;

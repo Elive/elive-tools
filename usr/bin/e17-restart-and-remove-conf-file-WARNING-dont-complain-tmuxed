@@ -139,10 +139,15 @@ main(){
     # sync
 
     # finish the kill process
-    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph efreetd e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
+    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
+
 
     sync
     sleep 1
+
+    killall -9 efreetd 2>/dev/null
+    LC_ALL=C sleep 0.3
+
 
     case "$@" in
         e16|E16)

@@ -157,6 +157,7 @@ main(){
         e17|E17)
             # upgrade confs
             rm -fr ~/.e
+            rm -fr ~/.cache/efreet
             ;;
     esac
 

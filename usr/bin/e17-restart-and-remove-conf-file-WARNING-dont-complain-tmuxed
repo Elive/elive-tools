@@ -80,7 +80,7 @@ main(){
             killall -9 cairo-dock 2>/dev/null
             killall -9 conky 2>/dev/null
 
-            killall -s STOP e16 starte16 efreetd 2>/dev/null
+            killall -s STOP e16 starte16 2>/dev/null
             sync
 
             # upgrade confs
@@ -101,8 +101,14 @@ main(){
             EL_DEBUG=0 elive-skel upgrade .emerald
 
             ;;
+        e26|E26)
+            # E26+
+            sync
+            killall -s STOP enlightenment 2>/dev/null
+
+            ;;
         *)
-            echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17" 1>&2
+            echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17|e26" 1>&2
             exit 1
             ;;
     esac
@@ -139,31 +145,36 @@ main(){
     # sync
 
     # finish the kill process
-    killall -9 enlightenment_start enlightenment_system enlightenment ecomorph e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
-
-
-    sync
-    sleep 1
-
-    killall -9 efreetd 2>/dev/null
-    LC_ALL=C sleep 0.3
-
-
     case "$@" in
         e16|E16)
+            killall -9 e16 starte16 efreetd  2>/dev/null
+
             # upgrade confs
             EL_DEBUG=0 elive-skel upgrade .e16
+
             ;;
         e17|E17)
+            # killall -9 enlightenment_start enlightenment_system enlightenment ecomorph e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
+            killall -9 enlightenment_start enlightenment_system enlightenment ecomorph e16 starte16 efreetd dbus-daemon ssh-agent gnome-keyring-daemon gvfsd at-spi-bus-launcher systemd 2>/dev/null
+
+            sleep 1
+            killall -9 efreetd 2>/dev/null
+            LC_ALL=C sleep 0.3
+
             # upgrade confs
             rm -fr ~/.e
             rm -fr ~/.cache/efreet
+
+            ;;
+        e26|E26)
+            killall enlightenment  2>/dev/null
+
+            # upgrade confs
+            rm -fr ~/.e
+            rm -fr ~/.cache/efreet
+
             ;;
     esac
-
-
-
-
 
 
     # just in case something is remaining

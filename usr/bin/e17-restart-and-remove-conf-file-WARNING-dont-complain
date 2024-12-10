@@ -71,9 +71,13 @@ main(){
                 EROOT="/usr/share/e16"
                 tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e16"
                 ;;
-            "Enlightenment")
+            "E17")
                 E_START="1"
                 tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
+                ;;
+            "E26")
+                E_START="1"
+                tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e26"
                 ;;
             *)
                 el_error "$( eval_gettext "Unknown desktop found." ): $user_active_desktop"

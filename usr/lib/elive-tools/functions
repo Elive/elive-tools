@@ -3487,13 +3487,13 @@ el_user_desktop_active_get(){
         user)
             # systemd
             if ((is_systemd)) ; then
-                usenrame="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
+                username="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
             else
-                usename="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
+                username="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+'  | awk '{print $1}' | head -1 )"
             fi
 
-            if [[ -n "$usenrame" ]] ; then
-                echo "$usenrame"
+            if [[ -n "$username" ]] ; then
+                echo "$username"
             fi
             ;;
         desktop)

@@ -171,12 +171,13 @@ main(){
         e26|E26)
             killall enlightenment  2>/dev/null
             killall efreetd  2>/dev/null
-            killall enlightenment  2>/dev/null
+            killall enlightenment_start  2>/dev/null
+            killall enlightenment enlightenment_start efreetd  2>/dev/null
 
             sync
             LC_ALL=C sleep 0.5
 
-            killall -9 enlightenment_alert enlightenment  2>/dev/null
+            killall -9 enlightenment_alert enlightenment enlightenment_start  2>/dev/null
 
             # upgrade confs
             rm -fr ~/.e

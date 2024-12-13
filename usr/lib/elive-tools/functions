@@ -37,7 +37,7 @@ fi
 #   Set the DISPLAY variable
 #-------------------------------------------------------------------------------
 el_set_display_variables(){ # Set DISPLAY variables of our actual user
-    local display e_ipc_socket e_ipc_file pid file is_debug buf
+    local display e_ipc_socket e_ipc_file pid file is_debug buf is_enlightenment is_pong
 
     if [[ "$1" = "debug" ]] ; then
         is_debug=1
@@ -66,11 +66,16 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         export E_IPC_SOCKET="${e_ipc_file%-*}"
     fi
     # E26+ mode:
-    if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
-        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
-        e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
-        export E_IPC_SOCKET="${e_ipc_file%\|*}"
+    if [[ -z "$E_IPC_SOCKET" ]] ; then
+        while read -ru 3 file
+        do
+            e_ipc_file="$( command find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 2>/dev/null | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
+            e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
+            e_ipc_file="/tmp/${e_ipc_file##* /run/user/$UID/}"
+            export E_IPC_SOCKET="${e_ipc_file%\|*}"
+        done 3<<< "$( find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>&1 || true )"
     fi
+    #fi
 
     # force re-set of the display
     # if we are not from a remote connection with the display set remotely, then
@@ -156,26 +161,41 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             #;;
     #esac
 
+    # cache call
+    if pidof -q enlightenment_start ; then
+        if [[ -x "$( which enlightenment_remote )" ]] ; then
+            is_enlightenment=1
+        fi
+    fi
+
     # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
     fi
 
     # cache'd one
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
+    if ! ((is_pong)) && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
     # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
     fi
 
     # Loop through all dbus socket files in /tmp and test them
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] ; then
+    if ! ((is_pong)) && [[ -x "$( which enlightenment_remote )" ]] ; then
         for socket in /tmp/dbus-* ; do
             if test -S "$socket" ; then
                 export DBUS_SESSION_BUS_ADDRESS="unix:path=$socket"
-                if enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
                     break
                 else
                     unset DBUS_SESSION_BUS_ADDRESS
@@ -184,12 +204,16 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         done
     fi
     # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
     fi
 
     # elive cache'd usable one
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
+    if ! ((is_pong)) && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
         buf="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
         if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
             unset buf
@@ -197,18 +221,26 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
     fi
 
     # test standard address (not actually working under E26)
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
+    if ! ((is_pong)) && test -S "/run/user/$UID/bus" ; then
         buf="unix:path=/run/user/$UID/bus"
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
     fi
 
 
@@ -220,19 +252,21 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     if ((is_terminal)) && [[ "$UID" != 0 ]] && [[ -z "$SSH_CONNECTION" ]] ; then
-        # only show the error if we have a graphical system running by the user
-        if command ls --color=none /tmp/e-"${USER}"@*/*-* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
-            if [[ -z "${DISPLAY}" ]] ; then
-                el_warning "Variable DISPLAY is not set, so we will not have access to the local graphical system"
-            fi
-            if [[ -z "${XAUTHORITY}" ]] ; then
-                el_warning "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
-            fi
-            # only e17+
-            if command ls --color=none /tmp/e-${USER}@*/*-* /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
-                if [[ -z "${E_IPC_SOCKET}" ]] ; then
-                    if [[ "$UID" != 0 ]] ; then
-                        el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
+        if [[ -z "${DISPLAY}" ]] || [[ -z "$XAUTHORITY" ]] || [[ -z "$E_IPC_SOCKET" ]] ; then
+            # only show the error if we have a graphical system running by the user
+            if command ls --color=none /tmp/e-"${USER}"@*/*-* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>/dev/null || pidof e16 1>/dev/null 2>&1 ; then
+                if [[ -z "${DISPLAY}" ]] ; then
+                    el_warning "Variable DISPLAY is not set, so we will not have access to the local graphical system"
+                fi
+                if [[ -z "${XAUTHORITY}" ]] ; then
+                    el_warning "Variable XAUTHORITY is not set, so we may not have full access to the local graphical system"
+                fi
+                # only e17+
+                if command ls --color=none /tmp/e-${USER}@*/*-* /tmp/e-"${USER}"@*/*\|* 1>/dev/null 2>/dev/null ; then
+                    if [[ -z "${E_IPC_SOCKET}" ]] ; then
+                        if [[ "$UID" != 0 ]] ; then
+                            el_warning "Variable E_IPC_SOCKET is not set, we may be not the user owner of this graphical session"
+                        fi
                     fi
                 fi
             fi

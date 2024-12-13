@@ -3462,6 +3462,34 @@ el_user_email_get(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_user_desktop_running
+#   DESCRIPTION:  ask if actual user is running or not the given desktop
+#    PARAMETERS:  $1 = desktop name (e16|enlightenment)
+#       RETURNS:  true if running, false if not
+#===============================================================================
+el_user_desktop_running(){
+    # pre {{{
+    local desktop
+
+    desktop="$1"
+    shift
+
+    if [[ -z "$desktop" ]] ; then
+        el_error "parameter must be a desktop name, like e16 or enlightenment, ignoring..."
+        return 1
+    fi
+
+    # }}}
+
+    if ps ux | grep -vw grep | grep -iwqs "$desktop" ; then
+        return 0
+    else
+        return 1
+    fi
+
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_user_desktop_active_get
 #   DESCRIPTION:  returns the name of the active user running the graphical system
 #    PARAMETERS:  $1 = mode (user|desktop)

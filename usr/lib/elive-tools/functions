@@ -148,21 +148,20 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     # fetch dbus address to we can use things like notify-send or dbus-send
     #unset DBUS_SESSION_BUS_ADDRESS
 
+    #case "$( el_user_desktop_active_get "desktop" )" in
+        #"E16")
+            #unset DBUS_SESSION_BUS_ADDRESS
+            #;;
+        #"E26"|"Enlightenment")
+            #;;
+    #esac
+
     # test or invalidate
     if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
-        buf="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
-        if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
-            unset buf
-        fi
-        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
-    fi
-    # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
-    fi
+
+    # cache'd one
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
@@ -170,14 +169,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
         unset DBUS_SESSION_BUS_ADDRESS
     fi
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
-        buf="unix:path=/run/user/$UID/bus"
-        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
-    fi
-    # test or invalidate
-    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-        unset DBUS_SESSION_BUS_ADDRESS
-    fi
+
     # Loop through all dbus socket files in /tmp and test them
     if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] ; then
         for socket in /tmp/dbus-* ; do
@@ -190,6 +182,29 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
                 fi
             fi
         done
+    fi
+    # test or invalidate
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
+    fi
+
+    # elive cache'd usable one
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
+        buf="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
+        if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
+            unset buf
+        fi
+        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
+    fi
+    # test or invalidate
+    if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+        unset DBUS_SESSION_BUS_ADDRESS
+    fi
+
+    # test standard address (not actually working under E26)
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] && test -S "/run/user/$UID/bus" ; then
+        buf="unix:path=/run/user/$UID/bus"
+        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
     if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && [[ -x "$( which enlightenment_remote )" ]] && pidof -q enlightenment_start && ! enlightenment_remote -version 2>/dev/null | grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then

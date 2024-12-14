@@ -161,9 +161,10 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             #;;
     #esac
 
-    # cache call
-    if pidof -q enlightenment_start ; then
+    # only re-set the dbus variable if we have a running E in our actual environment
+    if [[ -n "$E_HOME_DIR" ]] && pidof -q enlightenment ; then
         if [[ -x "$( which enlightenment_remote )" ]] ; then
+            # cache call
             is_enlightenment=1
         fi
     fi

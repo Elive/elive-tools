@@ -61,18 +61,19 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
     # E17 mode:
     if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
-        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
-        e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
-        export E_IPC_SOCKET="${e_ipc_file%-*}"
+        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 | sed -e 's|^.*/run|/run|g' -e 's|^.*/tmp|/tmp|g' )"
+        if [[ -e "$e_ipc_file" ]] ; then
+            export E_IPC_SOCKET="${e_ipc_file%-*}"
+        fi
     fi
     # E26+ mode:
     if [[ -z "$E_IPC_SOCKET" ]] ; then
         while read -ru 3 file
         do
-            e_ipc_file="$( command find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 2>/dev/null | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 2>/dev/null )"
-            e_ipc_file="/tmp/${e_ipc_file##* /tmp/}"
-            e_ipc_file="/tmp/${e_ipc_file##* /run/user/$UID/}"
-            export E_IPC_SOCKET="${e_ipc_file%\|*}"
+            e_ipc_file="$( command find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|* -mindepth 0 -maxdepth 0 -type s -print0 2>/dev/null | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 | sed -e 's|^.*/run|/run|g' -e 's|^.*/tmp|/tmp|g' )"
+            if [[ -e "$e_ipc_file" ]] ; then
+                export E_IPC_SOCKET="${e_ipc_file%\|*}"
+            fi
         done 3<<< "$( find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>&1 || true )"
     fi
     #fi
@@ -83,8 +84,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     if ! { { [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] ; } && { [[ "$DISPLAY" = *"10"* ]] || [[ "$DISPLAY" = *"localhost"* ]] ; } ; } ; then
         if { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
             || { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
-            || [[ "$( pidof e16 | wc -w )" -gt 1 ]] \
-            || [[ "$( pidof enlighenment | wc -w )" -gt 1 ]] \
+            || pidof -q e16 \
+            || pidof -q enlightenment \
             ; then
                 unset DISPLAY
         fi

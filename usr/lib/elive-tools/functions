@@ -179,7 +179,22 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         fi
     fi
 
-    # cache'd one
+    # test standard address
+    if ! ((is_pong)) && test -S "/run/user/$UID/bus" ; then
+        buf="unix:path=/run/user/$UID/bus"
+        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
+    fi
+    # test or invalidate
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
+        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+            is_pong=1
+        else
+            unset DBUS_SESSION_BUS_ADDRESS
+        fi
+    fi
+
+
+    # set values for this user / session
     if ! ((is_pong)) && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
@@ -220,20 +235,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
             unset buf
         fi
-        [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
-    fi
-    # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
-        else
-            unset DBUS_SESSION_BUS_ADDRESS
-        fi
-    fi
-
-    # test standard address (not actually working under E26)
-    if ! ((is_pong)) && test -S "/run/user/$UID/bus" ; then
-        buf="unix:path=/run/user/$UID/bus"
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate

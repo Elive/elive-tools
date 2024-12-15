@@ -2208,8 +2208,8 @@ options_main_interact(){
                     meld \
                         "$tmpdir/sources_BEFORE/$file" "$( pwd )/$file"  "$tmpdir/sources_AFTER/$file"\
                         --output "$( pwd )/$file" --auto-merge \
-                        --diff "$tmpdir/sources_AFTER/$file" "$( pwd )/$file" \
                         --diff "$tmpdir/sources_BEFORE/$file" "$tmpdir/sources_AFTER/$file" \
+                        --diff "$tmpdir/sources_AFTER/$file" "$( pwd )/$file" \
                         --diff "$tmpdir/sources_NEWCLEAN/$file" "$( pwd )/$file"
 
 
@@ -2238,10 +2238,11 @@ options_main_interact(){
             if [[ -z "$ai_model" ]] ; then
                 el_info "Type the model you want to use:"
                 echo -e "
-  deepseek             | (middle quality, cheap)
-  sonnet               | (from Claude, very good quality, more expensive)
-  4o                   | (from OpenAI, good quality, average price)
-  o1-mini / o1-preview | (from OpenAI, very good quality, much more expensive)
+  gemini/gemini-exp-1206    | (good quality, fast, cheap)
+  deepseek                  | (middle quality, cheap)
+  sonnet                    | (from Claude, very good quality, more expensive)
+  4o                        | (from OpenAI, good quality, average price)
+  o1-mini / o1-preview      | (from OpenAI, very good quality, much more expensive)
   "
                 read ai_model
 
@@ -2285,7 +2286,7 @@ options_main_interact(){
                         --no-check-update \
                         --no-gitignore \
                         --yes \
-                        --${ai_model} \
+                        --model ${ai_model} \
                         source_file*  \
                         --message "I have an old source code modification that I want to import again in the new upstream code that changed a bit. My patch is the file 'source_file_patch.diff' and I need to implement these changes into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
 

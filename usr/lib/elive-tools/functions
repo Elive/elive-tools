@@ -3567,7 +3567,7 @@ el_user_desktop_active_get(){
         user)
             # systemd
             if ! ((is_found)) && ((is_systemd)) ; then
-                username="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
+                username="$( loginctl user-status | awk 'BEGIN {RS=""; FS="\n"} /State: active/ {print $1}' | sed -E -e 's|\s+\(.*$||g' | head -n 1 )"
                 [[ -n "$username" ]] && is_found=1
             fi
             if ! ((is_found)) && [[ -n "$XDG_GREETER_DATA_DIR" ]] ; then

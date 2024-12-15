@@ -3570,16 +3570,8 @@ el_user_desktop_active_get(){
                 username="$(  LC_ALL="$EL_LC_EN" loginctl list-users | grep -w active | awk '{print $2}' | tac | psort -- -p "^${USER}$" | head -1 )"
                 [[ -n "$username" ]] && is_found=1
             fi
-            if ! ((is_found)) ; then
-                username="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+' | awk '{print $1}' | head -1 )"
-                [[ -n "$username" ]] && is_found=1
-            fi
             if ! ((is_found)) && [[ -n "$XDG_GREETER_DATA_DIR" ]] ; then
                 username="$( echo "$XDG_GREETER_DATA_DIR" | sed -e 's|^.*/data/||g' -e 's|^.*/||g' )"
-                [[ -n "$username" ]] && is_found=1
-            fi
-            if ! ((is_found)) && [[ -n "$XAUTHORITY" ]] ; then
-                username="$( echo "$XAUTHORITY" | sed -e 's|^/home/||g' -e 's|/.*$||g' )"
                 [[ -n "$username" ]] && is_found=1
             fi
             if ! ((is_found)) && [[ -n "$ECONFDIR" ]] ; then
@@ -3588,6 +3580,14 @@ el_user_desktop_active_get(){
             fi
             if ! ((is_found)) && [[ -n "$E_HOME_DIR" ]] ; then
                 username="$( echo "$E_HOME_DIR" | sed -e 's|^/home/||g' -e 's|/.*$||g' )"
+                [[ -n "$username" ]] && is_found=1
+            fi
+            if ! ((is_found)) ; then
+                username="$( who | grep -E 'tty[0-9]*.*\(:[[:digit:]]+' | awk '{print $1}' | head -1 )"
+                [[ -n "$username" ]] && is_found=1
+            fi
+            if ! ((is_found)) && [[ -n "$XAUTHORITY" ]] ; then
+                username="$( echo "$XAUTHORITY" | sed -e 's|^/home/||g' -e 's|/.*$||g' )"
                 [[ -n "$username" ]] && is_found=1
             fi
 

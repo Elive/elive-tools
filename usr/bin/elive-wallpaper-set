@@ -61,16 +61,20 @@ main(){
     if [[ -n "$E_START" ]] ; then
         backgrounds_dir="$HOME/.e/e/backgrounds"
 
-        E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
-        case "$E_VERSION" in
-            0.17.*)
-                backgrounds_dir="$HOME/.e/e17/backgrounds"
-                ;;
-            *)
-                zenity --warning --text="Wallpapers configurator for newer version of Enlightenment is not yet implemented, try to do it manually from its configurations"
-                backgrounds_dir="$HOME/.e/e/backgrounds"
-                ;;
-        esac
+        if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+            E_HOME_DIR="$HOME/.e/e17"
+        fi
+        backgrounds_dir="$E_HOME_DIR/backgrounds"
+        # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+        # case "$E_VERSION" in
+        #     0.17.*)
+        #         backgrounds_dir="$HOME/.e/e17/backgrounds"
+        #         ;;
+        #     *)
+        #         # zenity --warning --text="Wallpapers configurator for newer version of Enlightenment is not yet implemented, try to do it manually from its configurations"
+        #         backgrounds_dir="$HOME/.e/e/backgrounds"
+        #         ;;
+        # esac
     fi
 
     mkdir -p "$backgrounds_dir"

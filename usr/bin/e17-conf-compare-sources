@@ -18,13 +18,13 @@ main(){
         exit 1
     fi
 
+    if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+        E_HOME_DIR="$HOME/.e/e17"
+    fi
+
     # }}}
 
-    if [[ -d "$HOME/.e/e/config" ]] ; then
-        cd "$HOME/.e/e/config/$E_CONF_PROFILE"
-    else
-        cd "$HOME/.e/e17/config/$E_CONF_PROFILE"
-    fi
+    cd "$E_HOME_DIR/config/$E_CONF_PROFILE"
 
     enlightenment_remote -save
     sync

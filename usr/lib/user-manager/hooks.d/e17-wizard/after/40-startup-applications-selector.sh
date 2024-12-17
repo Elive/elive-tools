@@ -74,16 +74,20 @@ main(){
         order_file="$HOME/.e16/startup-applications.list"
     else
         if [[ -x "$(which enlightenment)" ]] ; then
-            E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
-            case "$E_VERSION" in
-                0.17.*)
-                    order_file="$HOME/.e/e17/applications/startup/.order"
-                    ;;
-                *)
-                    el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
-                    exit
-                    ;;
-            esac
+            if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+                E_HOME_DIR="$HOME/.e/e17"
+            fi
+            order_file="$E_HOME_DIR/applications/startup/.order"
+            # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+            # case "$E_VERSION" in
+            #     0.17.*)
+            #         order_file="$HOME/.e/e17/applications/startup/.order"
+            #         ;;
+            #     *)
+            #         el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
+            #         exit
+            #         ;;
+            # esac
         fi
     fi
 

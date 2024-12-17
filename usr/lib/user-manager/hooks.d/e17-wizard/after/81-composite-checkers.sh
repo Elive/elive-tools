@@ -92,12 +92,15 @@ main(){
 
     # e17 {{{
     if [[ -n "$E_START" ]] ; then
+        if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+            E_HOME_DIR="$HOME/.e/e17"
+        fi
         # default E profile of user
-        dir="${HOME}/.e/e17/config/$(enlightenment_remote -default-profile-get)"
+        dir="${E_HOME_DIR}/config/$(enlightenment_remote -default-profile-get)"
 
         if [[ ! -d "$dir" ]] ; then
             el_warning "Unable to get default E profile of user, switching to default one"
-            dir="${HOME}/.e/e17/config/standard"
+            dir="${E_HOME_DIR}/config/standard"
         fi
         if [[ ! -d "$dir" ]] ; then
             el_error "Where is the default E profile of user? exiting..."

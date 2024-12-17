@@ -131,7 +131,7 @@ run_edje(){
     # full E theme
     if ((is_e_theme)) ; then
         if $guitools --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
-            $precmd cp -f "$file" "$HOME/.e/e17/themes/"
+            $precmd cp -f "$file" "$E_HOME_DIR/themes/"
             # update: seems like it doesn't works?
             #enlightenment_remote -theme-set
             $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and also have the most features." )"
@@ -365,6 +365,10 @@ main(){
     # just make sure we have urxvt installed and don't waste code
     if ! el_dependencies_check "urxvt" ; then
         el_dependencies_install "rxvt-unicode"
+    fi
+
+    if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+        E_HOME_DIR="$HOME/.e/e17"
     fi
 
     # }}}

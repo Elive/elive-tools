@@ -56,7 +56,7 @@ main(){
     fi
 
     # e26
-    if [[ "$E_HOME_DIR" = *"/.e/e" ]] ; then
+    if [[ "$E_HOME_DIR" = "$HOME/.e/e" ]] ; then
         if [[ -e "/tmp/.${USER}-e-wizard-finished.stamp" ]] ; then
             rm -f "/tmp/.${USER}-e-wizard-finished.stamp"
         else

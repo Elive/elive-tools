@@ -19,6 +19,11 @@ run_all_hooks(){
         hooksdir="user-manager"
     fi
 
+    # wait a few seconds if we are in E26
+    if [[ -n "$E_HOME_DIR" ]] ; then
+        sleep 4
+    fi
+
     for step in $steps
     do
         for hook in "/usr/lib/$hooksdir/hooks.d/e17-wizard/$step/"*

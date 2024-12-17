@@ -20,9 +20,9 @@ export TEXTDOMAIN
 if [[ -n "$EROOT" ]] ; then
     exit
 fi
-if ! [[ -n "$E_START" ]] ; then
-    el_error "This desktop is not Enlightenment 17 ? exiting..."
-    exit 1
+if [[ "$E_HOME_DIR" != "$HOME/.e/e" ]] ; then
+    # el_error "This desktop is not Enlightenment 17 ? exiting..."
+    exit
 fi
 
 has_glxinfo_ecomorph_compatibility=1

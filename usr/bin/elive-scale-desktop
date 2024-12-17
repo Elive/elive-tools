@@ -102,7 +102,7 @@ special_screens(){
     font="DejaVu Sans"
 
     # e17
-    if [[ -n "$E_START" ]] ; then
+    if [[ -n "$E_START" ]] && [[ "$E_HOME_DIR" = "$HOME/.e/e17" ]] ; then
         # check
         if [[ "$( enlightenment_remote -ping )" != *pong ]] ; then
             el_error "Unable to connect to DBUS enlightenment_remote"

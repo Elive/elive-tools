@@ -133,9 +133,8 @@ run_edje(){
         if $guitools --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
             $precmd cp -f "$file" "$E_HOME_DIR/themes/"
             # update: seems like it doesn't works?
-            #enlightenment_remote -theme-set
-            $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and also have the most features." )"
-
+            enlightenment_remote -theme-set "$E_HOME_DIR/themes/$( basename "$file" )"
+            # $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and also have the most features." )"
         fi
 
         return 0

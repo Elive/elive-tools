@@ -74,14 +74,14 @@ main(){
     if [[ -n "$user_active_desktop" ]] ; then
         case "$user_active_desktop" in
             "E16")
-                EROOT="/usr/share/e16"
+                # EROOT="/usr/share/e16"
 
                 # Start nm-applet in the background with the popup option
                 ( nm-applet --popup & )
 
                 ;;
             "Enlightenment")
-                E_START="1"
+                # E_START="1"
 
                 # old trayer running? launch it directly
                 if pidof trayer 1>/dev/null 2>&1  ; then

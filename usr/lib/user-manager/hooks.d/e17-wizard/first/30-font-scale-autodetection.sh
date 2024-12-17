@@ -17,7 +17,9 @@ main(){
         fi
     fi
 
-    ( elive-scale-desktop --auto --quiet & )
+    if [ -n "$EROOT" ] ; then
+        ( elive-scale-desktop --auto --quiet & )
+    fi
 }
 
 #

@@ -28,11 +28,13 @@ verify_x11_access(){
 
 # set a specific wallpaper for the actual release if there's any
 e16_set_release_wallpaper(){
-    if [ -n "$EROOT" ] && [ -d /etc/elive/wallpaper ] ; then
+    if [ -d /etc/elive/wallpaper ] ; then
         wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
 
         if [ -s "$wallpaper" ] ; then
-            ( elive-wallpaper-set "$wallpaper" & )
+            if [ -n "$EROOT" ] ; then
+                ( elive-wallpaper-set "$wallpaper" & )
+            fi
         else
             if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
                 el_warning "/etc/elive/wallpaper has not a correct bg? \n$( ls -1 /etc/elive/wallpaper/ )"
@@ -43,7 +45,7 @@ e16_set_release_wallpaper(){
 
 # this runs a daemon to set the gtk theme, we can stop it in the end
 gtk_set_theme(){
-    if [ -s "$HOME/.xsettingsd" ] && ! pidof xsettingsd 1>/dev/null ; then
+    if [ -n "$EROOT" ] && [ -s "$HOME/.xsettingsd" ] && ! pidof xsettingsd 1>/dev/null ; then
         ( xsettingsd 1>/dev/null 2>&1 & )
     fi
 }

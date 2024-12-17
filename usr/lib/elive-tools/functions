@@ -101,7 +101,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
     # get from w
     if [[ -z "${DISPLAY}" ]] ; then
-        display="$( w -hs | awk -v user="$USER" '{ if (($1 == user) && ($5 ~ /(\/e16|xinit|enlightenment_start)/ )) print $3}' | grep "^:" | tail -1 )"
+        display="$( w -hs "$USER" | awk '{ if ($5 ~ /(\/e16|xinit|enlightenment_start)/ ) print $3}' | grep "^:" | tail -1 )"
         [[ -n "$display" ]] && export DISPLAY="$display"
     fi
     # Find Xorg or X process

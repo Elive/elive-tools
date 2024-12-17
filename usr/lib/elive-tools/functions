@@ -195,7 +195,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
 
 
     # set values for this user / session
-    if ! ((is_pong)) && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}" ; then
+    if ! ((is_pong)) && test -e ~/.dbus/session-bus/"$(dbus-uuidgen --get 2>/dev/null)-${display}" ; then
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
     # test or invalidate

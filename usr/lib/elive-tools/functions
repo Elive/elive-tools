@@ -84,8 +84,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     if ! { { [[ -n "$TMUX" ]] || [[ -n "$SSH_CONNECTION" ]] ; } && { [[ "$DISPLAY" = *"10"* ]] || [[ "$DISPLAY" = *"localhost"* ]] ; } ; } ; then
         if { [[ -n "$EROOT" ]] && command ls --color=none /tmp/e-"${USER}"@*/* 1>/dev/null 2>/dev/null ; } \
             || { [[ -n "$EROOT" ]] && [[ -n "$E_START" ]] ; } \
-            || pidof -q e16 \
-            || pidof -q enlightenment \
+            || { pidof -q e16 && pidof -q enlightenment ; } \
             ; then
                 unset DISPLAY
         fi

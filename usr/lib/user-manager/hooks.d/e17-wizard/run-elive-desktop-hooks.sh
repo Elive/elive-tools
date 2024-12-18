@@ -82,10 +82,10 @@ run_all_hooks(){
 
 main(){
     # run it in BG so we don't need to wait for desktop start
-    if ((is_terminal)) ; then
-        run_all_hooks
+    if ((is_terminal)) || [[ -n "$E_START" ]] ; then
+        run_all_hooks "$@"
     else
-        run_all_hooks &
+        run_all_hooks "$@" &
     fi
 }
 

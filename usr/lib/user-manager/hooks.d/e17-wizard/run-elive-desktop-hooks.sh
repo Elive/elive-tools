@@ -56,7 +56,7 @@ run_all_hooks(){
     done
 
     # remove useless / known logs
-    logs="$( cat "/tmp/.X11-error-logs-desktop-hooks.txt" | grep -vE "(^Terminating|conky|/run/user/.*/keyring/|cairo-dock)" )"
+    logs="$( cat "/tmp/.X11-error-logs-desktop-hooks.txt" | grep -vE "(^Terminating|conky|/run/user/.*/keyring/|cairo-dock)" | sed -e 's|^ $||g' -e '/^$/d' )"
     rm -f "/tmp/.X11-error-logs-desktop-hooks.txt"
 
     if [[ -n "$logs" ]] ; then

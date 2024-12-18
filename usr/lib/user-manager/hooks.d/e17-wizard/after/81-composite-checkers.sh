@@ -108,7 +108,11 @@ main(){
         fi
 
         # get file
-        file="${dir}/module.comp.cfg"
+        if [[ "$E_HOME_DIR" = "$HOME/.e/e17" ]] ; then
+            file="${dir}/module.comp.cfg"
+        else
+            file="${dir}/e_comp.cfg"
+        fi
         if [[ ! -s "$file" ]] ; then
             # if not exist, most probably is because we have it disabled (no composite at all selected)
             el_debug "E composite conf not found, ignoring..."

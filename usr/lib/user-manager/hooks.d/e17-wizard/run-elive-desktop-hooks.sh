@@ -11,7 +11,12 @@ run_all_hooks(){
     fi
 
     # }}}
-    steps="first last after"
+    if [[ -n "$1" ]] ; then
+        steps="$1"
+        shift
+    else
+        steps="first last after"
+    fi
 
     if grep -qs "boot=live" /proc/cmdline ; then
         hooksdir="deliver"

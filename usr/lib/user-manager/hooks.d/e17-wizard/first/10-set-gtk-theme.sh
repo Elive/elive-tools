@@ -52,7 +52,12 @@ gtk_set_theme(){
 
 elm_set_theme(){
     # set elementary theme light to match "elive light" theme and have a better default
-    elementary_config -q -p light
+    if [ -n "$EROOT" ] ; then
+        elementary_config -q -p light
+    else
+        # not needed since we set it later in 12-ethemes.sh
+        true
+    fi
 }
 
 verify_x11_access

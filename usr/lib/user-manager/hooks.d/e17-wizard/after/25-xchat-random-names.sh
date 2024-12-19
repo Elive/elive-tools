@@ -41,23 +41,37 @@ main(){
     if [[ -f "$HOME/.config/hexchat/hexchat.conf" ]] ; then
 
         randomized="$RANDOM$RANDOM$RANDOM"
+        # hexchat_name="EliveLinux_${LANG%%_*}"
+        hexchat_name="Elive_${LANG%%_*}"
+        if [[ "$E_HOME_DIR" = "$HOME/.e/e" ]] ; then
+            hexchat_name="${hexchat_name}_e26"
+        else
+            if [[ "$E_HOME_DIR" = "$HOME/.e/e17" ]] ; then
+                hexchat_name="${hexchat_name}_e17"
+            else
+                if [[ -n "$EROOT" ]] ; then
+                    hexchat_name="${hexchat_name}_e16"
+                fi
+            fi
+        fi
+
 
         NUMBERRANDOM="${randomized:0:2}"
-        sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
+        sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = ${hexchat_name}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if ((is_live)) ; then
-            sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick1 = Elive.*1.*$|irc_nick1 = ${hexchat_name}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:2:2}"
-        sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
+        sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = ${hexchat_name}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if ((is_live)) ; then
-            sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick2 = Elive.*2.*$|irc_nick2 = ${hexchat_name}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
 
         NUMBERRANDOM="${randomized:4:2}"
-        sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
+        sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = ${hexchat_name}_${NUMBERRANDOM}|" "${HOME}/.config/hexchat/hexchat.conf" || true
         if ((is_live)) ; then
-            sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = EliveLinux_${LANG%%_*}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
+            sudo -H sed -i "s|^.*irc_nick3 = Elive.*3.*$|irc_nick3 = ${hexchat_name}_${NUMBERRANDOM}|" "/etc/skel/.config/hexchat/hexchat.conf" || true
         fi
     fi
 

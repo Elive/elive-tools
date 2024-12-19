@@ -1,4 +1,12 @@
-#!/bin/sh
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-tools"
+export TEXTDOMAIN
+
 main(){
     # debug mode
     # if grep -Fqs "debug" /proc/cmdline ; then
@@ -43,8 +51,10 @@ main(){
                 "1" \
                 "${message_design_elm_default} + ${message_color_palette} Light" \
                 "2" \
-                "${message_design_elm_default} + ${message_color_palette} Mauve-Sunset" \
+                "${message_design_elm_default} + ${message_color_palette} Dark" \
                 "3" \
+                "${message_design_elm_default} + ${message_color_palette} Mauve-Sunset" \
+                "4" \
                 "${message_elm_elive_light} ${message_elm_elive_light_unfinished} + ${message_color_palette} Light" \
                 --height=220 \
                 --width=480 || echo cancel )"
@@ -57,14 +67,21 @@ main(){
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
-                "2")
+                "1")
+                    # default E flat theme + dark color palette
+                    elementary_config -q -p "default"
+                    if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
+                        enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
+                    fi
+                    ;;
+                "3")
                     # default E flat theme
                     elementary_config -q -p "mauve-sunset"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
-                "3")
+                "4")
                     # E17 Elive theme
                     elementary_config -q -p "light"
                     if ! enlightenment_remote -theme-get | grep -q "/Elive Light.edj$" ; then

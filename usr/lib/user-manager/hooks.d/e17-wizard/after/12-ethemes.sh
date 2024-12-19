@@ -31,7 +31,7 @@ main(){
             local message_message
             message_message="$( printf "$( eval_gettext "Select the design that you want" )" "" )"
             local message_design_elm_default
-            message_design_elm_default="$( printf "$( eval_gettext "Default E flat theme" )" "" )"
+            message_design_elm_default="$( printf "$( eval_gettext "Default E26 flat theme" )" "" )"
             local message_elm_elive_light
             message_elm_elive_light="$( printf "$( eval_gettext "E17 Elive theme" )" "" )"
             local message_elm_elive_light_unfinished

@@ -35,7 +35,7 @@ main(){
             local message_elm_elive_light
             message_elm_elive_light="$( printf "$( eval_gettext "E17 Elive theme" )" "" )"
             local message_elm_elive_light_unfinished
-            message_elm_elive_light_unfinished="$( printf "$( eval_gettext "(unfinished / bugged)" )" "" )"
+            message_elm_elive_light_unfinished="$( printf "$( eval_gettext "(unfinished and bugged)" )" "" )"
             local message_color_palette
             message_color_palette="$( printf "$( eval_gettext "Color palette" )" "" )"
 

@@ -35,7 +35,7 @@ main(){
             local message_elm_elive_light
             message_elm_elive_light="$( printf "$( eval_gettext "E17 Elive theme" )" "" )"
             local message_elm_elive_light_unfinished
-            message_elm_elive_light_unfinished="$( printf "$( eval_gettext "(unfinished to port and bugged)" )" "" )"
+            message_elm_elive_light_unfinished="$( printf "$( eval_gettext "(unfinished to import, some issues)" )" "" )"
             local message_color_palette
             message_color_palette="$( printf "$( eval_gettext "Color palette" )" "" )"
 
@@ -57,7 +57,7 @@ main(){
                 "4" \
                 "${message_elm_elive_light} ${message_elm_elive_light_unfinished} + ${message_color_palette} Light" \
                 --height=220 \
-                --width=480 || echo cancel )"
+                --width=540 || echo cancel )"
 
             case "$result" in
                 "1")

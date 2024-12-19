@@ -50,6 +50,12 @@ gtk_set_theme(){
     fi
 }
 
+elm_set_theme(){
+    # set elementary theme light to match "elive light" theme and have a better default
+    elementary_config -p light
+}
+
 verify_x11_access
 e16_set_release_wallpaper
 gtk_set_theme
+elm_set_theme

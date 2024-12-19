@@ -52,7 +52,7 @@ gtk_set_theme(){
 
 elm_set_theme(){
     # set elementary theme light to match "elive light" theme and have a better default
-    elementary_config -p light
+    elementary_config -q -p light
 }
 
 verify_x11_access

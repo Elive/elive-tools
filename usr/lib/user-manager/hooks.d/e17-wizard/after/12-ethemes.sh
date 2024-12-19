@@ -67,7 +67,7 @@ main(){
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
-                "1")
+                "2")
                     # default E flat theme + dark color palette
                     elementary_config -q -p "default"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then

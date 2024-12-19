@@ -64,6 +64,7 @@ main(){
                     # default E flat theme + light color palette
                     elementary_config -q -p "light"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
+                        LC_ALL=C sleep 0.5
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
@@ -71,6 +72,7 @@ main(){
                     # default E flat theme + dark color palette
                     elementary_config -q -p "default"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
+                        LC_ALL=C sleep 0.5
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
@@ -78,6 +80,7 @@ main(){
                     # default E flat theme
                     elementary_config -q -p "mauve-sunset"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
+                        LC_ALL=C sleep 0.5
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/default.edj"
                     fi
                     ;;
@@ -85,6 +88,7 @@ main(){
                     # E17 Elive theme
                     elementary_config -q -p "light"
                     if ! enlightenment_remote -theme-get | grep -q "/Elive Light.edj$" ; then
+                        LC_ALL=C sleep 0.5
                         enlightenment_remote -theme-set "/usr/share/elementary/themes/Elive Light.edj"
                     fi
                     ;;

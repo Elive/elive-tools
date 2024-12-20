@@ -41,7 +41,7 @@ echo "$$" > "$lockfile"
 
 ERM(){
     if [[ -n "$E_START" ]] ; then
-        el_warning "disabled eremote for fonts configurations in the new versions: $@"
+        el_debug "disabled eremote for fonts configurations in the new versions: $@"
         #enlightenment_remote "$@"
         true
         return "$?"

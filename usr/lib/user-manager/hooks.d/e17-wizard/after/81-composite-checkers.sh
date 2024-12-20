@@ -140,7 +140,7 @@ main(){
 
                     # if [[ "$E_HOME_DIR" = "$HOME/.e/e17" ]] ; then
                         local message_vbox
-                        message_vbox="$( printf "$( eval_gettext "Hardware acceleration might not function properly in a virtual machine. Disable it if you see any crash." )" "" )"
+                        message_vbox="$( printf "$( eval_gettext "Hardware acceleration might not function properly in a virtual machine. We recommend to have it disabled in the desktop startup options." )" "" )"
                         zenity --warning --text="$message_vbox"
                     # fi
 

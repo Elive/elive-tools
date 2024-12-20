@@ -41,8 +41,7 @@ main(){
         read nothing
 
         enlightenment_remote -save
-        sync
-
+        sync ; LC_ALL=C sleep 0.3
         eet_conf_unpack_all_files
 
         el_explain 0 "Comparing with meld..."

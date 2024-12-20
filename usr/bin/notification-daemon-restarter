@@ -8,7 +8,7 @@ main(){
     # restart notification daemon to avoid the messages not appear after a while
     if [[ -n "$EROOT" ]] ; then
         # make sure we want it running:
-        if grep -qs "^/usr/lib/notification-daemon/notification-daemon" "$HOME/.e16/startup-applications.list" ; then
+        if grep -qs "^/usr/lib/notification-daemon/notification-daemon" "$HOME/.e16/startup-applications.list" 2>/dev/null ; then
             kill $(pidof notification-daemon 2>/dev/null ) >/dev/null 2>&1 || true
             LC_ALL=C sleep 0.3
             ( /usr/lib/notification-daemon/notification-daemon & )

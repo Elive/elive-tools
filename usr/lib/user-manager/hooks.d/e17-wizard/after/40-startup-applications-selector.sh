@@ -461,7 +461,7 @@ EOF
         message_hexchat="$( printf "$( eval_gettext "IRC Chat: With the chat channel of Elive" )" "" )"
 
         # always enable notifications features (notify-send) by default:
-        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] ; then
+        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] && [[ -e "$HOME/.e16/startup-applications.list" ]] && ! grep -qs "notification-daemon" "$HOME/.e16/startup-applications.list" ; then
             echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
         fi
 

@@ -56,8 +56,8 @@ main(){
                 "${message_design_elm_default} + ${message_color_palette} Mauve-Sunset" \
                 "4" \
                 "${message_elm_elive_light} ${message_elm_elive_light_unfinished} + ${message_color_palette} Light" \
-                --height=220 \
-                --width=540 || echo cancel )"
+                --height=280 \
+                --width=600 || echo cancel )"
 
             case "$result" in
                 "1")

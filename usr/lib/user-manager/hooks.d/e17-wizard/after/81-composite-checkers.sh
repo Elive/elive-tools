@@ -137,9 +137,12 @@ main(){
                 ;;
             2)
                 if [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
-                    local message_vbox
-                    message_vbox="$( printf "$( eval_gettext "Hardware acceleration might not function properly in a virtual machine." )" "" )"
-                    zenity --warning --text="$message_vbox"
+
+                    if [[ "$E_HOME_DIR" = "$HOME/.e/e17" ]] ; then
+                        local message_vbox
+                        message_vbox="$( printf "$( eval_gettext "Hardware acceleration might not function properly in a virtual machine." )" "" )"
+                        zenity --warning --text="$message_vbox"
+                    fi
 
                 else
                     local message_gl

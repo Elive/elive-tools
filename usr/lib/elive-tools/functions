@@ -3605,19 +3605,19 @@ el_user_desktop_active_get(){
             fi
             if ! ((is_found)) && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
                 case "$XDG_SESSION_DESKTOP" in
-                    "e16")                  echo "e16" ; is_found=1 ; ;;
+                    "e16")                  echo "E16" ; is_found=1 ; ;;
                     "enlightenment")        echo "E26" ; is_found=1 ; ;;
                 esac
             fi
             if ! ((is_found)) && [[ -n "$XDG_CURRENT_DESKTOP" ]] ; then
                 case "$XDG_CURRENT_DESKTOP" in
-                    "E16")                  echo "e16" ; is_found=1 ; ;;
+                    "E16")                  echo "E16" ; is_found=1 ; ;;
                     "Enlightenment")        echo "E26" ; is_found=1 ; ;;
                 esac
             fi
             if ! ((is_found)) && [[ -n "$DESKTOP" ]] ; then
                 case "$DESKTOP" in
-                    "E16")                  echo "e16" ; is_found=1 ; ;;
+                    "E16")                  echo "E16" ; is_found=1 ; ;;
                     "Enlightenment")        echo "E26" ; is_found=1 ; ;;
                 esac
             fi
@@ -3651,6 +3651,21 @@ el_user_desktop_active_get(){
                         is_found=1
                     else
                         if ps ux | grep -vw grep | grep -iwqs enlightenment ; then
+                            echo "E26"
+                            is_found=1
+                        fi
+                    fi
+                fi
+            fi
+
+            if ! ((is_found)) ; then
+                # try to detect running active desktop
+                if [[ "$USER" = "$( el_user_desktop_active_get user )" ]] ; then
+                    if pidof -q e16 ; then
+                        echo "E16"
+                        is_found=1
+                    else
+                        if pidof -q enlightenment_start ; then
                             echo "E26"
                             is_found=1
                         fi

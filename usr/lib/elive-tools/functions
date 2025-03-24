@@ -170,11 +170,15 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     fi
 
     # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
         else
-            unset DBUS_SESSION_BUS_ADDRESS
+            is_pong=1
         fi
     fi
 
@@ -184,11 +188,15 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
         else
-            unset DBUS_SESSION_BUS_ADDRESS
+            is_pong=1
         fi
     fi
 
@@ -198,16 +206,20 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         source ~/.dbus/session-bus/"$(dbus-uuidgen --get)-${display}"
     fi
     # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
         else
-            unset DBUS_SESSION_BUS_ADDRESS
+            is_pong=1
         fi
     fi
 
     # Loop through all dbus socket files in /tmp and test them
-    if ! ((is_pong)) && [[ -x "$( which enlightenment_remote )" ]] ; then
+    if ! ((is_pong)) && ((is_enlightenment)) && [[ -x "$( which enlightenment_remote )" ]] ; then
         for socket in /tmp/dbus-* ; do
             if test -S "$socket" ; then
                 export DBUS_SESSION_BUS_ADDRESS="unix:path=$socket"
@@ -220,13 +232,18 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         done
     fi
     # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
         else
-            unset DBUS_SESSION_BUS_ADDRESS
+            is_pong=1
         fi
     fi
+
 
     # elive cache'd usable one
     if ! ((is_pong)) && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
@@ -237,11 +254,15 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"
     fi
     # test or invalidate
-    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] && ((is_enlightenment)) ; then
-        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-            is_pong=1
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
         else
-            unset DBUS_SESSION_BUS_ADDRESS
+            is_pong=1
         fi
     fi
 

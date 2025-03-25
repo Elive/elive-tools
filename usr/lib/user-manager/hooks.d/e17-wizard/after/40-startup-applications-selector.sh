@@ -72,12 +72,14 @@ main(){
     if [[ -n "$EROOT" ]] ; then
         # e16
         order_file="$HOME/.e16/startup-applications.list"
+        is_e16=1
     else
         if [[ -x "$(which enlightenment)" ]] ; then
             if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
                 E_HOME_DIR="$HOME/.e/e17"
             fi
             order_file="$E_HOME_DIR/applications/startup/.order"
+            is_enlightenment=1
             # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
             # case "$E_VERSION" in
             #     0.17.*)
@@ -586,11 +588,18 @@ EOF
     echo "# $message_instructions" >> "$HOME/.e16/startup-applications.list"
 
     # sort the launchers
-    echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$HOME/.e16/startup-applications.list"
+    echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$order_file"
 
     # fix for bookworm asking for wifi password, for some reason even if the daemon is correctly running, this needs to be run again otherwise wifi password asking will not show up
     if ((is_live)) && ((is_bookworm)) ; then
-        echo "gnome-keyring-daemon" >> "$HOME/.e16/startup-applications.list"
+        if ((is_e16)) ; then
+            echo "gnome-keyring-daemon" >> "$HOME/.e16/startup-applications.list"
+        fi
+        if ((is_enlightenment)) ; then
+            if ! LC_ALL=C grep -Fqs "gnome-keyring-daemon" "$HOME/.elxstrt" ; then
+                echo -e "\n# Fix for bookworm on which the keyring is not working and needs to be run again:\nkillall gnome-keyring-daemon 2>/dev/null 1>&2 || true\ngnome-keyring-daemon &" >> "$HOME/.elxstrt"
+            fi
+        fi
     fi
 
     # configure cairo-dock

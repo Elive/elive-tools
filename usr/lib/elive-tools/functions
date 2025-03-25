@@ -169,18 +169,18 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         fi
     fi
 
-    # test or invalidate
-    # if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
-    #     if ((is_enlightenment)) ; then
-    #         if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-    #             is_pong=1
-    #         else
-    #             unset DBUS_SESSION_BUS_ADDRESS
-    #         fi
-    #     else
-    #         is_pong=1
-    #     fi
-    #fi
+    # verify enlightenment already set / default dbus value
+    if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        if ((is_enlightenment)) ; then
+            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                is_pong=1
+            else
+                unset DBUS_SESSION_BUS_ADDRESS
+            fi
+        # else
+        #     is_pong=1
+        fi
+    fi
 
     # test standard address
     if ! ((is_pong)) && test -S "/run/user/$UID/bus" ; then

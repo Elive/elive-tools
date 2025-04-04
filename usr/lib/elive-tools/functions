@@ -177,8 +177,8 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             else
                 unset DBUS_SESSION_BUS_ADDRESS
             fi
-        # else
-        #     is_pong=1
+        else
+            is_pong=1
         fi
     fi
 

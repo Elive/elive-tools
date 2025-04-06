@@ -66,7 +66,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             export E_IPC_SOCKET="${e_ipc_file%-*}"
         fi
     fi
-    # E26+ mode:
+    # Enlightenment mode:
     if [[ -z "$E_IPC_SOCKET" ]] ; then
         while read -ru 3 file
         do
@@ -157,7 +157,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         #"E16")
             #unset DBUS_SESSION_BUS_ADDRESS
             #;;
-        #"E26"|"Enlightenment")
+        #""|"Enlightenment")
             #;;
     #esac
 
@@ -3627,19 +3627,19 @@ el_user_desktop_active_get(){
             if ! ((is_found)) && [[ -n "$XDG_SESSION_DESKTOP" ]] ; then
                 case "$XDG_SESSION_DESKTOP" in
                     "e16")                  echo "E16" ; is_found=1 ; ;;
-                    "enlightenment")        echo "E26" ; is_found=1 ; ;;
+                    "enlightenment")        echo "Enlightenment" ; is_found=1 ; ;;
                 esac
             fi
             if ! ((is_found)) && [[ -n "$XDG_CURRENT_DESKTOP" ]] ; then
                 case "$XDG_CURRENT_DESKTOP" in
                     "E16")                  echo "E16" ; is_found=1 ; ;;
-                    "Enlightenment")        echo "E26" ; is_found=1 ; ;;
+                    "Enlightenment")        echo "Enlightenment" ; is_found=1 ; ;;
                 esac
             fi
             if ! ((is_found)) && [[ -n "$DESKTOP" ]] ; then
                 case "$DESKTOP" in
                     "E16")                  echo "E16" ; is_found=1 ; ;;
-                    "Enlightenment")        echo "E26" ; is_found=1 ; ;;
+                    "Enlightenment")        echo "Enlightenment" ; is_found=1 ; ;;
                 esac
             fi
 
@@ -3655,7 +3655,7 @@ el_user_desktop_active_get(){
                 is_found=1
             fi
             if ! ((is_found)) && [[ "$E_HOME_DIR" = *"/.e/e" ]] ; then
-                echo "E26"
+                echo "Enlightenment"
                 is_found=1
             fi
             if ! ((is_found)) &&  [[ -n "$E_START" ]] ; then
@@ -3672,7 +3672,7 @@ el_user_desktop_active_get(){
                         is_found=1
                     else
                         if ps ux | grep -vw grep | grep -iwqs enlightenment ; then
-                            echo "E26"
+                            echo "Enlightenment"
                             is_found=1
                         fi
                     fi
@@ -3687,7 +3687,7 @@ el_user_desktop_active_get(){
                         is_found=1
                     else
                         if pidof -q enlightenment_start ; then
-                            echo "E26"
+                            echo "Enlightenment"
                             is_found=1
                         fi
                     fi

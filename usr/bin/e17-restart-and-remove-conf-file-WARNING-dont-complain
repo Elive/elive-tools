@@ -74,9 +74,9 @@ main(){
             "E17")
                 tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e17"
                 ;;
-            "E26")
+            "Enlightenment")
                 E_START="1"
-                tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed e26"
+                tmux-attach-jobs background erestart "e17-restart-and-remove-conf-file-WARNING-dont-complain-tmuxed enlightenment"
                 ;;
             *)
                 el_error "$( eval_gettext "Unknown desktop found." ): $user_active_desktop"

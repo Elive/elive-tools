@@ -99,7 +99,7 @@ run_desktop_autostart(){
                 is_run=1
             fi
         else
-            # E26+
+            # Enlightenment
             if [[ "$E_START" ]] ; then
                 if [[ "$E_HOME_DIR" ]] ; then
                     list="${E_HOME_DIR}/applications/startup/.order"

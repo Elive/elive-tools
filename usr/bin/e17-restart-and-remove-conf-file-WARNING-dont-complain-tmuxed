@@ -41,7 +41,7 @@ main(){
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17|e26"
+        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17|enlightenment"
         exit 1
     fi
 
@@ -104,13 +104,13 @@ main(){
             EL_DEBUG=0 elive-skel upgrade .emerald
 
             ;;
-        e26|E26)
-            # E26+
+        enew|ENEW|Enlightenment|enlightenment)
+            # Enlightenment
             killall -s STOP enlightenment 2>/dev/null
 
             ;;
         *)
-            echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17|e26" 1>&2
+            echo -e "E: unknown desktop to restart conf, example: $(basename "$0" ) e16|e17|enlightenment" 1>&2
             exit 1
             ;;
     esac
@@ -168,7 +168,7 @@ main(){
             rm -fr ~/.cache/efreet
 
             ;;
-        e26|E26)
+        enew|ENEW|Enlightenment|enlightenment)
             killall enlightenment  2>/dev/null
             killall efreetd  2>/dev/null
             killall enlightenment_start  2>/dev/null

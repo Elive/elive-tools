@@ -24,7 +24,7 @@ run_all_hooks(){
         hooksdir="user-manager"
     fi
 
-    # wait a few seconds if we are in E26
+    # wait a few seconds if we are in Enlightenment
     if [[ -n "$E_HOME_DIR" ]] ; then
         sleep 4
     fi

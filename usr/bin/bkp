@@ -314,44 +314,56 @@ do_list(){
 
 
 do_meld(){
-    local version history_num
+    local version history_num is_done
 
-    if ! [[ -d "$bkpdir_id" ]] ; then
-        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
-    fi
-
-    if ! el_dependencies_check meld ; then
-        if ! el_dependencies_install meld ; then
-            el_error "Install required dependencies"
+    if ! ((is_done)) && [[ -d "$bkpdir_id" ]] ; then
+        if ! el_dependencies_check meld ; then
+            if ! el_dependencies_install meld ; then
+                el_error "Install required dependencies"
+            fi
         fi
+
+        if [[ -n "$3" ]] ; then
+            history_num="$3"
+        else
+            history_num="1"
+        fi
+
+        if ((is_old_rdiff)) ; then
+            version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        else
+            version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        fi
+
+        el_check_variables "version"
+
+        do_sudo rm -rf "${1}.differ"
+        if ((is_old_rdiff)) ; then
+            do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+        else
+            do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+        fi
+
+        echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
+
+        do_sudo meld "${1}.differ/" "${2}/"
+
+        do_sudo rm -rf "${1}.differ"
+
+        is_done=1
     fi
 
-    if [[ -n "$3" ]] ; then
-        history_num="$3"
-    else
-        history_num="1"
+    if ! ((is_done)) && [[ -d "${PWD}.snapshot" ]] ; then
+        do_sudo meld "${PWD}.snapshot/" "${PWD}/"
+
+        is_done=1
     fi
 
-    if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    else
-        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+
+    if ! ((is_done)) ; then
+        echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
+        return 1
     fi
-
-    el_check_variables "version"
-
-    do_sudo rm -rf "${1}.differ"
-    if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
-    else
-        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
-    fi
-
-    echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
-
-    do_sudo meld "${1}.differ/" "${2}/"
-
-    do_sudo rm -rf "${1}.differ"
 
     cd "${2}"
 }

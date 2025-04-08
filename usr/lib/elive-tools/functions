@@ -2747,27 +2747,25 @@ el_security_function_loop(){
 #       RETURNS:  true if found, false if not
 #===============================================================================
 el_array_member_check(){
-    local match list i
+    local match list
     match="$1"
     shift
     list=("$@")
 
     if [[ -n $ZSH_VERSION ]] ; then
-        for i in "${(P)list[@]}"
-        do
-            [[ -z "$i" ]] && continue
-            if [[ "${list[i]}" = "$match" ]] ; then
-                return 0
-            fi
-        done
+        # Use Zsh's built-in index search (i), which is efficient.
+        # It returns the index (1-based) or length+1 if not found.
+        if [[ ${list[(i)$match]} -le ${#list} ]]; then
+            return 0
+        fi
     else
-        for i in "${!list[@]}"
-        do
-            [[ -z "$i" ]] && continue
-            if [[ "${list[i]}" = "$match" ]] ; then
-                return 0
-            fi
-        done
+        # Use grep for potentially faster searching in Bash, especially for large arrays.
+        # -F: fixed string, -x: match whole line, -q: quiet
+        # Using printf ensures each element is on a newline, handling elements with spaces.
+        # The '--' prevents match from being interpreted as an option if it starts with '-'.
+        if printf "%s\n" "${list[@]}" | grep -Fxq -- "$match"; then
+            return 0
+        fi
     fi
 
     return 1
@@ -2781,17 +2779,25 @@ el_array_member_check(){
 #===============================================================================
 el_array_member_unset(){
     _out=()
-    local i item=$1
+    local i item list
+    item="$1"
     shift
+    list=("$@") # Capture the rest of the arguments into the list array
 
-    for i in "$@"; do
-        [[ -z "$i" ]] && continue
-        if [[ $item != "$i" ]]; then
-            _out+=("$i")
-        fi
-    done
-
-    # note: this is a bit hacky but it works until newer versions of bash, the common alternative is: for i in "${!list_requires_update[@]}"; do [[ ${list_requires_update[i]} = "$package" ]] && unset 'list_requires_update[i]'; done
+    if [[ -n $ZSH_VERSION ]] ; then
+        # Use Zsh's array subtraction, which is very efficient.
+        _out=("${(@)list:#$item}")
+    else
+        # Bash: Iterate and rebuild the array, excluding the item.
+        for i in "${list[@]}"; do
+            # Skip empty elements if necessary, though usually not needed unless the original array had them.
+            # [[ -z "$i" ]] && continue
+            if [[ "$item" != "$i" ]]; then
+                _out+=("$i")
+            fi
+        done
+    fi
+    # The note about the hacky alternative is removed as the standard loop is preferred for clarity.
 }
 
 #===  FUNCTION  ================================================================
@@ -2802,30 +2808,31 @@ el_array_member_unset(){
 #===============================================================================
 el_array_member_add(){
     _out=()
-    local i item=$1 match
+    local item list
+    item="$1"
     shift
+    list=("$@") # Capture the rest of the arguments into the list array
 
-    # see if we have the entry already
-    for i in "$@"; do
-        if [[ -n "$i" ]] ; then
-            if [[ "$item" = "$i" ]]; then
-                match=1
-            fi
+    if [[ -n $ZSH_VERSION ]] ; then
+        # Use Zsh's efficient index search. Add only if not found.
+        if [[ ${list[(i)$item]} -gt ${#list} ]]; then
+            _out=("${list[@]}" "$item")
+        else
+            _out=("${list[@]}")
         fi
-    done
-
-    # if is repeated, just show the default array, otherwise, append the value
-    if ((match)) ; then
-        _out=("$@")
     else
-        for i in "$@"; do
-            if [[ -n "$i" ]] ; then
-                _out+=("$i")
-            fi
-        done
+        # Bash: Use the optimized check. Add only if not found.
+        # Need to pass the list elements correctly to the check function simulation.
+        local found=0
+        if printf "%s\n" "${list[@]}" | grep -Fxq -- "$item"; then
+            found=1
+        fi
 
-        # add elements to the new array
-        _out+=("$item")
+        if ((found)); then
+            _out=("${list[@]}")
+        else
+            _out=("${list[@]}" "$item")
+        fi
     fi
 }
 

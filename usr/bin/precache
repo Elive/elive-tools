@@ -54,8 +54,8 @@ main(){
         if [[ -e "$resolved_arg" ]] ; then
             files_to_cache_list+="${resolved_arg}\n"
         else
-             el_explain_plain "Skipping non-existent resolved argument: $resolved_arg (original: $arg)"
-             continue # Skip ldd if the main executable doesn't exist after resolving
+            el_explain_plain "Skipping non-existent resolved argument: $resolved_arg (original: $arg)"
+            continue # Skip ldd if the main executable doesn't exist after resolving
         fi
 
         # Add dependant libraries to list
@@ -85,6 +85,8 @@ main(){
     # Create a sorted, unique array of files to cache
     # Using process substitution and readarray (mapfile) for robustness
     readarray -t cached_arr < <(echo -e "${files_to_cache_list}" | sort -u)
+
+    # el_explain_plain "cache list ready"
 
     # Precache final result
     local sorted

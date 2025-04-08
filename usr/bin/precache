@@ -90,6 +90,7 @@ main(){
     local sorted
     for sorted in "${cached_arr[@]}"
     do
+        [[ -z "$sorted" ]] && continue
         if ((is_trace)) ; then
             echo "$sorted"
         else

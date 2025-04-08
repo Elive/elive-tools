@@ -169,8 +169,6 @@ main(){
 
         if [[ -n "$lang" ]] ; then
             export LANG="$lang"
-        else
-            el_warning "unable to get lang conf by E remote"
         fi
     fi
 

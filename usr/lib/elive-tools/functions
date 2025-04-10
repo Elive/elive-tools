@@ -4492,6 +4492,7 @@ fi
 # extra vars
 source /etc/adduser.conf 2>/dev/null || true
 [[ -z "$DHOME" ]] && export DHOME=/home
+[[ -z "$UID" ]] && export UID="$(id -u)"
 # set the user's home, sometimes, like if we are in an init script, the home points to /
 if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
     if [[ "$UID" = "0" ]] || [[ "$USER" = "root" ]] ; then

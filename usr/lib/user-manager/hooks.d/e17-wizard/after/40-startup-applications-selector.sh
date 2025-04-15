@@ -95,6 +95,7 @@ main(){
 
     # create a default dir
     mkdir -p "$(dirname "$order_file" )"
+    rm -f "$order_file"
     touch "$order_file"
     mkdir -p "$HOME/.config/autostart"
 
@@ -463,8 +464,8 @@ EOF
         message_hexchat="$( printf "$( eval_gettext "IRC Chat: With the chat channel of Elive" )" "" )"
 
         # always enable notifications features (notify-send) by default:
-        if [[ -x "/usr/lib/notification-daemon/notification-daemon" ]] && [[ -e "$HOME/.e16/startup-applications.list" ]] && ! grep -qs "notification-daemon" "$HOME/.e16/startup-applications.list" ; then
-            echo "/usr/lib/notification-daemon/notification-daemon" >> "$HOME/.e16/startup-applications.list"
+        if [[ -e "/usr/share/applications/notification-daemon.desktop" ]] && ! grep -qs "notification-daemon.desktop" "$order_file" ; then
+            echo "/usr/share/applications/notification-daemon.desktop" >> "$order_file"
         fi
 
         # include composite, only if the video card has enough power
@@ -540,8 +541,8 @@ EOF
 
         # defaults in case the user canceled the dialog
         if [[ "$result" = "cancel" ]] ; then
-            echo -e "conky" >> "$HOME/.e16/startup-applications.list"
-            echo -e "cairo-dock" >> "$HOME/.e16/startup-applications.list"
+            echo -e "conky" >> "$order_file"
+            echo -e "cairo-dock" >> "$order_file"
             eesh compmgr start
             sleep 3
         else
@@ -564,9 +565,9 @@ EOF
                             ;;
                     esac
 
-                    if [[ -x "$(which "$line" )" ]] ; then
+                    if [[ -x "$( which "$line" )" ]] ; then
                         # add to known list
-                        echo "$line" >> "$HOME/.e16/startup-applications.list"
+                        echo "$line" >> "$order_file"
 
                         # run
                         # update: do not run: we will run them all later
@@ -579,13 +580,13 @@ EOF
     fi
 
     # sort the resulting list to satisfy dependencies (like notification-daemon should be run first
-    buf="$( cat "$HOME/.e16/startup-applications.list" )"
+    buf="$( cat "$order_file" )"
 
     # add an info header
-    rm -f "$HOME/.e16/startup-applications.list"
+    rm -f "$order_file"
     local message_instructions
     message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: To add an application to run at startup, simply add it to this list. If you want to disable one, comment the line (using the hashtag symbol at the start of the line) so it will be ignored. However, do not remove the line, as Elive may suggest adding it again in the future." )" "" )"
-    echo "# $message_instructions" >> "$HOME/.e16/startup-applications.list"
+    echo "# $message_instructions" >> "$order_file"
 
     # sort the launchers
     echo "$buf" | sort | psort -- -p "notification-daemon" -p "elive-startup-sound" -p "/etc/" >> "$order_file"
@@ -595,7 +596,7 @@ EOF
     # TODO: for every "plain" entry in startup-applications.list in order to make them compatible with Elive
     if ((is_live)) && ((is_bookworm)) ; then
         if ((is_e16)) ; then
-            echo "gnome-keyring-daemon" >> "$HOME/.e16/startup-applications.list"
+            echo "gnome-keyring-daemon" >> "$order_file"
         fi
         if ((is_enlightenment)) ; then
             if ! LC_ALL=C grep -Fqs "gnome-keyring-daemon" "$HOME/.elxstrt" ; then

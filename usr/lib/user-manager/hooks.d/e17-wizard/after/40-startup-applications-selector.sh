@@ -79,6 +79,7 @@ main(){
                 E_HOME_DIR="$HOME/.e/e17"
             fi
             order_file="$E_HOME_DIR/applications/startup/.order"
+            order_file_restart="$E_HOME_DIR/applications/restart/.order"
             is_enlightenment=1
             # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
             # case "$E_VERSION" in
@@ -350,12 +351,10 @@ main(){
 
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
-        # TODO FIXME: include it for E27 too or check if is running (on every restart)
         # update: not needed since E16 already runs it on every restart
-        # if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file}" ; then
-        #     echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
-        # fi
-        true
+        if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file_restart}" ; then
+            echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file_restart}"
+        fi
     fi
 
 

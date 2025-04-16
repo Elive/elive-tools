@@ -350,9 +350,12 @@ main(){
 
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
-        if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file}" ; then
-            echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
-        fi
+        # TODO FIXME: include it for E27 too or check if is running (on every restart)
+        # update: not needed since E16 already runs it on every restart
+        # if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file}" ; then
+        #     echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file}"
+        # fi
+        true
     fi
 
 
@@ -622,6 +625,9 @@ EOF
         if test -s "${order_file}" ; then
             while read -ru 3 line
             do
+                # if echo "$executable" | grep -qs "elxstrt" ; then
+                #     continue
+                # fi
                 executable="$( grep "^Exec=" "$line" | sed -e 's|^Exec=||g' | tail -1 )"
                 if [[ -n "$executable" ]] ; then
                     el_debug "running $executable"

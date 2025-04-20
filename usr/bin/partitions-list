@@ -40,9 +40,9 @@ get_all_partitions_list(){
 
     # }}}
     # LVM support {{{
-    if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( vgchange -ay 2>/dev/null | grep -q "logical volume.*active" ) ; then
+    if [[ -x /sbin/pvdisplay ]] && [[ -x /sbin/vgchange ]] && ( /sbin/vgchange -ay 2>/dev/null | grep -q "logical volume.*active" ) ; then
         # loop between the partitions that are used for a LVM (physical volume)
-        for pvname in $( LC_ALL="$EL_LC_EN" pvdisplay 2>/dev/null | grep -F "PV Name" | sed 's|^.*/dev/|/dev/|g')
+        for pvname in $( LC_ALL="$EL_LC_EN" /sbin/pvdisplay 2>/dev/null | grep -F "PV Name" | sed 's|^.*/dev/|/dev/|g')
         do
             # remove extra leading blank chars
             read -r pvname <<< "$pvname"
@@ -73,7 +73,7 @@ get_all_partitions_list(){
             [[ ! -b "${lvname}" ]] && continue
             el_array_member_add "${lvname}" "${partitions_lvm2_lv_arr[@]}" ; partitions_lvm2_lv_arr=("${_out[@]}")
             el_debug "Adding (LVM2) ${lvname} Logical Volume to our partitions list"
-        done 3<<< "$( LVM_SUPPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name,lv_name | sed "s|-|--|g;s|^[[:space:]]*\(.*\):\(.*\)$|/dev/mapper/\1-\2|" )"
+        done 3<<< "$( LVM_SUPPRESS_FD_WARNINGS=1 lvs --noheadings --separator : -o vg_name,lv_name 2>/dev/null | sed "s|-|--|g;s|^[[:space:]]*\(.*\):\(.*\)$|/dev/mapper/\1-\2|" )"
         unset lvname pvname
     fi
 

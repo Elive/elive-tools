@@ -183,7 +183,7 @@ do_snap(){
         PROMPT_PREPEND="snapshot" $SHELL -l || true
     fi
 
-    if el_confirm "Recover FROM snapshoted state?" ; then
+    if el_confirm "Use the changes FROM the snapshoted state?" ; then
         $SUDO_MODE rsync -a --delete --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"
     fi
 

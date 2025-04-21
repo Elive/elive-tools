@@ -59,13 +59,6 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         #unset XAUTHORITY
     #fi
 
-    # E17 mode:
-    if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
-        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 | sed -e 's|^.*/run|/run|g' -e 's|^.*/tmp|/tmp|g' )"
-        if [[ -e "$e_ipc_file" ]] ; then
-            export E_IPC_SOCKET="${e_ipc_file%-*}"
-        fi
-    fi
     # Enlightenment mode:
     if [[ -z "$E_IPC_SOCKET" ]] ; then
         while read -ru 3 file
@@ -76,7 +69,13 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
             fi
         done 3<<< "$( find /run/user/${UID}/e-${USER}@*/*\|* /tmp/e-"${USER}"@*/*\|*  1>/dev/null 2>&1 || true )"
     fi
-    #fi
+    # E17 mode:
+    if [[ -z "$E_IPC_SOCKET" ]] && command ls --color=none /tmp/e-"${USER}"@*/*-* 1>/dev/null 2>/dev/null ; then
+        e_ipc_file="$( command find /tmp/e-"${USER}"@*/*-* -mindepth 0 -maxdepth 0 -type s -print0 | xargs -r0 stat -c %y\ %n 2>/dev/null | sort -n | tail -1 | sed -e 's|^.*/run|/run|g' -e 's|^.*/tmp|/tmp|g' )"
+        if [[ -e "$e_ipc_file" ]] ; then
+            export E_IPC_SOCKET="${e_ipc_file%-*}"
+        fi
+    fi
 
     # force re-set of the display
     # if we are not from a remote connection with the display set remotely, then
@@ -103,6 +102,11 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         display="$( w -hs "$USER" | awk '{ if ($5 ~ /(\/e16|xinit|enlightenment_start)/ ) print $3}' | grep "^:" | tail -1 )"
         [[ -n "$display" ]] && export DISPLAY="$display"
     fi
+    # get it from ps
+    if [[ -z "${DISPLAY}" ]] ; then
+        display="$( ps ux | grep -E "Xorg|X|X11.* :[[:digit:]]+" | grep -v grep | sed -E -e 's|^.* :([[:digit:]]+).*$|:\1|g' | sort -uV | tail -1)"
+        [[ -n "$display" ]] && export DISPLAY="$display"
+    fi
     # Find Xorg or X process
     #pids=($(ps -C Xorg,X,xinit -o pid=))
     ## Loop through each PID
@@ -119,7 +123,7 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
         #fi
         #[[ -n "$display" ]] && export DISPLAY=":$display"
     #done
-    # If a valid DISPLAY was found, export it
+    ## If a valid DISPLAY was found, export it
     #if [[ -n "$display" ]]; then
         #export DISPLAY=":$display"
     #fi
@@ -136,16 +140,16 @@ el_set_display_variables(){ # Set DISPLAY variables of our actual user
     #fi
 
     # last resort / option to get a display value, but is not reliable, so only do it if we have any E* running:
-    # if [[ -z "${DISPLAY}" ]] ; then
-    #     if pidof -q e16 enlightenment_start enlighenment ; then
-    #         display="$( ps -u "$(id -u)" -o pid= | \
-    #             while read pid; do
-    #                 cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
-    #             done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
-    #
-    #         [[ -n "$display" ]] && export DISPLAY="$display"
-    #     fi
-    # fi
+    if [[ -z "${DISPLAY}" ]] ; then
+        if pidof -q e16 enlightenment_start enlighenment ; then
+            display="$( ps -u "$(id -u)" -o pid= | \
+                while read pid; do
+                    cat "/proc/$pid/environ" 2>/dev/null | LC_ALL=C tr '\0' '\n' | LC_ALL=C grep -a '^DISPLAY=:'
+                done | LC_ALL=C grep -o ':[0-9].*' | sort -u -V | tail -1 )"
+
+                [[ -n "$display" ]] && export DISPLAY="$display"
+        fi
+    fi
 
     display="${DISPLAY#:}"
     display="${display%.*}"

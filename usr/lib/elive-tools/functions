@@ -2166,7 +2166,7 @@ el_debug(){
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 4 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -2242,7 +2242,7 @@ el_info(){
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 4 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -2265,7 +2265,8 @@ el_info(){
             if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
                 if [[ -n "$arg" ]] ; then
                     arg="$( readlink -f "$arg" || true )"
-                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                    sourcenames_arr+=("$arg >")
+                    # el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
                 fi
             fi
         done
@@ -2331,7 +2332,8 @@ el_warning(){
             count="$(( $count + 1 ))"
             if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
                 if [[ -n "$arg" ]] ; then
-                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                    sourcenames_arr+=("$arg >")
+                    # el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
                 fi
             fi
         done
@@ -2422,7 +2424,8 @@ el_error(){
             count="$(( $count + 1 ))"
             if [[ "$count" -gt 1 ]] && [[ "$count" -lt "$counter" ]] ; then
                 if [[ -n "$arg" ]] ; then
-                    el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
+                    sourcenames_arr+=("$arg >")
+                    # el_array_member_add "$arg >" "${sourcenames_arr[@]}" ; sourcenames_arr=("${_out[@]}")
                 fi
             fi
         done

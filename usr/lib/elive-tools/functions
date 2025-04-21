@@ -2775,7 +2775,7 @@ el_array_member_check(){
 #          NAME:  el_array_member_unset
 #   DESCRIPTION:  unset members in an array
 #    PARAMETERS:  $1 = match, $2 = array contents
-#                 XXX needs to be used later with!:  arr=("${_out[@]}")
+#                 NOTE needs to be used later with!:  arr=("${_out[@]}")
 #===============================================================================
 el_array_member_unset(){
     _out=()
@@ -2804,7 +2804,7 @@ el_array_member_unset(){
 #          NAME:  el_array_member_add
 #   DESCRIPTION:  add a member in the array if not exist
 #    PARAMETERS:  $1 = element, $2 = array contents
-#                 XXX needs to be used later with!:  arr=("${_out[@]}")
+#                 NOTE needs to be used later with!:  arr=("${_out[@]}")
 #===============================================================================
 el_array_member_add(){
     _out=()

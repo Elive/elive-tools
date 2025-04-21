@@ -2166,7 +2166,7 @@ el_debug(){
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 4 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"
@@ -2242,7 +2242,7 @@ el_info(){
 
     # }}}
     # get the list of function names array {{{
-    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+    if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 4 ]] ; then
         counter="${#FUNCNAME[*]}"
         count=0
         for arg in "${FUNCNAME[@]}"

@@ -69,7 +69,7 @@ main(){
         for try in \$(seq 6)
         do
             if yt-dlp \
-                -f \"bv*+ba\" -S \"+res:720,+res:480,+res:1080\" \
+                -f \"bestvideo[ext=mp4][height=720]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height=480]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=720]+bestaudio[ext=m4a]/best[ext=mp4]/best/b\"
                 --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
@@ -78,7 +78,7 @@ main(){
                 sleep 1
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
-                    -f \"bv*+ba\" -S \"+res:720,+res:480,+res:1080\" \
+                    -f \"bestvideo[ext=mp4][height=720]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height=480]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=720]+bestaudio[ext=m4a]/best[ext=mp4]/best/b\"
                     --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
                     \"$@\" ; then

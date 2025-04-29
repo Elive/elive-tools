@@ -3093,7 +3093,7 @@ el_report_to_elive(){
         else
             # don't ask the user for his contact if he's running on live mode
             conf_send_debug_reports="yes"
-            conf_send_debug_reports_email="Live"
+            conf_send_debug_reports_email="livemode"
         fi
     fi
 

@@ -92,10 +92,10 @@ main(){
     if ! ((is_played)) ; then
         # create new audio file
         if [[ -n "$OPENAI_API_KEY" ]] && [[ -x "$( which elive-assistant )" ]] && el_verify_internet fast ; then
-            file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+            file="$( echo "${text}" | voice=nova DISPLAY="" elive-assistant --stdout speech )"
             # rate limit?
-            if [[ ! -s "$file" ]] ; then
-                sleep 2 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+            #if [[ ! -s "$file" ]] ; then
+                #sleep 2 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
                 #if [[ ! -s "$file" ]] ; then
                     #sleep 10 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
                     #if [[ ! -s "$file" ]] ; then
@@ -105,7 +105,7 @@ main(){
                         #fi
                     #fi
                 #fi
-            fi
+            #fi
 
             if [[ -s "$file" ]] ; then
                 mv -f "$file" "$HOME/.cache/el_speak/${text_filename}.mp3"

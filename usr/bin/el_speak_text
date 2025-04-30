@@ -91,20 +91,20 @@ main(){
     # save a copy of the voice
     if ! ((is_played)) ; then
         # create new audio file
-        if [[ -n "$OPENAI_API_KEY" ]] && [[ -x "$( which elive-assistant )" ]] ; then
+        if [[ -n "$OPENAI_API_KEY" ]] && [[ -x "$( which elive-assistant )" ]] && el_verify_internet fast ; then
             file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
             # rate limit?
             if [[ ! -s "$file" ]] ; then
                 sleep 2 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
-                if [[ ! -s "$file" ]] ; then
-                    sleep 10 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
-                    if [[ ! -s "$file" ]] ; then
-                        sleep 30 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
-                        if [[ ! -s "$file" ]] ; then
-                            sleep 1m ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
-                        fi
-                    fi
-                fi
+                #if [[ ! -s "$file" ]] ; then
+                    #sleep 10 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                    #if [[ ! -s "$file" ]] ; then
+                        #sleep 30 ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                        #if [[ ! -s "$file" ]] ; then
+                            #sleep 1m ; file="$( echo "${text}" | voice=nova elive-assistant --stdout speech )"
+                        #fi
+                    #fi
+                #fi
             fi
 
             if [[ -s "$file" ]] ; then
@@ -112,7 +112,9 @@ main(){
                 lame --quiet --decode "$HOME/.cache/el_speak/${text_filename}.mp3" - | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 5  2>/dev/null
                 is_played=1
             fi
-        else
+        fi
+
+        if ! ((is_played)) ; then
             echo "${text}" | iconv -f utf8 -t ISO-8859-15 | text2wave -f 48000 -otype riff -scale 0.8 > "$HOME/.cache/el_speak/${text_filename}.wav"
 
             # play it
@@ -124,7 +126,7 @@ main(){
         fi
 
         cd "$HOME/.cache/el_speak"
-        ls -1tr *mp3 | head -n "-800" | xargs rm -f
+        ls -1tr *mp3 | head -n "-1000" | xargs rm -f
         rm -f "$HOME/.cache/el_speak/"*.wav
     fi
 

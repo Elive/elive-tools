@@ -184,7 +184,7 @@ do_snap(){
     fi
 
     if el_confirm "Recover FROM its snapshoted state?" ; then
-        $SUDO_MODE rsync -a --delete --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"
+        $SUDO_MODE rsync -a --delete --exclude="build/*" --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"
     fi
 
     $SUDO_MODE rm -rf "${target}.snapshot"

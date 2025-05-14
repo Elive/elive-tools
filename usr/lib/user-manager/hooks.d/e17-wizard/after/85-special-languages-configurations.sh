@@ -16,12 +16,19 @@ suggest_emodule_flag_keyboard(){
         return 0
     fi
 
-    local message_suggestion_flag
-    message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts; if you want fast switching between different language layouts, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
+    # e27 -> enlightenment
+    # if el_user_desktop_running enlightenment ; then
+        local message_suggestion_flag
+        message_suggestion_flag="$( printf "$( eval_gettext "Tip: Your country has different keyboard layouts; if you want fast switching between different language layouts, right-click on the shelf in the corner to add the keyboard gadget." )" "" )"
 
-    if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
-        zenity --info --text="$message_suggestion_flag"
-    fi
+        if ! [[ "$MACHINE_VIRTUAL" = "yes" ]] ; then
+            zenity --info --text="$message_suggestion_flag"
+        fi
+    # else
+    #     # e16
+    #     true
+    #     # zenity --info --text="$( eval_gettext "" )" "" || true
+    # fi
 }
 
 

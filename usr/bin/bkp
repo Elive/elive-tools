@@ -184,7 +184,22 @@ do_snap(){
     fi
 
     if el_confirm "Recover FROM its snapshoted state?" ; then
-        $SUDO_MODE rsync -a --delete --exclude="build/*" --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"
+        #$SUDO_MODE rsync -a --delete --exclude="build/*" --info=flist0,name "${target}.snapshot/" "${target}/" | grep -v "^\.git/$"
+        #$SUDO_MODE find "${target}.snapshot" -mindepth 1 -maxdepth 1 -exec mv -t "${target}/" "{}" \;
+        $SUDO_MODE bash -c '
+            shopt -s dotglob nullglob
+            target="$1"
+            if [[ ! -d "$target.snapshot" ]]; then
+                echo "Error: Source directory $target.snapshot missing" >&2
+                exit 1
+            fi
+            for item in "$target.snapshot"/*; do
+                dest="$target/$(basename "$item")"
+                [[ -e "$dest" ]] && rm -rf "$dest"
+                mv -f "$item" "$target/" || exit 1
+            done
+            shopt -u dotglob nullglob
+        ' _ "$target"
     fi
 
     $SUDO_MODE rm -rf "${target}.snapshot"

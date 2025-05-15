@@ -174,12 +174,12 @@ do_snap(){
         NOREPORTS=1 el_error "Failed to create snapshot"
     fi
 
-    el_info "Snapshot created, exit your SHELL when you finish"
     if [[ "$PROMPT_PREPEND" = "snapshot" ]] ; then
         # finish here because we come from a previous subshell
         el_info "You are already in a snapshot shell, exit it to finish your snapshot state"
         return 0
     else
+        el_info "Snapshot created, exit your SHELL when you finish"
         PROMPT_PREPEND="snapshot" $SHELL -l || true
     fi
 

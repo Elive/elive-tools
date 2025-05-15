@@ -430,7 +430,7 @@ main(){
 
                 # select the card that has most tracks
                 # first detect the max number of tracks
-                selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$d/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[Device"  -p "\[HDMI"-p "Generic" -p "system" -p "Modem" | tail -1 )"
+                selection_number="$( echo "${array_cards}" | sort -g | sed -e 's| :: .*$||g' -e '/^$d/d' | psort -- -p "\[ThinkPadEC" -p "\[NVidia" -p "midi" -p "MIDI" -p "\[VX-5000" -p "\[VX5000" -p "\[Webcam" -p "\[Dummy" -p "\[Device" -p "\[HDMI" -p "Generic" -p "system" -p "Modem" | tail -1 )"
 
                 # now pick the card with same max tracks by prior, like if we have MID and ThinkPadEC both as 2 (pulseaudio?) like in Venus computer
                 selection="$( echo "${array_cards}" | sed -e '/^$/d' | sort -ug | grep -F "${selection_number} :: " | psort -- -p ":: ThinkPadEC" -p ":: modem" -p ":: NVidia" -p ":: midi" -p ":: MIDI" -p ":: Webcam" -p ":: Dummy" -p ":: system" -p ":: Device" -p ":: HDMI" -p ":: Generic" | sed -e 's|^.* :: ||g' -e '/^$/d' | tail -n 1 )"

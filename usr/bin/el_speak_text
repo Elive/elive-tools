@@ -58,8 +58,8 @@ main(){
     # }}}
 
     # this trick is required because an ugly tmp.lab file is created in the home
-    mkdir -p /tmp/.$(basename $0)-$USER-$$  "$HOME/.cache/el_speak"
-    cd /tmp/.$(basename $0)-$USER-$$
+    mkdir -p "/tmp/.$(basename $0)-$USER-$$"  "$HOME/.cache/el_speak"
+    cd "/tmp/.$(basename $0)-$USER-$$"
 
     # wait for someone that finishes to speak before to start speaking
     #if ps aux | grep -v grep | grep -v "$$" | grep -vE "(vi|vim|gvim|emacs|scite|geany)" | grep -q "$(basename $0) " ; then
@@ -78,10 +78,12 @@ main(){
 
     # play if we have it in cache, with effects
     if [[ -s "$HOME/.cache/el_speak/${text_filename}.wav" ]] ; then
+        el_debug "playing .wav cached file: $text_filename"
         play -q -t wav "$HOME/.cache/el_speak/${text_filename}.wav" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 5  2>/dev/null
         is_played=1
     else
         if [[ -s "$HOME/.cache/el_speak/${text_filename}.mp3" ]] ; then
+            el_debug "playing .mp3 cached file: $text_filename"
             # play -q -t mp3 "$HOME/.cache/el_speak/${text_filename}.mp3" tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 5  2>/dev/null
             lame --quiet --decode "$HOME/.cache/el_speak/${text_filename}.mp3" - | play -q -t wav - tempo 1.0 pad 0 2 flanger reverb 40 50 100 100 75 3 norm 5  2>/dev/null
             is_played=1

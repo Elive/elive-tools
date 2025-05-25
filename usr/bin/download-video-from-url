@@ -70,6 +70,7 @@ main(){
         do
             if yt-dlp \
                 -f \"bestvideo[ext=mp4][height=720]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height=480]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=720]+bestaudio[ext=m4a]/best[ext=mp4]/best/b\" \
+                --remux-video "mp4/mkv/webm/mov" \
                 --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
@@ -79,6 +80,7 @@ main(){
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     -f \"bestvideo[ext=mp4][height=720]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height=480]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=720]+bestaudio[ext=m4a]/best[ext=mp4]/best/b\" \
+                    --remux-video "mp4/mkv/webm/mov" \
                     --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
                     \"$@\" ; then

@@ -77,12 +77,24 @@ main(){
 
     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
 
+    if echo \"$@\" | grep -qsE \"(youtu.be|youtube.com)\" ; then
+        output_filename=\"%(title)s (%(id)s) [%(channel)s] - [%(duration>%Hh%Mm)s - %(view_count>%d)s views - %(upload_date>%Y-%m-%d)s] - [%(vcodec)s+%(acodec)s].%(ext)s\"
+        # append playlist number if on a playlist
+        if echo \"$@\" | grep -qsE \"(list=)\" ; then
+            output_filename=\"%(playlist_index)02d - \$output_filename\"
+        fi
+    else
+        output_filename=\"%(title)s (%(id)s) - [%(duration>%Hh%Mm)s - %(upload_date>%Y-%m-%d)s] - [%(vcodec)s+%(acodec)s].%(ext)s\"
+    fi
+
+
     if test -n \"$1\" ; then
         for try in \$(seq 6)
         do
             if yt-dlp \
                 --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=3 --compat-options no-keep-subs --convert-subs srt \
-                --remux-video "mp4/mkv/webm/mov" --no-keep-video \
+                --remux-video \"mp4/mkv/webm/mov\" --no-keep-video \
+                -o \"\$output_filename\" \
                 --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
@@ -92,6 +104,7 @@ main(){
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=6 --compat-options no-keep-subs --convert-subs srt \
+                    -o \"\$output_filename\" \
                     --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
                     \"$@\" ; then

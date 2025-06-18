@@ -103,6 +103,7 @@ run_edje(){
     do
         [[ "$line" = *"'e/theme/about'"* ]] && is_e_theme=1
         [[ "$line" = *"'e/modules/ibox/"* ]] && is_e_theme=1
+        [[ "$line" = *"'elive-gadget-clock"* ]] && is_elive_gadget_clock=1
         [[ "$line" = *"'e/desktop/background'"* ]] && is_e_wallpaper=1
         [[ "$line" = "^0 groups in file"* ]] && is_e_invalid=1
 
@@ -139,6 +140,15 @@ run_edje(){
 
         return 0
     fi
+
+    # elive gadget clock
+    if ((is_elive_gadget_clock)) ; then
+        killall elive-gadget-clock || true
+        # this runs the clock, adds the theme, and saves it
+        elive-gadget-clock --theme "$file"
+    fi
+
+
 
     # just play a single group
     if [[ "$groups" = 1 ]] ; then

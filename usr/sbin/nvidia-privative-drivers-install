@@ -1498,7 +1498,7 @@ try_again(){
 
     # }}}
 
-    { echo "'other' '$message_option_1'" ; echo "'open' '$message_option_2'" ; echo "'exit' '$message_option_3'" ; echo "'reboot' '$message_option_4'" ; echo "'console' '$message_option_5'" ; } \
+    { echo "'free' '$message_option_2'" ; echo "'version' '$message_option_1'" ; echo "'exit' '$message_option_3'" ; echo "'reboot' '$message_option_4'" ; echo "'console' '$message_option_5'" ; } \
         | xargs dialog --timeout 380 --clear --colors --backtitle "Elive Systems: Use Ctrl-L to redraw, Enter to confirm" --menu "Select an option" 0 0 0  2>"/tmp/.$(basename $0)-ret"
 
 
@@ -1515,11 +1515,11 @@ try_again(){
     read -r ret <<< "$ret"
 
     case "$ret" in
-        "open")
+        "free")
             uninstall_driver
             exit
             ;;
-        "other")
+        "version")
             export is_mode_already_run=1
             $0 $args
             exit

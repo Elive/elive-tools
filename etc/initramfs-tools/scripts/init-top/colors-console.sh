@@ -30,7 +30,7 @@ if [ "$TERM" = "linux" ]; then
     echo -en "\e]P1e50000" # red
     echo -en "\e]P287cc00" # green
     echo -en "\e]P3fc8700" # brown
-    echo -en "\e]P46720ff" # blue
+    echo -en "\e]P49b5fff" # blue
     echo -en "\e]P5fa00cc" # magenta
     echo -en "\e]P600c8fc" # cyan
     echo -en "\e]P7d8d8d8" # white
@@ -39,7 +39,7 @@ if [ "$TERM" = "linux" ]; then
     echo -en "\e]P9ff4040" # light red
     echo -en "\e]PAc2fc4c" # light green
     echo -en "\e]PBffc342" # light brown
-    echo -en "\e]PC9e71ff" # light blue
+    echo -en "\e]PCa876ff" # light blue
     echo -en "\e]PDff58e0" # light magenta
     echo -en "\e]PEa1efff" # light cyan
     echo -en "\e]PFffffff" # light white

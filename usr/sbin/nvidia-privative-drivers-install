@@ -856,10 +856,19 @@ interactive_ask_driver_version(){
 
             ;;
         *)
+            # Other driver versions
             if LC_ALL=C apt-cache search "nvidia-settings-$_NVIDIA_VERSION" 2>/dev/null | awk '{print $1}' | grep -qs "nvidia-settings-$_NVIDIA_VERSION" ; then
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver nvidia-settings-$_NVIDIA_VERSION"
             else
                 _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-driver"
+            fi
+
+            # possibly needed firmwares
+            if apt-cache show "firmware-nvidia-${_NVIDIA_VERSION}-graphics" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="firmware-nvidia-${_NVIDIA_VERSION}-graphics $_NVIDIA_PACKAGES"
+            fi
+            if apt-cache show "firmware-nvidia-${_NVIDIA_VERSION}-gsp" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="firmware-nvidia-${_NVIDIA_VERSION}-gsp $_NVIDIA_PACKAGES"
             fi
 
             # extra packages
@@ -867,13 +876,13 @@ interactive_ask_driver_version(){
                 if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-cuda-toolkit $_NVIDIA_PACKAGES"
                 fi
-                # opencl support
-                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvcuvid1" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvcuvid1 $_NVIDIA_PACKAGES"
-                fi
-                # pretty small and needed, cuda support but requires opencl-icd too
+                # OpenCL support for things like Blender, Davinci Resolve, etc
                 if apt-cache show "nvidia-$_NVIDIA_VERSION-opencl-icd" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-opencl-icd $_NVIDIA_PACKAGES"
+                fi
+                # pretty small and needed, cuda support but requires opencl-icd too
+                if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvcuvid1" 1>/dev/null 2>&1 ; then
+                    _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-nvcuvid1 $_NVIDIA_PACKAGES"
                 fi
                 # OptiX ray tracing
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-nvoptix1" 1>/dev/null 2>&1 ; then
@@ -917,13 +926,7 @@ interactive_ask_driver_version(){
                 if apt-cache show "libnvidia-$_NVIDIA_VERSION-encode1" 1>/dev/null 2>&1 ; then
                     _NVIDIA_PACKAGES="libnvidia-$_NVIDIA_VERSION-encode1 $_NVIDIA_PACKAGES"
                 fi
-                # vdpau video driver, pretty required
-                if apt-cache show "nvidia-$_NVIDIA_VERSION-vdpau-driver" 1>/dev/null 2>&1 ; then
-                    _NVIDIA_PACKAGES="nvidia-$_NVIDIA_VERSION-vdpau-driver $_NVIDIA_PACKAGES"
-                fi
             fi
-
-
             ;;
     esac
 

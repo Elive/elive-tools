@@ -15,6 +15,15 @@ main(){
             #fi
         else
             ( ulauncher & )
+            el_config_get
+            # because of a bug, ulauncher needs to be run a first time in order to run correctly
+            if ! ((conf_first_run)) ; then
+                sleep 2
+                killall ulauncher 1>/dev/null 2>&1 || killall -9 ulauncher 1>/dev/null 2>&1
+                ( ulauncher & )
+                conf_first_run=1
+                el_config_save "conf_first_run"
+            fi
             sleep 2
         fi
         is_launcher_used=1

@@ -31,7 +31,7 @@ e16_set_release_wallpaper(){
     # if we have a wallpaper to set
     if [ -d /etc/elive/wallpaper ] ; then
         # only for non-special versions like retrowave, they include already a good wallpaper in the theme:
-        if ! [ -e chroot/var/lib/dpkg/info/elive-skel-retrowave-all.list ] ; then
+        if ! [ -e /var/lib/dpkg/info/elive-skel-retrowave-all.list ] ; then
             wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
 
             if [ -s "$wallpaper" ] ; then

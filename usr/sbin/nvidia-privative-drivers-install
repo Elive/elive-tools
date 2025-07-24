@@ -745,6 +745,15 @@ interactive_ask_driver_version(){
                 _NVIDIA_PACKAGES="nvidia-settings $_NVIDIA_PACKAGES"
             fi
 
+            # possibly needed firmwares
+            if apt-cache show "firmware-nvidia-graphics" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="firmware-nvidia-graphics $_NVIDIA_PACKAGES"
+            fi
+            if apt-cache show "firmware-nvidia-gsp" 1>/dev/null 2>&1 ; then
+                _NVIDIA_PACKAGES="firmware-nvidia-gsp $_NVIDIA_PACKAGES"
+            fi
+
+
             # extra packages
             if ((is_extra_packages_wanted)) ; then
                 if apt-cache show "nvidia-cuda-toolkit" 1>/dev/null 2>&1 ; then

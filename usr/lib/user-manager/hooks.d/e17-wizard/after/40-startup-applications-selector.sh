@@ -587,7 +587,7 @@ EOF
     # add an info header
     rm -f "$order_file"
     local message_instructions
-    message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: To add an application to run at startup, simply add it to this list. If you want to disable one, comment the line (using the hashtag symbol at the start of the line) so it will be ignored. However, do not remove the line, as Elive may suggest adding it again in the future." )" "" )"
+    message_instructions="$( printf "$( eval_gettext "INSTRUCTIONS: To add an application to run at the startup, simply add it to this list, it can be an executable or its .desktop file launcher. If you want to disable one, comment the line (using the hashtag symbol at the start of the line) so it will be ignored. However, do not remove the line, as Elive may suggest adding it again in the future." )" "" )"
     echo "# $message_instructions" >> "$order_file"
 
     # sort the launchers

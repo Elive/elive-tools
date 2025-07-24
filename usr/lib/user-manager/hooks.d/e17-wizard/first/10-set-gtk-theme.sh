@@ -28,16 +28,20 @@ verify_x11_access(){
 
 # set a specific wallpaper for the actual release if there's any
 e16_set_release_wallpaper(){
+    # if we have a wallpaper to set
     if [ -d /etc/elive/wallpaper ] ; then
-        wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
+        # only for non-special versions like retrowave, they include already a good wallpaper in the theme:
+        if ! [ -e chroot/var/lib/dpkg/info/elive-skel-retrowave-all.list ] ; then
+            wallpaper="$( find /etc/elive/wallpaper/ -type f \( -iname '*'jpg -o -iname '*'jpeg -o -iname '*'png \) | tail -1 )"
 
-        if [ -s "$wallpaper" ] ; then
-            if [ -n "$EROOT" ] ; then
-                ( elive-wallpaper-set "$wallpaper" & )
-            fi
-        else
-            if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
-                el_warning "/etc/elive/wallpaper has not a correct bg? \n$( ls -1 /etc/elive/wallpaper/ )"
+            if [ -s "$wallpaper" ] ; then
+                if [ -n "$EROOT" ] ; then
+                    ( elive-wallpaper-set "$wallpaper" & )
+                fi
+            else
+                if ! grep -Fqs "special-version: yes" /etc/elive-version ; then
+                    el_warning "/etc/elive/wallpaper has not a correct bg? \n$( ls -1 /etc/elive/wallpaper/ )"
+                fi
             fi
         fi
     fi

@@ -9,7 +9,7 @@ waiter(){
     local is_newline_put
     # watcher of the command, with space after the command, of course
     #while ps aux | grep -v grep | grep -v "$$" | grep -v "$(basename $0) $watcher" | grep -vE "(vim|gvim|emacs|scite|geany).*${watcher}" | grep -qE "([[:digit:]] ${watcher} |[[:digit:]] ${watcher}$|[[:digit:]] .*bin/${watcher} |[[:digit:]] .*bin/${watcher}$)"
-    while pidof -zcxq "$watcher"
+    while pidof -zcxq "$watcher" 2>/dev/null
     # warning: next command cuts the 'command' name if is longer than 15 chars, so it cannot work with these ones
     #while ps axk comm o comm,args | grep -qs "^${watcher}.*${watcher} "
     do

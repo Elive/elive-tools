@@ -1,4 +1,12 @@
-#!/bin/sh
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+EL_REPORTS="1"
+el_make_environment
+# . gettext.sh
+# TEXTDOMAIN=""
+# export TEXTDOMAIN
+
 SOURCE="$(basename $0)"
 #set -x
 

@@ -7,11 +7,10 @@ el_make_environment
 # TEXTDOMAIN=""
 # export TEXTDOMAIN
 
-SOURCE="$(basename $0)"
 #set -x
 
 main(){
-    tmp_lock="/tmp/.${SOURCE}-${USER}-killing.lock"
+    tmp_lock="/tmp/.$( basename ${SOURCE} )-${USER}-killing.lock"
     # run
     if [ -x "/usr/bin/ulauncher" ] ; then
         if ps ux | LC_ALL=C grep -qs "python3.*ulauncher$" ; then

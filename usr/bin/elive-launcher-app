@@ -13,26 +13,17 @@ main(){
     tmp_lock="/tmp/.$( basename ${SOURCE} )-${USER}-killing.lock"
     # run
     if [ -x "/usr/bin/ulauncher" ] ; then
-        if ps ux | LC_ALL=C grep -qs "python3.*ulauncher$" ; then
-            #if [ "$1" = "force" ] ; then
-                ulauncher-toggle || ( ulauncher & )
-            #else
-                ## do not do anything because is already running, so the trigger will automatically open it
-                #true
-            #fi
-        else
-            ( ulauncher & )
-            el_config_get
-            # because of a bug, ulauncher needs to be run a first time in order to run correctly
-            if ! ((conf_first_run)) ; then
-                sleep 2
-                killall ulauncher 1>/dev/null 2>&1 || killall -9 ulauncher 1>/dev/null 2>&1
-                ( ulauncher & )
-                conf_first_run=1
-                el_config_save "conf_first_run"
-            fi
+        ( ulauncher & )
+        el_config_get
+        # because of a bug, ulauncher needs to be run a first time in order to run correctly
+        if ! ((conf_first_run)) ; then
             sleep 2
+            killall ulauncher 1>/dev/null 2>&1 || killall -9 ulauncher 1>/dev/null 2>&1
+            ( ulauncher & )
+            conf_first_run=1
+            el_config_save "conf_first_run"
         fi
+        sleep 1
         is_launcher_used=1
     else
         # use kupfer instead

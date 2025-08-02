@@ -59,6 +59,8 @@ main(){
         exit 1
     fi
 
+    name="${name// /_}"
+
     # check if transmission torrents directory is available (I use an external disk for them)
     download_dir="$( grep \"download-dir\" ~/.config/transmission/settings.json | sed -e 's|^.*": "||g' -e 's|",$||g' | tail -1 )"
 

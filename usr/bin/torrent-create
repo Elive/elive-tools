@@ -112,6 +112,8 @@ main(){
 
 
     # }}}
+    gui_error "This tool is actually broken, do not use it. Exiting..."
+
 
     # make a copy of what we want to share in order to seed them and from a temporal place
     mkdir -p "${download_dir}"
@@ -120,7 +122,8 @@ main(){
         if [[ -d "${1}" ]] && [[ -z "$2" ]] ; then
             el_warning "Directory for your torrent files ALREADY exists, do you want to update its contents?\nThis will DELETE all the previous data in: ${download_dir}/${name} "
             el_info "Going to run: rsync -av --delete \"${1%/}/\" \"${download_dir}/${name%/}/\""
-            if gui_confirm "Update the directory deleting its previous contents?" ; then
+            # FIXME: this command deleted the entire target directory if the tool is called as "$0 . "
+            if gui_confirm "Update the torrent downloads directory for this torrent where deleting its previous contents? (suggested)" ; then
                 rsync -av --delete "${1%/}/" "${download_dir}/${name%/}/"
             fi
         else

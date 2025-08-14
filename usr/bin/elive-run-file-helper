@@ -122,8 +122,10 @@ run_edje(){
         # show a preview
         $precmd edje_player "$file"
 
-        if $guitool --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
-            $precmd enlightenment_remote -desktop-bg-add-set "$file"
+        if el_user_desktop_running enlightenment ; then
+            if $guitool --question --text="$( eval_gettext "Do you want to install this wallpaper?" )" ; then
+                $precmd enlightenment_remote -desktop-bg-add-set "$file"
+            fi
         fi
 
         return 0
@@ -131,11 +133,15 @@ run_edje(){
 
     # full E theme
     if ((is_e_theme)) ; then
-        if $guitools --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
-            $precmd cp -f "$file" "$E_HOME_DIR/themes/"
-            # update: seems like it doesn't works?
-            enlightenment_remote -theme-set "$E_HOME_DIR/themes/$( basename "$file" )"
-            # $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and also have the most features." )"
+        if el_user_desktop_running enlightenment ; then
+            if $guitool --question --text="$( eval_gettext "Do you want to install this theme?" )" ; then
+                $precmd cp -f "$file" "$E_HOME_DIR/themes/"
+                # update: seems like it doesn't works?
+                enlightenment_remote -theme-set "$E_HOME_DIR/themes/$( basename "$file" )"
+                # $guitool --info --text="$( eval_gettext "You can now activate the new theme from the preferences menu. Note that themes may not always be fully compatible; we suggest using the Elive theme for compatibility, stability, and also have the most features." )"
+            fi
+        else
+            $guitool --error --text="$( eval_gettext "This theme requires to have running a newer version of Enlightenment, please login into this window manager in order to be able to use this file." )"
         fi
 
         return 0

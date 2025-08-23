@@ -687,7 +687,7 @@ el_make_environment(){ # make ready our environment (source variables and functi
         is_debug=1
     fi
 
-    if [[ -f "/etc/adduser.conf" ]] ; then
+    if [[ -z "$DSHELL" && -z "$DHOME" && -z "$EXTRA_GROUPS" ]] && [[ -s "/etc/adduser.conf" ]] ; then
         source /etc/adduser.conf
     fi
 
@@ -4490,7 +4490,9 @@ fi
 
 
 # extra vars
-source /etc/adduser.conf 2>/dev/null || true
+if [[ -z "$DSHELL" && -z "$DHOME" && -z "$EXTRA_GROUPS" ]] && [[ -s "/etc/adduser.conf" ]] ; then
+    source /etc/adduser.conf 2>/dev/null || true
+fi
 [[ -z "$DHOME" ]] && export DHOME=/home
 [[ -z "$UID" ]] && export UID="$(id -u)"
 # set the user's home, sometimes, like if we are in an init script, the home points to /

@@ -101,11 +101,14 @@ run_edje(){
 
     while read -ru 3 line
     do
+        # note: groups are always listed between ' ' so include them that way and with the wildcard
         [[ "$line" = *"'e/theme/about'"* ]] && is_e_theme=1
         [[ "$line" = *"'e/modules/ibox/"* ]] && is_e_theme=1
         [[ "$line" = *"'elive-gadget-clock"* ]] && is_elive_gadget_clock=1
         [[ "$line" = *"'e/desktop/background'"* ]] && is_e_wallpaper=1
         [[ "$line" = "^0 groups in file"* ]] && is_e_invalid=1
+        # generic edjes have 'main'
+        [[ "$line" = *"'main'"* ]] && is_main=1
 
     done 3<<< "$( LC_ALL="$EL_LC_EN" edje_player -G "$file" )"
 
@@ -152,6 +155,14 @@ run_edje(){
         killall elive-gadget-clock || true
         # this runs the clock, adds the theme, and saves it
         elive-gadget-clock --theme "$file"
+
+        return 0
+    fi
+
+    # generic edje playable
+    if ((is_main)) ; then
+        $precmd edje_player --group=main "$file"
+        return 0
     fi
 
 
@@ -173,6 +184,9 @@ run_edje(){
     $guitool --warning --text="$( eval_gettext "You are trying to run an EDJE file, but we don't know how to use it. Please tell us about this type of file in the Elive forums so we can implement it." )"
 
     el_warning "Unknown EDJE purpose file: groups:\n$( edje_player -G "$file" )"
+
+    # fallback playing
+    $precmd edje_player "$file" || true
 }
 
 run_compiler(){

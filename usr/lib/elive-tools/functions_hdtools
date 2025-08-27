@@ -31,7 +31,7 @@ get_disk_from_partition_complex(){
     #    nvme0n1p3_crypt: 1 dependencies: (nvme0n1p3)
 
     # valid disk values
-    if echo "$partition" | grep -v "/dev/mapper/" | grep -qsE "((xvd|sd|hd|vd)[a-z]|nvme[[:digit:]]+n[[:digit:]]+|mmcblk[[:digit:]]+|md[[:digit:]]+|md[[:digit:]]+p[[:digit:]]+)" ; then
+    if echo "$partition" | grep -v "/dev/mapper/" | grep -qsE "((xvd|sd|hd|vd)[a-z]|nvme[[:digit:]]+n[[:digit:]]+|mmcblk[[:digit:]]+|md[[:digit:]]+|md[[:digit:]]+p[[:digit:]]+|nbd[[:digit:]]+)" ; then
         device="$( get_disk_from_partition "$partition" )"
     fi
 
@@ -161,10 +161,10 @@ get_disk_from_partition(){
     done 3<<< "$( lsblk -d -rino PATH | tac )"
 
     # try fast mode
-    if [[ "$partition" = /dev/nvme*p* ]] || [[ "$partition" = /dev/mmcblk*p* ]] || [[ "$partition" = /dev/md*p* ]] ; then
+    if [[ "$partition" = /dev/nvme*p* ]] || [[ "$partition" = /dev/mmcblk*p* ]] || [[ "$partition" = /dev/md*p* ]] || [[ "$partition" = /dev/nbd*p* ]] ; then
         disk="${partition%%p[0-9]*}"
     else
-        if echo "$partition" | grep -qsE "^/dev/(nvme|md[[:digit:]]{3}|mmcblk)" ; then
+        if echo "$partition" | grep -qsE "^/dev/(nvme|md[[:digit:]]{3}|mmcblk|nbd[[:digit:]]+)" ; then
             disk="${partition}"
         else
             disk="${partition%%[0-9]*}"

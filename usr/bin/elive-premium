@@ -245,37 +245,16 @@ premium_synthwave_player(){
     # Synthwave Player
     el_info "$( eval_gettext "Synthwave Player: A music player with a retro-futuristic vibe." )"
     if el_confirm "$( eval_gettext "Do you want to install the Synthwave Player?" )" ; then
-        local latest_tag version url_server url_player deb_server deb_player
-        el_info "$(eval_gettext "Fetching latest version information...")"
-        latest_tag=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/Elive/synthwave-player/releases/latest | grep -o 'v[0-9.]\+$')
-        if [[ -z "$latest_tag" ]] ; then
-            el_error "$(eval_gettext "Could not determine the latest version of Synthwave Player.")"
-            return 1
-        fi
-
-        version=${latest_tag#v}
-
-        url_server="https://github.com/Elive-Premium/synthwave-player/releases/download/${latest_tag}/synthwave-player-server_${version}_all.deb"
-        url_player="https://github.com/Elive-Premium/synthwave-player/releases/download/${latest_tag}/synthwave-player_${version}_all.deb"
-
-        deb_server="/tmp/synthwave-player-server_${version}_all.deb"
-        deb_player="/tmp/synthwave-player_${version}_all.deb"
-
-        el_info "$(eval_gettext "Downloading Synthwave Player version") ${version}..."
-        if ! wget -O "$deb_server" "$url_server" || ! wget -O "$deb_player" "$url_player" ; then
-            el_error "$(eval_gettext "Failed to download Synthwave Player packages.")"
-            rm -f "$deb_server" "$deb_player"
-            return 1
-        fi
-
-        el_info "$(eval_gettext "Please enter your administrator password to install the packages.")"
-        if ! gksu bash -c "dpkg -i \"$deb_server\" \"$deb_player\" ; apt-get -f install -y" ; then
-            el_error "$(eval_gettext "Installation failed.")"
-        else
-            el_info "$(eval_gettext "Synthwave Player installed successfully.")"
-        fi
-
-        rm -f "$deb_server" "$deb_player"
+        el_info "$( eval_gettext "You will be directed to the download page where you must download two .deb files:" )"
+        echo "- synthwave-player_..._all.deb"
+        echo "- synthwave-player-server_..._all.deb"
+        echo
+        el_warning "$( eval_gettext "Important: The 'synthwave-player-server' package must be installed only on the machine that will serve the music." )"
+        el_info "$( eval_gettext "After downloading, click on the files from your file manager to install them." )"
+        echo
+        el_info "$( eval_gettext "Press Enter to open the download page." )"
+        read nothing
+        web-launcher "https://github.com/Elive-Premium/synthwave-player/releases/latest"
     fi
 }
 

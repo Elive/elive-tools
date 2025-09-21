@@ -17,9 +17,9 @@ ssh_key_check(){
     # check ssh ID key
     # if [[ ! -s ~/.ssh/id_rsa.pub ]] && [[ ! -s ~/.ssh/id_ed25519.pub ]] && [[ ! -s ~/.ssh/id_ecdsa.pub ]] ; then
     if [[ ! -s ~/.ssh/id_rsa.pub ]] ; then
-        el_warning "$( eval_gettext "You don't have an SSH key configured, you need it added to your Github account to access the Premium features." )"
-        if el_confirm "$( eval_gettext "Do you want to create a new SSH key now? (If you say NO, you will need to import your existing SSH keys into your:" ) ~/.ssh/id_rsa.pub" ; then
-            el_warning "Important: you can optionally NOT include a password, to avoid having to enter it every time. For that just press 'Enter'"
+        el_warning "$( eval_gettext "You don't have an SSH key configured. An SSH key is required and must be added to your Github account to access the Premium features." )"
+        if el_confirm "$( eval_gettext "Do you want to create a new SSH key now? (If not, you will need to import your existing SSH keys into:" ) ~/.ssh/id_rsa.pub" ; then
+            el_warning "$( eval_gettext "Important: You can optionally skip adding a password for your SSH key. This will prevent you from having to enter it every time you use it. To do so, just press 'Enter' when prompted for a password." )"
             ssh-keygen -t rsa -f ~/.ssh/id_rsa -C "$patreon_email"
         fi
     fi
@@ -36,9 +36,9 @@ ssh_key_check(){
             # Try to add key silently, might work if no passphrase.
             if ! ssh-add ~/.ssh/id_rsa &>/dev/null ; then
                 # It failed, probably needs a passphrase.
-                el_info "$(eval_gettext "Please enter the passphrase for your SSH key to add it to the agent.")"
+                el_info "$(eval_gettext "Please enter the passphrase for your SSH key to add it to the ssh-agent.")"
                 if ! ssh-add ~/.ssh/id_rsa < /dev/tty ; then
-                    el_warning "$(eval_gettext "Failed to add SSH key to agent. Git operations might fail if a passphrase is required.")"
+                    el_warning "$(eval_gettext "Failed to add SSH key to the ssh-agent. Git operations might fail if a passphrase is required.")"
                 fi
             fi
         fi
@@ -65,30 +65,30 @@ usage(){
     echo "  synthwave   Install the Synthwave Player"
     echo
 
-    if el_confirm "$( eval_gettext "Open website to see available premium features?" )" ; then
+    if el_confirm "$( eval_gettext "Do you want to open the website to see the available premium features?" )" ; then
         ( web-launcher "https://www.elivecd.org/premium/" & )
     fi
 }
 
 github_login_required(){
-    el_notify "normal" "logo-elive" "Important" "$( eval_gettext "Log into Github and have accepted the Elive-Premium invitation in order to view this page." )"
+    el_notify "normal" "logo-elive" "Important" "$( eval_gettext "You need to be logged into Github and have accepted the Elive-Premium invitation to view this page." )"
 }
 
 git_github_conf(){
     local username token email
 
     if [[ -z "$( command git config --get github.user )" ]] ; then
-        el_info "Insert your Github username"
+        el_info "$(eval_gettext "Please enter your Github username:")"
         read username
         if [[ -n "$username" ]] ; then
             git config --global github.user "$username"
         else
-            el_info "Insert your Github username"
+            el_info "$(eval_gettext "Please enter your Github username:")"
             read username
             if [[ -n "$username" ]] ; then
             git config --global github.user "$username"
             else
-                el_error "You need to insert your Github username in order to continue"
+                el_error "$(eval_gettext "You must enter your Github username to continue.")"
                 exit 1
             fi
         fi
@@ -98,16 +98,16 @@ git_github_conf(){
         if [[ -n "$patreon_email" ]] ; then
             git config --global user.email "$patreon_email"
         else
-            el_info "Insert your email"
+            el_info "$(eval_gettext "Please enter your email address:")"
             read email
             if [[ -n "$email" ]] ; then
                 git config --global user.email "$email"
             else
-                read -p "Insert your email: " email
+                read -p "$(eval_gettext "Please enter your email address: ")" email
                 if [[ -n "$email" ]] ; then
                     git config --global user.email "$email"
                 else
-                    el_error "You need to insert your email in order to continue"
+                    el_error "$(eval_gettext "You must enter your email address to continue.")"
                     exit 1
                 fi
             fi
@@ -137,7 +137,7 @@ github_access_check(){
     fi
 
     # check github access
-    echo -e "Testing access to the Premium Github access..." 1>&2
+    echo -e "Testing access to the Premium Github repositories..." 1>&2
 
     # fix possible permission issues with .ssh
     chown -R "$USER":"$USER" ~/.ssh
@@ -153,17 +153,17 @@ github_access_check(){
     rm -rf "/tmp/${USER}-elivepremium-test.git" || true
 
     if ! ((is_cloned)) ; then
-        el_warning "$( eval_gettext "You don't have access to the Elive Premium Github repository. First, add your SSH key to your Github account." )"
+        el_warning "$( eval_gettext "You don't have access to the Elive Premium Github repository. Please add your SSH key to your Github account first." )"
         # el_info "$( eval_gettext "Instructions: You need to add your SSH key to your Github account, you can do it from the following link:" )"
 
         # copy keys to clipboard
         if cat ~/.ssh/id_rsa.pub 2>/dev/null | xclip -i -selection clipboard ; then
-            el_info "SSH Pub Key copied to clipboard (copy-paste)"
+            el_info "$( eval_gettext "Your SSH Public Key has been copied to the clipboard." )"
         else
-            el_info "Copy the contents of your ~/.ssh/id_*.pub file and add it to your Github account"
+            el_info "$( eval_gettext "Please copy the contents of your ~/.ssh/id_*.pub file and add it to your Github account." )"
         fi
 
-        el_info "Press Enter to copy-paste your SSH key to your Github account"
+        el_info "$( eval_gettext "Press Enter to open Github in your browser where you can paste your SSH key." )"
         read nothing
         ( web-launcher "https://github.com/settings/ssh/new" & )
 
@@ -175,7 +175,7 @@ github_access_check(){
 
         sleep 5
         echo
-        el_info "Press Enter when you have your SSH added correctly, in order to continue..."
+        el_info "$( eval_gettext "Press Enter once you have added your SSH key to Github to continue..." )"
         read nothing
     fi
 
@@ -184,13 +184,13 @@ github_access_check(){
         if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
             echo -e "Possible causes:" 1>&2
             echo -e " * You haven't accepted the invitation yet" 1>&2
-            echo -e " * You have a SSH password that is not prompted / asked (suggestion: don't use a password for it, just press enter)" 1>&2
+            echo -e " * Your SSH key is protected by a passphrase that was not prompted for. (Suggestion: create a key without a passphrase by pressing Enter when asked)." 1>&2
             echo -e " * Your github user name must be: '$( git config --get github.user )'" 1>&2
-            echo -e " * Contact Thanatermesis if you have any problem to look into the issue" 1>&2
-            echo -e " * Your SSH key is not correctly added to your Github account:\n\n'$( cat ~/.ssh/id_rsa.pub 2>/dev/null )'" 1>&2
+            echo -e " * If you continue to have problems, contact Thanatermesis for assistance." 1>&2
+            echo -e " * Your SSH key is not correctly added to your Github account. The key found is:\n\n'$( cat ~/.ssh/id_rsa.pub 2>/dev/null )'" 1>&2
             echo -e "\n\n    * Which should be added to the web page: 'https://github.com/settings/ssh/new'" 1>&2
 
-            el_error "$( eval_gettext "No access to the Elive Premium Github repo. Ensure you've received and accepted the invitation. Exiting..." )"
+            el_error "$( eval_gettext "Could not access the Elive Premium Github repository. Please ensure you have received and accepted the invitation. Exiting..." )"
             exit 1
         fi
     fi
@@ -199,12 +199,12 @@ github_access_check(){
 premium_elivim(){
     # Elivim
     echo -e "\n\n\n"
-    el_info "Elivim. An amazing framework for the NeoVim editor"
-    if el_confirm "$( eval_gettext "Do you want to install the Elivim framework of Neovim?" )" ; then
+    el_info "$( eval_gettext "Elivim: An amazing framework for the NeoVim editor." )"
+    if el_confirm "$( eval_gettext "Do you want to install the Elivim framework for Neovim?" )" ; then
 
         el_dependencies_install "neovim|git|python3-venv|fonts-noto-color-emoji|ripgrep|nodejs|npm|gcc"
 
-        el_info "$( eval_gettext "Follow the terminal instructions." )"
+        el_info "$( eval_gettext "Please follow the instructions in the terminal." )"
 
         # github_login_required
         # web-launcher "https://github.com/Elive-Premium/elive-for-servers"
@@ -216,8 +216,8 @@ premium_elivim(){
 premium_assistant(){
     # Assistant
     echo -e "\n\n\n"
-    el_info "Elive AI. Handy tools to use AI in your system"
-    if el_confirm "$( eval_gettext "Do you want to install elive-assistant with its many AI features?" )" ; then
+    el_info "$( eval_gettext "Elive AI: A collection of handy tools to use Artificial Intelligence on your system." )"
+    if el_confirm "$( eval_gettext "Do you want to install Elive Assistant and its many AI features?" )" ; then
         el_dependencies_install "elive-assistant"
     fi
 }
@@ -225,9 +225,9 @@ premium_assistant(){
 premium_gptuuu(){
     # gptuuu
     echo -e "\n\n\n"
-    el_info "GPT Uncensored, Unbiased, Untracked"
-    if el_confirm "$( eval_gettext "Do you want to install a local AI chat system in your machine?" )" ; then
-        el_info "$( eval_gettext "Follow the terminal instructions." )"
+    el_info "$( eval_gettext "GPT-UUU: GPT Uncensored, Unbiased, Untracked." )"
+    if el_confirm "$( eval_gettext "Do you want to install a local AI chat system on your machine?" )" ; then
+        el_info "$( eval_gettext "Please follow the instructions in the terminal." )"
 
         el_dependencies_install "git"
         git clone git@github.com:Elive-Premium/gptuuu /tmp/gptuuu-$$ --depth 1 && /tmp/gptuuu-$$/installer.sh ; rm -rf /tmp/gptuuu-$$
@@ -237,9 +237,9 @@ premium_gptuuu(){
 premium_servers(){
     # Servers
     echo -e "\n\n\n"
-    el_info "Elive for Servers, enhancer and more..."
-    if el_confirm "$( eval_gettext "Do you want to enhance your Servers with Elive features? Continue to know more information." )" ; then
-        el_info "$( eval_gettext "Check the website of the project to know how to use it for your servers." )"
+    el_info "$( eval_gettext "Elive for Servers: Enhancements for your server and more." )"
+    if el_confirm "$( eval_gettext "Do you want to enhance your servers with Elive features? Continue to learn more." )" ; then
+        el_info "$( eval_gettext "Check the project website to learn how to use it on your servers." )"
         github_login_required
         web-launcher "https://github.com/Elive-Premium/elive-for-servers"
     fi
@@ -248,7 +248,7 @@ premium_servers(){
 premium_synthwave_player(){
     # Synthwave Player
     echo -e "\n\n\n"
-    el_info "Synthwave Player. A music player with a retro-futuristic vibe."
+    el_info "$( eval_gettext "Synthwave Player: A music player with a retro-futuristic vibe." )"
     if el_confirm "$( eval_gettext "Do you want to install the Synthwave Player?" )" ; then
         local latest_tag version url_server url_player deb_server deb_player
         el_info "$(eval_gettext "Fetching latest version information...")"
@@ -273,7 +273,7 @@ premium_synthwave_player(){
             return 1
         fi
 
-        el_info "$(eval_gettext "Insert your admin password to install the packages")"
+        el_info "$(eval_gettext "Please enter your administrator password to install the packages.")"
         if ! gksu bash -c "dpkg -i \"$deb_server\" \"$deb_player\" ; apt-get -f install -y" ; then
             el_error "$(eval_gettext "Installation failed.")"
         else
@@ -313,7 +313,7 @@ main(){
     esac
 
     if ! ((is_bookworm)) ; then
-        el_error "$( eval_gettext "This feature is only available for Elive 3.8.40+ which is based on Bookworm or newer." )"
+        el_error "$( eval_gettext "This feature is only available for Elive 3.8.40+ (based on Debian Bookworm or newer)." )"
         exit 1
     fi
 
@@ -327,17 +327,17 @@ main(){
     fi
 
     if ! ((is_premium_new)) ; then
-        el_info "$( eval_gettext "To be an Elive Premium user, you need to join Elive's Patreon." )"
-        if ! el_confirm "$( eval_gettext "Open website to see the features and benefits of being Premium?" )" ; then
+        el_info "$( eval_gettext "To become an Elive Premium user, you need to join Elive's Patreon." )"
+        if el_confirm "$( eval_gettext "Would you like to open the website to see the features and benefits of being a Premium user?" )" ; then
             web-launcher "https://www.elivecd.org/premium/"
         fi
-        el_info "$( eval_gettext "This user is not yet configured as Premium" )"
-        if el_confirm "$( eval_gettext "Open the Patreon website to become Premium?" )" ; then
+        el_info "$( eval_gettext "This user is not yet configured as a Premium user." )"
+        if el_confirm "$( eval_gettext "Would you like to open the Patreon website to become a Premium user?" )" ; then
             web-launcher "https://www.patreon.com/elive"
         fi
 
         local message_email
-        message_email="$( printf "$( eval_gettext "Insert your Email used in your Patreon or associated with your Premium account." )" "" )"
+        message_email="$( printf "$( eval_gettext "Please enter the email address used for your Patreon account or associated with your Premium account." )" "" )"
 
         el_info "$message_email"
         read -r patreon_email
@@ -352,7 +352,7 @@ main(){
 
     # update values
     if [[ "$is_premium_new" != "$is_premium_user" ]] ; then
-        el_info "Insert your admin password to save the configuration"
+        el_info "$( eval_gettext "Please enter your administrator password to save the configuration." )"
         gksu bash -c "source /usr/lib/elive-tools/functions ;
         sed -i '/^patreon_email=/d' '/etc/elive/settings' 2>/dev/null || true
         echo 'patreon_email=\"$patreon_email\"' >> /etc/elive/settings
@@ -364,8 +364,8 @@ main(){
 
     # verify
     if ! ((is_premium_user)) ; then
-        el_error "$( eval_gettext "This Email is not from a Premium user. Try using the same one assigned in your Patreon account." )"
-        el_info "$( eval_gettext "Instructions: If your Patreon account has a different email configured, you must change it. Note that this email will also be used to access the Github Premium section." )"
+        el_error "$( eval_gettext "This email address does not belong to a Premium user. Please try the one associated with your Patreon account." )"
+        el_info "$( eval_gettext "Instructions: If your Patreon account uses a different email address, you must change it to match what you entered. Note that this email will also be used to access the Github Premium repositories." )"
         exit
     fi
 

@@ -126,7 +126,7 @@ github_access_check(){
     chmod 644 ~/.ssh/*.pub
     chmod o-w ~
 
-    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
+    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" < /dev/tty ; then
         is_cloned=1
     fi
 
@@ -161,7 +161,7 @@ github_access_check(){
 
     if ! ((is_cloned)) ; then
         echo -e "Testing access to the Elive Premium Github repository..." 1>&2
-        if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
+        if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" < /dev/tty ; then
             echo -e "Possible causes:" 1>&2
             echo -e " * You haven't accepted the invitation yet" 1>&2
             echo -e " * You have a SSH password that is not prompted / asked (suggestion: don't use a password for it, just press enter)" 1>&2

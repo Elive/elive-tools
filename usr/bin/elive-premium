@@ -137,7 +137,6 @@ github_access_check(){
 
     # check github access
     echo -e "Testing access to the Premium Github access..." 1>&2
-    el_warning "$( eval_gettext "Important: If you encounter a 'permission denied' error at this step. Contact Thanatermesis to check the issue." )"
 
     # fix possible permission issues with .ssh
     chown -R "$USER":"$USER" ~/.ssh
@@ -186,7 +185,7 @@ github_access_check(){
             echo -e " * You haven't accepted the invitation yet" 1>&2
             echo -e " * You have a SSH password that is not prompted / asked (suggestion: don't use a password for it, just press enter)" 1>&2
             echo -e " * Your github user name must be: '$( git config --get github.user )'" 1>&2
-            # FIXME: multiple ones?
+            echo -e " * Contact Thanatermesis if you have any problem to look into the issue" 1>&2
             echo -e " * Your SSH key is not correctly added to your Github account:\n\n'$( cat ~/.ssh/id_rsa.pub 2>/dev/null )'" 1>&2
             echo -e "\n\n    * Which should be added to the web page: 'https://github.com/settings/ssh/new'" 1>&2
 

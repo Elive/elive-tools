@@ -65,7 +65,7 @@ usage(){
     echo "  synthwave   Install the Synthwave Player"
     echo
 
-    if el_confirm "$( eval_gettext "Open website to see the premium features?" )" ; then
+    if el_confirm "$( eval_gettext "Open website to see available premium features?" )" ; then
         ( web-launcher "https://www.elivecd.org/premium/" & )
     fi
 }

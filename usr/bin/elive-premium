@@ -229,7 +229,7 @@ premium_gptuuu(){
         el_info "$( eval_gettext "Follow the terminal instructions." )"
 
         el_dependencies_install "git"
-        git clone git@github.com:Elive-Premium/gptuuu /tmp/gptuuu-$$ --depth 1 && /tmp/gptuuu-$$/installer.sh ; rm -rf /tmp/elivim-$$
+        git clone git@github.com:Elive-Premium/gptuuu /tmp/gptuuu-$$ --depth 1 && /tmp/gptuuu-$$/installer.sh ; rm -rf /tmp/gptuuu-$$
     fi
 }
 
@@ -300,8 +300,7 @@ main(){
         message_email="$( printf "$( eval_gettext "Insert your Email used in your Patreon or associated with your Premium account." )" "" )"
 
         el_info "$message_email"
-        read patreon_email
-        read -r patreon_email <<< "$patreon_email"
+        read -r patreon_email
         patreon_email="$( echo "${patreon_email,,}" )"
 
 

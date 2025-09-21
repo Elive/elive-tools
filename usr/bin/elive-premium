@@ -11,7 +11,7 @@ set -e
 
 ssh_key_check(){
     # delete wrong rsa keys if any (bug from previous version of this script)
-    if ! grep "^ssh-rsa " ~/.ssh/id_rsa.pub 2>/dev/null ; then
+    if ! grep -qs "^ssh-rsa " ~/.ssh/id_rsa.pub 2>/dev/null ; then
         rm -f ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
     fi
     # check ssh ID key
@@ -19,7 +19,7 @@ ssh_key_check(){
     if [[ ! -s ~/.ssh/id_rsa.pub ]] ; then
         el_warning "$( eval_gettext "You don't have an SSH key configured, you need it added to your Github account to access the Premium features." )"
         if el_confirm "$( eval_gettext "Do you want to create a new SSH key now? (If you say NO, you will need to import your existing SSH keys into your:" ) ~/.ssh/id_rsa.pub" ; then
-            el_warning "Important: you can optionally NOT include a passphrase, to avoid having to enter it every time"
+            el_warning "Important: you can optionally NOT include a password, to avoid having to enter it every time. For that just press 'Enter'"
             ssh-keygen -t rsa -f ~/.ssh/id_rsa -C "$patreon_email"
         fi
     fi
@@ -164,11 +164,11 @@ github_access_check(){
         if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
             echo -e "Possible causes:" 1>&2
             echo -e " * You haven't accepted the invitation yet" 1>&2
+            echo -e " * You have a SSH password that is not prompted / asked (suggestion: don't use a password for it, just press enter)" 1>&2
             echo -e " * Your github user name must be: '$( git config --get github.user )'" 1>&2
             # FIXME: multiple ones?
             echo -e " * Your SSH key is not correctly added to your Github account:\n\n'$( cat ~/.ssh/id_rsa.pub 2>/dev/null )'" 1>&2
             echo -e "\n\n    * Which should be added to the web page: 'https://github.com/settings/ssh/new'" 1>&2
-            echo -e " * Your SSH key is not correctly loaded in your SSH agent" 1>&2
 
             el_error "$( eval_gettext "No access to the Elive Premium Github repo. Ensure you've received and accepted the invitation. Exiting..." )"
             exit 1

@@ -58,11 +58,11 @@ premium_status_get(){
 usage(){
     echo "Usage: $0 [elivim|assistant|gptuuu|servers|synthwave]"
     echo
-    echo "  elivim      Install the Elivim framework for Neovim"
-    echo "  assistant   Install the Elive AI assistant"
-    echo "  gptuuu      Install the GPT Uncensored, Unbiased, Untracked"
-    echo "  servers     Install the Elive for Servers enhancer"
-    echo "  synthwave   Install the Synthwave Player"
+    echo "  elivim             Install the Elivim framework for Neovim"
+    echo "  assistant          Install the Elive AI assistant"
+    echo "  gptuuu             Install the GPT Uncensored, Unbiased, Untracked"
+    echo "  servers            Install the Elive for Servers enhancer"
+    echo "  synthwave-player   Install the Synthwave Player"
     echo
 
     if el_confirm "$( eval_gettext "Do you want to open the website to see the available premium features?" )" ; then
@@ -198,7 +198,6 @@ github_access_check(){
 
 premium_elivim(){
     # Elivim
-    echo -e "\n\n\n"
     el_info "$( eval_gettext "Elivim: An amazing framework for the NeoVim editor." )"
     if el_confirm "$( eval_gettext "Do you want to install the Elivim framework for Neovim?" )" ; then
 
@@ -215,7 +214,6 @@ premium_elivim(){
 
 premium_assistant(){
     # Assistant
-    echo -e "\n\n\n"
     el_info "$( eval_gettext "Elive AI: A collection of handy tools to use Artificial Intelligence on your system." )"
     if el_confirm "$( eval_gettext "Do you want to install Elive Assistant and its many AI features?" )" ; then
         el_dependencies_install "elive-assistant"
@@ -224,7 +222,6 @@ premium_assistant(){
 
 premium_gptuuu(){
     # gptuuu
-    echo -e "\n\n\n"
     el_info "$( eval_gettext "GPT-UUU: GPT Uncensored, Unbiased, Untracked." )"
     if el_confirm "$( eval_gettext "Do you want to install a local AI chat system on your machine?" )" ; then
         el_info "$( eval_gettext "Please follow the instructions in the terminal." )"
@@ -236,7 +233,6 @@ premium_gptuuu(){
 
 premium_servers(){
     # Servers
-    echo -e "\n\n\n"
     el_info "$( eval_gettext "Elive for Servers: Enhancements for your server and more." )"
     if el_confirm "$( eval_gettext "Do you want to enhance your servers with Elive features? Continue to learn more." )" ; then
         el_info "$( eval_gettext "Check the project website to learn how to use it on your servers." )"
@@ -247,12 +243,11 @@ premium_servers(){
 
 premium_synthwave_player(){
     # Synthwave Player
-    echo -e "\n\n\n"
     el_info "$( eval_gettext "Synthwave Player: A music player with a retro-futuristic vibe." )"
     if el_confirm "$( eval_gettext "Do you want to install the Synthwave Player?" )" ; then
         local latest_tag version url_server url_player deb_server deb_player
         el_info "$(eval_gettext "Fetching latest version information...")"
-        latest_tag=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/Elive-Premium/synthwave-player/releases/latest | grep -o 'v[0-9.]\+$')
+        latest_tag=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/Elive/synthwave-player/releases/latest | grep -o 'v[0-9.]\+$')
         if [[ -z "$latest_tag" ]] ; then
             el_error "$(eval_gettext "Could not determine the latest version of Synthwave Player.")"
             return 1
@@ -394,7 +389,7 @@ main(){
             premium_servers
             exit
             ;;
-        synthwave|player)
+        synthwave|player|"synthwave-player")
             premium_synthwave_player
             exit
             ;;

@@ -56,18 +56,34 @@ premium_status_get(){
 }
 
 usage(){
-    echo "Usage: $0 [elivim|assistant|gptuuu|servers|synthwave]"
     echo
-    echo "  elivim             Install the Elivim framework for Neovim"
-    echo "  assistant          Install the Elive AI assistant"
-    echo "  gptuuu             Install the GPT Uncensored, Unbiased, Untracked"
-    echo "  servers            Install the Elive for Servers enhancer"
-    echo "  synthwave-player   Install the Synthwave Player"
+    el_info "$( eval_gettext "Please select one of the following premium features to install:" )"
+    echo
+    echo "  1) $( eval_gettext "Elivim: An amazing framework for the NeoVim editor." )"
+    echo "  2) $( eval_gettext "Elive AI: A collection of handy tools to use Artificial Intelligence on your system." )"
+    echo "  3) $( eval_gettext "GPT-UUU: GPT Uncensored, Unbiased, Untracked." )"
+    echo "  4) $( eval_gettext "Elive for Servers: Enhancements for your server and more." )"
+    echo "  5) $( eval_gettext "Synthwave Player: A music player with a retro-futuristic vibe." )"
+    echo
+    echo "  0) $( eval_gettext "Exit" )"
     echo
 
-    if el_confirm "$( eval_gettext "Do you want to open the website to see the available premium features?" )" ; then
-        ( web-launcher "https://www.elivecd.org/premium/" & )
-    fi
+    local choice
+    read -p "$( eval_gettext "Enter your choice" ) [0-5]: " choice
+    echo
+
+    case "$choice" in
+        1) premium_elivim ;;
+        2) premium_assistant ;;
+        3) premium_gptuuu ;;
+        4) premium_servers ;;
+        5) premium_synthwave_player ;;
+        0) return 0 ;;
+        *)
+            el_error "$( eval_gettext "Invalid option selected." )"
+            return 1
+            ;;
+    esac
 }
 
 github_login_required(){

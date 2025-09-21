@@ -56,12 +56,13 @@ premium_status_get(){
 }
 
 usage(){
-    echo "Usage: $0 [elivim|assistant|gptuuu|servers]"
+    echo "Usage: $0 [elivim|assistant|gptuuu|servers|synthwave]"
     echo
     echo "  elivim      Install the Elivim framework for Neovim"
     echo "  assistant   Install the Elive AI assistant"
     echo "  gptuuu      Install the GPT Uncensored, Unbiased, Untracked"
     echo "  servers     Install the Elive for Servers enhancer"
+    echo "  synthwave   Install the Synthwave Player"
     echo
 
     if el_confirm "$( eval_gettext "Open website to see the premium features?" )" ; then
@@ -244,6 +245,45 @@ premium_servers(){
     fi
 }
 
+premium_synthwave_player(){
+    # Synthwave Player
+    echo -e "\n\n\n"
+    el_info "Synthwave Player. A music player with a retro-futuristic vibe."
+    if el_confirm "$( eval_gettext "Do you want to install the Synthwave Player?" )" ; then
+        local latest_tag version url_server url_player deb_server deb_player
+        el_info "$(eval_gettext "Fetching latest version information...")"
+        latest_tag=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/Elive-Premium/synthwave-player/releases/latest | grep -o 'v[0-9.]\+$')
+        if [[ -z "$latest_tag" ]] ; then
+            el_error "$(eval_gettext "Could not determine the latest version of Synthwave Player.")"
+            return 1
+        fi
+
+        version=${latest_tag#v}
+
+        url_server="https://github.com/Elive-Premium/synthwave-player/releases/download/${latest_tag}/synthwave-player-server_${version}_all.deb"
+        url_player="https://github.com/Elive-Premium/synthwave-player/releases/download/${latest_tag}/synthwave-player_${version}_all.deb"
+
+        deb_server="/tmp/synthwave-player-server_${version}_all.deb"
+        deb_player="/tmp/synthwave-player_${version}_all.deb"
+
+        el_info "$(eval_gettext "Downloading Synthwave Player version") ${version}..."
+        if ! wget -O "$deb_server" "$url_server" || ! wget -O "$deb_player" "$url_player" ; then
+            el_error "$(eval_gettext "Failed to download Synthwave Player packages.")"
+            rm -f "$deb_server" "$deb_player"
+            return 1
+        fi
+
+        el_info "$(eval_gettext "Insert your admin password to install the packages")"
+        if ! gksu bash -c "dpkg -i \"$deb_server\" \"$deb_player\" ; apt-get -f install -y" ; then
+            el_error "$(eval_gettext "Installation failed.")"
+        else
+            el_info "$(eval_gettext "Synthwave Player installed successfully.")"
+        fi
+
+        rm -f "$deb_server" "$deb_player"
+    fi
+}
+
 
 
 
@@ -252,8 +292,8 @@ main(){
 
     [[ -s /etc/elive/settings ]] && source /etc/elive/settings
 
-    if ! el_dependencies_check "git|curl|ssh-keygen|xclip" ; then
-        el_dependencies_install "git|curl|openssh-client|xclip"
+    if ! el_dependencies_check "git|curl|wget|ssh-keygen|xclip" ; then
+        el_dependencies_install "git|curl|wget|openssh-client|xclip"
     fi
 
     case "$( cat /etc/debian_version )" in
@@ -354,6 +394,10 @@ main(){
             premium_servers
             exit
             ;;
+        synthwave|player)
+            premium_synthwave_player
+            exit
+            ;;
         *)
             usage
             exit
@@ -378,6 +422,7 @@ main(){
     premium_assistant
     premium_gptuuu
     premium_servers
+    premium_synthwave_player
 
 
 }

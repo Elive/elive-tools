@@ -1,0 +1,49 @@
+#!/bin/bash
+# IMPORTANT: this tool can fails if you are trying to install a package that includes a dpkg/apt-get command in the installation process, for example installing a package that includes a daemon like eliveinstaller-5g which runs apt-get remove later, but this should never happen... these commands are not supposed to run on these processes
+
+SOURCE="$0"
+tool="$( basename "$0" )"
+
+
+waiter(){
+    local is_waiting i
+    i=0
+
+    tput sc
+    while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+        case $(($i % 4)) in
+            0 ) j="-" ;;
+            1 ) j="\\" ;;
+            2 ) j="|" ;;
+            3 ) j="/" ;;
+        esac
+        tput rc
+        echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
+        is_waiting=1
+
+        LC_ALL=C  sleep 0.5
+        ((i=i+1))
+    done
+
+    # make sure that dpkg/apt still not running
+    if ((is_waiting)) ; then
+        unset is_waiting
+        LC_ALL=C  sleep 4
+        # recursively call it again
+        $FUNCNAME
+    fi
+}
+
+
+
+waiter
+
+case "$tool" in
+    dpkg)
+        "/usr/bin/$tool" "$@"
+        ;;
+    *)
+        el_error "$tool not implemented in $SOURCE"
+        exit 1
+        ;;
+esac

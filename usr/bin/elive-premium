@@ -23,6 +23,26 @@ ssh_key_check(){
             ssh-keygen -t rsa -f ~/.ssh/id_rsa -C "$patreon_email"
         fi
     fi
+
+    # make sure ssh-agent is running and has the key
+    if ! ssh-add -l &>/dev/null ; then
+        # This will fail with 2 if agent is not running, 1 if agent running but no keys
+        if [[ $? -eq 2 ]] ; then
+            eval "$(ssh-agent -s)"
+        fi
+
+        if [[ -f ~/.ssh/id_rsa ]] ; then
+            # Now agent is running for sure.
+            # Try to add key silently, might work if no passphrase.
+            if ! ssh-add ~/.ssh/id_rsa &>/dev/null ; then
+                # It failed, probably needs a passphrase.
+                el_info "$(eval_gettext "Please enter the passphrase for your SSH key to add it to the agent.")"
+                if ! ssh-add ~/.ssh/id_rsa < /dev/tty ; then
+                    el_warning "$(eval_gettext "Failed to add SSH key to agent. Git operations might fail if a passphrase is required.")"
+                fi
+            fi
+        fi
+    fi
 }
 
 premium_status_get(){
@@ -126,7 +146,7 @@ github_access_check(){
     chmod 644 ~/.ssh/*.pub
     chmod o-w ~
 
-    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" < /dev/tty ; then
+    if timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
         is_cloned=1
     fi
 
@@ -161,7 +181,7 @@ github_access_check(){
 
     if ! ((is_cloned)) ; then
         echo -e "Testing access to the Elive Premium Github repository..." 1>&2
-        if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" < /dev/tty ; then
+        if ! timeout 20 git clone --quiet git@github.com:Elive-Premium/.github.git "/tmp/${USER}-elivepremium-test.git" ; then
             echo -e "Possible causes:" 1>&2
             echo -e " * You haven't accepted the invitation yet" 1>&2
             echo -e " * You have a SSH password that is not prompted / asked (suggestion: don't use a password for it, just press enter)" 1>&2

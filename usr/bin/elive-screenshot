@@ -14,18 +14,16 @@ export TEXTDOMAIN
 exit_ok(){
     set +e
     #rm -f "$lockfile"
-    if [[ -s "$tmpimage" ]] && ! [[ -d "$tmpimage" ]] ; then
-        rm -f "$tmpimage"
+    if [[ -d "$tmpdir" ]] ; then
+        rm -r -f "$tmpdir"
     fi
-    rmdir "$tmpdir"
 }
 exit_error(){
     set +e
     #rm -f "$lockfile"
-    if [[ -s "$tmpimage" ]] && ! [[ -d "$tmpimage" ]] ; then
-        rm -f "$tmpimage"
+    if [[ -d "$tmpdir" ]] ; then
+        rm -r -f "$tmpdir"
     fi
-    rmdir "$tmpdir"
 }
 
 #if [[ -r "$lockfile" ]] ; then
@@ -61,6 +59,7 @@ Usage: $(basename $0) [options]
 -q  quality:     Image quality (1-100) high value means high size, low compression. Default: 90. (not available for PNG)
 -p  png:         Use PNG quality (default is jpg)
 -s  save:        Save the screenshot in your pictures directory
+-f  file:        Save the screenshot to a specific file path. Implies -s.
 
 Notes: if no window or range is specified, the full desktop is used for the screenshot
 "
@@ -191,9 +190,15 @@ take_screenshot(){
 
     # copy it to the screenshots directory if wanted
     if ((is_mode_save)) ; then
-        mkdir -p "$(xdg-user-dir PICTURES)/Screenshots"
-        cp -f "$tmpimage" "$(xdg-user-dir PICTURES)/Screenshots/"
-        el_info "Screenshot saved as: $(xdg-user-dir PICTURES)/Screenshots/$(basename $tmpimage)"
+        if [[ -n "$file_output" ]] ; then
+            mkdir -p "$(dirname "$file_output")"
+            cp -f "$tmpimage" "$file_output"
+            el_info "Screenshot saved as: $file_output"
+        else
+            mkdir -p "$(xdg-user-dir PICTURES)/Screenshots"
+            cp -f "$tmpimage" "$(xdg-user-dir PICTURES)/Screenshots/"
+            el_info "Screenshot saved as: $(xdg-user-dir PICTURES)/Screenshots/$(basename $tmpimage)"
+        fi
     fi
 
     # tell the user
@@ -220,7 +225,7 @@ main(){
 
     # }}}
 
-    while getopts ":drswphq:" opt; do
+    while getopts ":drswphq:f:" opt; do
         case "$opt" in
             #a)
                 #is_mode_auto=1
@@ -253,6 +258,10 @@ main(){
 
             p)
                 is_mode_png=1
+                ;;
+            f)
+                file_output="$OPTARG"
+                is_mode_save=1
                 ;;
             #f)
                 #el_debug "force mode"
@@ -293,6 +302,10 @@ main(){
                 ;;
         esac
     done
+
+    if [[ -n "$file_output" ]] && [[ "$file_output" != /* ]] ; then
+        file_output="$(pwd)/$file_output"
+    fi
 
     # set defaults
     if ((is_mode_png)) ; then

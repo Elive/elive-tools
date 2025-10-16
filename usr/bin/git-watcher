@@ -2234,11 +2234,13 @@ options_main_interact(){
             # dependencies
             if ! el_dependencies_check "aider" ; then
                 el_error "Aider is not installed, install it first and configure it: pipx install aider-chat"
+                return 1
             fi
             if [[ -z "$ai_model" ]] ; then
                 el_info "Type the model you want to use:"
                 echo -e "
-  gemini/gemini-exp-1206    | (good quality, fast, cheap)
+  gemini-pro                | (best overall quality)
+  gemini-flash              | (fast, large files)
   deepseek                  | (middle quality, cheap)
   sonnet                    | (from Claude, very good quality, more expensive)
   4o                        | (from OpenAI, good quality, average price)
@@ -2247,6 +2249,11 @@ options_main_interact(){
                 read ai_model
 
             fi
+
+            EL_REPORTS=0  el_warning "Temporal code with 3 different ways to generate the NEW patch, try all of them manually commenting the other blocks of code and running a meld to see which option generates the best results in order to keep it as selected option"
+
+
+            # my original code
             if do_compare_before_after "$commit_id" ; then
                 while read -ru 3 file
                 do
@@ -2289,14 +2296,243 @@ options_main_interact(){
                         --model ${ai_model} \
                         source_file*  \
                         --message "I have an old source code modification that I want to import again in the new upstream code that changed a bit. My patch is the file 'source_file_patch.diff' and I need to implement these changes into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
-
                         # --message "I have an old source code modification that I want to import again in the new upstream clean code. The original file was 'source_file_before.${ext}', my patch is the file 'source_file_patch.diff', they needss to be imported now into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
-
-
                 done 3<<< "$( find "${tmpdir}/sources_AFTER" -type f )"
             fi
-            cd "$pwd"
 
+            ## improved version 1
+            # if do_compare_before_after "$commit_id" ; then
+            #     while read -ru 3 file
+            #     do
+            #         [[ ! -s "$file" ]] && continue
+            #         [[ ! -e "$file" ]] && continue
+            #         file="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_AFTER/||g" )"
+            #         ext="${file##*.}"
+            #
+            #         # Verificar que el archivo existe en el directorio actual
+            #         if [[ ! -f "$(pwd)/$file" ]]; then
+            #             el_warning "File '$file' not found in current directory, skipping"
+            #             continue
+            #         fi
+            #
+            #         # cleanup
+            #         rm -rf "${tmpdir}/helper_ai"
+            #         mkdir -p "${tmpdir}/helper_ai"
+            #
+            #         # copy files
+            #         cp -f "$tmpdir/sources_BEFORE/$file" "${tmpdir}/helper_ai/source_file_before.${ext}"
+            #         cp -f "$tmpdir/sources_AFTER/$file" "${tmpdir}/helper_ai/source_file_after.${ext}"
+            #         cp -f "$(pwd)/$file" "${tmpdir}/helper_ai/source_file_NEW_to_modify.${ext}"
+            #
+            #         # prepare environment
+            #         cd "$tmpdir/helper_ai"
+            #
+            #         # Generate patch with context
+            #         diff -Nau "source_file_before.${ext}" "source_file_after.${ext}" > "source_file_patch.diff"
+            #
+            #         # Create a summary of key differences between old and new code
+            #         {
+            #             echo "KEY DIFFERENCES BETWEEN OLD AND NEW CODE:"
+            #             echo "=========================================="
+            #             echo "File: $file"
+            #             echo ""
+            #             echo "Structural changes detected:"
+            #             # Extract function/class name changes
+            #             diff -u "source_file_before.${ext}" "source_file_NEW_to_modify.${ext}" | \
+            #                 grep -E '^[-+][^-+]' | head -10 | sed 's/^/  /'
+            #                                 echo ""
+            #                                 echo "Patch to apply (from old version):"
+            #                                 cat "source_file_patch.diff"
+            #                             } > "context_summary.txt"
+            #
+            #                             rm -f "source_file_before.${ext}" "source_file_after.${ext}"
+            #
+            #                             rm -rf .git
+            #                             git init .
+            #                             git add *
+            #                             git commit -m init
+            #
+            #         # Improved AI prompt with better context
+            #         aider \
+            #             --code-theme monokai \
+            #             --git \
+            #             --lint-cmd 'c:cppcheck' \
+            #             --no-attribute-author \
+            #             --no-attribute-commit-message-author \
+            #             --no-attribute-commit-message-committer \
+            #             --no-auto-commits \
+            #             --no-auto-test \
+            #             --no-check-update \
+            #             --no-gitignore \
+            #             --yes \
+            #             --model "${ai_model}" \
+            #             source_file* context_summary.txt \
+            #             --message "I need to adapt an old patch to new code. Here's the context:
+            #
+            #         1. OLD CODE: The original code that was modified (source_file_before.${ext} -> source_file_after.${ext})
+            #         2. PATCH: The specific changes made (source_file_patch.diff)
+            #         3. NEW CODE: The current code that needs updating (source_file_NEW_to_modify.${ext})
+            #         4. CONTEXT: Key differences between old and new versions (context_summary.txt)
+            #
+            #         Please analyze the logical intent of the patch and apply equivalent changes to the NEW CODE. Focus on:
+            #         - Understanding WHAT the patch does functionally, not just the literal changes
+            #         - Adapting the changes to the new code structure
+            #         - Maintaining the same behavior/logic in the new context
+            #
+            #         Only modify 'source_file_NEW_to_modify.${ext}'. Output only the modified code, no explanations."
+            #
+            #         # Copy back the modified file if it was changed
+            #         if [[ -f "source_file_NEW_to_modify.${ext}" ]] && \
+            #             ! cmp -s "source_file_NEW_to_modify.${ext}" "$pwd/$file"; then
+            #                         cp -f "source_file_NEW_to_modify.${ext}" "$pwd/$file"
+            #                         el_info "Updated: $file"
+            #                     else
+            #                         el_info "No changes needed for: $file"
+            #         fi
+            #
+            #     done 3<<< "$( find "${tmpdir}/sources_AFTER" -type f )"
+            # fi
+
+            ## improved version 2
+#             if do_compare_before_after "$commit_id" ; then
+#                 # Get context from user about the patch purpose
+#                 el_info "Please provide context about what this patch does:"
+#                 echo -e "\nWhat problem does this patch solve or what functionality does it add?"
+#                 read -p "Patch purpose: " patch_purpose
+#                 echo -e "\nWhat behavior changes should be preserved?"
+#                 read -p "Behavior description: " patch_behavior
+#
+#                 # Create a context file that will be used for all files
+#                 mkdir -p "${tmpdir}/helper_ai"
+#                 cat > "${tmpdir}/helper_ai/patch_context.md" << EOF
+# # PATCH ADAPTATION CONTEXT
+#
+# ## PATCH PURPOSE
+# $patch_purpose
+#
+# ## EXPECTED BEHAVIOR
+# $patch_behavior
+#
+# ## ADAPTATION INSTRUCTIONS
+# 1. Analyze the semantic intent of the original patch
+# 2. Find equivalent components in the new code structure
+# 3. Preserve the business logic, not necessarily the syntax
+# 4. Maintain consistency with the new code's patterns and style
+# 5. Only modify the target file, don't change other files
+#
+# ## IMPORTANT
+# - Focus on semantic equivalence, not textual similarity
+# - The new code may have different architecture/structure
+# - Adapt the change to fit the new context appropriately
+# EOF
+#
+#                 while read -ru 3 file
+#                 do
+#                     [[ ! -s "$file" ]] && continue
+#                     [[ ! -e "$file" ]] && continue
+#
+#                     file_relative="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_AFTER/||g" )"
+#                     ext="${file_relative##*.}"
+#
+#                     # Check if file exists in current directory
+#                     if [[ ! -f "$(pwd)/$file_relative" ]]; then
+#                         el_warning "File '$file_relative' doesn't exist in current directory, skipping..."
+#                         continue
+#                     fi
+#
+#                     # cleanup and setup per-file directory
+#                     file_workspace="${tmpdir}/helper_ai/${file_relative//\//_}"
+#                     rm -rf "$file_workspace"
+#                     mkdir -p "$file_workspace"
+#
+#                     # copy files with better naming
+#                     cp -f "$tmpdir/sources_BEFORE/$file_relative" "$file_workspace/OLD_before_patch.${ext}"
+#                     cp -f "$tmpdir/sources_AFTER/$file_relative" "$file_workspace/OLD_after_patch.${ext}"
+#                     cp -f "$(pwd)/$file_relative" "$file_workspace/NEW_target_to_modify.${ext}"
+#                     cp -f "${tmpdir}/helper_ai/patch_context.md" "$file_workspace/"
+#
+#                     # prepare diff and analysis
+#                     cd "$file_workspace"
+#                     diff -Nau "OLD_before_patch.${ext}" "OLD_after_patch.${ext}" > "patch_changes.diff"
+#
+#                     # Create a summary of what changed in the original patch
+#                     cat >> "patch_context.md" << EOF
+# ## FILE-SPECIFIC CONTEXT
+# File: $file_relative
+# Original changes: $(wc -l < patch_changes.diff) lines modified
+#
+# ### ORIGINAL CHANGES SUMMARY:
+# $(grep '^+' patch_changes.diff | head -10 | sed 's/^+/  Added: /' | head -5)
+# $(grep '^-' patch_changes.diff | head -10 | sed 's/^-/  Removed: /' | head -5)
+# EOF
+#
+#                     # Initialize git repo
+#                     rm -rf .git
+#                     git init -q
+#                     git add -A
+#                     git commit -q -m "initial"
+#
+#                     el_info "Processing: $file_relative"
+#
+#                     # Use improved prompt with semantic context
+#                     aider \
+#                         --code-theme monokai \
+#                         --git \
+#                         --lint-cmd 'c:cppcheck' \
+#                         --no-attribute-author \
+#                         --no-attribute-commit-message-author \
+#                         --no-attribute-commit-message-committer \
+#                         --no-auto-commits \
+#                         --no-auto-test \
+#                         --no-check-update \
+#                         --no-gitignore \
+#                         --yes \
+#                         --model "${ai_model}" \
+#                         . \
+#                         --message "I need to adapt an old patch to new code with different structure.
+#
+#         CONTEXT: Read 'patch_context.md' first to understand the patch purpose.
+#
+#         FILES:
+#         - 'OLD_before_patch.${ext}': Original code before patch
+#         - 'OLD_after_patch.${ext}': Original code after patch
+#         - 'patch_changes.diff': Exact changes made in original patch
+#         - 'NEW_target_to_modify.${ext}': New code where changes need adaptation
+#
+#         TASK: Apply the semantic intent of the original patch to 'NEW_target_to_modify.${ext}'. The new code may have different structure, so focus on preserving behavior, not syntax.
+#
+#         RULES:
+#         1. Only modify 'NEW_target_to_modify.${ext}'
+#         2. Adapt to the new code's architecture and style
+#         3. Preserve the business logic from the original patch
+#         4. Don't explain, just output the modified code
+#         "
+#
+#                     # Copy back the modified file if aider succeeded
+#                     if [[ -f "NEW_target_to_modify.${ext}" ]] && [[ -s "NEW_target_to_modify.${ext}" ]]; then
+#                         cp -f "NEW_target_to_modify.${ext}" "$(pwd)/$file_relative"
+#                         el_success "Updated: $file_relative"
+#                     else
+#                         el_error "Failed to process: $file_relative"
+#                     fi
+#
+#                 done 3<<< "$( find "${tmpdir}/sources_AFTER" -type f )"
+#
+#                 # Also check for files that were deleted in the patch
+#                 el_info "Checking for files that might have been deleted in original patch..."
+#                 while read -ru 3 file
+#                 do
+#                     file_relative="$( echo "$file" | sed -e "s|^.*${tmpdir}/sources_BEFORE/||g" )"
+#                     if [[ ! -f "${tmpdir}/sources_AFTER/$file_relative" ]] && [[ -f "$(pwd)/$file_relative" ]]; then
+#                         el_warning "File '$file_relative' was deleted in original patch but exists in current code. Consider manual review."
+#                     fi
+#                 done 3<<< "$( find "${tmpdir}/sources_BEFORE" -type f )"
+#             fi
+#
+
+
+
+            cd "$pwd"
             if [[ "$( command git diff --unified=0 HEAD~1 | wc -l )" -gt 0 ]] ; then
                 if el_confirm "Run a git commit to save your changes?" ; then
                     command git add -u

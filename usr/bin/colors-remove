@@ -6,7 +6,8 @@ main(){
     # }}}
 
     if [[ ! -t 0 ]] ; then
-        sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" </dev/stdin
+        sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" </dev/stdin 2>/dev/null || true
+
     fi
 
 }

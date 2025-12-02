@@ -180,8 +180,13 @@ EOF
                 result="$( echo "$result" | awk '{print $1}' )"
 
                 # select a variant keyboard if needed
-                XKBVARIANT="$( { echo -e "Normal\nNormal defaults for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u | awk '{$2 = "" ; code = $1 ; $1 = "" ; print code"\n"$0}' | sed -e 's|^  ||g' ; } | zenity --width=440 --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Variant" --column="Description" 2>/dev/null )"
+                XKBVARIANT="$( { echo -e "Normal\nNormal defaults for '$result'" ; sed '/^! variant$/,/^ *$/!d;//d' "/usr/share/X11/xkb/rules/base.lst" | awk -v lang="$result" '{if ($2 == lang":") print $0}' | sed -E -e 's|^\s+||g' | sort -u | awk '{$2 = "" ; code = $1 ; $1 = "" ; print code"\n"$0}' | sed -e 's|^  ||g' ; echo -e "Other\n$(eval_gettext "Other (keyboard variants by country and other configurations)")" ; } | zenity --width=440 --height=380 --list --text="Select your variant for '${result}', or just Cancel" --column="Variant" --column="Description" 2>/dev/null )"
                 XKBVARIANT="$( echo "$XKBVARIANT" | awk '{print $1}' )"
+
+                if [[ "$XKBVARIANT" = "Other" ]] ; then
+                    zenity --info --text="$( eval_gettext "For other keyboard types like 'latam' for South America or many more options, you need to re-run this tool and choose the 'Advanced' mode." )"
+                    unset XKBVARIANT
+                fi
 
                 if [[ -z "$XKBVARIANT" ]] || [[ "$XKBVARIANT" = "Normal"* ]] || ! echo "$XKBVARIANT" | grep -qs "[[:alpha:]]" ; then
                     unset XKBVARIANT

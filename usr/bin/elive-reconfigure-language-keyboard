@@ -43,6 +43,7 @@ main(){
     # pre {{{
 
     if grep -Fqs "thanatests" /proc/cmdline ; then
+        EL_REPORTS=0 el_warning "We are in thanatests mode, exiting..."
         exit
     fi
 

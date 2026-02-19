@@ -88,7 +88,7 @@ run_edc_compile(){
         fi
     fi
 
-    file_output="$( find . -type f -iname '*.edj' -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" " )"
+    file_output="$( find . -type f -iname '*.edj' -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -f2- -d" " )"
     if [[ -s "$file_output" ]] ; then
         run_edje "$file_output"
     fi

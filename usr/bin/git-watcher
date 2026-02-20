@@ -2295,7 +2295,7 @@ options_main_interact(){
                         --yes \
                         --model ${ai_model} \
                         source_file*  \
-                        --message "I have an old source code modification that I want to import again in the new upstream code that changed a bit. My patch is the file 'source_file_patch.diff' and I need to implement these changes into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
+                        --message "I have an old source code modification that I want to import again in the new upstream code that changed a bit. My patch is the file 'source_file_patch.diff' and I need to implement these changes into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me about any compile instructions, commands to run, or anything similar, just do the modifications for the source code file and only that."
                         # --message "I have an old source code modification that I want to import again in the new upstream clean code. The original file was 'source_file_before.${ext}', my patch is the file 'source_file_patch.diff', they needss to be imported now into the file 'source_file_NEW_to_modify.${ext}'. Only modify 'source_file_NEW_to_modify.${ext}'. Don't tell me any compile instructions or anything else, just do the modifications for the source code file."
                 done 3<<< "$( find "${tmpdir}/sources_AFTER" -type f )"
             fi

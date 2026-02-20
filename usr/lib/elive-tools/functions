@@ -2638,8 +2638,6 @@ el_confirm(){
                 ;;
         esac
     else
-        el_set_display_variables
-
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             if $guitool --question --text="$question" ; then
                 return 0
@@ -2868,8 +2866,6 @@ el_step_requires_fixme(){
 
     : ${dir:="$prev_dir"}
 
-    el_set_display_variables
-
     # }}}
     el_check_dirs "${dir}"
     cd "$dir" || el_warning "dir doesnt exist: $dir"
@@ -2889,7 +2885,6 @@ el_step_requires_fixme(){
         PROMPT_PREPEND="breakpoint" $SHELL -l || true
     else
         cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
-        el_set_display_variables
         local _dummy
         _dummy="$( eval_gettext "Experimental or incomplete code detected. Report this to the Elive forums if necessary. Exiting now..." )"
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
@@ -4408,10 +4403,17 @@ fi
 
 if [[ -n "$FORCE_INTERACTIVE" ]] ; then
     case "$FORCE_INTERACTIVE" in
-        "yes")      is_interactive=1  ; ;;
-        "no")       unset is_interactive  ; ;;
+        "yes"|1)      is_interactive=1  ; ;;
+        "no"|0)       unset is_interactive  ; ;;
     esac
+elif ((EL_NON_INTERACTIVE)) ; then
+    unset is_interactive
 fi
+if ! ((is_interactive)) ; then
+    # when we are in non-interactive, we should also disable access to display, otherwise some things may popup expecting answer, like in el_confirm
+    unset DISPLAY
+fi
+
 
 # set a default useful debug PS
 export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '

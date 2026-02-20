@@ -33,10 +33,13 @@ fi
 
 # The rest of the definitions are moved to the end of the file, functions must be declared before
 
-#-------------------------------------------------------------------------------
-#   Set the DISPLAY variable
-#-------------------------------------------------------------------------------
-el_set_display_variables(){ # Set DISPLAY variables of our actual user
+#===  FUNCTION  ================================================================
+#          NAME:  el_set_display_variables
+#   DESCRIPTION:  Set DISPLAY variables of our actual user
+#    PARAMETERS:  $1 = debug (optional)
+#       RETURNS:  -
+#===============================================================================
+el_set_display_variables(){
     local display e_ipc_socket e_ipc_file pid file is_debug buf is_enlightenment is_pong
 
     if [[ "$1" = "debug" ]] ; then
@@ -484,10 +487,13 @@ el_notify(){
 }
 
 
-#-------------------------------------------------------------------------------
-#   Verify if we have internet connection with a fast ping check
-#-------------------------------------------------------------------------------
-el_verify_internet_ping(){ # verify if we have internet connection using a ping (true or false, return value)
+#===  FUNCTION  ================================================================
+#          NAME:  el_verify_internet_ping
+#   DESCRIPTION:  verify if we have internet connection using a ping
+#    PARAMETERS:  $1 = timeout, $2 = mode
+#       RETURNS:  0 if online, 1 if offline
+#===============================================================================
+el_verify_internet_ping(){
     # pre {{{
     local timeout count target target2 mode
     timeout="$1"
@@ -546,10 +552,13 @@ el_verify_internet_ping(){ # verify if we have internet connection using a ping 
     # in any case if we reach here, is because we cannot ping to google, so return that
     return 1
 }
-#-------------------------------------------------------------------------------
-#   Verify if we have internet connection (return value)
-#-------------------------------------------------------------------------------
-el_verify_internet(){ # verify if we have internet connection (true or false, return value)
+#===  FUNCTION  ================================================================
+#          NAME:  el_verify_internet
+#   DESCRIPTION:  verify if we have internet connection
+#    PARAMETERS:  $1 = mode (fast|normal)
+#       RETURNS:  0 if online, 1 if offline
+#===============================================================================
+el_verify_internet(){
     # pre {{{
     local stamp_hour_prev date_hour_now date_hour_prev returned OnLine i mode timeout buf target target2 interface
 
@@ -678,10 +687,13 @@ el_verify_internet(){ # verify if we have internet connection (true or false, re
     fi
 }
 
-#-------------------------------------------------------------------------------
-#   Make ready the user's environment (bash variables, extra functions, etc)
-#-------------------------------------------------------------------------------
-el_make_environment(){ # make ready our environment (source variables and functions)
+#===  FUNCTION  ================================================================
+#          NAME:  el_make_environment
+#   DESCRIPTION:  make ready the user's environment (bash variables, extra functions, etc)
+#    PARAMETERS:  $1 = debug (optional)
+#       RETURNS:  -
+#===============================================================================
+el_make_environment(){
     local is_debug
     if [[ "$1" = "debug" ]] ; then
         is_debug=1
@@ -743,20 +755,26 @@ el_make_environment(){ # make ready our environment (source variables and functi
     fi
 }
 
-#-------------------------------------------------------------------------------
-#   Title Set: sets the title of a window
-#-------------------------------------------------------------------------------
-el_title_set(){ # set the Title on the actual Window
+#===  FUNCTION  ================================================================
+#          NAME:  el_title_set
+#   DESCRIPTION:  sets the title of a window
+#    PARAMETERS:  $* = title string
+#       RETURNS:  -
+#===============================================================================
+el_title_set(){
 
     el_set_display_variables
     echo -ne "\033]0;$*\007"
 
 }
 
-#-------------------------------------------------------------------------------
-#   Resolutions, get the resolution values
-#-------------------------------------------------------------------------------
-el_resolution_get(){ # show our actual resolution
+#===  FUNCTION  ================================================================
+#          NAME:  el_resolution_get
+#   DESCRIPTION:  Resolutions, get the resolution values
+#    PARAMETERS:  $1 = h|v (optional)
+#       RETURNS:  resolution string or value
+#===============================================================================
+el_resolution_get(){
     local buf resolution_h resolution_v resolution
 
     el_set_display_variables
@@ -806,9 +824,12 @@ el_resolution_get(){ # show our actual resolution
     fi
 }
 
-#-------------------------------------------------------------------------------
-#   Get the DPI of the primary screen connected
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_dpi_get
+#   DESCRIPTION:  Get the DPI of the primary screen connected
+#    PARAMETERS:  $1 = lowered|rounded (optional)
+#       RETURNS:  DPI string (e.g. 96x96)
+#===============================================================================
 el_dpi_get(){
     local resolution_h resolution_v screen_size_v screen_size_h buf dpi_v dpi_h dpi_lowered
 
@@ -908,10 +929,13 @@ el_dpi_get(){
 }
 
 
-#-------------------------------------------------------------------------------
-#   Dependencies Check
-#-------------------------------------------------------------------------------
-el_dependencies_check(){ # check if we have these command dependencies, if not, notify and exit
+#===  FUNCTION  ================================================================
+#          NAME:  el_dependencies_check
+#   DESCRIPTION:  check if we have these command dependencies, if not, notify and exit
+#    PARAMETERS:  $@ = dependencies (pipe separated)
+#       RETURNS:  0 if found, 1 if missing
+#===============================================================================
+el_dependencies_check(){
     # example:  el_dependencies_check gmplayer|find|sed|etc
     local check found found_no dir
 
@@ -948,9 +972,12 @@ el_dependencies_check(){ # check if we have these command dependencies, if not, 
 }
 
 
-#-------------------------------------------------------------------------------
-#   Install required packages
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_dependencies_install
+#   DESCRIPTION:  Install required packages
+#    PARAMETERS:  $@ = packages
+#       RETURNS:  0 if success, 1 if failed
+#===============================================================================
 el_dependencies_install(){
     local depends temp is_failed
 
@@ -1077,9 +1104,12 @@ EOF
 
 }
 
-#-------------------------------------------------------------------------------
-#   Remove packages
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_package_remove
+#   DESCRIPTION:  Remove packages
+#    PARAMETERS:  $@ = packages
+#       RETURNS:  0 if success, 1 if failed
+#===============================================================================
 el_package_remove(){
     local depends temp is_failed i list arch
 
@@ -1203,9 +1233,12 @@ EOF
 
 }
 
-#-------------------------------------------------------------------------------
-#   Run apt-get update
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_aptget_update
+#   DESCRIPTION:  Run apt-get update
+#    PARAMETERS:  $1 = force (optional)
+#       RETURNS:  0 if success, 1 if failed
+#===============================================================================
 el_aptget_update(){
     local message_updating force want_update buf is_failed
     force="$1"
@@ -1295,9 +1328,12 @@ el_aptget_update(){
     fi
 
 }
-#-------------------------------------------------------------------------------
-#   Check if a newer version of a package exists
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_package_newer_check
+#   DESCRIPTION:  Check if a newer version of a package exists
+#    PARAMETERS:  $1 = package
+#       RETURNS:  0 if newer exists, 1 if not
+#===============================================================================
 el_package_newer_check(){
     local package installed candidate
     # XXX important: this uses apt caches, doesn't check for online version
@@ -1577,10 +1613,13 @@ el_package_upgrade_fast(){
     fi
 }
 
-#-------------------------------------------------------------------------------
-#   Check if variable exists
-#-------------------------------------------------------------------------------
-el_check_variables(){ # check if we have set these variables, if not, notify and exit
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_variables
+#   DESCRIPTION:  check if variable exists
+#    PARAMETERS:  $@ = variable names (pipe separated)
+#       RETURNS:  0 if all exist, 1 if any missing
+#===============================================================================
+el_check_variables(){
     # example $0 foo,bar,we
     # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
     local found_no _var
@@ -1608,10 +1647,13 @@ el_check_variables(){ # check if we have set these variables, if not, notify and
 }
 
 
-#-------------------------------------------------------------------------------
-#   Check if files exists
-#-------------------------------------------------------------------------------
-el_check_files(){ # check if we have these files (and non-zero), if not, notify and exit
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_files
+#   DESCRIPTION:  check if files exists
+#    PARAMETERS:  $@ = file paths (pipe separated)
+#       RETURNS:  0 if all exist, 1 if any missing
+#===============================================================================
+el_check_files(){
     # example $0 foo,bar,we
     local _var found_no
 
@@ -1638,10 +1680,13 @@ el_check_files(){ # check if we have these files (and non-zero), if not, notify 
 }
 
 
-#-------------------------------------------------------------------------------
-#   Check if dir exists
-#-------------------------------------------------------------------------------
-el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify and exit
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_dirs
+#   DESCRIPTION:  check if dir exists
+#    PARAMETERS:  $@ = directory paths (pipe separated)
+#       RETURNS:  0 if all exist, 1 if any missing
+#===============================================================================
+el_check_dirs(){
     # example $0 foo,bar,we
     local found_no line
 
@@ -1667,9 +1712,12 @@ el_check_dirs(){ # check if we have these dirs (and non-zero), if not, notify an
 }
 
 
-#-------------------------------------------------------------------------------
-#   check if dir has files
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_dir_has_files
+#   DESCRIPTION:  check if dir has files
+#    PARAMETERS:  $@ = directory paths (pipe separated)
+#       RETURNS:  0 if all have files, 1 if any empty or missing
+#===============================================================================
 el_check_dir_has_files(){
     local dir files
 
@@ -1695,9 +1743,12 @@ el_check_dir_has_files(){
     done 3<<< "$( echo "${@}" | tr '|' '\n' )"
 }
 
-#-------------------------------------------------------------------------------
-#   check if we have automatic sudo
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_sudo_automated
+#   DESCRIPTION:  check if we have automatic sudo
+#    PARAMETERS:  -
+#       RETURNS:  0 if automated, 1 if requires password
+#===============================================================================
 el_check_sudo_automated(){
     if sudo -H -n echo 2>/dev/null 1>/dev/null ; then
         return 0
@@ -1934,7 +1985,6 @@ el_check_version_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    #el_check_variables "date_builded|date_today|date_builded_total_days|date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
 
     # retrun false if we have any error calculating it
@@ -2006,7 +2056,6 @@ el_check_version_development_is_days_recent(){
     date_today_total_days="$(( ${date_today_y} * 365 + ${date_today_total_days} ))"
 
     # - calculate date today }}}
-    #el_check_variables "date_builded|date_today|date_builded_total_days|date_today_total_days"
     days_difference="$(( ${date_today_total_days} - ${date_builded_total_days} ))"
 
     # retrun false if we have any error calculating it
@@ -3338,6 +3387,13 @@ el_add_on_exit(){
         trap on_exit EXIT
     fi
 }
+#===  FUNCTION  ================================================================
+#          NAME:  on_exit
+#   DESCRIPTION:  Internal function to execute all commands registered via el_add_on_exit
+#    PARAMETERS:  -
+#       RETURNS:  -
+#   EXAMPLE:      el_add_on_exit "rm -f /tmp/file"
+#===============================================================================
 on_exit(){
     local i
     # create empty variable of array type if not exist
@@ -4184,10 +4240,12 @@ el_json_delete_ids_regex(){
     cat "$file" | jq "delpaths([paths | select(.[-1] | strings | test(\"${match}\"; \"ix\"))])" > "${file}.new" && mv -f "${file}.new" "$file"
 }
 
-#-------------------------------------------------------------------------------
-#   get the version of an installed package or a candidate, in a faster way
-#   $1 = packagename , $2 installed | candidate , $3 full | clean
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_apt_package_version_get
+#   DESCRIPTION:  get the version of an installed package or a candidate
+#    PARAMETERS:  $1 = package, $2 = installed|candidate, $3 = full|clean
+#       RETURNS:  version string
+#===============================================================================
 el_apt_package_version_get(){
     local package state mode version
     package="$1"
@@ -4232,9 +4290,12 @@ el_apt_package_version_get(){
 }
 
 
-#-------------------------------------------------------------------------------
-#   apt-get wrapper with lock feature
-#-------------------------------------------------------------------------------
+#===  FUNCTION  ================================================================
+#          NAME:  el_aptget
+#   DESCRIPTION:  apt-get wrapper with lock feature
+#    PARAMETERS:  $@ = apt-get arguments
+#       RETURNS:  apt-get exit status
+#===============================================================================
 el_aptget(){
     local i j is_shown
     i=0
@@ -4288,17 +4349,41 @@ el_aptget(){
 ###################################################################
 # DEPRECATED FUNCTIONS TO FALLBACK:
 ###################################################################
+#===  FUNCTION  ================================================================
+#          NAME:  el_notify_user
+#   DESCRIPTION:  Deprecated function fallback to el_notify
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
 el_notify_user(){
     el_warning "Deprecated function ${FUNCNAME[0]} by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
     el_notify "normal" "logo-elive" "$1" "$2"
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_notify_user_important
+#   DESCRIPTION:  Deprecated function fallback to el_notify
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
 el_notify_user_important(){
     el_warning "Deprecated function ${FUNCNAME[0]} by elive-tools functions from $SOURCE $0 - (fallback to el_notify)"
     el_notify "critical" "logo-elive" "$1" "$2"
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_translations_required_notify
+#   DESCRIPTION:  deprecated function, use el_check_translations_required instead
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
 el_check_translations_required_notify(){
     el_error "deprecated function ${FUNCNAME[0]} from elive-tools functions from $SOURCE $0, use el_check_translations_required instead"
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_check_dependencies
+#   DESCRIPTION:  compatibility wrapper for el_dependencies_check
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
 el_check_dependencies(){
     # compatibility
     el_warning "${FUNCNAME[0]} is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
@@ -4336,7 +4421,7 @@ fi
 [[ -z "$zenity" ]] && [[ -x "/usr/bin/zenity" ]] && zenity="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 [[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=15 --center --image=logo-elive"
 # set a default guitool compatible with the scripts
-guitool="$zenity"
+guitool="$zenity"  # default GUI tool (zenity, yad, etc)
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
 if [[ -n "$TERM" ]] ; then
@@ -4371,8 +4456,8 @@ if [[ -n "$TERM" ]] ; then
             is_console=0
         else
             # note: in the past we had is_terminal=1 forced in order to get features from other things, this is not needed anymore since the use of is_interactive
-            is_terminal=0
-            is_console=1
+            is_terminal=0 # we are in a terminal
+            is_console=1 # we are in a non-X console
         fi
     fi
 
@@ -4383,7 +4468,7 @@ if [[ -n "$TERM" ]] ; then
     fi
 
     if [[ "$TERM" = "screen-256color"* ]] || [[ "$TERM" = *"tmux"* ]] ; then
-        is_terminal_remote=1
+        is_terminal_remote=1 # we are in a remote session
     fi
 
     # cronjobs must never be interactives
@@ -4391,15 +4476,15 @@ if [[ -n "$TERM" ]] ; then
         is_terminal=0
     fi
 else
-    is_terminal=0
-    is_console=0
+    is_terminal=0  # we are in a terminal
+    is_console=0  # we are in a non-X console
     # if we don't have TERM we need this value to not trigger 'tput' errors like when running apt commands
     # update: apt should have the variable set itself
     #export TERM="linux"
 fi
 
 if ((is_terminal)) || ((is_console)) ; then
-    is_interactive=1
+    is_interactive=1  # flag: we are in interactive mode (user is reachable)
 fi
 
 if [[ -n "$FORCE_INTERACTIVE" ]] ; then
@@ -4418,7 +4503,7 @@ fi
 
 
 # set a default useful debug PS
-export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '  # Prompt for debug mode, showing function name and line number
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
 if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
@@ -4489,7 +4574,7 @@ fi
 #if grep -Fqs thanatest /proc/cmdline ; then
     #EL_DEBUG=${EL_DEBUG:-"3"}
 #else
-    EL_DEBUG=${EL_DEBUG:-"2"}
+    EL_DEBUG=${EL_DEBUG:-"2"} # Elive debug verbosity level (0-5)
 #fi
 
 
@@ -4497,7 +4582,7 @@ fi
 if [[ -z "$DSHELL" && -z "$DHOME" && -z "$EXTRA_GROUPS" ]] && [[ -s "/etc/adduser.conf" ]] ; then
     source /etc/adduser.conf 2>/dev/null || true
 fi
-[[ -z "$DHOME" ]] && export DHOME=/home
+[[ -z "$DHOME" ]] && export DHOME="/home"  # default OS home directory
 [[ -z "$UID" ]] && export UID="$(id -u)"
 # set the user's home, sometimes, like if we are in an init script, the home points to /
 if [[ -z "$HOME" ]] || [[ "$HOME" = "/" ]] ; then
@@ -4518,7 +4603,7 @@ fi
 
 # use LC_ALL=C like this instead:  LC_ALL="$EL_LC_EN":
 if LC_ALL=C grep -qs "^en_US.UTF-8\s*" "/etc/locale.gen" ; then
-    EL_LC_EN="en_US.UTF-8"
+    EL_LC_EN="en_US.UTF-8" # fallback charset to show messages supporting utf8 if detected
 else
     # warning: this can broke things by not being utf8
     EL_LC_EN="C"
@@ -4527,7 +4612,7 @@ fi
 
 # systemd?
 if pidof -cq systemd ; then
-    is_systemd=1
+    is_systemd=1 # flag: OS runs on systemd
 else
     if ! [[ -e "/var/lib/dpkg/info/sysvinit-core.list" ]] ; then
         is_systemd=1

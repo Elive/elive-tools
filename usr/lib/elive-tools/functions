@@ -35,9 +35,9 @@ fi
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_set_display_variables
-#   DESCRIPTION:  Set DISPLAY variables of our actual user
-#    PARAMETERS:  $1 = debug (optional)
-#       RETURNS:  -
+#   DESCRIPTION:  Set DISPLAY, DBUS, and XAUTHORITY variables for the current user
+#    PARAMETERS:  $1 = "debug" (optional) to enable verbose output
+#       RETURNS:  0 on success or if already in console
 #===============================================================================
 el_set_display_variables(){
     local display e_ipc_socket e_ipc_file pid file is_debug buf is_enlightenment is_pong
@@ -313,9 +313,9 @@ el_set_display_variables(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_pulseaudio
-#   DESCRIPTION:  manages pulseaudio for user
-#    PARAMETERS:  $1 = check|start|stop|restart
-#       RETURNS:  in check mode, returns 0 if pulseaudio is running, 1 if not
+#   DESCRIPTION:  Manages the PulseAudio daemon for the current user
+#    PARAMETERS:  $1 = mode (check|start|stop|restart)
+#       RETURNS:  0 if running (check) or success, 1 if not running or failed
 #===============================================================================
 el_pulseaudio(){
     local mode is_pulseaudio
@@ -382,11 +382,10 @@ el_pulseaudio(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_notify
-#   DESCRIPTION:  send a notification to the user in a nice way
-#    PARAMETERS:  $1 = mode (normal|important|critical), $2 = title, $3 = message, $4 = icon, [$5 = button]
-# Example button: result="$( el_notify wait logo-elive foo bar --action=open=message )"
-#                   will return "open" in the "result" variable when the button is clicked
-#       RETURNS:  -
+#   DESCRIPTION:  Sends a desktop notification via notify-send or el_info fallback
+#    PARAMETERS:  $1 = mode (soft|normal|important|critical|wait)
+#                 $2 = icon name, $3 = title, $4 = message, $@ = extra args
+#       RETURNS:  0 on success, 1 on missing parameters
 #===============================================================================
 el_notify(){
     # pre {{{
@@ -489,8 +488,8 @@ el_notify(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_verify_internet_ping
-#   DESCRIPTION:  verify if we have internet connection using a ping
-#    PARAMETERS:  $1 = timeout, $2 = mode
+#   DESCRIPTION:  Verifies internet connectivity by pinging public DNS (8.8.8.8)
+#    PARAMETERS:  $1 = timeout in seconds (default 7), $2 = mode (unused)
 #       RETURNS:  0 if online, 1 if offline
 #===============================================================================
 el_verify_internet_ping(){
@@ -554,8 +553,8 @@ el_verify_internet_ping(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_verify_internet
-#   DESCRIPTION:  verify if we have internet connection
-#    PARAMETERS:  $1 = mode (fast|normal)
+#   DESCRIPTION:  Checks internet status using carrier, cache, ping, and curl
+#    PARAMETERS:  $1 = mode (fast|normal) - affects timeouts and retry loops
 #       RETURNS:  0 if online, 1 if offline
 #===============================================================================
 el_verify_internet(){
@@ -689,8 +688,8 @@ el_verify_internet(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_make_environment
-#   DESCRIPTION:  make ready the user's environment (bash variables, extra functions, etc)
-#    PARAMETERS:  $1 = debug (optional)
+#   DESCRIPTION:  Initializes user environment (HOME, USER, PATH, PS4, XDG dirs)
+#    PARAMETERS:  $1 = "debug" (optional)
 #       RETURNS:  -
 #===============================================================================
 el_make_environment(){
@@ -757,7 +756,7 @@ el_make_environment(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_title_set
-#   DESCRIPTION:  sets the title of a window
+#   DESCRIPTION:  Sets the terminal window title using escape sequences
 #    PARAMETERS:  $* = title string
 #       RETURNS:  -
 #===============================================================================
@@ -770,9 +769,9 @@ el_title_set(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_resolution_get
-#   DESCRIPTION:  Resolutions, get the resolution values
-#    PARAMETERS:  $1 = h|v (optional)
-#       RETURNS:  resolution string or value
+#   DESCRIPTION:  Retrieves the primary screen resolution via xrandr or xdpyinfo
+#    PARAMETERS:  $1 = "h" (horizontal), "v" (vertical), or empty (full string)
+#       RETURNS:  Resolution value (e.g., 1920x1080) or specific dimension
 #===============================================================================
 el_resolution_get(){
     local buf resolution_h resolution_v resolution
@@ -826,9 +825,9 @@ el_resolution_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_dpi_get
-#   DESCRIPTION:  Get the DPI of the primary screen connected
-#    PARAMETERS:  $1 = lowered|rounded (optional)
-#       RETURNS:  DPI string (e.g. 96x96)
+#   DESCRIPTION:  Calculates or rounds the DPI of the primary connected screen
+#    PARAMETERS:  $1 = mode (lowered|rounded|empty)
+#       RETURNS:  DPI string (e.g., 96x96, 144x144)
 #===============================================================================
 el_dpi_get(){
     local resolution_h resolution_v screen_size_v screen_size_h buf dpi_v dpi_h dpi_lowered
@@ -931,9 +930,9 @@ el_dpi_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_dependencies_check
-#   DESCRIPTION:  check if we have these command dependencies, if not, notify and exit
-#    PARAMETERS:  $@ = dependencies (pipe separated)
-#       RETURNS:  0 if found, 1 if missing
+#   DESCRIPTION:  Checks if required commands exist in PATH or standard sbin dirs
+#    PARAMETERS:  $@ = command names (pipe '|' separated)
+#       RETURNS:  0 if all found, 1 if any are missing
 #===============================================================================
 el_dependencies_check(){
     # example:  el_dependencies_check gmplayer|find|sed|etc
@@ -974,9 +973,9 @@ el_dependencies_check(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_dependencies_install
-#   DESCRIPTION:  Install required packages
-#    PARAMETERS:  $@ = packages
-#       RETURNS:  0 if success, 1 if failed
+#   DESCRIPTION:  Installs packages using apt-get with GUI or terminal su/sudo
+#    PARAMETERS:  $@ = package names (space or pipe separated)
+#       RETURNS:  0 if success, 1 if installation failed
 #===============================================================================
 el_dependencies_install(){
     local depends temp is_failed
@@ -1106,9 +1105,9 @@ EOF
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_package_remove
-#   DESCRIPTION:  Remove packages
-#    PARAMETERS:  $@ = packages
-#       RETURNS:  0 if success, 1 if failed
+#   DESCRIPTION:  Uninstalls specified packages via apt-get
+#    PARAMETERS:  $@ = package names (space or pipe separated)
+#       RETURNS:  0 if success, 1 if removal failed
 #===============================================================================
 el_package_remove(){
     local depends temp is_failed i list arch
@@ -1235,9 +1234,9 @@ EOF
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_aptget_update
-#   DESCRIPTION:  Run apt-get update
-#    PARAMETERS:  $1 = force (optional)
-#       RETURNS:  0 if success, 1 if failed
+#   DESCRIPTION:  Updates apt package lists if older than 4 hours or if forced
+#    PARAMETERS:  $1 = "force" (optional) to bypass the 4-hour cache
+#       RETURNS:  0 if success, 1 if update failed or no internet
 #===============================================================================
 el_aptget_update(){
     local message_updating force want_update buf is_failed
@@ -1330,9 +1329,9 @@ el_aptget_update(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_package_newer_check
-#   DESCRIPTION:  Check if a newer version of a package exists
-#    PARAMETERS:  $1 = package
-#       RETURNS:  0 if newer exists, 1 if not
+#   DESCRIPTION:  Compares installed vs candidate versions using apt cache
+#    PARAMETERS:  $1 = package name
+#       RETURNS:  0 if a newer version is available, 1 if up-to-date, 2 on error
 #===============================================================================
 el_package_newer_check(){
     local package installed candidate
@@ -1361,14 +1360,10 @@ el_package_newer_check(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_package_upgrade_fast
-#   DESCRIPTION:  update and install a package in a very fast and light way
-#                 WARNING: this is not a reliable tool, use with caution
-#                 notes:
-#                   - packages should include DATESTAMP in their version, so then the "normal" mode will work without problems and not neededing the "force" one (not needed to allow downgrades)
-#                   - packages should include DISTRO in the version, in order to not install a candidate from a different distro
-#    PARAMETERS:  $1 = timeout for each package to download, $2 = force|normal, $@ = packages
-#                 normal means that only newer packages will be installed, force will allow downgrades
-#       RETURNS:  true if something was installed, false if failed or nothing found to install
+#   DESCRIPTION:  Directly downloads and installs .deb packages from Elive repos
+#    PARAMETERS:  $1 = download timeout, $2 = mode (force|normal), $@ = packages
+#                 "force" allows downgrades; "normal" only upgrades
+#       RETURNS:  0 if packages were installed, 1 if failed or nothing to do
 #===============================================================================
 el_package_upgrade_fast(){
     # pre {{{
@@ -1615,9 +1610,9 @@ el_package_upgrade_fast(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_variables
-#   DESCRIPTION:  check if variable exists
-#    PARAMETERS:  $@ = variable names (pipe separated)
-#       RETURNS:  0 if all exist, 1 if any missing
+#   DESCRIPTION:  Verifies that the named variables are set and non-empty
+#    PARAMETERS:  $@ = variable names (pipe '|' separated)
+#       RETURNS:  0 if all variables have values, 1 if any are empty/unset
 #===============================================================================
 el_check_variables(){
     # example $0 foo,bar,we
@@ -1649,9 +1644,9 @@ el_check_variables(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_files
-#   DESCRIPTION:  check if files exists
-#    PARAMETERS:  $@ = file paths (pipe separated)
-#       RETURNS:  0 if all exist, 1 if any missing
+#   DESCRIPTION:  Verifies existence and non-zero size of specified files
+#    PARAMETERS:  $@ = file paths (pipe '|' separated)
+#       RETURNS:  0 if all files exist and are not empty, 1 otherwise
 #===============================================================================
 el_check_files(){
     # example $0 foo,bar,we
@@ -1682,9 +1677,9 @@ el_check_files(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_dirs
-#   DESCRIPTION:  check if dir exists
-#    PARAMETERS:  $@ = directory paths (pipe separated)
-#       RETURNS:  0 if all exist, 1 if any missing
+#   DESCRIPTION:  Verifies that the specified paths exist and are directories
+#    PARAMETERS:  $@ = directory paths (pipe '|' separated)
+#       RETURNS:  0 if all paths are directories, 1 otherwise
 #===============================================================================
 el_check_dirs(){
     # example $0 foo,bar,we
@@ -1714,9 +1709,9 @@ el_check_dirs(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_dir_has_files
-#   DESCRIPTION:  check if dir has files
-#    PARAMETERS:  $@ = directory paths (pipe separated)
-#       RETURNS:  0 if all have files, 1 if any empty or missing
+#   DESCRIPTION:  Verifies that directories exist and contain at least one file
+#    PARAMETERS:  $@ = directory paths (pipe '|' separated)
+#       RETURNS:  0 if all directories are non-empty, 1 otherwise
 #===============================================================================
 el_check_dir_has_files(){
     local dir files
@@ -1745,9 +1740,9 @@ el_check_dir_has_files(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_sudo_automated
-#   DESCRIPTION:  check if we have automatic sudo
+#   DESCRIPTION:  Checks if sudo can be run without a password prompt (non-interactive)
 #    PARAMETERS:  -
-#       RETURNS:  0 if automated, 1 if requires password
+#       RETURNS:  0 if sudo is passwordless, 1 if it requires a password
 #===============================================================================
 el_check_sudo_automated(){
     if sudo -H -n echo 2>/dev/null 1>/dev/null ; then
@@ -1759,9 +1754,9 @@ el_check_sudo_automated(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_sudo
-#   DESCRIPTION:  run a command from root, as much as possible
-#    PARAMETERS:  args/command
-#       RETURNS:  -
+#   DESCRIPTION:  Runs a command as root using sudo, gksu, or su as available
+#    PARAMETERS:  $@ = command and arguments to execute
+#       RETURNS:  Exit status of the executed command
 #===============================================================================
 el_sudo(){
     # pre {{{
@@ -1831,9 +1826,9 @@ el_sudo(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_translations_required
-#   DESCRIPTION:  check the amount of translations made for actual application
-#    PARAMETERS:  -
-#   RETURNS:      true or false
+#   DESCRIPTION:  Checks if the current TEXTDOMAIN needs more translation work
+#    PARAMETERS:  $1 = mode ("report" to notify user)
+#       RETURNS:  0 if translation is needed (>6% untranslated), 1 otherwise
 #===============================================================================
 el_check_translations_required(){
     # pre {{{
@@ -1888,9 +1883,9 @@ el_check_translations_required(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_version_development
-#   DESCRIPTION:  checks if we are in a development version
+#   DESCRIPTION:  Checks /etc/elive-version to see if this is a development build
 #    PARAMETERS:  -
-#       RETURNS:  true if we are development state, false if we are stable
+#       RETURNS:  0 if development version, 1 if stable
 #===============================================================================
 el_check_version_development(){
     if [[ -e "/etc/elive-version" ]] ; then
@@ -1907,9 +1902,9 @@ el_check_version_development(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_elive_version_get
-#   DESCRIPTION:  Get the version number of the HOST (installed) elive system
+#   DESCRIPTION:  Retrieves the Elive version string from /etc/elive-version
 #    PARAMETERS:  -
-#       RETURNS:  version number
+#       RETURNS:  Version string (e.g., "3.8.30")
 #===============================================================================
 el_elive_version_get(){
     # pre {{{
@@ -1934,9 +1929,9 @@ el_elive_version_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_version_is_days_recent
-#   DESCRIPTION:  check if this version is less than $1 ~days old
-#    PARAMETERS:  $1 = days old to check
-#       RETURNS:  true if is less than $1 old, false if we are older than it
+#   DESCRIPTION:  Checks if the system build date is within the last N days
+#    PARAMETERS:  $1 = number of days to check against
+#       RETURNS:  0 if build is recent, 1 if older or error
 #===============================================================================
 el_check_version_is_days_recent(){
     # pre {{{
@@ -2000,9 +1995,9 @@ el_check_version_is_days_recent(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_version_development_is_days_recent
-#   DESCRIPTION:  check if this development version is less than $1 ~days old
-#    PARAMETERS:  $1 = days old to check
-#       RETURNS:  true if is less than $1 old, false if we are older than it
+#   DESCRIPTION:  Checks if a development build date is within the last N days
+#    PARAMETERS:  $1 = number of days to check against
+#       RETURNS:  0 if recent dev build, 1 if stable or old build
 #===============================================================================
 el_check_version_development_is_days_recent(){
     # pre {{{
@@ -2072,9 +2067,9 @@ el_check_version_development_is_days_recent(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_check_is_shell
-#   DESCRIPTION:  check if we are running from a shell
+#   DESCRIPTION:  Determines if the script is being sourced in an interactive shell
 #    PARAMETERS:  -
-#       RETURNS:  true if we are a shell, false if we are not
+#       RETURNS:  0 if in a shell (bash/zsh), 1 if running as a script
 #===============================================================================
 el_check_is_shell(){
     # pre {{{
@@ -2097,11 +2092,10 @@ el_check_is_shell(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_explain
-#   DESCRIPTION:  function to show the progress of the application
-#    PARAMETERS:
-# verbose_level:    $1 = any number, from $EL_DEBUG levels
-#                        levels: 0 = always|error, 1 = warning, 2 = info, 3 = debug
-#       message:    $2 = can include: __hilight words__, XXsuper hilightXX
+#   DESCRIPTION:  Prints formatted progress/debug messages to stderr with colors
+#    PARAMETERS:  $1 = verbose level (0=error, 1=warn, 2=info, 3=debug)
+#                 $@ = message (supports __word__ and XXwordXX highlighting)
+#       RETURNS:  -
 #===============================================================================
 el_explain(){
     # pre {{{
@@ -2200,8 +2194,9 @@ el_explain(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_debug
-#   DESCRIPTION:  show debug messages | EL_DEBUG -ge 3|4
-#    PARAMETERS:  optional (message)
+#   DESCRIPTION:  Prints debug info including source file, line, and function stack
+#    PARAMETERS:  $@ = message (optional)
+#       RETURNS:  -
 #===============================================================================
 el_debug(){
     # pre {{{
@@ -2281,8 +2276,9 @@ el_debug(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_info
-#   DESCRIPTION:  show info messages | (always)
-#    PARAMETERS:  message
+#   DESCRIPTION:  Prints informational messages to stderr
+#    PARAMETERS:  $@ = message
+#       RETURNS:  -
 #===============================================================================
 el_info(){
     # pre {{{
@@ -2353,8 +2349,9 @@ el_info(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_warning
-#   DESCRIPTION:  show warning messages | EL_DEBUG -ge 1
-#    PARAMETERS:  optional (message)
+#   DESCRIPTION:  Prints warning messages and reports them to Elive servers
+#    PARAMETERS:  $@ = message
+#       RETURNS:  -
 #===============================================================================
 el_warning(){
     # pre {{{
@@ -2446,8 +2443,9 @@ el_warning(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_error
-#   DESCRIPTION:  show error messages | EL_DEBUG -ge 0
-#    PARAMETERS:  optional (message)
+#   DESCRIPTION:  Prints error messages and reports them to Elive servers
+#    PARAMETERS:  $@ = message
+#       RETURNS:  -
 #===============================================================================
 el_error(){
     # pre {{{
@@ -2544,8 +2542,9 @@ el_error(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_group_check
-#   DESCRIPTION:  check if user is already on a specific group
-#    PARAMETERS:  $1 = groupname
+#   DESCRIPTION:  Checks if the current user is a member of the specified group
+#    PARAMETERS:  $1 = group name
+#       RETURNS:  0 if member, 1 otherwise
 #===============================================================================
 el_group_check(){
     # pre {{{
@@ -2567,8 +2566,9 @@ el_group_check(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_group_add
-#   DESCRIPTION:  verify and add an user to a group
-#    PARAMETERS:  $1 = group to add
+#   DESCRIPTION:  Adds the current user to a group and notifies about reboot
+#    PARAMETERS:  $1 = group name
+#       RETURNS:  0 on success, 1 on failure
 #===============================================================================
 el_group_add(){
     # pre {{{
@@ -2640,9 +2640,9 @@ el_group_add(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_confirm
-#   DESCRIPTION:  ask (console) for confirmation
-#    PARAMETERS:  question
-#       RETURNS:  true | false
+#   DESCRIPTION:  Prompts user for Yes/No confirmation (CLI or GUI)
+#    PARAMETERS:  $1 = question string
+#       RETURNS:  0 for Yes, 1 for No
 #===============================================================================
 el_confirm(){
     # pre {{{
@@ -2706,11 +2706,9 @@ el_confirm(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_security_function_loop
-#   DESCRIPTION:  check for a possible infinite-loops, needs to be called as:
-#                 el_security_function_loop || return 0
-#                 from every function of your scripts
-#    PARAMETERS:  $1 = number of recursivity's allowed
-#       RETURNS:  1 if found a loop, 0 if not
+#   DESCRIPTION:  Detects infinite recursion by inspecting the function call stack
+#    PARAMETERS:  $1 = max allowed recursions (default 4)
+#       RETURNS:  1 if a loop is detected (to break it), 0 otherwise
 #===============================================================================
 el_security_function_loop(){
     # pre {{{
@@ -2796,9 +2794,9 @@ el_security_function_loop(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_array_member_check
-#   DESCRIPTION:  check if an element exists in an array
-#    PARAMETERS:  $1 = match, $2 = array (list of words)
-#       RETURNS:  true if found, false if not
+#   DESCRIPTION:  Checks if a specific string exists within an array
+#    PARAMETERS:  $1 = string to match, $@ = array elements
+#       RETURNS:  0 if found, 1 otherwise
 #===============================================================================
 el_array_member_check(){
     local match list i
@@ -2829,9 +2827,9 @@ el_array_member_check(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_array_member_unset
-#   DESCRIPTION:  unset members in an array
-#    PARAMETERS:  $1 = match, $2 = array contents
-#                 NOTE needs to be used later with!:  arr=("${_out[@]}")
+#   DESCRIPTION:  Removes matching elements from an array, outputting to $_out
+#    PARAMETERS:  $1 = string to remove, $@ = array elements
+#       RETURNS:  Populates global array _out
 #===============================================================================
 el_array_member_unset(){
     _out=()
@@ -2850,9 +2848,9 @@ el_array_member_unset(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_array_member_add
-#   DESCRIPTION:  add a member in the array if not exist
-#    PARAMETERS:  $1 = element, $2 = array contents
-#                 NOTE needs to be used later with!:  arr=("${_out[@]}")
+#   DESCRIPTION:  Adds an element to an array if not already present
+#    PARAMETERS:  $1 = string to add, $@ = array elements
+#       RETURNS:  Populates global array _out
 #===============================================================================
 el_array_member_add(){
     _out=()
@@ -2885,9 +2883,9 @@ el_array_member_add(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_array_print_per_line
-#   DESCRIPTION:  prints each element of the array, one entry per line
-#    PARAMETERS:  $1 = array to print
-#       RETURNS:  value
+#   DESCRIPTION:  Prints each array element on a new line
+#    PARAMETERS:  $@ = array elements
+#       RETURNS:  -
 #===============================================================================
 el_array_print_per_line(){
     # note: echo "${arr[@]}" doesn't works, so this function
@@ -2897,8 +2895,9 @@ el_array_print_per_line(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_step_requires_fixme
-#   DESCRIPTION:  temporal "step" to put in experimental/development code, only
-#    PARAMETERS:  $1 = dir to login (optional), $2 = message (optional)
+#   DESCRIPTION:  Breakpoint for dev code; opens a subshell or shows a warning
+#    PARAMETERS:  $1 = working directory, $2 = message
+#       RETURNS:  -
 #===============================================================================
 el_step_requires_fixme(){
     # pre {{{
@@ -2949,8 +2948,8 @@ el_step_requires_fixme(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_report_to_elive
-#   DESCRIPTION:  function to send easly and painless reports to elive
-#    PARAMETERS:  $1 = message
+#   DESCRIPTION:  Sends telemetry/error reports to Elive servers via netcat
+#    PARAMETERS:  $@ = message string
 #       RETURNS:  -
 #===============================================================================
 el_report_to_elive(){
@@ -3231,8 +3230,8 @@ el_report_to_elive(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_mark_state
-#   DESCRIPTION:  marks states for debug purposes
-#    PARAMETERS:  $1 = id | $1 + $2 = category + action
+#   DESCRIPTION:  Sends tracking/analytics events to Elive statistics server
+#    PARAMETERS:  $1 = state ID or category, $2 = action (optional)
 #       RETURNS:  -
 #===============================================================================
 el_mark_state(){
@@ -3317,9 +3316,9 @@ el_mark_state(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_flag
-#   DESCRIPTION:  control states with marks and locks
-#    PARAMETERS:  $2 = action (add|del|check), $3 = name
-#       RETURNS:  true or false for check actions
+#   DESCRIPTION:  Manages temporary state flags using files in /tmp
+#    PARAMETERS:  $1 = action (add|del|check), $2 = flag name
+#       RETURNS:  0/1 for check action based on flag existence
 #===============================================================================
 el_flag(){
     # pre {{{
@@ -3370,8 +3369,8 @@ el_flag(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_add_on_exit
-#   DESCRIPTION:  add commands that will be run on exit of the application
-#    PARAMETERS:  command to run
+#   DESCRIPTION:  Registers a command to be executed when the script exits
+#    PARAMETERS:  $@ = command string
 #       RETURNS:  -
 #===============================================================================
 el_add_on_exit(){
@@ -3389,10 +3388,9 @@ el_add_on_exit(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  on_exit
-#   DESCRIPTION:  Internal function to execute all commands registered via el_add_on_exit
+#   DESCRIPTION:  Trap handler that runs all commands in the on_exit_items array
 #    PARAMETERS:  -
 #       RETURNS:  -
-#   EXAMPLE:      el_add_on_exit "rm -f /tmp/file"
 #===============================================================================
 on_exit(){
     local i
@@ -3411,8 +3409,8 @@ on_exit(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_request_report_bug
-#   DESCRIPTION:  Request the user to report a bug
-#    PARAMETERS:  Message to tell to the user (optional)
+#   DESCRIPTION:  Prompts the user to report a bug to the Elive tracker
+#    PARAMETERS:  $@ = message to display
 #       RETURNS:  -
 #===============================================================================
 el_request_report_bug(){
@@ -3502,9 +3500,9 @@ el_request_report_bug(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_processes_using_mountpoint
-#   DESCRIPTION:  show the name of the processes that is using a mountpoint
-#    PARAMETERS:  $1 mountpoint-dir, $2 mode [kill]
-#       RETURNS:  -
+#   DESCRIPTION:  Identifies (and optionally kills) processes using a mountpoint
+#    PARAMETERS:  $1 = mountpoint or device, $2 = mode ("kill" to terminate)
+#       RETURNS:  0 on success, 1 on error
 #===============================================================================
 el_processes_using_mountpoint(){
     # pre {{{
@@ -3567,8 +3565,9 @@ el_processes_using_mountpoint(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_user_email_get
-#   DESCRIPTION:  determine which is the email of the user and return it
-#       RETURNS:  email string
+#   DESCRIPTION:  Attempts to find the user's email via config files or git
+#    PARAMETERS:  -
+#       RETURNS:  Email string or error message
 #===============================================================================
 el_user_email_get(){
     # pre {{{
@@ -3593,9 +3592,9 @@ el_user_email_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_user_desktop_running
-#   DESCRIPTION:  ask if actual user is running or not the given desktop
-#    PARAMETERS:  $1 = desktop name (e16|enlightenment)
-#       RETURNS:  true if running, false if not
+#   DESCRIPTION:  Checks if a specific desktop process is running for the user
+#    PARAMETERS:  $1 = desktop process name (e.g., e16, enlightenment)
+#       RETURNS:  0 if running, 1 otherwise
 #===============================================================================
 el_user_desktop_running(){
     # pre {{{
@@ -3621,10 +3620,9 @@ el_user_desktop_running(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_user_desktop_active_get
-#   DESCRIPTION:  returns the name of the active user running the graphical system
-#    PARAMETERS:  $1 = mode (user|desktop)
-#       RETURNS:  username string
-#                 mode desktop: returns the strings "E16" or "Enlightenment"
+#   DESCRIPTION:  Identifies the active GUI user or the running desktop environment
+#    PARAMETERS:  $1 = mode ("user" or "desktop")
+#       RETURNS:  Username or Desktop name (E16, Enlightenment, etc.)
 #===============================================================================
 el_user_desktop_active_get(){
     # pre {{{
@@ -3758,7 +3756,7 @@ el_user_desktop_active_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_request_donation
-#   DESCRIPTION:  ask to the user to make a donation to elive
+#   DESCRIPTION:  Displays a GUI prompt asking the user to donate to Elive
 #    PARAMETERS:  -
 #       RETURNS:  -
 #===============================================================================
@@ -3801,12 +3799,9 @@ el_request_donation(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_config_get
-#   DESCRIPTION:  gets all the previously saved configurations for the $0 tool
-#    PARAMETERS:  -
-#                 to force conf file: prepend the variable SOURCE ($0) to the function call
-#       RETURNS:  sources the file configuration, so it gets the variables
-#          NOTE:  this tool cannot work with array variables
-#          NOTE:  NEVER set a variable as "local" in your functions or it will be set back to local (so, not fetching any conf), since bash 5.0
+#   DESCRIPTION:  Loads persistent configuration variables for the current tool
+#    PARAMETERS:  - (Uses global $SOURCE to identify the config file)
+#       RETURNS:  Sources the config file into the current shell
 #===============================================================================
 el_config_get(){
     # pre {{{
@@ -3840,11 +3835,9 @@ el_config_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_config_save
-#   DESCRIPTION:  saves a configuration to re-use if we run again the installer
-#                 works with bash and zsh, but the SOURCE var needs to be set in main script
-#    PARAMETERS:  varname (not value), multiple-ones allowed (space separated)
-#                 to force conf file: prepend the variable SOURCE ($0) to the function call
-#       RETURNS:  -
+#   DESCRIPTION:  Saves specified variables to a persistent config file
+#    PARAMETERS:  $@ = variable names (must start with "conf_")
+#       RETURNS:  0 on success, 1 on error
 #===============================================================================
 el_config_save(){
     # pre {{{
@@ -3921,8 +3914,8 @@ el_config_save(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_config_restart
-#   DESCRIPTION:  remove all configurations
-#    PARAMETERS:  -
+#   DESCRIPTION:  Deletes the persistent configuration file for the current tool
+#    PARAMETERS:  - (Uses global $SOURCE)
 #       RETURNS:  -
 #===============================================================================
 el_config_restart(){
@@ -3956,9 +3949,9 @@ el_config_restart(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_ram_usage_show
-#   DESCRIPTION:  shows memory usage (ram)
-#    PARAMETERS:  $1 = free|total|used (optional)
-#       RETURNS:  info
+#   DESCRIPTION:  Displays RAM statistics in MB or percentage
+#    PARAMETERS:  $1 = mode (free|total|used|used_percent)
+#       RETURNS:  Numeric value or full 'free' output
 #===============================================================================
 el_ram_usage_show(){
     # pre {{{
@@ -3993,9 +3986,9 @@ el_ram_usage_show(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_architecture
-#   DESCRIPTION:  returns the architecture
-#    PARAMETERS:  $1 = host | kernel, $2 = format (normal|gnu), $3 = file to use to know arch (host mode only)
-#       RETURNS:  string
+#   DESCRIPTION:  Returns the system or binary architecture
+#    PARAMETERS:  $1 = "host" or "kernel", $2 = "normal" or "gnu", $3 = file path
+#       RETURNS:  Architecture string (e.g., amd64, i386-linux-gnu)
 #===============================================================================
 el_architecture(){
     # pre {{{
@@ -4068,9 +4061,9 @@ el_architecture(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_get_machine_id
-#   DESCRIPTION:  get a unique machine identifier (root)
+#   DESCRIPTION:  Generates a unique hardware ID using DMI, UUID, or CPU info
 #    PARAMETERS:  -
-#       RETURNS:  value id
+#       RETURNS:  Unique ID string
 #===============================================================================
 el_get_machine_id(){
     # pre {{{
@@ -4165,8 +4158,9 @@ el_get_machine_id(){
 }
 #===  FUNCTION  ================================================================
 #          NAME:  el_json_append_file
-#   DESCRIPTION:  appends a json file to an existing one
-#    PARAMETERS:  $1 = file, $2 = extra-file-contents
+#   DESCRIPTION:  Merges two JSON files using 'jq'
+#    PARAMETERS:  $1 = target file, $2 = file containing JSON to append
+#       RETURNS:  0 on success, 1 on error
 #===============================================================================
 el_json_append_file(){
     # pre {{{
@@ -4207,8 +4201,9 @@ el_json_append_file(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_json_delete_ids_regex
-#   DESCRIPTION:  delete IDs (named entries) from a regex string
-#    PARAMETERS:  $1 = file, $2 = regex
+#   DESCRIPTION:  Deletes JSON keys matching a regex pattern using 'jq'
+#    PARAMETERS:  $1 = target file, $2 = regex pattern
+#       RETURNS:  0 on success, 1 on error
 #===============================================================================
 el_json_delete_ids_regex(){
     # pre {{{
@@ -4242,9 +4237,9 @@ el_json_delete_ids_regex(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_apt_package_version_get
-#   DESCRIPTION:  get the version of an installed package or a candidate
-#    PARAMETERS:  $1 = package, $2 = installed|candidate, $3 = full|clean
-#       RETURNS:  version string
+#   DESCRIPTION:  Retrieves package version from dpkg status or apt cache
+#    PARAMETERS:  $1 = package, $2 = "installed"|"candidate", $3 = "full"|"clean"
+#       RETURNS:  Version string
 #===============================================================================
 el_apt_package_version_get(){
     local package state mode version
@@ -4292,9 +4287,9 @@ el_apt_package_version_get(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_aptget
-#   DESCRIPTION:  apt-get wrapper with lock feature
+#   DESCRIPTION:  Runs apt-get while waiting for other package locks to release
 #    PARAMETERS:  $@ = apt-get arguments
-#       RETURNS:  apt-get exit status
+#       RETURNS:  Exit status of apt-get
 #===============================================================================
 el_aptget(){
     local i j is_shown

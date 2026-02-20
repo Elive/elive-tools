@@ -20,12 +20,33 @@ main(){
 
     case "$command" in
 
-        apt|apt-*|dpkg|dpkg*)
+        dpkg|dpkg*)
             #el_info "apt/dpkg mode"
             tput sc
             i=0
 
-            while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+            while fuser /var/lib/dpkg/lock  >/dev/null 2>&1 ; do
+                case $(($i % 4)) in
+                    0 ) j="-" ;;
+                    1 ) j="\\" ;;
+                    2 ) j="|" ;;
+                    3 ) j="/" ;;
+                esac
+                tput rc
+                echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
+                flag_busy=1
+
+                sleep 0.5
+                ((i=i+1))
+            done
+            ;;
+
+        apt|apt-*)
+            #el_info "apt/dpkg mode"
+            tput sc
+            i=0
+
+            while fuser /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
                 case $(($i % 4)) in
                     0 ) j="-" ;;
                     1 ) j="\\" ;;

@@ -676,9 +676,9 @@ usage(){
 -t to
 -x CC: (extra recipients in CC form)
 -X BCC: (extra recipients in blind-CC form)
--s subject (optional)
--S super-subject (title in the message, optional)
--H header-text (defaults to: \$user on \$hostname)
+-s subject (optional) - second line in phone notifications
+-H header-text (defaults to: \$user on \$hostname) - preview in gmail list
+-S super-subject (title for the message body, optional)
 -m message (can be file or text passed)
 -T template to use (if you want to use, optional) [default|none]
 

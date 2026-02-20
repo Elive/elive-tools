@@ -4410,10 +4410,11 @@ if [[ -n "$FORCE_INTERACTIVE" ]] ; then
 elif ((EL_NON_INTERACTIVE)) ; then
     unset is_interactive
 fi
-if ! ((is_interactive)) ; then
-    # when we are in non-interactive, we should also disable access to display, otherwise some things may popup expecting answer, like in el_confirm
-    unset DISPLAY
-fi
+#if ! ((is_interactive)) ; then
+    ## when we are in non-interactive, we should also disable access to display, otherwise some things may popup expecting answer, like in el_confirm
+    #update: do not enable this, otherwise tools like elive-assistant will fail (xdo typing, so elive-assistant is not run interactively)
+    #unset DISPLAY
+#fi
 
 
 # set a default useful debug PS

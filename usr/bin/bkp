@@ -514,7 +514,7 @@ do_remove(){
 
 main(){
     # pre {{{
-    local tool namedir bkpdir_id target history_num
+    local tool namedir bkpdir_id target history_num bkp_id
 
     tool="$(basename $0)"
     namedir="$( pwd )"
@@ -526,8 +526,11 @@ main(){
     fi
     bkpdir_backups="${bkpdir_main}/backups"
     bkpdir_works="${bkpdir_main}/working"
-    bkpdir_id="${bkpdir_backups}/${namedir}.rdiff"
+    bkpdir_id="${bkpdir_backups}/${namedir}${bkp_id:+_$bkp_id}.rdiff"
     target="$( pwd )"
+    if [[ -n "$bkp_id" ]] ; then
+        target="${target}_${bkp_id}"
+    fi
 
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
@@ -565,6 +568,10 @@ main(){
     for arg in "$@"
     do
         case "$arg" in
+            --id|-i)
+                bkp_id="${2}"
+                shift 2
+                ;;
             --quiet|-q)
                 is_quiet=1
                 shift
@@ -630,8 +637,9 @@ main(){
 
 # Usage
 if [[ -z "${1}" ]] ; then
-    echo -e "Usage: $(basename $BASH_SOURCE) save | get {n} | list | diff {n} | meld {n} | remove | purge | work | snap"
-    echo -e "               extra options: diff-reverse {n}"
+    echo -e "Usage: $(basename $BASH_SOURCE) [options] save | get {n} | list | diff {n} | meld {n} | remove | purge | work | snap"
+    echo -e "               options: --id ID | -i ID | --quiet | -q"
+    echo -e "               extra commands: diff-reverse {n}"
     echo -e "  where [n] is the number of previously historied backup"
     exit 1
 fi

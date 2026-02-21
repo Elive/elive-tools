@@ -530,11 +530,6 @@ main(){
     fi
     bkpdir_backups="${bkpdir_main}/backups"
     bkpdir_works="${bkpdir_main}/working"
-    bkpdir_id="${bkpdir_backups}/${namedir}${bkp_id:+_$bkp_id}.rdiff"
-    target="$( pwd )"
-    if [[ -n "$bkp_id" ]] ; then
-        target="${target}_${bkp_id}"
-    fi
 
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
@@ -563,15 +558,12 @@ main(){
         fi
     fi
 
-    el_check_variables "tool|namedir|bkpdir_id|target"
-    el_check_dirs      "${target}"
-
-
     # }}}
 
-    for arg in "$@"
-    do
-        case "$arg" in
+    # Parse arguments first to get bkp_id
+    local args_to_process=()
+    while (( "$#" )); do
+        case "$1" in
             --id|-i)
                 bkp_id="${2}"
                 shift 2
@@ -580,6 +572,27 @@ main(){
                 is_quiet=1
                 shift
                 ;;
+            *)
+                args_to_process+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Define ID-dependent paths after parsing arguments
+    bkpdir_id="${bkpdir_backups}/${namedir}${bkp_id:+_$bkp_id}.rdiff"
+    target="$( pwd )"
+    if [[ -n "$bkp_id" ]] ; then
+        target="${target}_${bkp_id}"
+    fi
+
+    el_check_variables "tool|namedir|bkpdir_id|target"
+    el_check_dirs      "${target}"
+
+    # Process remaining commands
+    set -- "${args_to_process[@]}"
+    while (( "$#" )); do
+        case "$1" in
             work|w|-w)
                 do_work
                 shift
@@ -590,9 +603,7 @@ main(){
                 ;;
             get|g|-g|--get)
                 do_get "${bkpdir_id}" "${target}" "$2"
-                if [[ -n "$2" ]] ; then
-                    shift
-                fi
+                [[ -n "$2" ]] && shift
                 shift
                 ;;
             snap|x|-x|--snap|snapshot|--snapshot)
@@ -605,23 +616,17 @@ main(){
                 ;;
             diff)
                 do_diff "${bkpdir_id}" "${target}" "${2}"
-                if [[ -n "$2" ]] ; then
-                    shift
-                fi
+                [[ -n "$2" ]] && shift
                 shift
                 ;;
             diff-reverse)
                 do_diff_reverse "${bkpdir_id}" "${target}" "${2}"
-                if [[ -n "$2" ]] ; then
-                    shift
-                fi
+                [[ -n "$2" ]] && shift
                 shift
                 ;;
             meld)
                 do_meld "${bkpdir_id}" "${target}" "${2}"
-                if [[ -n "$2" ]] ; then
-                    shift
-                fi
+                [[ -n "$2" ]] && shift
                 shift
                 ;;
             remove|-r|forget)
@@ -630,6 +635,9 @@ main(){
                 ;;
             purge)
                 do_purge_olds "${bkpdir_backups}"
+                shift
+                ;;
+            *)
                 shift
                 ;;
         esac

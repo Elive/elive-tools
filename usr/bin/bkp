@@ -239,7 +239,9 @@ do_save(){
         mkdir -p "$bkpdir_id"
     fi
 
-    echo -ne "Saving..."
+    if ! ((is_quiet)) ; then
+        echo -ne "Saving..."
+    fi
 
     #      rsync -av --delete "${target}/" "${bkpdir_id}/"
     check_files_owner_compatibility "${1}/"
@@ -255,7 +257,9 @@ do_save(){
         version="$( do_sudo rdiff-backup --parsable-output list increments "$2" | wc -l )"
     fi
 
-    echo -e "\r\033[K${el_c_g}Saved${el_c_n}  [${version}]"
+    if ! ((is_quiet)) ; then
+        echo -e "\r\033[K${el_c_g}Saved${el_c_n}  [${version}]"
+    fi
     #echo -e "${el_c_g}Saved${el_c_n} $(du -hs ${2} | awk '{print $1}')"
 
 }
@@ -315,15 +319,21 @@ do_list(){
     if [[ -d "$1" ]] ; then
         if ((is_old_rdiff)) ; then
             do_sudo rdiff-backup -l "${1}"
-            echo ""
-            do_sudo rdiff-backup --parsable-output -l "${1}"
+            if ! ((is_quiet)) ; then
+                echo ""
+                do_sudo rdiff-backup --parsable-output -l "${1}"
+            fi
         else
             do_sudo rdiff-backup list increments "${1}"
-            echo ""
-            do_sudo rdiff-backup --parsable-output list increments "${1}"
+            if ! ((is_quiet)) ; then
+                echo ""
+                do_sudo rdiff-backup --parsable-output list increments "${1}"
+            fi
         fi
     else
-        el_info "no backups found for this directory"
+        if ! ((is_quiet)) ; then
+            el_info "no backups found for this directory"
+        fi
     fi
 }
 
@@ -521,7 +531,9 @@ main(){
 
     # TODO: delete
     if [[ -d "${HOME}/.${tool}.backups" ]] ; then
-        el_warning "you still having the old dir for backups, remove it entirely: ${HOME}/.${tool}.backups"
+        if ! ((is_quiet)) ; then
+            el_warning "you still having the old dir for backups, remove it entirely: ${HOME}/.${tool}.backups"
+        fi
     fi
 
 
@@ -601,14 +613,9 @@ main(){
                 fi
                 shift
                 ;;
-            remove|-r)
+            remove|-r|forget)
                 do_remove "${bkpdir_id}" "${target}"
                 shift
-                ;;
-            forget)
-                el_error "did you mean remove?"
-                shift
-                exit 1
                 ;;
             purge)
                 do_purge_olds "${bkpdir_backups}"

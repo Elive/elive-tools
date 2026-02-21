@@ -504,9 +504,13 @@ do_remove(){
         do_sudo rm -rf "${1}"
         do_sudo rm -rf "${1}."*
 
-        echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
+        if ! ((is_quiet)) ; then
+            echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
+        fi
     else
-        echo -e "${el_c_r}E: ${el_c_n}Already removed ?"
+        if ! ((is_quiet)) ; then
+            echo -e "${el_c_r}E: ${el_c_n}Already removed ?"
+        fi
     fi
 }
 

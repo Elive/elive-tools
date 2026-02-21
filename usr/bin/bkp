@@ -582,12 +582,11 @@ main(){
     # Define ID-dependent paths after parsing arguments
     bkpdir_id="${bkpdir_backups}/${namedir}${bkp_id:+_$bkp_id}.rdiff"
     target="$( pwd )"
-    if [[ -n "$bkp_id" ]] ; then
-        target="${target}_${bkp_id}"
-    fi
 
     el_check_variables "tool|namedir|bkpdir_id|target"
     el_check_dirs      "${target}"
+
+    el_debug "Backup directory: ${bkpdir_id}"
 
     # Process remaining commands
     set -- "${args_to_process[@]}"

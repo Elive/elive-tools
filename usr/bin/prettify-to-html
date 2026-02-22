@@ -32,6 +32,7 @@ el_prettify_to_html(){
                     else if ($1 ~ /^\s*\-\-\-/) print "<span style=\"color:#614700;font-family:monospace;\">"$0"</span>" ;
                     else if ($1 ~ /^E:/) print "<span style=\"color:red;\">"$0"</span>" ;
                     else if ($1 ~ /^W:/) print "<span style=\"color:#e0a300;\">"$0"</span>" ;
+                    else if ($0 ~ /^\s*(#|\/\/)\s/) print "<span style=\"color:#888888;\">"$0"</span>" ;
                     else {
                         if ($0 ~ /[Ww]arning|[Ee]rror/) print "<b>"$0"</b>" ;
                         else print $0

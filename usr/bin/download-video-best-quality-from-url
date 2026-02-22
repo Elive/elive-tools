@@ -92,7 +92,7 @@ main(){
         for try in \$(seq 6)
         do
             if yt-dlp \
-                --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=3 --compat-options no-keep-subs --convert-subs srt \
+                --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=12 --compat-options no-keep-subs --convert-subs srt \
                 --remux-video \"mp4/mkv/webm/mov\" --no-keep-video \
                 -o \"\$output_filename\" \
                 --embed-metadata --embed-chapters \
@@ -103,7 +103,7 @@ main(){
                 sleep 1
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
-                    --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=6 --compat-options no-keep-subs --convert-subs srt \
+                    --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=24 --compat-options no-keep-subs --convert-subs srt \
                     -o \"\$output_filename\" \
                     --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
@@ -114,7 +114,7 @@ main(){
                     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                     if yt-dlp \
                         -i \
-                        --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=8 --compat-options no-keep-subs \
+                        --write-auto-subs --write-subs --embed-subs --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=48 --compat-options no-keep-subs \
                         --embed-metadata --embed-chapters \
                         \"$@\" ; then
                         is_downloaded=1

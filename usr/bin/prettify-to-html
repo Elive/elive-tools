@@ -26,13 +26,13 @@ el_prettify_to_html(){
     # else
         output="$( printf "%s" "$message" | sed 's|\\n|<br>|g' |
             awk '{ if ($1 ~ /^\s*\-/) print "<span style=\"color:#a74000;font-family:monospace;\">"$0"</span>" ;
-                    else if ($0 ~ /@@.*@@/) print "<span style=\"color:#e0a300;font-family:monospace;\">"$0"</span>" ;
+                    else if ($0 ~ /@@.*@@/ || $0 ~ /^diff --git /) print "<span style=\"color:#e0a300;font-family:monospace;\">"$0"</span>" ;
                     else if ($1 ~ /^\s*\+/) print "<span style=\"color:#00a742;font-family:monospace;\">"$0"</span>" ;
                     else if ($1 ~ /^\s*\+\+\+/) print "<span style=\"color:blue;font-family:monospace;\">"$0"</span>" ;
                     else if ($1 ~ /^\s*\-\-\-/) print "<span style=\"color:#614700;font-family:monospace;\">"$0"</span>" ;
                     else if ($1 ~ /^E:/) print "<span style=\"color:red;\">"$0"</span>" ;
                     else if ($1 ~ /^W:/) print "<span style=\"color:#e0a300;\">"$0"</span>" ;
-                    else if ($0 ~ /^\s*(#|\/\/)\s/) print "<span style=\"color:#888888;\">"$0"</span>" ;
+                    else if ($0 ~ /^\s*(#|\/\/)\s/ || $0 ~ /^index [0-9a-f]+\.\.[0-9a-f]+/) print "<span style=\"color:#888888;\">"$0"</span>" ;
                     else {
                         if ($0 ~ /[Ww]arning|[Ee]rror/) print "<b>"$0"</b>" ;
                         else print $0

@@ -3493,8 +3493,12 @@ on_exit(){
     # run each appended command
     for i in "${on_exit_items[@]}"
     do
-        #echo "on_exit: $i"
-        eval $i
+        if [[ -n "$i" ]] ; then
+            if [[ "${EL_DEBUG}" -ge 3 ]] ; then
+                echo "on_exit evaluating: $i" >&2
+            fi
+            eval "$i" || true
+        fi
     done
 }
 

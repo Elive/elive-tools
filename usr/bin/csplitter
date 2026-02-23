@@ -1,0 +1,182 @@
+#!/usr/bin/perl
+#
+# csplitter: A smart C/C++ source code splitter that respects code structure.
+#
+# This tool splits large C source files into smaller chunks while ensuring that
+# splits only occur at the top-level scope (brace depth 0) and not inside
+# comments or preprocessor directives.
+#
+# Example:
+#   csplitter large_project.c 2000
+#   (This creates large_project-split-001.c, 002.c, etc., each ~2000 lines)
+#
+
+use strict;
+use warnings;
+
+# Check arguments
+if (@ARGV < 2) {
+    die "Usage: $0 <input_file.c> <lines_per_chunk> [output_prefix]\n" .
+        "Example: $0 program.c 1800\n" .
+        "Example: $0 program.c 1500 myoutput-\n";
+}
+
+my $input_file = $ARGV[0];
+my $lines_per_chunk = $ARGV[1] + 0;  # Convert to number
+my $user_prefix = $ARGV[2] if @ARGV > 2;
+
+# Validate input
+die "Error: Input file '$input_file' not found\n" unless -f $input_file;
+die "Error: lines_per_chunk must be positive integer\n" unless $lines_per_chunk > 0;
+
+# Determine output prefix and extension
+my ($filename, $path, $extension) = fileparse($input_file, qr/\.[^.]*/);
+$extension =~ s/^\.//;  # Remove leading dot
+
+# Set default prefix if not provided
+my $prefix = $user_prefix // "${filename}-split-";
+
+# Open input file
+open my $in, '<', $input_file or die "Cannot open $input_file: $!";
+
+# State variables
+my $chunk_num = 1;
+my $line_count = 0;
+my $brace_depth = 0;
+my $in_comment = 0;
+my $in_string = 0;
+my $string_char = '';
+my $current_file;
+my @lines_in_chunk;
+
+# Start first file
+$current_file = sprintf("%s%03d.%s", $prefix, $chunk_num, $extension);
+open my $out, '>', $current_file or die "Cannot create $current_file: $!";
+
+print "Splitting $input_file into chunks of ~$lines_per_chunk lines...\n";
+
+while (my $line = <$in>) {
+    push @lines_in_chunk, $line;
+    $line_count++;
+
+    # Parse the line character by character for accurate brace counting
+    my $char_idx = 0;
+    my $len = length($line);
+
+    while ($char_idx < $len) {
+        my $char = substr($line, $char_idx, 1);
+        my $next_char = $char_idx + 1 < $len ? substr($line, $char_idx + 1, 1) : '';
+
+        # Handle escape sequences in strings
+        if ($in_string && $char eq '\\') {
+            $char_idx += 2;  # Skip escape sequence
+            next;
+        }
+
+        # Handle string boundaries
+        if (!$in_comment && ($char eq '"' || $char eq "'")) {
+            if (!$in_string) {
+                $in_string = 1;
+                $string_char = $char;
+            } elsif ($char eq $string_char) {
+                $in_string = 0;
+            }
+            $char_idx++;
+            next;
+        }
+
+        # Handle comment boundaries (only outside strings)
+        if (!$in_string) {
+            # Start of multi-line comment
+            if (!$in_comment && $char eq '/' && $next_char eq '*') {
+                $in_comment = 1;
+                $char_idx += 2;
+                next;
+            }
+
+            # End of multi-line comment
+            if ($in_comment && $char eq '*' && $next_char eq '/') {
+                $in_comment = 0;
+                $char_idx += 2;
+                next;
+            }
+
+            # Single-line comment
+            if (!$in_comment && $char eq '/' && $next_char eq '/') {
+                last;  # Skip rest of line
+            }
+        }
+
+        # Count braces (only outside comments and strings)
+        if (!$in_comment && !$in_string) {
+            if ($char eq '{') {
+                $brace_depth++;
+            } elsif ($char eq '}') {
+                $brace_depth--;
+            }
+        }
+
+        $char_idx++;
+    }
+
+    # Write line to current output file
+    print $out $line;
+
+    # Check if we should start a new chunk
+    if ($line_count >= $lines_per_chunk && $brace_depth == 0 && !$in_comment) {
+        # Don't split in the middle of preprocessor directives
+        if ($line !~ /^\s*#/ && $line !~ /^\s*\/\//) {
+            close $out;
+            printf "Created %s with %d lines\n", $current_file, $line_count;
+
+            $chunk_num++;
+            $current_file = sprintf("%s%03d.%s", $prefix, $chunk_num, $extension);
+            open $out, '>', $current_file or die "Cannot create $current_file: $!";
+
+            $line_count = 0;
+            @lines_in_chunk = ();
+        }
+    }
+}
+
+close $out;
+close $in;
+
+# Handle last chunk
+if ($line_count > 0) {
+    printf "Created %s with %d lines\n", $current_file, $line_count;
+} else {
+    # Last file is empty, remove it
+    unlink $current_file;
+    $chunk_num--;
+}
+
+my $total_chunks = $chunk_num;
+print "\nSplit complete. Created $total_chunks files.\n";
+
+# Show reassembly command
+my $reassembly_file = "${filename}-combined.$extension";
+print "Reassemble with: cat '$prefix'*.$extension > '$reassembly_file'\n";
+print "Or: cat '$prefix'???.$extension > '$reassembly_file'\n";
+
+# Helper function to parse filename
+sub fileparse {
+    my ($fullname, $pattern) = @_;
+    my ($filename, $path);
+
+    if ($fullname =~ m|^(.*/)([^/]*)$|) {
+        $path = $1;
+        $filename = $2;
+    } else {
+        $path = '';
+        $filename = $fullname;
+    }
+
+    my $extension = '';
+    if ($pattern && $filename =~ /($pattern)$/) {
+        $extension = $1;
+        $filename =~ s/$pattern$//;
+    }
+
+    return ($filename, $path, $extension);
+}

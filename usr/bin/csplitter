@@ -2,13 +2,26 @@
 #
 # csplitter: A smart C/C++ source code splitter that respects code structure.
 #
-# This tool splits large C source files into smaller chunks while ensuring that
-# splits only occur at the top-level scope (brace depth 0) and not inside
-# comments or preprocessor directives.
+# DESCRIPTION:
+#   This tool splits large C/C++ source files into smaller chunks. Unlike standard
+#   'split', it ensures that files are only broken at the top-level scope (brace 
+#   depth 0). It avoids splitting inside functions, multi-line comments, strings,
+#    or preprocessor directives.
 #
-# Example:
-#   csplitter large_project.c 2000
-#   (This creates large_project-split-001.c, 002.c, etc., each ~2000 lines)
+# USAGE:
+#   csplitter <input_file> <lines_per_chunk> [output_prefix]
+#
+# EXAMPLES:
+#   1. Split a file into chunks of approximately 2000 lines:
+#      csplitter large_project.c 2000
+#      (Creates: large_project-split-001.c, large_project-split-002.c, ...)
+#
+#   2. Reassemble the split files back into a single source file:
+#      cat large_project-split-*.c > large_project_restored.c
+#
+#   3. Using a custom prefix:
+#      csplitter mylib.cpp 1500 chunk_
+#      (Creates: chunk_001.cpp, chunk_002.cpp, ...)
 #
 
 use strict;

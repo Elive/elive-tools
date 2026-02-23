@@ -2988,6 +2988,51 @@ el_step_requires_fixme(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_subshell
+#   DESCRIPTION:  Opens an informative subshell for the user
+#    PARAMETERS:  $1 = working directory, $2 = message
+#       RETURNS:  -
+#       EXAMPLE:  el_subshell "/tmp" "You can now inspect the logs in this shell"
+#===============================================================================
+el_subshell(){
+    # pre {{{
+    local dir prev_dir message
+
+    dir="$1"
+    shift
+    if [[ -n "$1" ]] ; then
+        message="$1"
+        shift
+    fi
+
+    prev_dir="$(pwd)"
+
+    : ${dir:="$prev_dir"}
+
+    # }}}
+    el_check_dirs "${dir}"
+    cd "$dir" || el_warning "dir doesnt exist: $dir"
+
+    if ((is_interactive)) ; then
+        echo -e "\n"
+        if [[ -n "$message" ]] ; then
+            el_info "${message}"
+            echo -e ""
+        fi
+        echo -e "$(tput setaf 3)New SHELL Started$(tput op)"
+        el_explain 2 "Type '__exit__' or '__logout__' when you have finished to continue..."
+        PROMPT_PREPEND="subshell" $SHELL -l || true
+    else
+        cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
+        el_error "shell is not interactive, cannot run ${FUNCNAME}"
+        return 1
+    fi
+
+    cd "${prev_dir}" || el_warning "prev dir doesnt exist anymore: ${prev_dir}"
+
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_report_to_elive
 #   DESCRIPTION:  Sends telemetry/error reports to Elive servers via netcat
 #    PARAMETERS:  $@ = message string

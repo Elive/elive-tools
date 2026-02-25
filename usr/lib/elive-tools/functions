@@ -2136,8 +2136,7 @@ el_check_is_shell(){
 #===============================================================================
 el_explain(){
     # pre {{{
-    # if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
-    if ! [[ "${EL_DEBUG}" -ge 2 ]] ; then
+    if ! ((is_print_fancy)) || ! [[ "${EL_DEBUG}" -ge 2 ]] ; then
         return 0
     fi
 
@@ -2238,7 +2237,7 @@ el_explain(){
 #===============================================================================
 el_debug(){
     # pre {{{
-    if ! [[ "${EL_DEBUG}" -ge 3 ]] || ! ((is_interactive)) ; then
+    if ! ((is_print_fancy)) || [[ ! "${EL_DEBUG}" -ge 3 ]] ; then
         return 0
     fi
     # don't show debug messages from this own tool (like if we are in a shell and the functions calls themselves)
@@ -2321,7 +2320,7 @@ el_debug(){
 #===============================================================================
 el_info(){
     # pre {{{
-    if ! ((is_interactive)) || [[ "${EL_DEBUG}" -eq 0 ]] ; then
+    if ! ((is_print_fancy)) || [[ ! "${EL_DEBUG}" -ge 1 ]] ; then
         return 0
     fi
 
@@ -2400,7 +2399,7 @@ el_warning(){
 
     # }}}
     # get the list of function names array {{{
-    if { [[ -z "$NOREPORTS" ]] && [[ -z "$NOREPORT" ]] && [[ -z "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_interactive" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
+    if { [[ -z "$NOREPORTS" ]] && [[ -z "$NOREPORT" ]] && [[ -z "$NO_ELIVETOOLS_REPORTS" ]] && { [[ -n "$REPORTS" ]] || [[ -n "$EL_REPORTS" ]] || [[ -n "$FORCE_REPORTS" ]] ; } ; }    || { [[ -n "$is_print_fancy" ]] && [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; } ; then
 
         counter="${#FUNCNAME[*]}"
         count=0
@@ -2444,13 +2443,11 @@ el_warning(){
     # }}}
     # show warning {{{
 
-    if ((is_interactive)) ; then
-        if [[ "${EL_DEBUG}" -ge 1 ]] ; then
-            if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
-            else
-                echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
-            fi
+    if ((is_print_fancy)) && [[ "${EL_DEBUG}" -ge 1 ]] ; then
+        if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+            echo -e "${el_c_y2}W: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_y2}$message${el_c_n}" 1>&2
+        else
+            echo -e "${el_c_y2}W: ${el_c_y2}$message${el_c_n}" 1>&2
         fi
     fi
 
@@ -2539,17 +2536,11 @@ el_error(){
     # show error {{{
 
 
-    if ((is_interactive)) ; then
-        if [[ "${EL_DEBUG}" -ge 0 ]] ; then
-            if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
-                echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
-            else
-                echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
-            fi
-        #else
-            #if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] && el_check_version_development ; then
-                #timeout 120 $guitool --error --text="${SOURCE}: $message"
-            #fi
+    if ((is_print_fancy)) && [[ "${EL_DEBUG}" -ge 0 ]] ; then
+        if [[ -n "${BASH_SOURCE[*]}" ]] && [[ "${EL_DEBUG}" -ge 3 ]] ; then
+            echo -e "${el_c_r}E: ${el_c_gr}[ ${sourcenames_arr} +${el_c_c2}${BASH_LINENO[0]} ${el_c_gr}${funcnames}] ${el_c_r}$message${el_c_n}" 1>&2
+        else
+            echo -e "${el_c_r}E: ${el_c_r}$message${el_c_n}" 1>&2
         fi
     fi
 
@@ -2683,7 +2674,7 @@ el_group_add(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_confirm
-#   DESCRIPTION:  Prompts user for Yes/No confirmation (CLI or GUI)
+#   DESCRIPTION:  Prompts user for Yes/No confirmation
 #    PARAMETERS:  $1 = question string
 #       RETURNS:  0 for Yes, 1 for No
 #       EXAMPLE:  if el_confirm "Do you want to proceed?" ; then do_it ; fi
@@ -2731,12 +2722,17 @@ el_confirm(){
                 ;;
         esac
     else
+        # Note: we should never open a gui from here, to many tools / scripts are not expecting to be run??
+        #el_error "Asking for confirmation without being in interactive mode, failing with a 'no' answer..."
+        #return 1
         if [[ "${DISPLAY}" = ":0.0" || "${DISPLAY}" = ":0" ]] ; then
             if $guitool --question --text="$question" ; then
                 return 0
             else
                 return 1
             fi
+        else
+            return 1
         fi
     fi
 
@@ -4731,11 +4727,15 @@ fi
 
 if ((is_terminal)) || ((is_console)) ; then
     is_interactive=1  # flag: we are in interactive mode (user is reachable)
+    is_print_fancy=1  # flag: to know when we want fancy printing (colored)
 fi
 
 if [[ -n "$FORCE_INTERACTIVE" ]] ; then
     case "$FORCE_INTERACTIVE" in
-        "yes"|1)      is_interactive=1  ; ;;
+        "yes"|1)
+            is_interactive=1
+            is_print_fancy=1
+            ;;
         "no"|0)       unset is_interactive  ; ;;
     esac
 elif ((EL_NON_INTERACTIVE)) ; then
@@ -4752,7 +4752,7 @@ fi
 export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '  # Prompt for debug mode, showing function name and line number
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
-if [[ -n "$NOCOLOR" ]] || ! ((is_terminal)) ; then
+if [[ -n "$NOCOLOR" ]] || ! ((is_print_fancy)) || ! ((is_terminal)) ; then
     el_c_n=""
     el_c_r=""
     el_c_r2=""

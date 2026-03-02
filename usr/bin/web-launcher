@@ -59,8 +59,8 @@ main(){
                 # get normal urls, we will use app later
                 el_array_member_add "${arg#--app=}" "${urls[@]}" ; urls=("${_out[@]}")
                 el_debug "added url '${arg#--app=}' in APP mode"
-                if [[ "${arg#--app=}" != http* ]] ; then
-                    el_warning "url doesn't starts with http (needed for the --app= argument), disabling mode_app..."
+                if [[ "${arg#--app=}" != http* ]] && [[ "${arg#--app=}" != file* ]] ; then
+                    el_warning "url doesn't starts with http or file (needed for the --app= argument), disabling mode_app..."
                     unset is_mode_app
                 fi
                 shift

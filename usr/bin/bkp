@@ -659,10 +659,25 @@ main(){
 
 # Usage
 if [[ -z "${1}" ]] ; then
-    echo -e "Usage: $(basename $BASH_SOURCE) [options] save | get {n} | list | diff {n} | meld {n} | remove | purge | work | snap"
-    echo -e "               options: --id ID | -i ID | --quiet | -q"
-    echo -e "               extra commands: diff-reverse {n}"
-    echo -e "  where [n] is the number of previously historied backup"
+    echo -e "Usage: $(basename "$BASH_SOURCE") [options] <command>"
+    echo -e ""
+    echo -e "Options:"
+    echo -e "  --id, -i ID      Specify a unique identifier for the backup (allows multiple backups for one dir)"
+    echo -e "  --quiet, -q      Minimize output (useful for scripts)"
+    echo -e ""
+    echo -e "Commands:"
+    echo -e "  save             Create a new incremental backup of the current directory"
+    echo -e "  get {n}          Restore the directory to the state of the n-th previous backup (default: 1)"
+    echo -e "  list             List all available backup increments and their timestamps"
+    echo -e "  diff {n}         Show a colorized diff between current files and the n-th backup"
+    echo -e "  diff-reverse {n} Show a diff in reverse (backup vs current)"
+    echo -e "  meld {n}         Open 'meld' (GUI) to compare/merge current files with the n-th backup"
+    echo -e "  work             Create a temporary sandbox copy of the dir to work in; merges/discards on exit"
+    echo -e "  snap             Create a BTRFS-based COW snapshot and drop into a shell; restore or discard on exit"
+    echo -e "  remove           Delete the backup history for the current directory"
+    echo -e "  purge            Delete ALL backups and working states managed by this tool for all directories"
+    echo -e ""
+    echo -e "  Note: {n} refers to the increment number (1 is the most recent backup)"
     exit 1
 fi
 

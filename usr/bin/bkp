@@ -98,7 +98,7 @@ do_work(){
     # everything is erased after the logout
     local dir tmpdir
 
-    dir="$( pwd )"
+    dir="$( readlink -f "$(pwd)" )"
     tmpdir="${bkpdir_works}/${namedir}"
 
     do_sudo rm -rf "${tmpdir}"
@@ -116,7 +116,7 @@ do_work(){
     # entering in new shell
     PROMPT_PREPEND="work" $SHELL || true
     # go back
-    cd "$target"
+    cd -P "$target"
 
     if el_confirm "Do you want to run meld with your previous working state?" ; then
         if ! el_dependencies_check meld ; then
@@ -209,6 +209,8 @@ do_snap(){
 
 do_save(){
     local version others_list_num ref
+    local src="${1%/}"
+    local dst="${2%/}"
 
     mkdir -p "${bkpdir_backups}"
 
@@ -243,18 +245,18 @@ do_save(){
         echo -ne "Saving..."
     fi
 
-    #      rsync -av --delete "${target}/" "${bkpdir_id}/"
-    check_files_owner_compatibility "${1}/"
+    #      rsync -av --delete "${src}" "${dst}"
+    check_files_owner_compatibility "${src}"
     if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup "${1}/" "${2}/"
+        do_sudo rdiff-backup "${src}" "${dst}"
     else
-        do_sudo rdiff-backup $rdiff_opts backup "${1}/" "${2}/"
+        do_sudo rdiff-backup $rdiff_opts backup "${src}" "${dst}"
     fi
 
     if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$2" | wc -l )"
+        version="$( do_sudo rdiff-backup -l --parsable-output "$dst" | wc -l )"
     else
-        version="$( do_sudo rdiff-backup --parsable-output list increments "$2" | wc -l )"
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$dst" | wc -l )"
     fi
 
     if ! ((is_quiet)) ; then
@@ -267,7 +269,9 @@ do_save(){
 
 do_get(){
     local version history_num
-    cd "${2}"
+    local src="${1%/}"
+    local dst="${2%/}"
+    cd -P "$dst"
 
     if ! [[ -d "$bkpdir_id" ]] ; then
         echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
@@ -285,32 +289,32 @@ do_get(){
     fi
 
     if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     else
-        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     fi
 
     el_check_variables "version"
 
-    do_sudo rm -rf "${1}.get"
+    do_sudo rm -rf "${src}.get"
 
-    #check_files_owner_compatibility "${1}" # we don't need to check a dir to restore, so we have checked it at saving
+    #check_files_owner_compatibility "${src}" # we don't need to check a dir to restore, so we have checked it at saving
     if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.get/"
+        do_sudo rdiff-backup -r "$version" "${src}" "${src}.get"
     else
-        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.get/"
+        do_sudo rdiff-backup restore --at "$version" "${src}" "${src}.get"
     fi
 
     if ((is_quiet)) ; then
-        do_sudo rsync -aq --delete "${1}.get/" "${2}/"
+        do_sudo rsync -aq --delete "${src}.get/" "${dst}/"
         echo -e "\r\033[KRecovered      "
     else
-        do_sudo rsync -a --delete --info=flist0,name "${1}.get/" "${2}/"
+        do_sudo rsync -a --delete --info=flist0,name "${src}.get/" "${dst}/"
     fi
 
-    do_sudo rm -rf "${1}.get"
+    do_sudo rm -rf "${src}.get"
 
-    cd "${2}"
+    cd -P "$dst"
 
 }
 
@@ -340,6 +344,8 @@ do_list(){
 
 do_meld(){
     local version history_num is_done
+    local src="${1%/}"
+    local dst="${2%/}"
 
     if ! ((is_done)) && [[ -d "$bkpdir_id" ]] ; then
         if ! el_dependencies_check meld ; then
@@ -355,31 +361,31 @@ do_meld(){
         fi
 
         if ((is_old_rdiff)) ; then
-            version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+            version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
         else
-            version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+            version="$( do_sudo rdiff-backup --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
         fi
 
         el_check_variables "version"
 
-        do_sudo rm -rf "${1}.differ"
+        do_sudo rm -rf "${src}.differ"
         if ((is_old_rdiff)) ; then
-            do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+            do_sudo rdiff-backup -r "$version" "${src}" "${src}.differ"
         else
-            do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+            do_sudo rdiff-backup restore --at "$version" "${src}" "${src}.differ"
         fi
 
         echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-        do_sudo meld "${1}.differ/" "${2}/"
+        do_sudo meld "${src}.differ/" "${dst}/"
 
-        do_sudo rm -rf "${1}.differ"
+        do_sudo rm -rf "${src}.differ"
 
         is_done=1
     fi
 
-    if ! ((is_done)) && [[ -d "${PWD}.snapshot" ]] ; then
-        do_sudo meld "${PWD}.snapshot/" "${PWD}/"
+    if ! ((is_done)) && [[ -d "$(readlink -f .).snapshot" ]] ; then
+        do_sudo meld "$(readlink -f .).snapshot/" "$(readlink -f .)/"
 
         is_done=1
     fi
@@ -390,12 +396,14 @@ do_meld(){
         return 1
     fi
 
-    cd "${2}"
+    cd -P "$dst"
 }
 
 
 do_diff(){
     local version history_num
+    local src="${1%/}"
+    local dst="${2%/}"
 
     if ! [[ -d "$bkpdir_id" ]] ; then
         echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
@@ -408,47 +416,49 @@ do_diff(){
     fi
 
     if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     else
-        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     fi
 
     el_check_variables "version"
 
-    do_sudo rm -rf "${1}.differ"
+    do_sudo rm -rf "${src}.differ"
 
     if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+        do_sudo rdiff-backup -r "$version" "${src}" "${src}.differ"
     else
-        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+        do_sudo rdiff-backup restore --at "$version" "${src}" "${src}.differ"
     fi
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
     local diff_excludes=(--exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
 
-    #diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | strings | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
+    #diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | strings | sed -e "s|--- ${src}.differ|--- a|g" -e "s|+++ ${dst}|+++ b|g" | colordiff
     # seems like "strings" eat words, but maybe we need it?
-    diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | sed -e "s|--- ${1}.differ|--- a|g" -e "s|+++ ${2}|+++ b|g" | colordiff
+    diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | sed -e "s|--- ${src}.differ|--- a|g" -e "s|+++ ${dst}|+++ b|g" | colordiff
 
     #if [[ -n "$( which lsdiff )" ]] ; then
-        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | lsdiff | wc -l )"
-        #diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | lsdiff | wc -l )"
+        #diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
-        diff -Naur "${diff_excludes[@]}" "${1}.differ/" "${2}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
+        diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
-    do_sudo rm -rf "${1}.differ"
+    do_sudo rm -rf "${src}.differ"
 
-    cd "${2}"
+    cd -P "$dst"
 }
 
 
 do_diff_reverse(){
     local version history_num
+    local src="${1%/}"
+    local dst="${2%/}"
 
     if ! [[ -d "$bkpdir_id" ]] ; then
         echo -e "E: dir $bkpdir_id not exists, not backup saved yet ?"
@@ -461,51 +471,53 @@ do_diff_reverse(){
     fi
 
     if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     else
-        version="$( do_sudo rdiff-backup --parsable-output list increments "$1" | awk '{print $1}' | tail -${history_num} | head -1 )"
+        version="$( do_sudo rdiff-backup --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
     fi
 
     el_check_variables "version"
 
-    do_sudo rm -rf "${1}.differ"
+    do_sudo rm -rf "${src}.differ"
     if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup -r "$version" "${1}/" "${1}.differ/"
+        do_sudo rdiff-backup -r "$version" "${src}" "${src}.differ"
     else
-        do_sudo rdiff-backup restore --at "$version" "${1}/" "${1}.differ/"
+        do_sudo rdiff-backup restore --at "$version" "${src}" "${src}.differ"
     fi
 
     local diff_excludes=(--exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    diff -Naur "${diff_excludes[@]}" "${2}/" "${1}.differ/" | strings | sed -e "s|+++ ${1}.differ|+++ a|g" -e "s|--- ${2}|--- b|g" | colordiff
+    diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | strings | sed -e "s|+++ ${src}.differ|+++ a|g" -e "s|--- ${dst}|--- b|g" | colordiff
 
     #if [[ -n "$( which lsdiff )" ]] ; then
-        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${diff_excludes[@]}" "${2}/" "${1}.differ/" | lsdiff | wc -l )"
-        #diff -Naur "${diff_excludes[@]}" "${2}/" "${1}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
+        #echo -e "\n ${el_c_y}Total different files:${el_c_n} $( diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | lsdiff | wc -l )"
+        #diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${diff_excludes[@]}" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
-        diff -Naur "${diff_excludes[@]}" "${2}/" "${1}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
+        diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
-    do_sudo rm -rf "${1}.differ"
+    do_sudo rm -rf "${src}.differ"
 
-    cd "${2}"
+    cd -P "$dst"
 }
 
 
 do_remove(){
-    cd "$2"
+    local src="${1%/}"
+    local dst="${2%/}"
+    cd -P "$dst"
 
-    if [[ -d "${1}" ]] ; then
-        do_sudo rm -rf "${1}"
-        do_sudo rm -rf "${1}."*
+    if [[ -d "${src}" ]] ; then
+        do_sudo rm -rf "${src}"
+        do_sudo rm -rf "${src}."*
 
         if ! ((is_quiet)) ; then
-            echo -e "${el_c_r}Removed dir ${el_c_y}${1}${el_c_n}"
+            echo -e "${el_c_r}Removed dir ${el_c_y}${src}${el_c_n}"
         fi
     else
         if ! ((is_quiet)) ; then
@@ -521,7 +533,10 @@ main(){
     local tool namedir bkpdir_id target history_num bkp_id
 
     tool="$(basename $0)"
-    namedir="$( pwd )"
+    # Use the real path to avoid issues with symlinks and ensure consistent IDs
+    # We use -P to ensure we are in the physical directory from the start
+    cd -P .
+    namedir="$( readlink -f "$(pwd)" )"
     namedir="${namedir//\//%}"
     if [[ -n $XDG_CACHE_HOME ]] ; then
         bkpdir_main="${XDG_CACHE_HOME}/${tool}"
@@ -538,10 +553,6 @@ main(){
         fi
     fi
 
-
-    if [[ -L "$target" ]] ; then
-        target="$( readlink -f "$target" )"
-    fi
 
     # do we have automated access to sudo ? use sudo
     if el_check_sudo_automated 2>/dev/null ; then
@@ -581,7 +592,7 @@ main(){
 
     # Define ID-dependent paths after parsing arguments
     bkpdir_id="${bkpdir_backups}/${namedir}${bkp_id:+_$bkp_id}.rdiff"
-    target="$( pwd )"
+    target="$( readlink -f "$(pwd)" )"
 
     el_check_variables "tool|namedir|bkpdir_id|target"
     el_check_dirs      "${target}"

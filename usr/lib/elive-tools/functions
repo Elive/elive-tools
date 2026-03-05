@@ -2387,7 +2387,7 @@ el_info(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_warning
-#   DESCRIPTION:  Prints warning messages and reports them to Elive servers
+#   DESCRIPTION:  Prints warning messages
 #    PARAMETERS:  $@ = message
 #       RETURNS:  -
 #       EXAMPLE:  el_warning "Disk space is low"
@@ -2480,7 +2480,7 @@ el_warning(){
 
 #===  FUNCTION  ================================================================
 #          NAME:  el_error
-#   DESCRIPTION:  Prints error messages and reports them to Elive servers
+#   DESCRIPTION:  Prints error messages
 #    PARAMETERS:  $@ = message
 #       RETURNS:  -
 #       EXAMPLE:  el_error "Failed to mount device"

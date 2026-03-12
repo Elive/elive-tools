@@ -4857,13 +4857,22 @@ fi
 
 
 # systemd?
-if pidof -cq systemd ; then
+if [[ -d /run/systemd/system ]] || pidof -cq systemd ; then
     is_systemd=1 # flag: OS runs on systemd
+elif [[ -x /sbin/openrc ]] || [[ -d /run/openrc ]]; then
+    is_openrc=1 # flag: OS runs on openrc
+elif [[ -f /run/runit.stopit ]] || pidof -q runsvdir ; then
+    is_runit=1 # flag: OS runs on runit
 else
-    if ! [[ -e "/var/lib/dpkg/info/sysvinit-core.list" ]] ; then
-        is_systemd=1
-    fi
+    is_sysvinit=1 # flag: OS runs on sysvinit
 fi
+
+# Verify that only one init system is detected
+_init_count=$(( ${is_systemd:-0} + ${is_openrc:-0} + ${is_runit:-0} + ${is_sysvinit:-0} ))
+if [[ $_init_count -gt 1 ]]; then
+    el_warning "Multiple init systems detected: systemd=${is_systemd}, openrc=${is_openrc}, runit=${is_runit}, sysvinit=${is_sysvinit}"
+fi
+unset _init_count
 
 
 

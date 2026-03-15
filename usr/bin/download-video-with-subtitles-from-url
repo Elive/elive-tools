@@ -96,7 +96,7 @@ main(){
                 -f \"bestvideo[ext=mp4][height=720]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height=480]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=720]+bestaudio[ext=m4a]/best[ext=mp4]/best/b\" \
                 --remux-video \"mp4/mkv/webm/mov\" --no-keep-video \
                 -o \"\$output_filename\" \
-                --write-auto-subs --write-subs --embed-subs --recode-video mp4 --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=22 --compat-options no-keep-subs --convert-subs srt \
+                --write-auto-subs --write-subs --embed-subs --recode-video mp4 --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=32 --compat-options no-keep-subs --convert-subs srt \
                 --embed-metadata --embed-chapters \
                 \"$@\" ; then
                 is_downloaded=1
@@ -118,7 +118,7 @@ main(){
                     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                     if yt-dlp \
                         -i \
-                        --write-auto-subs --write-subs --embed-subs --recode-video mp4 --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=82 --compat-options no-keep-subs \
+                        --write-auto-subs --write-subs --embed-subs --recode-video mp4 --sub-format=srt/vtt/best --sub-langs=${lang_local},en,fr,es,${lang_local}-en,fr-en,es-en  --sleep-subtitles=86 --compat-options no-keep-subs \
                         --embed-metadata --embed-chapters \
                         \"$@\" ; then
                         is_downloaded=1

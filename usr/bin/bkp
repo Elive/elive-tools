@@ -53,7 +53,7 @@ fi
 check_files_owner_compatibility(){
     local dir
     # check for files that are not owned by you so it can cause problems using this tool
-    for dir in "$@"
+    while read -ru 3 dir
     do
         if [[ -d "$dir" ]] ; then
             el_debug "checking for files not owned by you in '$dir'"
@@ -77,7 +77,7 @@ check_files_owner_compatibility(){
                 break
             fi
         fi
-    done
+    done 3<<< "$(printf "%s\n" "$@")"
 }
 
 do_sudo(){
@@ -193,11 +193,12 @@ do_snap(){
                 echo "Error: Source directory $target.snapshot missing" >&2
                 exit 1
             fi
-            for item in "$target.snapshot"/*; do
+            while read -ru 3 item
+            do
                 dest="$target/$(basename "$item")"
                 [[ -e "$dest" ]] && rm -rf "$dest"
                 mv -f "$item" "$target/" || exit 1
-            done
+            done 3<<< "$(printf "%s\n" "$target.snapshot"/*)"
             shopt -u dotglob nullglob
         ' _ "$target"
     fi

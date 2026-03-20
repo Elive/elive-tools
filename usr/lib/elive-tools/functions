@@ -1633,12 +1633,9 @@ el_package_upgrade_fast(){
 el_check_variables(){
     # example $0 foo,bar,we
     # note: if you get an error from this function, note that the function needs to be called with the varname, not its $value
-    local found_no _var vars
+    local found_no _var
 
-    # Split by pipe or space
-    vars="$(echo "${@}" | tr '|' ' ')"
-
-    for _var in $vars
+    while read -ru 3 _var
     do
         if [[ -n "$ZSH_VERSION" ]] ; then
             if [[ ! -n "${(P)_var}" ]] ; then
@@ -1651,7 +1648,7 @@ el_check_variables(){
                 found_no="yes"
             fi
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr '|' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -1670,7 +1667,7 @@ el_check_variables(){
 #===============================================================================
 el_check_files(){
     # example $0 foo,bar,we
-    local _var found_no vars
+    local _var found_no
 
     if [[ -z "$1" ]] ; then
         echo -e "E: ${FUNCNAME[0]} called without parameters (nothing to check?)" 1>&2
@@ -1678,16 +1675,13 @@ el_check_files(){
         return 1
     fi
 
-    # Split by pipe or space
-    vars="$(echo "${@}" | tr '|' ' ')"
-
-    for _var in $vars
+    while read -ru 3 _var
     do
         if [[ ! -s "${_var}" ]] ; then
             NOREPORTS=1 el_error "File '$_var' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr '|' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -1707,7 +1701,7 @@ el_check_files(){
 #===============================================================================
 el_check_dirs(){
     # example $0 foo,bar,we
-    local found_no line vars
+    local found_no line
 
     if [[ -z "$1" ]] ; then
         echo -e "E: ${FUNCNAME[0]} called without parameters (nothing to check?)" 1>&2
@@ -1715,16 +1709,13 @@ el_check_dirs(){
         return 1
     fi
 
-    # Split by pipe or space
-    vars="$(echo "${@}" | tr '|' ' ')"
-
-    for line in $vars
+    while read -ru 3 line
     do
         if [[ ! -d "${line}" ]] ; then
             NOREPORTS=1 el_error "Directory '$line' not exist, func: ${FUNCNAME[1]}"
             found_no="yes"
         fi
-    done
+    done 3<<< "$( echo "${@}" | tr '|' '\n' )"
 
     if [[ "$found_no" = "yes" ]] ; then
         return 1
@@ -4868,7 +4859,7 @@ else
 fi
 
 # Verify that only one init system is detected
-_init_count=$(( ${is_systemd:-0} + ${is_openrc:-0} + ${is_runit:-0} + ${is_sysvinit:-0} ))
+_init_count="$(( ${is_systemd:-0} + ${is_openrc:-0} + ${is_runit:-0} + ${is_sysvinit:-0} ))"
 if [[ $_init_count -gt 1 ]]; then
     el_warning "Multiple init systems detected: systemd=${is_systemd}, openrc=${is_openrc}, runit=${is_runit}, sysvinit=${is_sysvinit}"
 fi

@@ -152,6 +152,15 @@ main(){
 
         case "$filename" in
             # do we need a touch-screen keyboard?
+            "elive-gadget-clock.desktop")
+                if ((is_e16)) ; then
+                    menu+=("TRUE")
+                    menu_auto+=("$file")
+                    menu_auto_live+=("$file")
+                else
+                    menu+=("FALSE")
+                fi
+                ;;
             "onboard-autostart.desktop")
                 if ((is_keyboard_notfound)) ; then
                     menu+=("TRUE")

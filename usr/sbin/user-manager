@@ -248,6 +248,7 @@ sudoers_user_power(){
             echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-hibernate" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
             echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-suspend" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
             echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/pm-suspend-hybrid" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
+            echo "$username ALL=(ALL) NOPASSWD: /usr/sbin/openrc-shutdown" >> "/etc/sudoers.d/sudo_nopasswd_power_${username}"
             chmod 0440 "/etc/sudoers.d/sudo_nopasswd_power_${username}"
             ;;
     esac

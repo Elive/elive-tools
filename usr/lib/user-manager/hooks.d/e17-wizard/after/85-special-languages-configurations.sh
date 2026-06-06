@@ -88,6 +88,9 @@ main(){
 
     # install support for language
     if [[ -n "$language" ]] ; then
+        # ensure base fcitx5 and frontends are included
+        package="fcitx5,fcitx5-frontend-gtk2,fcitx5-frontend-gtk3,fcitx5-frontend-qt5,fcitx5-config-qt,${package}"
+
         # messages
         local message_asking
         message_asking="$( printf "$( eval_gettext "Do you want to add support for %s keyboard input to your Elive system?" )" "$language" )"

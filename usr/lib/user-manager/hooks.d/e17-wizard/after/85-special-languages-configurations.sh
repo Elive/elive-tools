@@ -119,6 +119,17 @@ main(){
             export QT_IM_MODULE="fcitx"
             export XMODIFIERS="@im=fcitx"
             export ECORE_IMF_MODULE="fcitx"
+
+            # make them persistent for the user
+            {
+                echo ""
+                echo "# Fcitx5 configuration for $language"
+                echo "export GTK_IM_MODULE=fcitx"
+                echo "export QT_IM_MODULE=fcitx"
+                echo "export XMODIFIERS=@im=fcitx"
+                echo "export ECORE_IMF_MODULE=fcitx"
+            } >> "$HOME/.profile"
+
             zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type here to test." )" || true
 
             # final note

@@ -60,7 +60,7 @@ main(){
             ;;
         ja_JP*)
             language="Japanese"
-            package="fcitx5-anthy|fcitx5-mozc"
+            package="fcitx5-mozc|fcitx5-anthy"
             suggest_emodule_flag_keyboard
             ;;
         zh_CN*|zh_TW*)

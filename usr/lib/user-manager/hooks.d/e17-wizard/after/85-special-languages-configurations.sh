@@ -96,9 +96,9 @@ main(){
 
         # desktop message
         if [[ -n "$EROOT" ]] ; then
-            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your input to '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure. You can swith it pressing the Hotkeys '%s'" )" "${language}" "Fcitx5" "Ctrl + Space" )"
+            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your input to '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure. You can swith it pressing the Hotkeys '%s'" )" "${language}" "Fcitx5" "Alt + Space" )"
         else
-            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Fcitx5" "Fcitx5 Configuration" "Menu -> Settings -> Language -> Input Methods" "System" "fcitx5" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
+            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Fcitx5" "Fcitx5 Configuration" "Menu -> Settings -> Language -> Input Methods" "System" "fcitx5" "Setup Option" "${language}" "Alt + Space" "${language}"  )"
         fi
 
         # install
@@ -109,6 +109,17 @@ main(){
             fi
 
             # run the daemon and setup
+            mkdir -p "$HOME/.config/fcitx5"
+            if [[ ! -f "$HOME/.config/fcitx5/config" ]] ; then
+                echo "[Hotkey]" > "$HOME/.config/fcitx5/config"
+                echo "TriggerKeys=" >> "$HOME/.config/fcitx5/config"
+                echo "EnumerateForwardKeys=" >> "$HOME/.config/fcitx5/config"
+                echo "EnumerateBackwardKeys=" >> "$HOME/.config/fcitx5/config"
+                echo "ToggleHotKey=Alt+space" >> "$HOME/.config/fcitx5/config"
+            else
+                sed -i 's/^ToggleHotKey=.*/ToggleHotKey=Alt+space/' "$HOME/.config/fcitx5/config"
+            fi
+
             fcitx5-configtool
 
             # instructions

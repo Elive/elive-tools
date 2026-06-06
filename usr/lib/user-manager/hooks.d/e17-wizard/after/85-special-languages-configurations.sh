@@ -74,7 +74,26 @@ main(){
             package="fcitx5-unikey"
             suggest_emodule_flag_keyboard
             ;;
-        *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*)
+        th_TH*)
+            language="Thai"
+            package="fcitx5-thai"
+            suggest_emodule_flag_keyboard
+            ;;
+        hi_IN*|bn_IN*|gu_IN*|kn_IN*|ml_IN*|mr_IN*|pa_IN*|ta_IN*|te_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            suggest_emodule_flag_keyboard
+            ;;
+        ar_*)
+            language="Arabic"
+            package="fcitx5-table-extra"
+            suggest_emodule_flag_keyboard
+            ;;
+        he_IL*)
+            language="Hebrew"
+            suggest_emodule_flag_keyboard
+            ;;
+        *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*|*_BE*|*_IT*|*_PT*|*_RO*)
             # countries with multiple layouts, info from /usr/share/doc/keyboard-configuration/xorg.lst
             # canada, swiss, cameroon, morocco, congo, ghana, guinea, serbia, syria, turkish, south africa, kenya, afghanistan, brazil, croatia, czech, iran, finland, france, georgia, germany, hungary, kazakshtan, norwegian, polish, spain, sweden, ukrania, pakistan, nigeria, mali
             suggest_emodule_flag_keyboard

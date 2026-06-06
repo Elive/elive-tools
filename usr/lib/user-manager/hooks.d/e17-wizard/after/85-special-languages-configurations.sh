@@ -55,23 +55,23 @@ main(){
     case "$LANG" in
         ko_KR*)
             language="Korean"
-            package="ibus-hangul"
+            package="fcitx5-hangul"
             suggest_emodule_flag_keyboard
             ;;
         ja_JP*)
             language="Japanese"
-            package="ibus-anthy|ibus-mozc"
+            package="fcitx5-anthy|fcitx5-mozc"
             suggest_emodule_flag_keyboard
             ;;
         zh_CN*|zh_TW*)
             language="Chinese"
             local message_instructions_extra
-            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager to install one of the suggested options supporting Chinese typing input in different ways:" )" " ibus-cangjie, ibus-chewing, ibus-pinyin, ibus-sunpinyin" )"
+            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager to install one of the suggested options supporting Chinese typing input in different ways:" )" " fcitx5-chinese-addons, fcitx5-chewing, fcitx5-pinyin, fcitx5-sunpinyin" )"
             suggest_emodule_flag_keyboard
             ;;
         vi_VN*)
             language="Vietnamese"
-            package="ibus-unikey"
+            package="fcitx5-unikey"
             suggest_emodule_flag_keyboard
             ;;
         *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*)
@@ -96,9 +96,9 @@ main(){
 
         # desktop message
         if [[ -n "$EROOT" ]] ; then
-            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your input to '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure. You can swith it pressing the Hotkeys '%s'" )" "${language}" "Ibus" "Win + Space" )"
+            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your input to '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure. You can swith it pressing the Hotkeys '%s'" )" "${language}" "Fcitx5" "Ctrl + Space" )"
         else
-            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Ibus" "Input Method Settings" "Menu -> Settings -> Language -> Input Methods" "System" "ibus" "Setup Option" "${language}" "Win + Space" "${language}"  )"
+            message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Fcitx5" "Fcitx5 Configuration" "Menu -> Settings -> Language -> Input Methods" "System" "fcitx5" "Setup Option" "${language}" "Ctrl + Space" "${language}"  )"
         fi
 
         # install
@@ -109,20 +109,20 @@ main(){
             fi
 
             # run the daemon and setup
-            ibus-setup
+            fcitx5-configtool
 
             # instructions
             zenity --info --text="$message_instructions" || true
 
             # demo typing
-            export GTK_IM_MODULE="ibus"
-            export QT_IM_MODULE="ibus"
-            export XMODIFIERS="@im=ibus"
-            export ECORE_IMF_MODULE="ibus"
+            export GTK_IM_MODULE="fcitx"
+            export QT_IM_MODULE="fcitx"
+            export XMODIFIERS="@im=fcitx"
+            export ECORE_IMF_MODULE="fcitx"
             zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type here to test." )" || true
 
             # final note
-            zenity --info --text="$( eval_gettext "You can install multiple Ibus packages to support your language. If you find a better alternative, please report it to Elive so it can be implemented and work for everyone." )" || true
+            zenity --info --text="$( eval_gettext "You can install multiple Fcitx5 packages to support your language. If you find a better alternative, please report it to Elive so it can be implemented and work for everyone." )" || true
         fi
 
         # add package in installed system

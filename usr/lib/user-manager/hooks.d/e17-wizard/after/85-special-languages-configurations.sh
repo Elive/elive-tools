@@ -121,14 +121,16 @@ main(){
             export ECORE_IMF_MODULE="fcitx"
 
             # make them persistent for the user
-            {
-                echo ""
-                echo "# Fcitx5 configuration for $language"
-                echo "export GTK_IM_MODULE=fcitx"
-                echo "export QT_IM_MODULE=fcitx"
-                echo "export XMODIFIERS=@im=fcitx"
-                echo "export ECORE_IMF_MODULE=fcitx"
-            } >> "$HOME/.profile"
+            if ! grep -q "GTK_IM_MODULE=fcitx" "$HOME/.profile" ; then
+                {
+                    echo ""
+                    echo "# Fcitx5 configuration for $language"
+                    echo "export GTK_IM_MODULE=fcitx"
+                    echo "export QT_IM_MODULE=fcitx"
+                    echo "export XMODIFIERS=@im=fcitx"
+                    echo "export ECORE_IMF_MODULE=fcitx"
+                } >> "$HOME/.profile"
+            fi
 
             zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type here to test." )" || true
 

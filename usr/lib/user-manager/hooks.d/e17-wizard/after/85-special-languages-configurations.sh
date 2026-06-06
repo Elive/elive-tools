@@ -123,6 +123,11 @@ main(){
                 sed -i 's/^ToggleHotKey=.*/ToggleHotKey=Alt+space/' "$HOME/.config/fcitx5/config"
             fi
 
+            # Set fcitx5 as the default input method
+            if command -v im-config >/dev/null ; then
+                im-config -n fcitx5
+            fi
+
             fcitx5-configtool
 
             # instructions

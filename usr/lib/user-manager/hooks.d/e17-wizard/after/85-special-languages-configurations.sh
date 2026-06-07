@@ -108,7 +108,7 @@ main(){
     # install support for language
     if [[ -n "$language" ]] ; then
         # ensure base fcitx5 and frontends are included
-        package="fcitx5,fcitx5-frontend-gtk2,fcitx5-frontend-gtk3,fcitx5-frontend-qt5,fcitx5-config-qt,${package}"
+        package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-qt5|fcitx5-config-qt|${package}"
 
         # messages
         local message_asking

@@ -133,13 +133,20 @@ main(){
             # run the daemon and setup
             mkdir -p "$HOME/.config/fcitx5"
             if [[ ! -f "$HOME/.config/fcitx5/config" ]] ; then
-                echo "[Hotkey]" > "$HOME/.config/fcitx5/config"
-                echo "TriggerKeys=" >> "$HOME/.config/fcitx5/config"
-                echo "EnumerateForwardKeys=" >> "$HOME/.config/fcitx5/config"
-                echo "EnumerateBackwardKeys=" >> "$HOME/.config/fcitx5/config"
-                echo "ToggleHotKey=Alt+space" >> "$HOME/.config/fcitx5/config"
+                {
+                    echo "[Hotkey/TriggerKeys]"
+                    echo "0=Alt+space"
+                } > "$HOME/.config/fcitx5/config"
             else
-                sed -i 's/^ToggleHotKey=.*/ToggleHotKey=Alt+space/' "$HOME/.config/fcitx5/config"
+                if grep -q "\[Hotkey/TriggerKeys\]" "$HOME/.config/fcitx5/config" ; then
+                    sed -i '/\[Hotkey\/TriggerKeys\]/,/^\[/ s/^[0-9]=.*/0=Alt+space/' "$HOME/.config/fcitx5/config"
+                else
+                    {
+                        echo ""
+                        echo "[Hotkey/TriggerKeys]"
+                        echo "0=Alt+space"
+                    } >> "$HOME/.config/fcitx5/config"
+                fi
             fi
 
             # Set fcitx5 as the default input method

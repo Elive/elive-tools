@@ -56,37 +56,44 @@ main(){
         ko_KR*)
             language="Korean"
             package="fcitx5-hangul"
+            fcitx_engine="hangul"
             suggest_emodule_flag_keyboard
             ;;
         ja_JP*)
             language="Japanese"
             package="fcitx5-mozc|fcitx5-anthy"
+            fcitx_engine="mozc"
             suggest_emodule_flag_keyboard
             ;;
         zh_CN*|zh_TW*)
             language="Chinese"
             local message_instructions_extra
             message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager to install one of the suggested options supporting Chinese typing input in different ways:" )" " fcitx5-chinese-addons, fcitx5-chewing, fcitx5-pinyin, fcitx5-sunpinyin" )"
+            fcitx_engine="pinyin"
             suggest_emodule_flag_keyboard
             ;;
         vi_VN*)
             language="Vietnamese"
             package="fcitx5-unikey"
+            fcitx_engine="unikey"
             suggest_emodule_flag_keyboard
             ;;
         th_TH*)
             language="Thai"
             package="fcitx5-thai"
+            fcitx_engine="thai"
             suggest_emodule_flag_keyboard
             ;;
         hi_IN*|bn_IN*|gu_IN*|kn_IN*|ml_IN*|mr_IN*|pa_IN*|ta_IN*|te_IN*)
             language="Indic"
             package="fcitx5-m17n"
+            fcitx_engine="m17n"
             suggest_emodule_flag_keyboard
             ;;
         ar_*)
             language="Arabic"
             package="fcitx5-table-extra"
+            fcitx_engine="table"
             suggest_emodule_flag_keyboard
             ;;
         he_IL*)
@@ -152,6 +159,27 @@ main(){
             # Set fcitx5 as the default input method
             if command -v im-config >/dev/null ; then
                 im-config -n fcitx5
+            fi
+
+            # Pre-configure the input engine
+            if [[ -n "$fcitx_engine" ]] && [[ ! -f "$HOME/.config/fcitx5/profile" ]] ; then
+                {
+                    echo "[Groups/0]"
+                    echo "Name=Default"
+                    echo "Default Layout=us"
+                    echo "DefaultIM=keyboard-us"
+                    echo ""
+                    echo "[Groups/0/Items/0]"
+                    echo "Name=keyboard-us"
+                    echo "Layout="
+                    echo ""
+                    echo "[Groups/0/Items/1]"
+                    echo "Name=${fcitx_engine}"
+                    echo "Layout="
+                    echo ""
+                    echo "[GroupOrder]"
+                    echo "0=Default"
+                } > "$HOME/.config/fcitx5/profile"
             fi
 
             fcitx5-configtool

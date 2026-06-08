@@ -68,6 +68,12 @@ main(){
                     TH) lang="th_TH" ; ;;
                     IN) lang="hi_IN" ; ;;
                     IL) lang="he_IL" ; ;;
+                    IR) lang="fa_IR" ; ;;
+                    KH) lang="km_KH" ; ;;
+                    LA) lang="lo_LA" ; ;;
+                    LK) lang="si_LK" ; ;;
+                    ET) lang="am_ET" ; ;;
+                    PH) lang="fil_PH" ; ;;
                     *) ;;
                 esac
             fi
@@ -123,9 +129,39 @@ main(){
             language="Hebrew"
             suggest_emodule_flag_keyboard
             ;;
-        *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*|*_BE*|*_IT*|*_PT*|*_RO*)
+        fa_IR*)
+            language="Persian"
+            package="fcitx5-table-extra|fcitx5-m17n"
+            fcitx_engine="table"
+            suggest_emodule_flag_keyboard
+            ;;
+        km_KH*)
+            language="Khmer"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n"
+            suggest_emodule_flag_keyboard
+            ;;
+        lo_LA*)
+            language="Lao"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n"
+            suggest_emodule_flag_keyboard
+            ;;
+        si_LK*)
+            language="Sinhala"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n"
+            suggest_emodule_flag_keyboard
+            ;;
+        am_ET*)
+            language="Amharic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n"
+            suggest_emodule_flag_keyboard
+            ;;
+        *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*|*_BE*|*_IT*|*_PT*|*_RO*|*_LU*|*_PH*|*_IE*|*_LV*|*_LT*|*_EE*)
             # countries with multiple layouts, info from /usr/share/doc/keyboard-configuration/xorg.lst
-            # canada, swiss, cameroon, morocco, congo, ghana, guinea, serbia, syria, turkish, south africa, kenya, afghanistan, brazil, croatia, czech, iran, finland, france, georgia, germany, hungary, kazakshtan, norwegian, polish, spain, sweden, ukrania, pakistan, nigeria, mali
+            # canada, swiss, cameroon, morocco, congo, ghana, guinea, serbia, syria, turkish, south africa, kenya, afghanistan, brazil, croatia, czech, iran, finland, france, georgia, germany, hungary, kazakshtan, norwegian, polish, spain, sweden, ukrania, pakistan, nigeria, mali, luxembourg, philippines, ireland, latvia, lithuania, estonia
             suggest_emodule_flag_keyboard
             ;;
         *_RU*)

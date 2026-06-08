@@ -50,16 +50,39 @@ main(){
      # }}}
 
     source /etc/default/locale
+    lang="$LANG"
+
+    if [[ "$LANG" = "en_US"* ]] ; then
+        # if the language is english, try to guess the country of the user to suggest a better input method
+        if el_verify_internet ; then
+            location="$( showmylocation )"
+            # location_country_code example: "VN" for vietnam
+            location_country_code="$( echo "$location" | awk -F"::" '/country_code/ {print $2}' | tail -1 )"
+            if [[ -n "$location_country_code" ]] ; then
+                case "$location_country_code" in
+                    KR) lang="ko_KR" ; ;;
+                    JP) lang="ja_JP" ; ;;
+                    CN) lang="zh_CN" ; ;;
+                    TW) lang="zh_TW" ; ;;
+                    VN) lang="vi_VN" ; ;;
+                    TH) lang="th_TH" ; ;;
+                    IN) lang="hi_IN" ; ;;
+                    IL) lang="he_IL" ; ;;
+                    *) ;;
+                esac
+            fi
+        fi
+    fi
 
     # different installs based in different languages
-    case "$LANG" in
+    case "$lang" in
         ko_KR*)
             language="Korean"
             package="fcitx5-hangul"
             fcitx_engine="hangul"
             suggest_emodule_flag_keyboard
             ;;
-        ja_JP*)
+        ja_JP*|en_JP*)
             language="Japanese"
             package="fcitx5-mozc|fcitx5-anthy"
             fcitx_engine="mozc"

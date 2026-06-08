@@ -148,7 +148,7 @@ main(){
 
         # desktop message
         if [[ -n "$EROOT" ]] ; then
-            message_instructions="$( printf "$( eval_gettext "To switch betwen keyboard layouts and %s, you can click the small icon in the corner or press '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure. You can swith it pressing the Hotkeys '%s'" )" "${language}" "Fcitx5" "Alt + Space" )"
+            message_instructions="$( printf "$( eval_gettext "To switch betwen keyboard layouts and %s, you can click the small icon in the corner or press the Hotkeys '%s'. Help us improving the support of your language into Elive telling us in the Elive forums what is missing to configure." )" "${language}" "Alt + Space" )"
         else
             message_instructions="$( printf "$( eval_gettext "To be able to type in %s, you need to change your keyboard layout to '%s'. You can find the keyboard layout settings by typing '%s' in the launcher. Or in %s. In the opened settings, select the '%s' button and then '%s'. Finally, select the '%s' and start the daemon, then select the %s language in the second tab and the Add button. When everything is done, open a graphical application and press '%s' to switch to your %s keyboard." )" "${language}" "Fcitx5" "Fcitx5 Configuration" "Menu -> Settings -> Language -> Input Methods" "System" "fcitx5" "Setup Option" "${language}" "Alt + Space" "${language}"  )"
         fi

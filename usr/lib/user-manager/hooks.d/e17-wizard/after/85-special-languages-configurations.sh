@@ -293,12 +293,14 @@ main(){
 
             # install permanently among reboots
             if [[ -e "/usr/share/applications/org.fcitx.Fcitx5.desktop" ]] ; then
-                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "/home/thana/.e16/startup-applications.list" 2>/dev/null ; then
-                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "/home/thana/.e16/startup-applications.list"
+                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "$HOME/.e16/startup-applications.list" 2>/dev/null ; then
+                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "$HOME/.e16/startup-applications.list"
                 fi
-                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "/home/thana/.e/e/applicatons/startup/.order" 2>/dev/null ; then
-                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "/home/thana/.e/e/applicatons/startup/.order"
+                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "$HOME/.e/e/applicatons/startup/.order" 2>/dev/null ; then
+                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "$HOME/.e/e/applicatons/startup/.order"
                 fi
+            else
+                el_error "Fcitx5 desktop file not found, it should be: /usr/share/applications/org.fcitx.Fcitx5.desktop but it is not there."
             fi
 
             # final note

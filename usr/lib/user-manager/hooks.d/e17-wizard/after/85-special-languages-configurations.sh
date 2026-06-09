@@ -289,10 +289,20 @@ main(){
                 } >> "$HOME/.profile"
             fi
 
-            zenity --entry --text="$( eval_gettext "Switch to the new keyboard layout and type here to test." )" || true
+            zenity --entry --text="$( eval_gettext "Try here your keyboard layout." )" || true
+
+            # install permanently among reboots
+            if [[ -e "/usr/share/applications/org.fcitx.Fcitx5.desktop" ]] ; then
+                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "/home/thana/.e16/startup-applications.list" 2>/dev/null ; then
+                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "/home/thana/.e16/startup-applications.list"
+                fi
+                if ! grep -qs "^/usr/share/applications/org.fcitx.Fcitx5.desktop" "/home/thana/.e/e/applicatons/startup/.order" 2>/dev/null ; then
+                    echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "/home/thana/.e/e/applicatons/startup/.order"
+                fi
+            fi
 
             # final note
-            zenity --info --text="$( eval_gettext "You can install multiple Fcitx5 packages to support your language. If you find a better alternative, please report it to Elive so it can be implemented and work for everyone." )" || true
+            # zenity --info --text="$( eval_gettext "You can install multiple Fcitx5 packages to support your language. If you find a better alternative, please report it to Elive so it can be implemented and work for everyone." )" || true
         fi
 
         # add package in installed system

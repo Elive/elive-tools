@@ -7,6 +7,22 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+case "$( cat /etc/debian_version )" in
+    12.*|"bookworm"*)
+        is_bookworm=1
+        ;;
+    11.*|"bullseye"*)
+        is_bullseye=1
+        is_old_rdiff=1
+        ;;
+    10.*|9.*|8.*)
+        is_old_rdiff=1
+        ;;
+    # *)
+    #     is_new=1
+    #     ;;
+esac
+
 
 
 
@@ -174,7 +190,11 @@ main(){
     # install support for language
     if [[ -n "$language" ]] ; then
         # ensure base fcitx5 and frontends are included
-        package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-qt5|fcitx5-config-qt|${package}"
+        if ((is_bookworm)) ; then
+            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-qt5|fcitx5-config-qt|${package}"
+        else
+            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-gtk4|fcitx5-frontend-qt5|fcitx5-frontend-qt6|fcitx5-config-qt|${package}"
+        fi
 
         # messages
         local message_asking

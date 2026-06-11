@@ -2689,11 +2689,15 @@ el_confirm(){
     # }}}
     # return answer {{{
     if ((is_interactive)) ; then
-        echo -en "$question [y/n]: "
-        if [[ -n $ZSH_VERSION ]] ; then
-            read reply
+        if ((FORCE_YES)) ; then
+            reply="y"
         else
-            read -e -N1 reply
+            echo -en "$question [y/n]: "
+            if [[ -n $ZSH_VERSION ]] ; then
+                read reply
+            else
+                read -e -N1 reply
+            fi
         fi
 
         case $reply in

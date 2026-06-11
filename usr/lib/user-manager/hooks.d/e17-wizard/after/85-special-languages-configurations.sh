@@ -70,7 +70,7 @@ main(){
 
     if [[ "$LANG" = "en_US"* ]] ; then
         # if the language is english, try to guess the country of the user to suggest a better input method
-        if el_verify_internet ; then
+        if ! grep -Fqs "country=" /proc/cmdline && el_verify_internet ; then
             location="$( showmylocation )"
             # location_country_code example: "VN" for vietnam
             location_country_code="$( echo "$location" | awk -F"::" '/country_code/ {print $2}' | tail -1 )"

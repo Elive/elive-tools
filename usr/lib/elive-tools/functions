@@ -2692,7 +2692,7 @@ el_confirm(){
         if ((FORCE_YES)) ; then
             reply="y"
         else
-            echo -en "$question [y/n]: "
+            echo -en "$question [y/n]: \a"
             if [[ -n $ZSH_VERSION ]] ; then
                 read reply
             else

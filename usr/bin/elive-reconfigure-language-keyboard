@@ -91,7 +91,7 @@ main(){
     language="${language%%.*}"
 
     if ((is_basic_mode)) ; then
-        result="$( { echo "Other" ; echo "${language}" ; cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F "UTF-8 UTF-8" | awk '{print $1}' | sed -e 's|\.UTF-8.*$||g' | sed -E -e 's|^\s+||g' ; } | sort -u | psort -- -p "Other" -p "_${language##*_}$" -p "^${language%%_*}_" | zenity --width=180 --height=380 --list --text="Change your language?\nActual is '${language}'" --column="language__COUNTRY" 2>/dev/null || echo cancel )"
+        result="$( { echo "Other" ; echo "${language}" ; cat /etc/locale.gen | grep -vE "(^#|@)" | grep -F " UTF-8" | awk '{print $1}' | sed -E -e 's|\.UTF-8.*$||g' -e 's|UTF-8.*$||g' -e 's|^\s+||g' ; } | sort -u | psort -- -p "Other" -p "_${language##*_}$" -p "^${language%%_*}_" | zenity --width=180 --height=380 --list --text="Select your LANGUAGE.\nYour actual one is '${language}'" --column="language__COUNTRY" 2>/dev/null || echo cancel )"
 
         # [[ "$result" = "cancel" ]] && exit  # do not exit on first dialog because the tool will not exit cleanly, languages will be not configured correctly
         if [[ "$result" = "cancel" ]] ; then
@@ -109,8 +109,14 @@ main(){
                 cat > "$script" -- <<EOF
 #!/bin/bash
 echo "LANG=$LANG" > /etc/default/locale
-if ! grep -qs "^${LANG} ${LANG#*.}$" /etc/locale.gen ; then
-    sed -i -e "s|# ${LANG} ${LANG#*.}|${LANG} ${LANG#*.}|" /etc/locale.gen
+# handle cases like en_US.UTF-8 (encoding is UTF-8) or vi_VN (encoding is UTF-8)
+if [[ "$LANG" == *.* ]] ; then
+    encoding="${LANG#*.}"
+else
+    encoding="UTF-8"
+fi
+if ! grep -qs "^${LANG} \${encoding}$" /etc/locale.gen ; then
+    sed -i -e "s|# ${LANG} \${encoding}|${LANG} \${encoding}|" /etc/locale.gen
     locale-gen --keep-existing > /dev/null 2>&1
     update-locale
 fi

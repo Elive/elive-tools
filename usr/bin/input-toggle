@@ -39,28 +39,71 @@ el_make_environment
 main(){
     # pre {{{
     local input
+    local dry_run=0
 
-    # Usage
-    if [[ -z "${1}" ]] || [[ "${1}" == "-h" ]] || [[ "${1}" == "--help" ]] ; then
-        echo -e "Usage: $(basename "$BASH_SOURCE") [action]"
-        echo -e "Toggle or explicitly set the state of input devices (reattach/float in xinput)."
-        echo -e ""
-        echo -e "Actions:"
-        echo -e "  touchpad          Toggle touchpad state"
-        echo -e "  touchpad-on       Enable touchpad"
-        echo -e "  touchpad-off      Disable touchpad"
-        echo -e ""
-        echo -e "  mouse             Toggle mouse/pointing devices state"
-        echo -e "  mouse-on          Enable mouse/pointing devices"
-        echo -e "  mouse-off         Disable mouse/pointing devices"
-        echo -e ""
-        echo -e "  keyboard          Toggle keyboard state"
-        echo -e "  keyboard-on       Enable keyboard"
-        echo -e "  keyboard-off      Disable keyboard"
-        exit 0
+    # Parse options
+    while [[ "$1" =~ ^- ]]; do
+        case "$1" in
+            -h|--help)
+                echo -e "Usage: $(basename "$BASH_SOURCE") [options] [action]"
+                echo -e "Toggle or explicitly set the state of input devices (reattach/float in xinput)."
+                echo -e ""
+                echo -e "Options:"
+                echo -e "  -d, --dry-run     Show what actions would be taken without executing them"
+                echo -e "  -h, --help        Show this help message"
+                echo -e ""
+                echo -e "Actions:"
+                echo -e "  touchpad          Toggle touchpad state"
+                echo -e "  touchpad-on       Enable touchpad"
+                echo -e "  touchpad-off      Disable touchpad"
+                echo -e ""
+                echo -e "  mouse             Toggle mouse/pointing devices state"
+                echo -e "  mouse-on          Enable mouse/pointing devices"
+                echo -e "  mouse-off         Disable mouse/pointing devices"
+                echo -e ""
+                echo -e "  keyboard          Toggle keyboard state"
+                echo -e "  keyboard-on       Enable keyboard"
+                echo -e "  keyboard-off      Disable keyboard"
+                exit 0
+                ;;
+            -d|--dry-run)
+                dry_run=1
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ -z "${1}" ]] ; then
+        echo "Error: Action required. Use -h or --help for usage." >&2
+        exit 1
     fi
 
     input="$1"
+
+    # Helper function to run or dry-run commands
+    run_cmd() {
+        if ((dry_run)); then
+            echo "[DRY-RUN] Would execute: $*"
+        else
+            "$@"
+        fi
+    }
+
+    get_default_master() {
+        local type="$1"
+        local m
+        if [[ "$type" == "keyboard" ]]; then
+            m="$(xinput list | grep -Ei "Virtual core keyboard" | grep -oE "id=[0-9]+" | cut -d= -f2 | head -n1)"
+            echo "${m:-3}"
+        else
+            m="$(xinput list | grep -Ei "Virtual core pointer" | grep -oE "id=[0-9]+" | cut -d= -f2 | head -n1)"
+            echo "${m:-2}"
+        fi
+    }
 
     # }}}
 
@@ -84,11 +127,14 @@ main(){
                             master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
                             [[ -n "$master" ]] && break
                         done
-                            fi
+                    fi
+                    if [[ -z "$master" ]] ; then
+                        master="$(get_default_master pointer)"
+                    fi
 
-                        # activate
-                        el_debug "re-activating id '$id' from master '$master'"
-                        xinput reattach "$id" "$master"
+                    # activate
+                    el_debug "re-activating id '$id' from master '$master'"
+                    run_cmd xinput reattach "$id" "$master"
                     fi
             done 3<<< "$( xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
             ;;
@@ -111,11 +157,15 @@ main(){
                     if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                         # deactivate
                         el_debug "deactivating id '$id' from master '$master'"
-                        xinput float "$id"
+                        run_cmd xinput float "$id"
 
                         # important, save the master value in order to be used later if we want to reattach
                         el_array_member_add "$master $id" "${conf_master_of_ids_touchpad[@]}" ; conf_master_of_ids_touchpad=("${_out[@]}")
-                        el_config_save "conf_master_of_ids_touchpad"
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_touchpad"
+                        else
+                            el_config_save "conf_master_of_ids_touchpad"
+                        fi
                     fi
                 fi
             done 3<<< "$( xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
@@ -124,18 +174,6 @@ main(){
 
 
         "touchpad")
-            # Update: doesn't works:
-            #if synclient -l | grep -qsi "TouchpadOff.*=.*0" ; then
-                #el_debug "disabling touchpad"
-                #synclient TouchpadOff=1
-            #else
-                #el_debug "enabling touchpad"
-                #synclient TouchpadOff=0
-            #fi
-            if xinput list | grep -Ei "(Touchpad).*(slave\s+pointer|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
-                is_disabled=1
-            fi
-
             # get conf in order to know where to reattach deactivated keyboards
             el_config_get
 
@@ -148,32 +186,42 @@ main(){
                 read -r master <<< "$master"
 
                 if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
-
-                    if ((is_disabled)) ; then
+                    if echo "$line" | grep -qsEi "floating\s+slave" ; then
                         if [[ -z "$master" ]] ; then
-                             for i in "${conf_master_of_ids[@]}" ; do
+                             for i in "${conf_master_of_ids_touchpad[@]}" ; do
                                  master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
                                  [[ -n "$master" ]] && break
                              done
                         fi
+                        if [[ -z "$master" ]] ; then
+                            master="$(get_default_master pointer)"
+                        fi
 
                         # activate
                         el_debug "re-activating id '$id' from master '$master'"
-                        xinput reattach "$id" "$master"
+                        run_cmd xinput reattach "$id" "$master"
 
                         # forget this conf
-                        el_array_member_unset "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
-                        el_config_save "conf_master_of_ids"
+                        el_array_member_unset "$master $id" "${conf_master_of_ids_touchpad[@]}" ; conf_master_of_ids_touchpad=("${_out[@]}")
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_touchpad"
+                        else
+                            el_config_save "conf_master_of_ids_touchpad"
+                        fi
                     else
                         # always create a new conf to delete old entries
                         if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                             # deactivate
                             el_debug "deactivating id '$id' from master '$master'"
-                            xinput float "$id"
+                            run_cmd xinput float "$id"
 
                             # important, save the master value in order to be used later if we want to reattach
-                            el_array_member_add "$master $id" "${conf_master_of_ids[@]}" ; conf_master_of_ids=("${_out[@]}")
-                            el_config_save "conf_master_of_ids"
+                            el_array_member_add "$master $id" "${conf_master_of_ids_touchpad[@]}" ; conf_master_of_ids_touchpad=("${_out[@]}")
+                            if ((dry_run)); then
+                                echo "[DRY-RUN] Would save conf_master_of_ids_touchpad"
+                            else
+                                el_config_save "conf_master_of_ids_touchpad"
+                            fi
                         fi
                     fi
                 fi
@@ -196,10 +244,13 @@ main(){
                             [[ -n "$master" ]] && break
                         done
                     fi
+                    if [[ -z "$master" ]] ; then
+                        master="$(get_default_master pointer)"
+                    fi
                     el_debug "re-activating mouse id '$id' from master '$master'"
-                    xinput reattach "$id" "$master"
+                    run_cmd xinput reattach "$id" "$master"
                 fi
-            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
             ;;
 
         "mouse-off")
@@ -213,20 +264,19 @@ main(){
                 if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
                     if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                         el_debug "deactivating mouse id '$id' from master '$master'"
-                        xinput float "$id"
+                        run_cmd xinput float "$id"
                         el_array_member_add "$master $id" "${conf_master_of_ids_mouse[@]}" ; conf_master_of_ids_mouse=("${_out[@]}")
-                        el_config_save "conf_master_of_ids_mouse"
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_mouse"
+                        else
+                            el_config_save "conf_master_of_ids_mouse"
+                        fi
                     fi
                 fi
-            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
             ;;
 
         "mouse")
-            # list of possible mouse devices from: xinput list:
-            if xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
-                is_disabled=1
-            fi
-
             # get conf in order to know where to reattach deactivated keyboards
             el_config_get
 
@@ -239,36 +289,46 @@ main(){
                 read -r master <<< "$master"
 
                 if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
-
-                    if ((is_disabled)) ; then
+                    if echo "$line" | grep -qsEi "floating\s+slave" ; then
                         if [[ -z "$master" ]] ; then
                              for i in "${conf_master_of_ids_mouse[@]}" ; do
                                  master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
                                  [[ -n "$master" ]] && break
                              done
                         fi
+                        if [[ -z "$master" ]] ; then
+                            master="$(get_default_master pointer)"
+                        fi
 
                         # activate
                         el_debug "re-activating id '$id' from master '$master'"
-                        xinput reattach "$id" "$master"
+                        run_cmd xinput reattach "$id" "$master"
 
                         # forget this conf
                         el_array_member_unset "$master $id" "${conf_master_of_ids_mouse[@]}" ; conf_master_of_ids_mouse=("${_out[@]}")
-                        el_config_save "conf_master_of_ids_mouse"
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_mouse"
+                        else
+                            el_config_save "conf_master_of_ids_mouse"
+                        fi
                     else
                         # always create a new conf to delete old entries
                         if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                             # deactivate
                             el_debug "deactivating id '$id' from master '$master'"
-                            xinput float "$id"
+                            run_cmd xinput float "$id"
 
                             # important, save the master value in order to be used later if we want to reattach
                             el_array_member_add "$master $id" "${conf_master_of_ids_mouse[@]}" ; conf_master_of_ids_mouse=("${_out[@]}")
-                            el_config_save "conf_master_of_ids_mouse"
+                            if ((dry_run)); then
+                                echo "[DRY-RUN] Would save conf_master_of_ids_mouse"
+                            else
+                                el_config_save "conf_master_of_ids_mouse"
+                            fi
                         fi
                     fi
                 fi
-            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller|Touchpad).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
+            done 3<<< "$( xinput list | grep -Ei "(TrackPoint|TPPS/2|Mouse|Genius|Wireless|Touch Controller).*(slave\s+pointer|floating\s+slave)" 2>&1 )"
 
             ;;
 
@@ -287,8 +347,11 @@ main(){
                             [[ -n "$master" ]] && break
                         done
                     fi
+                    if [[ -z "$master" ]] ; then
+                        master="$(get_default_master keyboard)"
+                    fi
                     el_debug "re-activating keyboard id '$id' from master '$master'"
-                    xinput reattach "$id" "$master"
+                    run_cmd xinput reattach "$id" "$master"
                 fi
             done 3<<< "$( xinput list | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" 2>&1 )"
             ;;
@@ -304,19 +367,19 @@ main(){
                 if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
                     if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                         el_debug "deactivating keyboard id '$id' from master '$master'"
-                        xinput float "$id"
+                        run_cmd xinput float "$id"
                         el_array_member_add "$master $id" "${conf_master_of_ids_keyboard[@]}" ; conf_master_of_ids_keyboard=("${_out[@]}")
-                        el_config_save "conf_master_of_ids_keyboard"
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_keyboard"
+                        else
+                            el_config_save "conf_master_of_ids_keyboard"
+                        fi
                     fi
                 fi
             done 3<<< "$( xinput list | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" 2>&1 )"
             ;;
 
         "keyboard")
-            if xinput list | grep -Ei "(USB keyboard|AT Translated).*(slave\s+keyboard|floating\s+slave)" | grep -qsEi "floating\s+slave" ; then
-                is_disabled=1
-            fi
-
             # get conf in order to know where to reattach deactivated keyboards
             el_config_get
 
@@ -329,32 +392,42 @@ main(){
                 read -r master <<< "$master"
 
                 if echo "$id" | grep -qsE "^[[:digit:]]+$" ; then
-
-                    if ((is_disabled)) ; then
+                    if echo "$line" | grep -qsEi "floating\s+slave" ; then
                         if [[ -z "$master" ]] ; then
                              for i in "${conf_master_of_ids_keyboard[@]}" ; do
                                  master="$( echo "$i" | awk -v id="$id" '{if ($2 == id) print $1}' )"
                                  [[ -n "$master" ]] && break
                              done
                         fi
+                        if [[ -z "$master" ]] ; then
+                            master="$(get_default_master keyboard)"
+                        fi
 
                         # activate keyboard
                         el_debug "re-activating keyboard id '$id' from master '$master'"
-                        xinput reattach "$id" "$master"
+                        run_cmd xinput reattach "$id" "$master"
 
                         # forget this conf
                         el_array_member_unset "$master $id" "${conf_master_of_ids_keyboard[@]}" ; conf_master_of_ids_keyboard=("${_out[@]}")
-                        el_config_save "conf_master_of_ids_keyboard"
+                        if ((dry_run)); then
+                            echo "[DRY-RUN] Would save conf_master_of_ids_keyboard"
+                        else
+                            el_config_save "conf_master_of_ids_keyboard"
+                        fi
                     else
                         # always create a new conf to delete old entries
                         if echo "$master" | grep -qsE "^[[:digit:]]+$" ; then
                             # deactivate keyboard
                             el_debug "deactivating keyboard id '$id' from master '$master'"
-                            xinput float "$id"
+                            run_cmd xinput float "$id"
 
                             # important, save the master value in order to be used later if we want to reattach
                             el_array_member_add "$master $id" "${conf_master_of_ids_keyboard[@]}" ; conf_master_of_ids_keyboard=("${_out[@]}")
-                            el_config_save "conf_master_of_ids_keyboard"
+                            if ((dry_run)); then
+                                echo "[DRY-RUN] Would save conf_master_of_ids_keyboard"
+                            else
+                                el_config_save "conf_master_of_ids_keyboard"
+                            fi
                         fi
                     fi
                 fi

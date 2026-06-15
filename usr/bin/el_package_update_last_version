@@ -163,12 +163,12 @@ main(){
                 if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install ; then
                     el_error "problem with apt-get -f install"
                 fi
-                if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename} ; then
+                if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y ${packagename} ; then
                     el_error "problem with apt-get install -y $packagename"
                 fi
             else
                 if el_check_sudo_automated ; then
-                    el_sudo bash -c "export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; apt-get -f install ; apt-get -f install -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confnew -y ${packagename}"
+                    el_sudo bash -c "export TERM=screen-256color ; export DEBIAN_FRONTEND=noninteractive ; export DEBIAN_PRIORITY=critical ; export DEBCONF_NONINTERACTIVE_SEEN=true ; export DEBCONF_NOWARNINGS=true ; apt-get -f install ; apt-get -f install -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold -y ${packagename}"
                 else
                     el_error "$(basename $0) called in automated mode and we are non-root, how we should proceed? ignoring..."
                 fi
@@ -221,7 +221,7 @@ main(){
                         if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get -f install ; then
                             el_error "problem with apt-get -f install"
                         fi
-                        if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" -y ${packagename} ; then
+                        if ! TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y ${packagename} ; then
                             el_error "problem with apt-get install -y $packagename"
                         fi
                     else

@@ -42,7 +42,20 @@ waiter
 
 case "$tool" in
     apt|apt-get)
-        "/usr/bin/$tool" "$@"
+        # Check if we are performing an install command
+        is_install=0
+        for arg in "$@"; do
+            if [[ "$arg" == "install" ]]; then
+                is_install=1
+                break
+            fi
+        done
+
+        if ((is_install)); then
+            "/usr/bin/$tool" -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" "$@"
+        else
+            "/usr/bin/$tool" "$@"
+        fi
         ;;
     *)
         el_error "$tool not implemented in $SOURCE"

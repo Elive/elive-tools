@@ -2821,8 +2821,7 @@ main(){
     # pre {{{
 
     # get the working branch name
-    branch_working="$( command git symbolic-ref HEAD )"
-    branch_working="${branch_working#refs/heads/}"
+    branch_working="$( command git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||' )"
     working_directory_d="$( pwd )"
 
     if [[ -z "$branch_working" ]] ; then
@@ -2960,8 +2959,8 @@ main(){
         command git checkout --quiet "${branch_working}"
     fi
     # force checkout in the working branch
-    if ! [[ "$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )" = "$branch_working" ]] ; then
-        branch_working_prev="$( command git symbolic-ref HEAD | sed -e 's|refs/heads/||g' )"
+    if ! [[ "$( command git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||' )" = "$branch_working" ]] ; then
+        branch_working_prev="$( command git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||' )"
         el_explain 0 "checking on: __${branch_working}__"
         command git checkout --quiet "${branch_working}"
     fi

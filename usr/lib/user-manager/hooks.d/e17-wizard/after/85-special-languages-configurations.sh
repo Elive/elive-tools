@@ -59,6 +59,9 @@ main(){
             set -x
         fi
     fi
+    if grep -Fqs "thanatests" /proc/cmdline ; then
+        return
+    fi
 
 
     # know virtualized state

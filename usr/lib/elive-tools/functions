@@ -4624,6 +4624,38 @@ el_check_dependencies(){
     el_warning "${FUNCNAME[0]} is moved to 'el_dependencies_check', update or report this code (full compatibility still working, don't worry), from: ${FUNCNAME[1]}"
     el_dependencies_check "$@"
 }
+#===  FUNCTION  ================================================================
+#          NAME:  el_debian_version_get
+#   DESCRIPTION:  sets the variables is_bookworm and others to know the version of debian
+#    PARAMETERS:  -
+#       RETURNS:  is_distro' variables
+#===============================================================================
+el_debian_version_get(){
+    case "$( cat /etc/debian_version )" in
+        15.*|"duke"*)
+            is_duke=1
+            ;;
+        14.*|"forky"*)
+            is_forky=1
+            ;;
+        13.*|"trixie"*)
+            is_trixie=1
+            ;;
+        12.*|"bookworm"*)
+            is_bookworm=1
+            ;;
+        11.*|"bullseye"*)
+            is_bullseye=1
+            is_old_rdiff=1
+            ;;
+        10.*|9.*|8.*)
+            is_old_rdiff=1
+            ;;
+        # *)
+            #     is_new=1
+            #     ;;
+    esac
+}
 
 
 ###################################################################

@@ -7,23 +7,7 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
-case "$( cat /etc/debian_version )" in
-    12.*|"bookworm"*)
-        is_bookworm=1
-        ;;
-    11.*|"bullseye"*)
-        is_bullseye=1
-        is_old_rdiff=1
-        ;;
-    10.*|9.*|8.*)
-        is_old_rdiff=1
-        ;;
-    # *)
-    #     is_new=1
-    #     ;;
-esac
-
-
+el_debian_version_get
 
 
 suggest_emodule_flag_keyboard(){

@@ -24,31 +24,25 @@ el_c_bold="\033[1m" # Bold 'color' effect
 
 set -e
 
+# if we have the original and updated functions, use them (so: we are in elive)
+if [[ -s /usr/lib/elive-tools/functions ]] ; then
+    source /usr/lib/elive-tools/functions
+    el_make_environment
+fi
+
 case "$( cat /etc/debian_version )" in
-    12.*|"bookworm"*)
-        is_bookworm=1
-        ;;
     11.*|"bullseye"*)
-        is_bullseye=1
         is_old_rdiff=1
         ;;
     10.*|9.*|8.*)
         is_old_rdiff=1
         ;;
-    # *)
-    #     is_new=1
-    #     ;;
 esac
 
 if ! ((is_old_rdiff)) ; then
     rdiff_opts="--terminal-verbosity 2"
 fi
 
-# if we have the original and updated functions, use them (so: we are in elive)
-if [[ -s /usr/lib/elive-tools/functions ]] ; then
-    source /usr/lib/elive-tools/functions
-    el_make_environment
-fi
 
 check_files_owner_compatibility(){
     local dir

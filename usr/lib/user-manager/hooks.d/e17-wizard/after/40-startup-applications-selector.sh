@@ -38,22 +38,8 @@ main(){
         fi
     fi
 
-        # determine the mount version
-    case "$( cat /etc/debian_version )" in
-        12.*|"bookworm"*)
-            is_bookworm=1
-            ;;
-        #11.*|"bullseye"*)
-            #is_bullseye=1
-            #;;
-        #10.*|"buster"*)
-            #is_buster=1
-            #;;
-        #7.*|"wheezy"*)
-            #is_wheezy=1
-            #;;
-    esac
-
+    # determine the mount version
+    el_debian_version_get
 
     if grep -Fqs "thanatests" /proc/cmdline ; then
         is_thanatests=1

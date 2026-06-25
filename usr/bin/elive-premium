@@ -286,21 +286,7 @@ main(){
         el_dependencies_install "git|curl|wget|openssh-client|xclip"
     fi
 
-    case "$( cat /etc/debian_version )" in
-        12.*|"bookworm"*)
-            is_bookworm=1
-            ;;
-        # 11.*|"bullseye"*)
-        #     is_bullseye=1
-        #     is_old_rdiff=1
-        #     ;;
-        # 10.*|9.*|8.*)
-        #     is_old_rdiff=1
-        #     ;;
-        # *)
-            #     is_new=1
-            #     ;;
-    esac
+    el_debian_version_get
 
     if ! ((is_bookworm)) ; then
         el_error "$( eval_gettext "This feature is only available for Elive 3.8.40+ (based on Debian Bookworm or newer)." )"

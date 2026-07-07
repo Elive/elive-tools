@@ -1835,6 +1835,15 @@ main(){
     interactive_ask_driver_version
     install_driver
 
+    # add version line
+    if [[ -n "$_NVIDIA_VERSION" ]] && ((is_driver_compiled_kernel)); then
+        if [[ ! -f /etc/elive-version ]]; then
+            touch /etc/elive-version
+        fi
+        sed -i "/^nvidia-privative:/d" /etc/elive-version
+        echo "nvidia-privative: $_NVIDIA_VERSION" >> /etc/elive-version
+    fi
+
 
 }
 

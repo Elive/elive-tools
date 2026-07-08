@@ -91,7 +91,26 @@ do_sudo(){
     fi
 }
 
-
+# extract version timestamps from rdiff-backup listing, handles old and new API formats
+_rdiff_list_timestamps() {
+    local path="$1"
+    local output firstline
+    if ((is_old_rdiff)) ; then
+        output="$(do_sudo rdiff-backup --parsable-output -l "$path" 2>/dev/null)" || return 1
+        awk '{print $1}' <<< "$output"
+    else
+        output="$(do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$path" 2>/dev/null)" || return 1
+        # get first line
+        firstline="${output%%$'\n'*}"
+        if [[ "$firstline" = "---" ]]; then
+            # new API format (YAML)
+            grep '^  time:' <<< "$output" | sed 's/.*: //'
+        else
+            # old API fallback
+            awk '{print $1}' <<< "$output"
+        fi
+    fi
+}
 
 do_work(){
     # this feature does a temporal copy of the directory for work from it,
@@ -254,11 +273,7 @@ do_save(){
         do_sudo rdiff-backup $rdiff_opts backup "${src}" "${dst}"
     fi
 
-    if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$dst" | wc -l )"
-    else
-        version="$( do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$dst" | wc -l )"
-    fi
+    version="$( _rdiff_list_timestamps "$dst" | wc -l )"
 
     if ! ((is_quiet)) ; then
         echo -e "\r\033[K${el_c_g}Saved${el_c_n}  [${version}]"
@@ -289,11 +304,7 @@ do_get(){
         echo -ne "Recovering..."
     fi
 
-    if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    else
-        version="$( do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    fi
+    version="$( _rdiff_list_timestamps "$src" | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
@@ -361,11 +372,7 @@ do_meld(){
             history_num="1"
         fi
 
-        if ((is_old_rdiff)) ; then
-            version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-        else
-            version="$( do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-        fi
+        version="$( _rdiff_list_timestamps "$src" | tail -${history_num} | head -1 )"
 
         el_check_variables "version"
 
@@ -416,11 +423,7 @@ do_diff(){
         history_num="1"
     fi
 
-    if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    else
-        version="$( do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    fi
+    version="$( _rdiff_list_timestamps "$src" | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 
@@ -471,11 +474,7 @@ do_diff_reverse(){
         history_num="1"
     fi
 
-    if ((is_old_rdiff)) ; then
-        version="$( do_sudo rdiff-backup -l --parsable-output "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    else
-        version="$( do_sudo rdiff-backup $rdiff_opts --parsable-output list increments "$src" | awk '{print $1}' | tail -${history_num} | head -1 )"
-    fi
+    version="$( _rdiff_list_timestamps "$src" | tail -${history_num} | head -1 )"
 
     el_check_variables "version"
 

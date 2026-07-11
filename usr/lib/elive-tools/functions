@@ -694,6 +694,47 @@ el_verify_internet(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_verify_internet_metered
+#   DESCRIPTION:  Checks if any active network connection is metered
+#    PARAMETERS:  -
+#       RETURNS:  0 if metered, 1 otherwise (or no active connection)
+#       EXAMPLE:  if el_verify_internet_metered ; then echo "Metered" ; fi
+#===============================================================================
+el_verify_internet_metered(){
+    local active_connections conn_name result metered_val
+
+    # Ensure we have nmcli
+    if ! command -v nmcli &>/dev/null; then
+        el_debug "nmcli is not installed, cannot check for metered connection"
+        return 1
+    fi
+
+    # Retrieve list of active connection names (terse format, only the NAME field)
+    active_connections="$(nmcli -t -f NAME con show --active 2>/dev/null)"
+
+    if [[ -z "$active_connections" ]]; then
+        el_debug "No active connection."
+        return 1
+    fi
+
+    # Iterate over each active connection
+    while IFS= read -r conn_name; do
+        [[ -z "$conn_name" ]] && continue
+        # Get the metered property for this connection
+        result="$(nmcli -t -f connection.metered con show "$conn_name" 2>/dev/null)"
+        # Expected output: "connection.metered:yes" (or no / guessed)
+        metered_val="${result#connection.metered:}"
+        if [[ "$metered_val" = "yes" ]] || [[ "$metered_val" = "guessed" ]]; then
+            el_debug "Metered connection: $conn_name"
+            return 0
+        fi
+    done <<< "$active_connections"
+
+    # No metered connection found
+    return 1
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_make_environment
 #   DESCRIPTION:  Initializes user environment (HOME, USER, PATH, PS4, XDG dirs)
 #    PARAMETERS:  $1 = "debug" (optional)

@@ -4691,12 +4691,31 @@ el_debian_version_get(){
             is_bullseye=1
             is_old_rdiff=1
             ;;
-        10.*|9.*|8.*)
+        10.*|"buster"*)
+            is_buster=1
             is_old_rdiff=1
             ;;
-        # *)
-            #     is_new=1
-            #     ;;
+        9.*|"stretch"*)
+            is_stretch=1
+            is_old_rdiff=1
+            ;;
+        8.*|"jessie"*)
+            is_jessie=1
+            is_old_rdiff=1
+            ;;
+        7.*|"wheezy"*)
+            is_wheezy=1
+            is_old_rdiff=1
+            ;;
+        *"sid"*)
+            is_sid=1
+            ;;
+        *"experimental"*)
+            is_experimental=1
+            ;;
+        *)
+            el_error "Unknown Debian version: $( cat /etc/debian_version )"
+            ;;
     esac
 }
 
@@ -4732,6 +4751,9 @@ fi
 [[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=15 --center --image=logo-elive"
 # set a default guitool compatible with the scripts
 guitool="$zenity"  # default GUI tool (zenity, yad, etc)
+
+# always know the debian version
+el_debian_version_get
 
 # do we are in a terminal ? avoid interactive-in-terminal if not
 if [[ -n "$TERM" ]] ; then

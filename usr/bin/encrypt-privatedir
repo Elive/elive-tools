@@ -67,7 +67,8 @@ main(){
 
     else
         echo "Mounting $ENCRYPTED_DIR to $MOUNTPOINT..."
-        if ((is_bookworm)) ; then
+        if ((is_bookworm)) || ((is_bullseye)) || ((is_buster)) || ((is_jessie)) || ((is_wheezy)) ; then
+            # old parameters
             sudo mount -t ecryptfs "$ENCRYPTED_DIR" "$MOUNTPOINT" -o ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_enable_filename_crypto,ecryptfs_passthrough=n,ecryptfs_key_type=passphrase,ecryptfs_sig=3c6a6d3b6fed1b60,ecryptfs_fnek_sig=3c6a6d3b6fed1b60,key=passphrase,quiet
         else
             sudo mount -t ecryptfs "$ENCRYPTED_DIR" "$MOUNTPOINT" -o ecryptfs_cipher=aes,ecryptfs_key_bytes=16,ecryptfs_enable_filename_crypto,ecryptfs_passthrough=n,ecryptfs_sig=3c6a6d3b6fed1b60,ecryptfs_fnek_sig=3c6a6d3b6fed1b60,key=passphrase

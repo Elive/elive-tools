@@ -588,13 +588,18 @@ EOF
     # fix for bookworm asking for wifi password, for some reason even if the daemon is correctly running, this needs to be run again otherwise wifi password asking will not show up
     # FIXME: move to a .desktop instead
     # TODO: for every "plain" entry in startup-applications.list in order to make them compatible with Elive
-    if ((is_live)) && ((is_bookworm)) ; then
-        if ((is_e16)) ; then
-            echo "gnome-keyring-daemon" >> "$order_file"
-        fi
-        if ((is_enlightenment)) ; then
-            if ! LC_ALL=C grep -Fqs "gnome-keyring-daemon" "$HOME/.elxstrt" ; then
-                echo -e "\n# Fix for bookworm on which the keyring is not working and needs to be run again:\nexport DBUS_SESSION_BUS_ADDRESS=\"$DBUS_SESSION_BUS_ADDRESS\"\nkillall gnome-keyring-daemon 2>/dev/null 1>&2 || true\ngnome-keyring-daemon &" >> "$HOME/.elxstrt"
+    if ((is_live)) ; then
+        if ((is_bookworm)) || ((is_trixie)) ; then
+            if ((is_trixie)) ; then
+                el_warning "verify if this code sills needed in trixie"
+            fi
+            if ((is_e16)) ; then
+                echo "gnome-keyring-daemon" >> "$order_file"
+            fi
+            if ((is_enlightenment)) ; then
+                if ! LC_ALL=C grep -Fqs "gnome-keyring-daemon" "$HOME/.elxstrt" ; then
+                    echo -e "\n# Fix for bookworm on which the keyring is not working and needs to be run again:\nexport DBUS_SESSION_BUS_ADDRESS=\"$DBUS_SESSION_BUS_ADDRESS\"\nkillall gnome-keyring-daemon 2>/dev/null 1>&2 || true\ngnome-keyring-daemon &" >> "$HOME/.elxstrt"
+                fi
             fi
         fi
     fi

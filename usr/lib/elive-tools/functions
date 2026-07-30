@@ -100,7 +100,7 @@ el_set_display_variables(){
             pid="$( basename "$E_IPC_SOCKET" )"
             pid="${pid%|*}"
             if [[ -n "$pid" && -d "/proc/$pid" ]] ; then
-                display="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
+                display="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
                 [[ -n "$display" ]] && export DISPLAY="$display"
             fi
         fi
@@ -112,7 +112,7 @@ el_set_display_variables(){
         for client in e16 enlightenment enlightenment_start x-session-manager startplasma-x11 ; do
             pid="$(pgrep -u "$(id -u)" -x "$client" 2>/dev/null | head -1)"
             if [[ -n "$pid" && -d "/proc/$pid" ]] ; then
-                display="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
+                display="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
                 if [[ -n "$display" ]] ; then
                     export DISPLAY="$display"
                     break
@@ -140,7 +140,7 @@ el_set_display_variables(){
     if [[ -z "${DISPLAY}" ]] ; then
         pgrep -u "$(id -u)" 2>/dev/null | while read -r pid ; do
             if [[ -r "/proc/$pid/environ" ]] ; then
-                d="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -a '^DISPLAY=:' | sed -e 's/^DISPLAY=//' | head -1)"
+                d="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=:' | sed -e 's/^DISPLAY=//' | head -1)"
                 if [[ -n "$d" ]] ; then
                     all_displays="${all_displays}${all_displays:+$'\n'}${d}"
                 fi

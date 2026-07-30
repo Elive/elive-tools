@@ -7,8 +7,6 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
-el_debian_version_get
-
 
 suggest_emodule_flag_keyboard(){
     # do not annoy with suggestions in live mode

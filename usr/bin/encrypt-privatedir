@@ -42,8 +42,6 @@ main(){
     MOUNTPOINT=~/.private
     ENCRYPTED_DIR=~/.private_encrypted
 
-    el_debian_version_get
-
     # checks
     if [[ ! -e /var/lib/dpkg/info/ecryptfs-utils.list ]] ; then
         el_dependencies_install ecryptfs-utils

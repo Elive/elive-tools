@@ -38,9 +38,6 @@ main(){
         fi
     fi
 
-    # determine the mount version
-    el_debian_version_get
-
     if grep -Fqs "thanatests" /proc/cmdline ; then
         is_thanatests=1
     fi

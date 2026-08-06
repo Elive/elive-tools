@@ -138,17 +138,9 @@ el_set_display_variables(){
 
     # 5) Last resort: scan all user processes for DISPLAY and pick the highest number
     if [[ -z "${DISPLAY}" ]] ; then
-        pgrep -u "$(id -u)" 2>/dev/null | while read -r pid ; do
-            if [[ -r "/proc/$pid/environ" ]] ; then
-                d="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=:' | sed -e 's/^DISPLAY=//' | head -1)"
-                if [[ -n "$d" ]] ; then
-                    all_displays="${all_displays}${all_displays:+$'\n'}${d}"
-                fi
-            fi
-        done
+        # Obtain all displays set in our processes, then sort unique and take the highest numeric display (e.g. :2 > :1 > :0)
+        all_displays="$(pgrep -u "$(id -u)" 2>/dev/null | sed 's|^|/proc/|; s|$|/environ|' | xargs -r grep -z -a -h '^DISPLAY=:' 2>/dev/null | tr '\0' '\n' | sed -e 's/^DISPLAY=//' | sort -u -V | tail -1 )"
         if [[ -n "$all_displays" ]] ; then
-            # Sort unique and take the highest numeric display (e.g. :2 > :1 > :0)
-            display="$(printf '%s\n' "$all_displays" | sort -u -V | tail -1)"
             [[ -n "$display" ]] && export DISPLAY="$display"
         fi
     fi

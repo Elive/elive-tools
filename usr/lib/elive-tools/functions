@@ -122,7 +122,7 @@ el_set_display_variables(){
     fi
 
     # 3) Try loginctl (systemd) if available
-    if [[ -z "${DISPLAY}" ]] && command -v loginctl >/dev/null 2>&1 ; then
+    if [[ -z "${DISPLAY}" ]] && ((is_systemd)) && command -v loginctl >/dev/null 2>&1 ; then
         for session in $(loginctl list-sessions --no-legend 2>/dev/null | awk -v uid="$(id -u)" -v user="$USER" '($2 == uid || $3 == user) {print $1}') ; do
             display="$(loginctl show-session -p Display "$session" 2>/dev/null | cut -d= -f2)"
             if [[ -n "$display" ]] ; then
@@ -132,13 +132,19 @@ el_set_display_variables(){
         done
     fi
 
-    # 4) Parse 'w' output (traditional fallback)
+    # 4) Parse 'who' output (systemd-openrc-wrapper method)
+    if [[ -z "${DISPLAY}" ]] ; then
+        display="$(timeout 5 who 2>/dev/null | awk -v user="$USER" '$1 == user { for(i=2;i<=NF;i++) if ($i ~ /^\(:[0-9]/ || $i ~ /^:[0-9]/) { gsub(/[\(\)]/, "", $i); print $i; break } }' | tail -1)"
+        [[ -n "$display" ]] && export DISPLAY="$display"
+    fi
+
+    # 5) Parse 'w' output (traditional fallback)
     if [[ -z "${DISPLAY}" ]] ; then
         display="$(w -hs "$USER" 2>/dev/null | awk '{ if ($5 ~ /(\/e16|xinit|enlightenment_start)/ ) print $3}' | grep "^:" | tail -1)"
         [[ -n "$display" ]] && export DISPLAY="$display"
     fi
 
-    # 5) Last resort: scan all user processes for DISPLAY and pick the highest number
+    # 6) Last resort: scan all user processes for DISPLAY and pick the highest number
     if [[ -z "${DISPLAY}" ]] ; then
         # Obtain all displays set in our processes, then sort unique and take the highest numeric display (e.g. :2 > :1 > :0)
         all_displays="$(pgrep -u "$(id -u)" 2>/dev/null | sed 's|^|/proc/|; s|$|/environ|' | xargs -r grep -z -a -h '^DISPLAY=:' 2>/dev/null | tr '\0' '\n' | sed -e 's/^DISPLAY=//' | sort -u -V | tail -1 )"

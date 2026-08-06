@@ -123,11 +123,13 @@ el_set_display_variables(){
 
     # 3) Try loginctl (systemd) if available
     if [[ -z "${DISPLAY}" ]] && command -v loginctl >/dev/null 2>&1 ; then
-        session="$(loginctl list-sessions --no-legend 2>/dev/null | awk -v uid="$(id -u)" '$3 == uid {print $1; exit}')"
-        if [[ -n "$session" ]] ; then
+        for session in $(loginctl list-sessions --no-legend 2>/dev/null | awk -v uid="$(id -u)" -v user="$USER" '($2 == uid || $3 == user) {print $1}') ; do
             display="$(loginctl show-session -p Display "$session" 2>/dev/null | cut -d= -f2)"
-            [[ -n "$display" ]] && export DISPLAY="$display"
-        fi
+            if [[ -n "$display" ]] ; then
+                export DISPLAY="$display"
+                break
+            fi
+        done
     fi
 
     # 4) Parse 'w' output (traditional fallback)

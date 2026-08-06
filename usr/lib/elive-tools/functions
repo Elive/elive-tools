@@ -4281,7 +4281,16 @@ el_show_funcs(){
 #       EXAMPLE:  el_show_functions
 #===============================================================================
 el_show_functions(){
-   echo -e "\nElive-tools Functions (Full Headers):"
+   echo -e "\nElive-tools Functions"
+   echo -e "\nYour script must start like:
+#!/bin/bash
+SOURCE=\"$0\"
+source /usr/lib/elive-tools/functions
+# optional:
+EL_REPORTS=\"1\"
+el_make_environment
+"
+   echo -e "\nHeader defintions:"
 
    # Use awk to print from the header start to the line before the function definition
    awk '

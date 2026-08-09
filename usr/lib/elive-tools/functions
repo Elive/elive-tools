@@ -4313,22 +4313,47 @@ el_make_environment
 #===  FUNCTION  ================================================================
 #          NAME:  el_get_machine_id
 #   DESCRIPTION:  Generates a unique hardware ID using DMI, UUID, or CPU info
-#    PARAMETERS:  -
+#    PARAMETERS:  $1 = "-f" or "--force" (optional) to bypass cached ID
 #       RETURNS:  Unique ID string
 #       EXAMPLE:  id=$(el_get_machine_id)
 #===============================================================================
 el_get_machine_id(){
     # pre {{{
-    local machine_id
-    #el_debug
-    #el_security_function_loop || return 0
+    local machine_id buf packed_info force
 
-    # use the cached / saved ID
-    if grep -qsF "machine-id: " "/etc/elive-version" 2>/dev/null ; then
+    if [[ "$1" = "-f" ]] || [[ "$1" = "--force" ]] ; then
+        force=1
+        shift
+    fi
+
+    # Helper function to check if a serial/UUID string is generic/invalid
+    _is_valid_id(){
+        local val="$1"
+        [[ -z "$val" ]] && return 1
+
+        # Strip leading/trailing spaces and dots
+        val="$( echo "$val" | sed -e 's/^[.[:space:]]*//' -e 's/[.[:space:]]*$//' )"
+        [[ -z "$val" ]] && return 1
+
+        # Require at least 8 alphanumeric characters
+        local clean_alnum
+        clean_alnum="$( echo "$val" | tr -cd '[:alnum:]' )"
+        [[ ${#clean_alnum} -lt 8 ]] && return 1
+
+        # Filter out common generic placeholder/OEM strings
+        if echo "$val" | LC_ALL=C grep -qiE "(to be filled|o\.?e\.?m|default|not specified|not available|not present|none|invalid|unknown|^serial$|^board serial|^system serial|type2|standard|ubuntu|Calistoga|Candy|Bobba|boardserial|Aspire|imedia|peppy|proliant|veriton|xxxx|0000000|123456|^part num|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)" ; then
+            return 1
+        fi
+
+        return 0
+    }
+
+    # Use the cached / saved ID from /etc/elive-version unless force is requested
+    if ! ((force)) && grep -qsF "machine-id: " "/etc/elive-version" 2>/dev/null ; then
         machine_id="$( LC_ALL=C grep "^machine-id: " /etc/elive-version | awk '{print $2}' | tail -1 )"
         if [[ -n "$machine_id" ]] ; then
             echo "$machine_id"
-            return
+            return 0
         fi
     fi
 
@@ -4339,69 +4364,83 @@ el_get_machine_id(){
 
     # }}}
 
-    # get system uuid
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-uuid 2>/dev/null || true )"
-        read -r machine_id <<< "$machine_id"
-        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-            unset machine_id
-        else
-            machine_id="systemuuid${machine_id}"
-        fi
-    fi
-
-    # get board serial number
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( cat /sys/class/dmi/id/board_serial 2>/dev/null || true )"
-        read -r machine_id <<< "$machine_id"
-        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-            unset machine_id
-        else
-            machine_id="boardserial${machine_id}"
-        fi
-    fi
-
-    # get system serial number
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-serial-number 2>/dev/null || true)"
-        read -r machine_id <<< "$machine_id"
-        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-            unset machine_id
-        else
-            machine_id="systemserialnumber${machine_id}"
-        fi
-    fi
-
-    # get product name
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s system-product-name 2>/dev/null || true )"
-        read -r machine_id <<< "$machine_id"
-        if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-            unset machine_id
-        fi
-    fi
-
-    # pack a combination of identifiers to make sure we have a machine id
-    if [[ -z "$machine_id" ]] || [[ "$machine_id" = 0 ]] || [[ "$machine_id" = INVALID ]] || [[ "$machine_id" = Not* ]] ; then
-        machine_id="$( dmidecode -s bios-vendor )$machine_id"
-        machine_id="$( dmidecode -s bios-version )$machine_id"
-        machine_id="$( dmidecode -s system-manufacturer )$machine_id"
-        machine_id="$( dmidecode -s system-product-name )$machine_id"
-        machine_id="$( echo "$( echo "$machine_id" ; cat /proc/cpuinfo 2>/dev/null | LC_ALL=C grep -E "(model name|model|cpu family)" 2>/dev/null | sort -u 2>/dev/null | psort -- -p "^model.*:" | head -1 )" | md5sum 2>/dev/null | awk '{print $1}' 2>/dev/null )"
-        read -r machine_id <<< "$machine_id"
-        machine_id="packed${machine_id}"
-    fi
-
-    # cleanups and backup
+    # 1) Get system UUID
     if [[ -z "$machine_id" ]] ; then
-        # re-use a backup if we cannot fetch machine-id in shutdown step
-        if [[ -e "/tmp/.machine-id" ]] ; then
-            machine_id="$( cat /tmp/.machine-id 2>/dev/null | tail -1 || true )"
-            read -r machine_id <<< "$machine_id"
+        buf="$( dmidecode -s system-uuid 2>/dev/null || true )"
+        [[ -z "$buf" ]] && buf="$( cat /sys/class/dmi/id/product_uuid 2>/dev/null || true )"
+        read -r buf <<< "$buf"
+        if _is_valid_id "$buf" ; then
+            if [[ "$buf" != *"00000000-0000"* ]] && [[ "$buf" != *"ffffffff-ffff"* ]] ; then
+                machine_id="systemuuid-${buf//-}"
+            fi
         fi
     fi
 
-    # show results
+    # 2) Get board serial number
+    if [[ -z "$machine_id" ]] ; then
+        buf="$( cat /sys/class/dmi/id/board_serial 2>/dev/null || true )"
+        [[ -z "$buf" ]] && buf="$( dmidecode -s baseboard-serial-number 2>/dev/null || true )"
+        read -r buf <<< "$buf"
+        if _is_valid_id "$buf" ; then
+            machine_id="boardserial-${buf}"
+        fi
+    fi
+
+    # 3) Get system serial number
+    if [[ -z "$machine_id" ]] ; then
+        buf="$( dmidecode -s system-serial-number 2>/dev/null || true )"
+        [[ -z "$buf" ]] && buf="$( cat /sys/class/dmi/id/product_serial 2>/dev/null || true )"
+        read -r buf <<< "$buf"
+        if _is_valid_id "$buf" ; then
+            machine_id="systemserialnumber-${buf}"
+        fi
+    fi
+
+    # 4) Get OS machine-id
+    if [[ -z "$machine_id" ]] ; then
+        buf="$( cat /etc/machine-id 2>/dev/null || cat /var/lib/dbus/machine-id 2>/dev/null || true )"
+        read -r buf <<< "$buf"
+        if _is_valid_id "$buf" && [[ "$buf" =~ ^[0-9a-fA-F]{32}$ ]] ; then
+            machine_id="machineid-${buf}"
+        fi
+    fi
+
+    # 5) Pack a combination of hardware/system identifiers if specific serials/UUIDs aren't valid
+    if [[ -z "$machine_id" ]] ; then
+        packed_info=""
+        packed_info+="$( dmidecode -s bios-vendor 2>/dev/null )"
+        packed_info+="$( dmidecode -s bios-version 2>/dev/null )"
+        packed_info+="$( dmidecode -s system-manufacturer 2>/dev/null )"
+        packed_info+="$( dmidecode -s system-product-name 2>/dev/null )"
+        packed_info+="$( dmidecode -s baseboard-product-name 2>/dev/null )"
+        packed_info+="$( cat /proc/cpuinfo 2>/dev/null | LC_ALL=C grep -E "(model name|model|cpu family)" | sort -u | head -2 )"
+        packed_info+="$( cat /sys/class/net/*/address 2>/dev/null | LC_ALL=C grep -v "00:00:00:00:00:00" | sort -u | head -1 )"
+        packed_info+="$( /sbin/blkid 2>/dev/null | LC_ALL=C grep -oP 'UUID="\K[^"]+' | sort | head -1 )"
+
+        buf="$( echo "$packed_info" | sha1sum 2>/dev/null | awk '{print $1}' )"
+        if [[ -n "$buf" ]] && [[ ${#buf} -ge 32 ]] ; then
+            machine_id="packed-${buf}"
+        fi
+    fi
+
+    # 6) Re-use a backup if present in /tmp/.machine-id
+    if [[ -z "$machine_id" ]] ; then
+        if [[ -e "/tmp/.machine-id" ]] ; then
+            buf="$( cat /tmp/.machine-id 2>/dev/null | tail -1 || true )"
+            read -r buf <<< "$buf"
+            if _is_valid_id "$buf" ; then
+                machine_id="recyclated-$buf"
+            fi
+        fi
+    fi
+
+    # 7) Fallback: generate a random sha1 number with prefix sha1generated
+    if [[ -z "$machine_id" ]] ; then
+        buf="$( dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1sum | awk '{print $1}' )"
+        machine_id="sha1generated-${buf}"
+    fi
+
+    # Show results
     if [[ -n "$machine_id" ]] ; then
         echo "$machine_id"
     else

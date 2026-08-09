@@ -616,6 +616,7 @@ user_add(){
     # required for: post-configuration of $username - configure root password as the same as the user if no system password has been set
     if ((is_show_output_wanted)) ; then
         echo "username=\"$username\""
+        echo "user_email=\"$user_email\""
         echo "user_password=\"$userpass\""
         echo "autologin=\"${autologin}\""
     fi

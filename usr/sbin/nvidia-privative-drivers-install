@@ -1468,6 +1468,7 @@ EOF
     fi
 
     el_info "Install complete"
+    el_info "Installed nvidia modules:\n$( find /lib/modules/ -type f -iname '*nvidia*ko*' )"
 
     if ((is_live)) && ! ((is_mode_auto)) && ! ((is_mode_simulate)) ; then
         local message_suggestion

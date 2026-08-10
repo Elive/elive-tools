@@ -1414,7 +1414,7 @@ EOF
         if find "/lib/modules/$(uname -r)/updates" -type f -name '*nvidia*ko*' | grep -qs "update.*/nvidia" ; then
             message_unable_to_load="NVIDIA correctly COMPILED\n\n(in simulation mode)\n\nYou can shutdown the computer since this verification worked\n\n$(find "/lib/modules/$(uname -r)/updates" -type f -iname nvidia'*' | sed -e 's|^.*updates/||g' | tr '\n' ' ' )"
         else
-            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' | grep -v "typec_nvidia" )"
+            message_unable_to_load="NVIDIA failed to COMPILE? \n$( find "/lib/modules/$(uname -r)/updates" -type f -name '*'nvidia'*' | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" )"
         fi
 
         # show the message if we have any
@@ -1492,7 +1492,7 @@ EOF
     fi
 
     el_info "Install complete"
-    el_info "Installed nvidia modules:\n$( find /lib/modules/ -type f -iname '*nvidia*ko*' )"
+    el_info "Installed nvidia modules:\n$( find /lib/modules/ -type f -iname '*nvidia*ko*' | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" )"
 
     if ((is_live)) && ! ((is_mode_auto)) && ! ((is_mode_simulate)) ; then
         local message_suggestion

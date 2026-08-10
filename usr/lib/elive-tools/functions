@@ -4371,7 +4371,8 @@ el_get_machine_id(){
         read -r buf <<< "$buf"
         if _is_valid_id "$buf" ; then
             if [[ "$buf" != *"00000000-0000-0000-0000-000000000000" ]] && [[ "$buf" != *"ffffffff-ffff-ffff-ffff-ffffffffffff"* ]] ; then
-                machine_id="systemuuid${buf}"
+                buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
+                machine_id="sysuid${buf}"
             fi
         fi
     fi
@@ -4382,7 +4383,8 @@ el_get_machine_id(){
         [[ -z "$buf" ]] && buf="$( dmidecode -s baseboard-serial-number 2>/dev/null || true )"
         read -r buf <<< "$buf"
         if _is_valid_id "$buf" ; then
-            machine_id="boardserial${buf}"
+            buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
+            machine_id="boards${buf}"
         fi
     fi
 
@@ -4392,7 +4394,8 @@ el_get_machine_id(){
         [[ -z "$buf" ]] && buf="$( cat /sys/class/dmi/id/product_serial 2>/dev/null || true )"
         read -r buf <<< "$buf"
         if _is_valid_id "$buf" ; then
-            machine_id="systemserialnumber${buf}"
+            buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
+            machine_id="sysser${buf}"
         fi
     fi
 
@@ -4401,7 +4404,8 @@ el_get_machine_id(){
         buf="$( cat /etc/machine-id 2>/dev/null || cat /var/lib/dbus/machine-id 2>/dev/null || true )"
         read -r buf <<< "$buf"
         if _is_valid_id "$buf" && [[ "$buf" =~ ^[0-9a-fA-F]{32}$ ]] ; then
-            machine_id="machineid${buf}"
+            buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
+            machine_id="machid${buf}"
         fi
     fi
 
@@ -4419,6 +4423,7 @@ el_get_machine_id(){
 
         buf="$( echo "$packed_info" | sha1sum 2>/dev/null | awk '{print $1}' )"
         if [[ -n "$buf" ]] && [[ ${#buf} -ge 32 ]] ; then
+            buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
             machine_id="packed${buf}"
         fi
     fi
@@ -4429,7 +4434,8 @@ el_get_machine_id(){
             buf="$( cat /tmp/.machine-id 2>/dev/null | tail -1 || true )"
             read -r buf <<< "$buf"
             if _is_valid_id "$buf" ; then
-                machine_id="recyclated$buf"
+                buf="$( echo "$buf" | sha1sum 2>/dev/null | awk '{print $1}' )"
+                machine_id="recycl$buf"
             fi
         fi
     fi
@@ -4437,7 +4443,7 @@ el_get_machine_id(){
     # 7) Fallback: generate a random sha1 number with prefix sha1generated
     if [[ -z "$machine_id" ]] ; then
         buf="$( dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1sum | awk '{print $1}' )"
-        machine_id="sha1generated${buf}"
+        machine_id="sha1gn${buf}"
     fi
 
     # Show results

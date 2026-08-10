@@ -122,10 +122,10 @@ load_driver(){
     fi
 
     # always load the drm module otherwise it will not work
-    nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|peermem).ko" | grep "nvidia.*drm.ko" )"
+    nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}" -p "${_NVIDIA_VERSION}" | grep -vE "(uvm|modeset|peermem)" | grep "nvidia.*drm" )"
     for i in $nvidia_modules
     do
-        i="$( basename "${i%.ko}" )"
+        i="$( basename "${i%%.ko*}" )"
         el_info "running: modprobe $i"
 
         if modprobe "$i" ; then
@@ -135,12 +135,12 @@ load_driver(){
     unset nvidia_modules
 
     if ! lsmod | grep -qs "^nvidia" ; then
-        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}.ko" -p "${_NVIDIA_VERSION}.ko" | grep -vE "(uvm|modeset|drm|peermem).ko" )"
+        nvidia_modules="$( find "/lib/modules/$(uname -r)/updates" -type f -iname '*nvidia*ko*' | psort --  -p "nvidia-legacy-${_NVIDIA_VERSION}" -p "${_NVIDIA_VERSION}" | grep -vE "(uvm|modeset|drm|peermem)" )"
 
-        if [[ "$( echo "$nvidia_modules" | wc -l )" -ge 1 ]] ; then
+        if [[ -n "$nvidia_modules" ]] ; then
             for i in $nvidia_modules
             do
-                i="$( basename "${i%.ko}" )"
+                i="$( basename "${i%%.ko*}" )"
                 _NVIDIA_MODULE="${i}"
                 el_info "running: modprobe $_NVIDIA_MODULE"
 
@@ -156,7 +156,7 @@ load_driver(){
     fi
 
     # check
-    if [[ "$( echo "$nvidia_modules" | wc -l )" -gt 1 ]] ; then
+    if [[ "$( echo "$nvidia_modules" | grep -c . )" -gt 1 ]] ; then
         el_warning "more than one nvidia module found: \n$nvidia_modules"
     fi
 
@@ -193,7 +193,7 @@ check_hardware(){
     # detect if we have the hardware with nvidia {{{
     # pci-id with nvidia on first graphic card
     #_DEVICE="$( lspci -mn | awk '/03(00|80|02)/ { print $3$4 }' | sed -e 's|"||g' | tr '[a-z]' '[A-Z]' | grep -E '^(10DE|12D2)' | head -n1)"
-    _DEVICE="$( lspci -mn | awk '/ "03/ { print $3$4 }' | sed -e 's|"||g' | tr '[a-z]' '[A-Z]' | grep -E '^(10DE|12D2)' | head -n1)"
+    _DEVICE="$( lspci -mn | awk '$2 ~ /^"?03/ { print $3$4 }' | tr -d ' "' | tr '[a-z]' '[A-Z]' | grep -E '^(10DE|12D2)' | head -n1)"
 
     if echo "${_DEVICE}" | grep -qs -E '^(10DE|12D2)' ; then
         el_debug "nvidia card found on pci-id"
@@ -373,7 +373,7 @@ detect_driver_version(){
         rm -rf tmp-nvidia 2>/dev/null
 
         cd "$prev_dir"
-        rm -rf /var/cache/apt/archives/tmp-nvidia 2>/dev/nul
+        rm -rf /var/cache/apt/archives/tmp-nvidia 2>/dev/null
         rm -rf /var/tmp/tmp-nvidia 2>/dev/null
     fi
 
@@ -645,6 +645,9 @@ interactive_ask_driver_version(){
                         _desc="$( printf "$( eval_gettext "Last drivers for the newest cards" )" )"
                         # show the specific version, its always good to know "what" exactly is considered the last version to know if its really supported on your hardware or not
                         _desc="$_desc ($( LC_ALL=C apt-cache show xserver-xorg-video-nvidia | grep "^Version: " | awk '{print $2}' | sort -V | tail -1 | sed -e 's|-.*$||g' ))"
+                        ;;
+                    *legacy-470xx)
+                        _desc="$( printf "$( eval_gettext "Previous drivers for Kepler cards" )" )"
                         ;;
                     *legacy-390xx)
                         _desc="$( printf "$( eval_gettext "Previous drivers for recent cards" )" )"
@@ -1459,7 +1462,7 @@ EOF
     service nvidia-kernel restart 1>/dev/null 2>&1
 
     # regenerate initramfs if we are not in live (and persistence)
-    if ! ((is_live)) && ! ((is_persitence)) ; then
+    if ! ((is_live)) && ! ((is_persistence)) ; then
         LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
         rm -f /boot/*old-dkms 2>/dev/null
     fi

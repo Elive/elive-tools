@@ -1848,7 +1848,30 @@ main(){
         echo "nvidia-privative: $_NVIDIA_VERSION" >> /etc/elive-version
     fi
 
+    report_kernel_nvidia_status
+}
 
+#===  FUNCTION  ================================================================
+#          NAME:  report_kernel_nvidia_status
+#   DESCRIPTION:  outputs machine-readable status of nvidia driver installation per kernel
+#===============================================================================
+report_kernel_nvidia_status(){
+    local kdir kver logfile="/var/log/nvidia-privative-drivers-install.log"
+
+    # clear logfile for fresh status output
+    : > "$logfile" 2>/dev/null || true
+
+    for kdir in /lib/modules/*; do
+        [ -d "$kdir" ] || continue
+        kver="$(basename "$kdir")"
+        if [ -f "/boot/vmlinuz-$kver" ] || [ -d "$kdir/kernel" ]; then
+            if find "$kdir" -type f -iname '*nvidia*ko*' 2>/dev/null | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" | grep -qs "nvidia" ; then
+                echo "NVIDIA_KERNEL_INSTALLED: $kver"
+            else
+                echo "NVIDIA_KERNEL_NOT_INSTALLED: $kver"
+            fi
+        fi
+    done | tee -a "$logfile"
 }
 
 #

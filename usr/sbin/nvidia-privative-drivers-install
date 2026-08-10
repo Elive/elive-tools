@@ -16,6 +16,16 @@ fi
 
 # TODO: since we install our own drivers, can we remove the package libgl1-mesa-dri ? (because it wastes 100 MB from installation), will need some betatestings
 
+NVIDIA_LOGFILE="/var/log/nvidia-privative-drivers-install.log"
+
+#===  FUNCTION  ================================================================
+#          NAME:  log_machine_status
+#   DESCRIPTION:  logs a machine-readable message to stdout and the logfile
+#===============================================================================
+log_machine_status(){
+    echo "$@" | tee -a "$NVIDIA_LOGFILE"
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  usage
 #   DESCRIPTION:  Shows the usage help, don't exit
@@ -218,10 +228,14 @@ check_hardware(){
         if ((is_mode_force)) ; then
             el_info "Force mode in a machine where is not detected nvidia card"
             is_nvidia_card_found=1
+            log_machine_status "NVIDIA_CARD_DETECTED: FORCED"
         else
             el_info "No nvidia graphic cards found on this machine"
+            log_machine_status "NVIDIA_CARD_DETECTED: FALSE"
             exit 1
         fi
+    else
+        log_machine_status "NVIDIA_CARD_DETECTED: TRUE (${_DEVICE:-unknown})"
     fi
 
     # in mode check we dont want to install, just to check
@@ -237,6 +251,7 @@ check_hardware(){
         if laptop-detect ; then
             is_optimus=1
             touch /tmp/.nvidia_optimus
+            log_machine_status "NVIDIA_OPTIMUS_DETECTED: TRUE"
         fi
     fi
     # }}}
@@ -977,6 +992,9 @@ install_driver(){
 
     # }}}
 
+    log_machine_status "NVIDIA_INSTALLATION_STARTED: $_NVIDIA_VERSION"
+    log_machine_status "NVIDIA_PACKAGES_TO_INSTALL: $_NVIDIA_PACKAGES"
+
     # uninstall previous drivers
     uninstall_driver
 
@@ -1467,6 +1485,12 @@ EOF
         rm -f /boot/*old-dkms 2>/dev/null
     fi
 
+    if ((is_driver_compiled_kernel)) ; then
+        log_machine_status "NVIDIA_INSTALLATION_STATUS: SUCCESS"
+    else
+        log_machine_status "NVIDIA_INSTALLATION_STATUS: FAILURE"
+    fi
+
     el_info "Install complete"
     el_info "Installed nvidia modules:\n$( find /lib/modules/ -type f -iname '*nvidia*ko*' )"
 
@@ -1644,8 +1668,10 @@ uninstall_driver(){
     if COLUMNS=1000 dpkg -l | awk '{print $2}' | grep nvidia | grep -vE "(nvidia-detect|glx-diversions|nvidia-installer-cleanup)" | grep -qs nvidia ; then
         echo -e ""
         el_error "We still having some nvidia packages not uninstalled: $( COLUMNS=1000 dpkg -l | grep nvidia | awk '{print $2}' | grep nvidia  1>&2 )"
+        log_machine_status "NVIDIA_UNINSTALLATION_STATUS: WARNING_PACKAGES_REMAIN"
     else
         el_debug "Driver NVIDIA uninstalled successfully"
+        log_machine_status "NVIDIA_UNINSTALLATION_STATUS: SUCCESS"
     fi
 
 
@@ -1736,6 +1762,10 @@ main(){
     args="$@"
 
     # }}}
+
+    # initialize log file for fresh run
+    : > "$NVIDIA_LOGFILE" 2>/dev/null || true
+    log_machine_status "NVIDIA_RUN_STARTED: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
     # Usage
     while getopts ":acdfm:lquvhtxs" opt; do
@@ -1856,22 +1886,19 @@ main(){
 #   DESCRIPTION:  outputs machine-readable status of nvidia driver installation per kernel
 #===============================================================================
 report_kernel_nvidia_status(){
-    local kdir kver logfile="/var/log/nvidia-privative-drivers-install.log"
-
-    # clear logfile for fresh status output
-    : > "$logfile" 2>/dev/null || true
+    local kdir kver
 
     for kdir in /lib/modules/*; do
         [ -d "$kdir" ] || continue
         kver="$(basename "$kdir")"
         if [ -f "/boot/vmlinuz-$kver" ] || [ -d "$kdir/kernel" ]; then
             if find "$kdir" -type f -iname '*nvidia*ko*' 2>/dev/null | grep -vE "(typec_nvidia|nvidia-wmi-ec-backlight)" | grep -qs "nvidia" ; then
-                echo "NVIDIA_KERNEL_INSTALLED: $kver"
+                log_machine_status "NVIDIA_KERNEL_INSTALLED: $kver"
             else
-                echo "NVIDIA_KERNEL_NOT_INSTALLED: $kver"
+                log_machine_status "NVIDIA_KERNEL_NOT_INSTALLED: $kver"
             fi
         fi
-    done | tee -a "$logfile"
+    done
 }
 
 #

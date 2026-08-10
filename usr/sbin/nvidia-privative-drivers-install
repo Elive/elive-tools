@@ -953,6 +953,11 @@ interactive_ask_driver_version(){
         _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES nvidia-modprobe"
     fi
 
+    # ensure dkms package is installed for building kernel modules
+    if apt-cache show "dkms" 1>/dev/null 2>&1 ; then
+        _NVIDIA_PACKAGES="$_NVIDIA_PACKAGES dkms"
+    fi
+
     # optimus extra packages
     if ((is_optimus)) && ! ((is_optimus_onlynvidia)) ; then
         _NVIDIA_PACKAGES="primus primus-nvidia primus-vk-nvidia $_NVIDIA_PACKAGES"

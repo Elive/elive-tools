@@ -970,6 +970,18 @@ interactive_ask_driver_version(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  fix_virtualbox_dkms_conf
+#   DESCRIPTION:  fixes /etc/modprobe.d/virtualbox-dkms.conf if it is a directory
+#===============================================================================
+fix_virtualbox_dkms_conf(){
+    if [ -d "/etc/modprobe.d/virtualbox-dkms.conf" ] ; then
+        NOREPORTS=1 el_warning "Fixing /etc/modprobe.d/virtualbox-dkms.conf directory bug..."
+        rm -rf /etc/modprobe.d/virtualbox-dkms.conf
+        echo "# virtualbox" > /etc/modprobe.d/virtualbox-dkms.conf
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  install_driver
 #   DESCRIPTION:  prepare system and install the driver to use nvidia
 #    PARAMETERS:  -
@@ -999,6 +1011,9 @@ install_driver(){
 
     log_machine_status "NVIDIA_INSTALLATION_STARTED: $_NVIDIA_VERSION"
     log_machine_status "NVIDIA_PACKAGES_TO_INSTALL: $_NVIDIA_PACKAGES"
+
+    # verify and fix virtualbox-dkms.conf before install
+    fix_virtualbox_dkms_conf
 
     # uninstall previous drivers
     uninstall_driver
@@ -1413,6 +1428,9 @@ EOF
     #fi
 
     # - apt-get install }}}
+    # verify and fix virtualbox-dkms.conf after install
+    fix_virtualbox_dkms_conf
+
     # load module {{{
     # reload devices just in case
     if ((is_mode_simulate)) ; then

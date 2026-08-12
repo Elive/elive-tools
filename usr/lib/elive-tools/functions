@@ -3158,7 +3158,7 @@ el_report_to_elive(){
 
     if ((is_interactive)) ; then
         if ((is_terminal)) ; then
-            messages_extra=" ||| TERMINAL MODE:  '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', BLACKLIST all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
+            messages_extra=" ||| TERMINAL MODE:  '$is_terminal' console '${is_console}' ( '$TERM'  ) is_interactive '${is_interactive}', BLACKLIST all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
         else
         #     # console mode: we need it from deliver
         #     messages_extra=" ||| (not) terminal mode: '$is_terminal' console '${is_console}' is_interactive '${is_interactive}', BLACKLIST all terminal and console REPORTS because we only need them from the TOOLS? (temporal warning to verify the correct detection) ${messages_extra}"
@@ -4809,6 +4809,22 @@ guitool="$zenity"  # default GUI tool (zenity, yad, etc)
 # always know the debian version
 el_debian_version_get
 
+
+# ----------------------------------------------------------------------
+# First, detect the real TTY device (if any) – this works even without TERM
+# ----------------------------------------------------------------------
+_is_tty=0
+_tty_dev=""
+if [ -t 0 ]; then
+    _is_tty=1
+    # Try `tty` command, fallback to /proc
+    _tty_dev=$(tty 2>/dev/null || readlink -f /proc/$$/fd/0 2>/dev/null)
+fi
+
+# ----------------------------------------------------------------------
+# Now your original code, but with corrected initial values
+# ----------------------------------------------------------------------
+
 # do we are in a terminal ? avoid interactive-in-terminal if not
 if [[ -n "$TERM" ]] ; then
     # this can be from a cronjob
@@ -4862,12 +4878,31 @@ if [[ -n "$TERM" ]] ; then
         is_terminal=0
     fi
 else
-    is_terminal=0  # we are in a terminal
-    is_console=0  # we are in a non-X console
-    # if we don't have TERM we need this value to not trigger 'tput' errors like when running apt commands
-    # update: apt should have the variable set itself
-    #export TERM="linux"
+    # TERM is unset – but we can still detect if we are on a console using the TTY device
+    if [[ $_is_tty -eq 1 ]] ; then
+        case "$_tty_dev" in
+            /dev/tty[1-9]*)
+                is_terminal=0
+                is_console=1
+                ;;
+            /dev/pts/*)
+                is_terminal=1
+                is_console=0
+                ;;
+            *)
+                is_terminal=0
+                is_console=0
+                ;;
+        esac
+    else
+        is_terminal=0
+        is_console=0
+    fi
+    # if we don't have TERM we need this value to not trigger 'tput' errors
+    export TERM="linux"
 fi
+unset _is_tty _tty_dev
+
 
 if ((is_terminal)) || ((is_console)) ; then
     is_interactive=1  # flag: we are in interactive mode (user is reachable)

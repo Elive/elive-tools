@@ -285,7 +285,7 @@ main(){
                     echo "/usr/share/applications/org.fcitx.Fcitx5.desktop" >> "$HOME/.e/e/applicatons/startup/.order"
                 fi
             else
-                el_error "Fcitx5 desktop file not found, it should be: /usr/share/applications/org.fcitx.Fcitx5.desktop but it is not there."
+                el_error "Fcitx5 desktop file not found, it should be: /usr/share/applications/org.fcitx.Fcitx5.desktop but it is not there:\n$( ls -1 /usr/share/applications/org.fcitx.Fcitx5.desktop/*fcitx*desktop )\n$(dpkg -l | grep fcitx5)"
             fi
 
             # final note

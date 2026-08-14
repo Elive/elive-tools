@@ -1115,7 +1115,7 @@ if ! apt-get install --reinstall -y $depends ; then
     apt-get -f install
 
     if ! apt-get install -y $depends ; then
-        apt-get -f install ; el_aptget_update force ; apt-get install $depends
+        apt-get -f install ; el_aptget_update force ; apt-get install -y $depends
         ret=\$?
     fi
 fi
@@ -1138,7 +1138,7 @@ if ! apt-get install --reinstall -y $depends ; then
     apt-get -f install
 
     if ! apt-get install -y $depends ; then
-        apt-get -f install ; el_aptget_update force ; apt-get install $depends
+        apt-get -f install ; el_aptget_update force ; apt-get install -y $depends
         ret=\$?
     fi
 fi

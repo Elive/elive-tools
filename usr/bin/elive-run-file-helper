@@ -75,8 +75,9 @@ run_edc_compile(){
             return 1
         fi
     else
-        if ! edje_cc "$file" ; then
-            logs="$( edje_cc "$file" 2>&1 )"
+        el_debug "edje_cc -beta '$file'"
+        if ! edje_cc -beta "$file" ; then
+            logs="$( edje_cc -beta "$file" 2>&1 )"
 
             local message_error
             message_error="$( printf "$( eval_gettext "This EDC file doesn't compile by itself, search the build.sh file to compile it or use manually the correct edje_cc command" )" "" )"

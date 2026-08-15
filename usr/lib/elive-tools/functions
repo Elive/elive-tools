@@ -68,9 +68,9 @@ el_set_display_variables(){
         curr_pid="$$"
         while [[ -n "$curr_pid" && "$curr_pid" -gt 1 ]] ; do
             ppid="$(awk '/PPid:/ {print $2}' "/proc/$curr_pid/status" 2>/dev/null)"
-            [[ -z "$ppid" || "$ppid" -eq "$curr_pid" ]] && break
-            if [[ -d "/proc/$ppid" ]] ; then
-                p_disp="$(tr '\0' '\n' < "/proc/$ppid/environ" 2>/dev/null | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
+            [[ -z "$ppid" || "$ppid" -le 1 || "$ppid" -eq "$curr_pid" ]] && break
+            if [[ -r "/proc/$ppid/environ" ]] ; then
+                p_disp="$(cat "/proc/$ppid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//')"
                 if [[ -n "$p_disp" ]] ; then
                     export DISPLAY="$p_disp"
                     break

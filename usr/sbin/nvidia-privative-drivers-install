@@ -1504,8 +1504,39 @@ EOF
 
     # regenerate initramfs if we are not in live (and persistence)
     if ! ((is_live)) && ! ((is_persistence)) ; then
-        LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
+        rm -f /tmp/.initrd.log 2>/dev/null || true
+        LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)' | tee /tmp/.initrd.log
         rm -f /boot/*old-dkms 2>/dev/null
+
+        # install missing firmware packages if any extra found
+        if grep -qs "Possible missing firmware" /tmp/.initrd.log ; then
+            el_info "Searching for required missing firmwares..."
+            # install apt-file if missing
+            if ! [[ -f /var/lib/dpkg/info/apt-file.list ]] ; then
+                if apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-overwrite" -y --no-install-recommends apt-file ; then
+                    apt-file update || apt-file update
+                fi
+            fi
+            while read -ru 3 line
+            do
+                apt-file search "$line" | sed -e 's|: .*$||g'
+            done 3<<< "$( cat "/tmp/.initrd.log" | grep -E "Possible missing firmware" | sed -e 's|^.*Possible missing firmware ||g' -e 's| for .*$||g' -e 's|[^/]*$||' | sort -u )" | sort -u > /tmp/.firmwares-to-install.txt
+
+            # install the list of packages (one per line) in one shot:
+            if [[ -s /tmp/.firmwares-to-install.txt ]] ; then
+                el_info "Installing missing firmwares: $( cat /tmp/.firmwares-to-install.txt | grep -vE "^\s*$" | sort -u | tr '\n' ' ' )"
+                if ! apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-overwrite" -y --no-install-recommends $( cat /tmp/.firmwares-to-install.txt | grep -vE '^\s*$' | sort -u | tr '\n' ' ' ) ; then
+                    el_error "error installing missing firmwares"
+                    apt-get -f -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-overwrite" install 2>&1 || true
+                fi
+
+                # rebuild (again) initrds
+                LC_ALL="$EL_LC_EN" update-initramfs -k all -u -t 2>&1 | grep -vE '(^mkdir:|mdadm:|Generating /|live-boot)'
+                rm -f /boot/*old-dkms 2>/dev/null
+            fi
+            rm -f /tmp/.firmwares-to-install.txt /tmp/.initrd.log 2>/dev/null || true
+        fi
+        rm -f /tmp/.initrd.log 2>/dev/null || true
     fi
 
     if ((is_driver_compiled_kernel)) ; then

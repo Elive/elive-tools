@@ -832,12 +832,16 @@ el_make_environment(){
         #PATH="$HOME/bin:$PATH"
     #fi
 
-    if [[ -n "${SOURCE}" ]] ; then
-        #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
-        #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
-        export PS4='+ [$(basename ${SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
-    else
-        export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+    if [[ -n "$BASH_VERSION" ]] ; then
+        if [[ -n "${SOURCE}" ]] ; then
+            #export PS4='+ ($(basename ${0}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}():  }'
+            #export PS4='+ [$(basename ${0})|${FUNCNAME[0]:+${FUNCNAME[0]}}|${LINENO}]  '
+            PS4='+ [$(basename ${SOURCE} 2>/dev/null )  ${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+        else
+            PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '
+        fi
+    elif [[ -n "$ZSH_VERSION" ]] ; then
+        PS4='+ [%_ %i]  '
     fi
 
     # XDG default directories
@@ -4985,7 +4989,11 @@ fi
 
 
 # set a default useful debug PS
-export PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '  # Prompt for debug mode, showing function name and line number
+if [[ -n "$BASH_VERSION" ]] ; then
+    PS4='+ [${FUNCNAME[0]:+${FUNCNAME[0]}} ${LINENO}]  '  # Prompt for debug mode, showing function name and line number
+elif [[ -n "$ZSH_VERSION" ]] ; then
+    PS4='+ [%_ %i]  '
+fi
 
 # TODO: LS_COLORS is not a reliable way to know that we are on a terminal, we should rely on is_terminal then
 if [[ -n "$NOCOLOR" ]] || ! ((is_print_fancy)) || ! ((is_terminal)) ; then

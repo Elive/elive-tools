@@ -5108,8 +5108,16 @@ elif [[ -x /sbin/openrc ]] && [[ -d /run/openrc ]]; then
 elif [[ -f /run/runit.stopit ]] && pidof -q runsvdir ; then
     is_runit=1 # flag: OS runs on runit
 else
-    # is_sysvinit=1 # flag: OS runs on sysvinit
+    # in early boots we don't have yet the pidof of systemd, for some reason, so try again new checks
+    if [[ "$( ps -p 1 -o comm= )" = "systemd" ]] ; then
+        # if [[ "$( readlink -f /sbin/init )" = *"/systemd/systemd" ]] ; then
+    # if [[ -d /run/systemd/system ]] ; then
+        is_systemd=1
+    elif [[ -f /run/runit.stopit ]] ; then
+        is_runit=1
+    fi
     if ! ((is_systemd)) ; then
+        is_sysvinit=1 # flag: OS runs on sysvinit
         el_warning "No init systems are found, are we using vanilla sysvinit ?  systemd=${is_systemd}, openrc=${is_openrc}, runit=${is_runit}, sysvinit=${is_sysvinit}"
     fi
 fi

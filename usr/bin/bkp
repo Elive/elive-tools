@@ -267,10 +267,11 @@ do_save(){
 
     #      rsync -av --delete "${src}" "${dst}"
     check_files_owner_compatibility "${src}"
+    # exclude our own storage dir (needed when backing up $HOME, where it lives inside the source)
     if ((is_old_rdiff)) ; then
-        do_sudo rdiff-backup "${src}" "${dst}"
+        do_sudo rdiff-backup --exclude "${bkpdir_main}" "${src}" "${dst}"
     else
-        do_sudo rdiff-backup $rdiff_opts backup "${src}" "${dst}"
+        do_sudo rdiff-backup $rdiff_opts backup --exclude "${bkpdir_main}" "${src}" "${dst}"
     fi
 
     version="$( _rdiff_list_timestamps "$dst" | wc -l )"

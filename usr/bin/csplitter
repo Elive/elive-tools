@@ -27,11 +27,22 @@
 use strict;
 use warnings;
 
+sub show_usage {
+    print "Usage: $0 <input_file.c> <lines_per_chunk> [output_prefix]\n" .
+          "Example: $0 program.c 1800\n" .
+          "Example: $0 program.c 1500 myoutput-\n";
+}
+
+# Check for help flags
+if (grep { $_ eq '-h' || $_ eq '--help' } @ARGV) {
+    show_usage();
+    exit 0;
+}
+
 # Check arguments
 if (@ARGV < 2) {
-    die "Usage: $0 <input_file.c> <lines_per_chunk> [output_prefix]\n" .
-        "Example: $0 program.c 1800\n" .
-        "Example: $0 program.c 1500 myoutput-\n";
+    show_usage();
+    exit 1;
 }
 
 my $input_file = $ARGV[0];

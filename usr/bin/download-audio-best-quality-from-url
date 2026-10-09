@@ -9,6 +9,15 @@ export TEXTDOMAIN
 
 
 main(){
+    # help option {{{
+    if [[ "$1" = "-h" || "$1" = "--help" ]] ; then
+        echo "$( eval_gettext "Usage:" ) $( basename "$SOURCE" ) <URL> [yt-dlp options...]"
+        echo
+        echo "$( eval_gettext "Download audio from the specified URL in best quality using yt-dlp." )"
+        exit 0
+    fi
+    # }}}
+
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
         el_dependencies_install "yt-dlp"

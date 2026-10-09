@@ -13,6 +13,13 @@ main(){
     local var
 
     # }}}
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename "$0")"
+            echo "Minimize all windows in the current screen and desktop area in E16."
+            return 0
+            ;;
+    esac
     # NOTE: to iconify the entire desktop, you can use:  eesh desk clear on
 
     screen="$( LC_ALL=C eesh desk ? )"

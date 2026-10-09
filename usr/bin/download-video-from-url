@@ -8,6 +8,15 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 main(){
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename "$0") <URL> [yt-dlp options]"
+            echo
+            echo "Download videos from a given URL using yt-dlp into ~/Videos."
+            exit 0
+            ;;
+    esac
+
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
         el_dependencies_install "yt-dlp"

@@ -48,6 +48,11 @@ main(){
         exit 1
     fi
 
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        echo "Usage: $( basename $0 ) {up|down}"
+        exit 0
+    fi
+
     # Get the current brightness level in percentage and raw integer value
     current_brightness="$(brightnessctl -m i)"
     current_brightness_percent="$(echo "$current_brightness" | awk -F',' '{print $4}' | tr -d '%')"

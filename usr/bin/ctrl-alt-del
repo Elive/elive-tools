@@ -9,6 +9,16 @@ export TEXTDOMAIN
 
 
 main(){
+    for arg in "$@" ; do
+        case "$arg" in
+            -h|--help)
+                echo "Usage: $(basename "$0")"
+                echo "Display a menu with typical Ctrl+Alt+Del desktop options (lock, switch user, logout, task manager, etc.)."
+                exit 0
+                ;;
+        esac
+    done
+
     # pre {{{
     if ! el_dependencies_check "gksu" ; then
         el_dependencies_install "gksu"

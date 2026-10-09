@@ -224,14 +224,15 @@ main(){
                 #list_cards="$arg"
             #fi
         #fi
-        if [[ "$arg" = "--help" ]] ; then
-            echo -e "Usage: $(basename $0) without arguments allows you to select the audio card to use"
+        if [[ "$arg" = "-h" ]] || [[ "$arg" = "--help" ]] ; then
+            echo -e "Usage: $(basename "$0") without arguments allows you to select the audio card to use"
+            echo -e "-h, --help: show this help and exit"
             echo -e "--smart: performs a smart way to detect the correct audio card to use"
             echo -e "--auto: automatically selects the audio card to use"
             echo -e "--quiet: silent mode, not interactive at all"
             echo -e "--nomessages: do not show messages"
             echo -e "NAME: this allows to configure the audio card to the given parameter name of the audio card to use"
-            exit
+            exit 0
         fi
     done
 

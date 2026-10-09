@@ -15,7 +15,24 @@ save_and_exit(){
     exit 0
 }
 
+help(){
+    cat << EOF
+$( basename "$0" ) [options]
+
+Check dmesg for system error messages and report them.
+
+Options:
+  -h, --help    Show this help message and exit
+EOF
+    exit 0
+}
+
 main(){
+    case "$1" in
+        -h|--help)
+            help
+            ;;
+    esac
     dmesg_result="$( dmesg 2>/dev/null | grep -vE "(,errors=|errors=remount)" | grep -qiE "(error|EHASHCOLLISION)" )"
 
     # enable if you want a demo content:

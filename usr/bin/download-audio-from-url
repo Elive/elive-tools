@@ -9,6 +9,14 @@ export TEXTDOMAIN
 
 
 main(){
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename "$0") <URL>"
+            echo "Download audio from the specified URL in MP3 format."
+            exit 0
+            ;;
+    esac
+
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
         el_dependencies_install "yt-dlp"

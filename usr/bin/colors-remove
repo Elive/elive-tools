@@ -2,7 +2,16 @@
 
 main(){
     # pre {{{
-
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename "$0") [OPTIONS] < input"
+            echo "Remove ANSI color and escape codes from standard input."
+            echo
+            echo "Options:"
+            echo "  -h, --help    Display this help message and exit"
+            exit 0
+            ;;
+    esac
     # }}}
 
     if [[ ! -t 0 ]] ; then

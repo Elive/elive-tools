@@ -5,6 +5,12 @@ main(){
 
     # }}}
 
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: $(basename "$0") <filename> [find-options...]"
+        echo "Search for files case-insensitively in the current directory matching *<filename>*."
+        return 0
+    fi
+
     filename="$1"
     shift
 

@@ -40,7 +40,10 @@ main(){
     local pid desktop
 
     # Usage
-    if [[ -z "${1}" ]] ; then
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) e16|e17|enlightenment"
+        exit 0
+    elif [[ -z "${1}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) e16|e17|enlightenment"
         exit 1
     fi

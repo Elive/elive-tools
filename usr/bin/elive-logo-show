@@ -14,6 +14,15 @@ main(){
             --no-newline)
                 echo_opt="-n"
                 ;;
+            -h|--help)
+                echo "Usage: $(basename "$0") [OPTIONS]"
+                echo "Display the Elive logo in ASCII colors."
+                echo
+                echo "Options:"
+                echo "  --no-newline   Do not output a trailing newline"
+                echo "  -h, --help     Display this help and exit"
+                return 0
+                ;;
         esac
     done
 

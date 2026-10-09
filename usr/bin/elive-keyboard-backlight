@@ -24,7 +24,15 @@ main(){
     local mode value
 
     # Usage
-    if [[ -z "${1}" ]] ; then
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) up|down|toggle|toggle_full|get|set|info|max [value|steps]"
+        echo -e "examples:"
+        echo -e "$(basename $SOURCE) get"
+        echo -e "$(basename $SOURCE) set 50%"
+        echo -e "$(basename $SOURCE) toggle 4 (toggle the light in steps of 4)"
+        echo -e "$(basename $SOURCE) toggle_full"
+        exit 0
+    elif [[ -z "${1}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) up|down|toggle|toggle_full|get|set|info|max [value|steps]"
         echo -e "examples:"
         echo -e "$(basename $SOURCE) get"

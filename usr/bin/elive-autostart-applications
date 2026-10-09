@@ -192,8 +192,16 @@ do_list(){
 
 main(){
     # Usage
+    case "$1" in
+        -h|--help)
+            echo -e "Usage: $(basename "$BASH_SOURCE") [start|stop]"
+            echo -e "Runs the XDG autostart applications selected by the user"
+            exit 0
+            ;;
+    esac
+
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) [start|stop]"
+        echo -e "Usage: $(basename "$BASH_SOURCE") [start|stop]"
         echo -e "Runs the XDG autostart applications selected by the user"
         exit 1
     fi

@@ -314,6 +314,17 @@ build_args()
 
 # }}}
 
+help(){
+    echo "Usage: $(basename "$0") [OPTIONS]"
+    echo
+    echo "Launcher and hardware compatibility checker for Ecomorph 3D desktop effects."
+    echo
+    echo "Options:"
+    echo "  -h, --help       display this help and exit"
+    echo "  --elivehelper    enable graphical error notifications via Zenity"
+    echo
+}
+
 abort_with_fallback_wm(){
     if ((is_elive_helper)) ; then
         case "$1" in
@@ -360,6 +371,10 @@ main(){
     for arg in "$@"
     do
         case "$arg" in
+            -h|--help)
+                help
+                exit 0
+                ;;
             --elivehelper)
                 is_elive_helper=1
                 ;;

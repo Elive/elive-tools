@@ -9,7 +9,28 @@ export TEXTDOMAIN
 
 
 
+help(){
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS] <file|url|arguments>
+
+Stream video or media to a Chromecast screen using mkchromecast.
+
+Options:
+  -h, --help    Show this help message and exit
+
+All other options and arguments are passed directly to mkchromecast.
+EOF
+}
+
 main(){
+    # parse options
+    case "$1" in
+        -h|--help)
+            help
+            exit 0
+            ;;
+    esac
+
     # pre {{{
     local file
 

@@ -9,7 +9,21 @@ export TEXTDOMAIN
 
 
 
+usage(){
+    echo "Usage: $(basename "$0") [OPTIONS]"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+}
+
 main(){
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+    esac
+
     guitool="$(which zenity) --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 
     #message_intro="$( printf "$( eval_gettext "Before reporting an issue, it's very important to know to where to report it, if you are unsure just use our forums so that we can assist. Remember that by reporting and fixing a bug you will directly benefit including others facing the same problem." )" "" )"

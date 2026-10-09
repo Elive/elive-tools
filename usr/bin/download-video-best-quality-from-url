@@ -8,6 +8,18 @@ TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
 main(){
+    # Help / usage check
+    if [[ "$1" = "-h" || "$1" = "--help" ]] ; then
+        echo "Usage: $(basename "$0") <URL> [yt-dlp options]"
+        echo
+        echo "Download a video from a URL in the best available quality using yt-dlp."
+        echo "Videos are saved to $(xdg-user-dir DOWNLOAD)/Videos"
+        echo
+        echo "Options:"
+        echo "  -h, --help    Display this help message and exit"
+        exit 0
+    fi
+
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
         el_dependencies_install "yt-dlp"

@@ -8,6 +8,16 @@ EL_REPORTS="1"
 main(){
     # pre {{{
     local input output Bi Bo
+
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename "$0") [-h|--help]"
+            echo
+            echo "Display the total downloaded and uploaded network traffic (in MB and bytes)"
+            echo "by inspecting iptables counters."
+            exit 0
+            ;;
+    esac
     if ! el_dependencies_check iptables ; then
         if ! el_dependencies_install iptables ; then
             exit 1
@@ -21,7 +31,7 @@ main(){
     Bi="$( expr $input / 1048576 )"
     Bo="$( expr $output / 1048576 )"
 
-    if [[ -n "$Bi" ]] && [[ -n "$Bi" ]] ; then
+    if [[ -n "$Bi" ]] && [[ -n "$Bo" ]] ; then
         echo -e "Downloaded $Bi MB ($input bytes)"
         echo -e "Uploaded   $Bo MB ($output bytes)"
 

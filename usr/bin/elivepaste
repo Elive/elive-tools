@@ -48,22 +48,31 @@ main(){
         source "${conf}"
     fi
 
-    # Usage
-    if [[ -z "$1" ]] && ! ((is_stdin)) ; then
+    usage(){
         #echo -e "Usage: $(basename $BASH_SOURCE) [options]"
         echo -e "Example: elivepaste sourcecode.c"
         echo -e "Example: dmesg | tail -n 200 | elivepaste"
         echo -e "Options:"
+        echo -e "-h, --help: show this help and exit"
         echo -e "-c channel: second parameter is the name of the IRC channel where to send the message"
         echo -e "-m message: an optional extra message to include"
         echo -e "-d : direct paste mode (warning to not include more than 5 lines or this is considered flood"
         echo -e "-s : silent mode: do not send to any IRC channel, just get the returned url"
+    }
+
+    # Usage
+    if [[ -z "$1" ]] && ! ((is_stdin)) ; then
+        usage
         exit 1
     fi
 
     for arg in "$@"
     do
         case "$arg" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
             -c)
                 channel="${2#\#}"
                 shift 2

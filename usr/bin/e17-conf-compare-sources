@@ -5,11 +5,30 @@ source /usr/lib/elive-tools/functions
 #el_make_environment
 
 
+usage(){
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Continuously unpacks Enlightenment (e17) configuration files into source format
+and uses bkp/meld to compare changes made on the desktop.
+
+Options:
+  -h, --help    Show this help message and exit
+EOF
+}
+
 eet_conf_unpack_all_files(){
     find . -mindepth 1 -maxdepth 1 -type f -iname '*'.cfg -exec eet -d {} config {}.src \;
 }
 
 main(){
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+    esac
+
     # pre {{{
     local conf
 

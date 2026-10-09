@@ -584,6 +584,10 @@ main(){
                 is_quiet=1
                 shift
                 ;;
+            --help|-h)
+                do_help
+                exit 0
+                ;;
             *)
                 args_to_process+=("$1")
                 shift
@@ -658,13 +662,13 @@ main(){
 
 }
 
-# Usage
-if [[ -z "${1}" ]] ; then
+do_help(){
     echo -e "Usage: $(basename "$BASH_SOURCE") [options] <command>"
     echo -e ""
     echo -e "Options:"
     echo -e "  --id, -i ID      Specify a unique identifier for the backup (allows multiple backups for one dir)"
     echo -e "  --quiet, -q      Minimize output (useful for scripts)"
+    echo -e "  --help, -h       Show this help message"
     echo -e ""
     echo -e "Commands:"
     echo -e "  save             Create a new incremental backup of the current directory"
@@ -679,6 +683,10 @@ if [[ -z "${1}" ]] ; then
     echo -e "  purge            Delete ALL backups and working states managed by this tool for all directories"
     echo -e ""
     echo -e "  Note: {n} refers to the increment number (1 is the most recent backup)"
+}
+
+if [[ -z "${1}" ]] ; then
+    do_help
     exit 1
 fi
 

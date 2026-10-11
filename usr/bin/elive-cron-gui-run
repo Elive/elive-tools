@@ -125,19 +125,31 @@ run_desktop_autostart(){
     fi
 }
 
+usage(){
+    echo -e "Usage: $(basename $BASH_SOURCE) [-h|--help] [--replace|-r]  ( /etc/xdg/autostart/*.desktop | command | tool )"
+    echo -e "This tool is a simple helper to run commands or .desktop autostart files from your ~/.crontab file, making sure it has access to your graphical system or that you have that .desktop file enabled in your autolaunchers (otherwise it will be ignored)"
+    echo -e ""
+    echo -e "Options:"
+    echo -e "  -h, --help    Show this help message and exit"
+    echo -e "  -r, --replace Kill existing instances of the executable before running"
+}
+
 main(){
     local launcher arg
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) [--replace]  ( /etc/xdg/autostart/*.desktop | command | tool )"
-        echo -e "This tool is a simple helper to run commands or .desktop autostart files from your ~/.crontab file, making sure it has access to your graphical system or that you have that .desktop file enabled in your autolaunchers (otherwise it will be ignored)"
+        usage
         exit 1
     fi
 
     for arg in "$@"
     do
         case "$arg" in
+            "-h"|"--help")
+                usage
+                exit 0
+                ;;
             "--replace"|"-r")
                 is_replace=1
                 shift

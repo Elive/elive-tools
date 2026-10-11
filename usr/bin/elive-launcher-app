@@ -9,7 +9,25 @@ el_make_environment
 
 #set -x
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$SOURCE") [OPTIONS]
+
+Launches a launcher application (ulauncher or kupfer) and manages
+its lifecycle based on memory usage.
+
+Options:
+  -h, --help    Show this help message and exit
+EOF
+    exit 0
+}
+
 main(){
+    # Check for help
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+        usage
+    fi
+
     tmp_lock="/tmp/.$( basename ${SOURCE} )-${USER}-killing.lock"
     # run
     if [ -x "/usr/bin/ulauncher" ] ; then

@@ -635,6 +635,14 @@ main(){
 
     # }}}
 
+    # check for --help
+    for arg in "$@"; do
+        if [[ "$arg" == "--help" ]] || [[ "$arg" == "--usage" ]]; then
+            usage
+            exit
+        fi
+    done
+
     # load configurations
     el_config_get
 

@@ -40,9 +40,26 @@ echo "$$" > "$lockfile"
 # end lock system }}}
 #
 # XXX Note: there's a .desktop that references to this (name $0) command, do not break up things
+
+usage(){
+    echo "Usage: $(basename "$0") [OPTIONS]"
+    echo ""
+    echo "Restart the desktop and remove configuration files."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    echo "  --ask         Ask for confirmation before resetting desktop settings"
+    echo ""
+}
+
 main(){
     for arg in "$@" ; do
         case "$arg" in
+
+            "-h"|"--help")
+                usage
+                exit 0
+                ;;
 
             "--ask")
                 zenity --info --text="$( eval_gettext "Make sure to close all your running applications correctly before activating new desktop settings." )"

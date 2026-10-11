@@ -7,7 +7,30 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [URL]
+
+Download a video with subtitles from a URL.
+
+Arguments:
+  URL          The URL of the video to download.
+
+Options:
+  -h, --help   Show this help message and exit.
+
+The video is saved to ~/Downloads/Videos/
+EOF
+}
+
 main(){
+    # help {{{
+    if [[ "$1" = "-h" ]] || [[ "$1" = "--help" ]] ; then
+        usage
+        exit 0
+    fi
+    # }}}
+
     # dependencies {{{
     if ! el_dependencies_check "yt-dlp" ; then
         el_dependencies_install "yt-dlp"

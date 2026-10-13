@@ -13,6 +13,20 @@ fi
 
 
 
+usage(){
+    echo -e "Usage: $(basename $0) [option]"
+    echo -e "-h, --help  show this help"
+    echo -e "--show-all"
+    echo -e "--show-raw  shows also 'layers' partitions like encrypted or extended"
+    echo -e "--show-disks  shows also the 'disks', not only partitions"
+    echo -e "--show-all-mountable"
+    #echo -e "--show-all-umountable"
+    echo -e "--show-only=/dev/partition - to obtain data from a partition"
+    echo -e "\nStructure and Fields:"
+    echo -e "1         2       3             4        5              6       7             8"
+    echo -e "device :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n"
+}
+
 get_all_partitions_list(){
     # get a normal list of partitions {{{
     # note: if we use like nvme[0-9]* AND extra partitioning... we don't need that, since the first already includes them (short version), so dont saturate this with extra loops
@@ -275,17 +289,7 @@ main(){
                 #shift
                 #;;
             -h|--help)
-                echo -e "Usage: $(basename $0) [option]"
-                echo -e "-h, --help  show this help"
-                echo -e "--show-all"
-                echo -e "--show-raw  shows also 'layers' partitions like encrypted or extended"
-                echo -e "--show-disks  shows also the 'disks', not only partitions"
-                echo -e "--show-all-mountable"
-                #echo -e "--show-all-umountable"
-                echo -e "--show-only=/dev/partition - to obtain data from a partition"
-                echo -e "\nStructure and Fields:"
-                echo -e "1         2       3             4        5              6       7             8"
-                echo -e "device :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n"
+                usage
                 exit 0
                 ;;
             --show-only-mountable|--only-mountable)
@@ -302,16 +306,7 @@ main(){
                 shift
                 ;;
             *)
-                echo -e "Usage: $(basename $0) [option]" 1>&2
-                echo -e "--show-all" 1>&2
-                echo -e "--show-raw  shows also 'layers' partitions like encrypted or extended" 1>&2
-                echo -e "--show-disks  shows also the 'disks', not only partitions" 1>&2
-                echo -e "--show-all-mountable" 1>&2
-                #echo -e "--show-all-umountable" 1>&2
-                echo -e "--show-only=/dev/partition - to obtain data from a partition" 1>&2
-                echo -e "\nStructure and Fields:" 1>&2
-                echo -e "1         2       3             4        5              6       7             8" 1>&2
-                echo -e "device :: type :: filesystem :: label :: human_label :: size :: human_size :: uuid\n" 1>&2
+                usage 1>&2
                 shift
                 ;;
         esac

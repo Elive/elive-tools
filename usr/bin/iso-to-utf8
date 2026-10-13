@@ -10,6 +10,13 @@ el_dependencies_check iconv
 
 # Nota: para editar en vim ese char number, si es el numero 828, hacer por ejemplo 828go
 
+if [[ "$1" == "-h" || "$1" == "--help" ]] ; then
+    echo -e "Usage: $(basename "$0") file-iso-from file-utf8-to"
+    echo -e "Converts a file from ISO-8859-15 encoding to UTF-8."
+    echo -e "If encoding errors are found, opens vim to fix them interactively."
+    exit 0
+fi
+
 if [[ -z $2 ]] ; then
     echo -e "`basename $0` file-iso-from file-utf8-to"
     exit 1

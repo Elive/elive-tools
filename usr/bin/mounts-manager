@@ -1471,6 +1471,24 @@ main(){
     # - checks }}}
 
     case "$1" in
+        --help|-h)
+            echo -e "Usage: $(basename $BASH_SOURCE) options:"
+            echo -e "Basic partitions / mountpoins features:"
+            echo -e "--get-mountpoint dev  : get the mountpoint of a device address"
+            echo -e "--check-is-mounted [dev|mountpoint]  : returns true|false if the argument is mounted"
+            echo -e "--mount dev [args]  : mount a device, args must be in udisks format:"
+            echo -e "                    (--mount-fstype reiserX --mount-options foo,bar)"
+            echo -e "--umount [dev|mountpoint]  : umounts a device|mountpoint"
+            echo -e "--umount-force [dev|mountpoint]  : umounts a device|mountpoint in a forced mode, NEVER do this unless you are a wizard in level 17"
+            echo -e ""
+            echo -e "Chroots related:"
+            echo -e "--chroot-layers-mount directory idname  : mount the layers needed for a full-working chroot (proc, sysfs, etc)"
+            echo -e "--chroot-layers-umount directory [idname] [bind]  : umount the layers"
+            echo -e "                                           \ bind is a special mode that allows you to run things in the graphical system among other features"
+            echo -e ""
+            echo -e "Note: by checking the source code you can found shortcuts to these long commands"
+            exit 0
+            ;;
         --get-mountpoint|-g)
             shift
             get_mountpoint "$@"

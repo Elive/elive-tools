@@ -8,6 +8,13 @@ main(){
     # pre {{{
     local i flag_busy
 
+    if [[ "$1" == "-h" || "$1" == "--help" ]] ; then
+        echo -e "Usage: $(basename $0) command args"
+        echo -e "Waits for a single instance of 'command' to finish before running it."
+        echo -e "Supports dpkg, apt, and generic commands."
+        exit 0
+    fi
+
     if [[ -z "$1" ]] ; then
         echo -e "Usage: $(basename $0) command args"
         exit

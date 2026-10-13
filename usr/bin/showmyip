@@ -43,11 +43,27 @@ verify_ip_validity(){
     is_valid_ip=1
 }
 
+usage(){
+    cat <<EOF
+Usage: showmyip [OPTIONS]
+
+Get your public IP address (IPv4 by default).
+
+Options:
+    -h, --help    Show this help message and exit
+    --ipv6, --ip6 Get IPv6 address instead of IPv4
+EOF
+}
+
 main(){
 
     for arg in "$@"
     do
         case "$arg" in
+            "-h"|"--help")
+                usage
+                exit 0
+                ;;
             "--ipv6"|"--ip6")
                 is_ipv6=1
                 ;;

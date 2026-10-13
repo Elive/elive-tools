@@ -36,6 +36,16 @@ exit_error(){
     exit_ok
 }
 
+usage(){
+    echo "Usage: encrypt-privatedir [-h|--help]"
+    echo ""
+    echo "Mounts ~/.private_encrypted to ~/.private using ecryptfs."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    exit 0
+}
+
 # set -e
 
 main(){
@@ -89,6 +99,13 @@ main(){
 #
 #  MAIN
 #
-main "$@"
+case "$1" in
+    -h|--help)
+        usage
+        ;;
+    *)
+        main "$@"
+        ;;
+esac
 
 # vim: set foldmethod=marker :

@@ -31,9 +31,34 @@ gui_confirm(){
     fi
 }
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS] FILE [FILE...]
+
+Create a torrent file from a file or directory.
+
+Options:
+  -h, --help    Show this help message and exit
+
+Arguments:
+  FILE          One or more files/directories to create a torrent from.
+
+Examples:
+  $(basename "$0") myfile.txt
+  $(basename "$0") mydirectory
+  $(basename "$0") file1.txt file2.txt
+EOF
+}
+
 main(){
     # pre {{{
     local name magnet file
+
+    # Handle -h / --help
+    if [[ "${1}" == "-h" ]] || [[ "${1}" == "--help" ]] ; then
+        usage
+        exit 0
+    fi
 
     if ! el_dependencies_check "transmission-cli|transmission-gtk|xclip|lynx" ; then
         el_dependencies_install "transmission-cli|transmission-gtk|xclip|lynx"

@@ -4,7 +4,22 @@ source /usr/lib/elive-tools/functions
 #EL_REPORTS="1"
 el_make_environment
 
+usage(){
+    echo "Usage: notification-daemon-restarter [-h|--help]"
+    echo
+    echo "Restarts the notification-daemon to avoid messages not appearing after a while."
+    echo
+    echo "Options:"
+    echo "  -h, --help   Show this help message and exit"
+}
+
 main(){
+    # handle -h / --help
+    if [[ "$1" == "-h" || "$1" == "--help" ]] ; then
+        usage
+        exit 0
+    fi
+
     # restart notification daemon to avoid the messages not appear after a while
     if [[ -n "$EROOT" ]] ; then
         # make sure we want it running:

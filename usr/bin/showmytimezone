@@ -330,7 +330,22 @@ convert_timezone()
 
 }
 
+usage() {
+    echo "Usage: showmytimezone [-h|--help]"
+    echo ""
+    echo "Displays the current timezone of the system."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+}
+
 main(){
+
+    # Check for help flag
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        usage
+        exit 0
+    fi
 
     timezone="$( showmylocation | grep -F "timezone" | awk -v FS="::" '{print $2}' )"
 

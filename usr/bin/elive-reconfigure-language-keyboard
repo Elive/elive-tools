@@ -7,6 +7,34 @@ el_make_environment
 TEXTDOMAIN="elive-tools"
 export TEXTDOMAIN
 
+# Usage / Help {{{
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Reconfigure system language and keyboard settings.
+
+Options:
+  -h, --help    Show this help message and exit
+
+Examples:
+  $(basename "$0")              Run the interactive language/keyboard configurator
+  $(basename "$0") -h           Show this help
+EOF
+    exit 0
+}
+# end Usage / Help }}}
+
+# Argument parsing {{{
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help)
+            usage
+            ;;
+    esac
+done
+# end Argument parsing }}}
+
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
 

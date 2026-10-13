@@ -12,6 +12,15 @@ main(){
 
     # }}}
 
+    # Help
+    if [[ "${1}" == "-h" ]] || [[ "${1}" == "--help" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) filename"
+        echo -e "\nThis tool converts subtitles that uses european encoding to the standard utf-8, it also removes the crappy newlines created by microsoft winblows"
+        echo -e "\nOptions:"
+        echo -e "  -h, --help    Show this help message and exit"
+        exit 0
+    fi
+
     # Usage
     if [[ -z "${1}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) filename"

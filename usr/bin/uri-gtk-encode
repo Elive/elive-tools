@@ -4,6 +4,13 @@
 
 use URI::Escape;
 
+if (grep { $_ eq '-h' || $_ eq '--help' } @ARGV) {
+    print "Usage: uri-gtk-encode [-h|--help] [input]\n";
+    print "Converts URI strings to GTK-encoded format (percent-encoding).\n";
+    print "Example: 'Vídeos' -> 'V%C3%ADdeos'\n";
+    exit 0;
+}
+
 # this version ignores the slashes:
 s{([^/]+)}{uri_escape($1)}ge
 

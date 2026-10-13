@@ -55,6 +55,24 @@ premium_status_get(){
     fi
 }
 
+help_message(){
+    echo
+    echo "Usage: elive-premium [OPTION]"
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    echo
+    echo "Available premium features:"
+    echo "  elivim, neovim          Elivim: An amazing framework for the NeoVim editor."
+    echo "  assistant, ai           Elive AI: A collection of handy tools to use Artificial Intelligence."
+    echo "  gptuuu, gpt-uuu         GPT-UUU: GPT Uncensored, Unbiased, Untracked."
+    echo "  servers, server         Elive for Servers: Enhancements for your server and more."
+    echo "  synthwave, player       Synthwave Player: A music player with a retro-futuristic vibe."
+    echo
+    echo "  (no argument)           Interactive menu to select a feature."
+    echo
+}
+
 usage(){
     echo
     el_info "$( eval_gettext "Please select one of the following premium features to install:" )"
@@ -280,6 +298,12 @@ premium_synthwave_player(){
 main(){
     # pre {{{
 
+    # handle -h / --help
+    if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]] ; then
+        help_message
+        exit 0
+    fi
+
     [[ -s /etc/elive/settings ]] && source /etc/elive/settings
 
     if ! el_dependencies_check "git|curl|wget|ssh-keygen|xclip" ; then
@@ -371,6 +395,10 @@ main(){
         synthwave|player|"synthwave-player")
             premium_synthwave_player
             exit
+            ;;
+        -h|--help)
+            help_message
+            exit 0
             ;;
         *)
             usage

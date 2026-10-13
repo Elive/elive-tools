@@ -11,10 +11,26 @@ source /usr/lib/elive-tools/functions
 #fi
 
 
+usage() {
+    echo "Usage: $(basename "$BASH_SOURCE") [options]"
+    echo "Record desktop using ffmpeg."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    echo ""
+    echo "Press 'q' to stop recording."
+}
+
 main(){
     # pre {{{
     local option
     local tempfile
+
+    # help check
+    if [[ "${1}" == "-h" ]] || [[ "${1}" == "--help" ]] ; then
+        usage
+        exit 0
+    fi
 
     # }}}
 

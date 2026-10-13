@@ -5,6 +5,22 @@ source /usr/lib/elive-tools/functions
 #el_make_environment
 
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [options] [commit message]
+
+Commit all changes and optionally push.
+
+Options:
+  -p, --push          Push after commit
+  -m, --message MSG   Commit message
+  -h, --help          Show this help message
+
+If no message is given, the remaining arguments are used as the message,
+or you will be prompted interactively.
+EOF
+}
+
 main(){
     # pre {{{
     local message result arg
@@ -19,6 +35,10 @@ main(){
                 shift
                 message="$1"
                 shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
                 ;;
         esac
     done

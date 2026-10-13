@@ -16,7 +16,7 @@
 
 $in="";
 
-if($ARGV[0] eq "-h") {
+if($ARGV[0] eq "-h" || $ARGV[0] eq "--help") {
     print  "Usage: $0 < HTML\n";
     exit;
 }

@@ -4,6 +4,29 @@ source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 #el_make_environment
 
+usage(){
+    cat <<EOF
+Usage: el_speak_text [OPTIONS] [TEXT]
+
+Speak the given text aloud.
+
+Options:
+  -f, --force       Force speaking even during night hours
+  -h, --help        Show this help message
+
+If no text is given, reads from stdin.
+
+Examples:
+  el_speak_text "Hello world"
+  echo "Hello world" | el_speak_text
+EOF
+}
+
+if [[ "$1" = -h ]] || [[ "$1" = --help ]] ; then
+    usage
+    exit 0
+fi
+
 if [[ ! -t 0 ]] ; then
     is_stdin=1
     text="$( cat 2>&1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" )"

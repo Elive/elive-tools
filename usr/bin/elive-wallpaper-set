@@ -4,6 +4,17 @@ source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 el_make_environment
 
+usage(){
+    eval_gettext "Usage: $(basename $SOURCE) [options] file1 [file2 ...]
+
+Options:
+  -h, --help    Show this help message and exit
+
+Arguments:
+  file1 [file2 ...]  Path(s) to wallpaper image file(s) to set as background.
+"
+}
+
 # Lock system (good one) {{{
 # lockfile="/tmp/.$(basename $0)-${USER}.lock"
 #
@@ -51,6 +62,14 @@ main(){
     # pre {{{
     local file
 
+    # Parse arguments for -h/--help
+    for arg in "$@"
+    do
+        if [[ "$arg" == "-h" || "$arg" == "--help" ]] ; then
+            usage
+            exit 0
+        fi
+    done
 
     # }}}
     # e16

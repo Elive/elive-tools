@@ -385,6 +385,21 @@ main(){
     # pre {{{
     local file
 
+    # help
+    if [[ "$1" = "-h" ]] || [[ "$1" = "--help" ]] ; then
+        cat <<EOF
+Usage: elive-run-file-helper [OPTIONS] FILE [FILE...]
+Options:
+  -h, --help      Show this help message and exit
+  -s, --simulate  Simulate mode (echo commands instead of running them)
+Description:
+  Opens/runs files based on their MIME type. Supported types include:
+  shell scripts, AppImages, DMG, EDJE/EDC, E themes, E16 themes,
+  PKGBUILD, Makefiles, ISO images, and more.
+EOF
+        exit 0
+    fi
+
     # include simulate mode
     if [[ "$1" = "-s" ]] || [[ "$1" = "--simulate" ]] ; then
         is_simulate=1

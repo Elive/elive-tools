@@ -141,6 +141,32 @@ main(){
 }
 
 #
+#  USAGE
+#
+usage(){
+    cat <<EOF
+Usage: $(basename $0) [OPTIONS]
+
+Manage Wi-Fi network connection (nm-applet).
+
+Options:
+    -h, --help    Show this help message and exit.
+EOF
+    exit 0
+}
+
+#
+#  ARGUMENT PARSING
+#
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help)
+            usage
+            ;;
+    esac
+done
+
+#
 #  MAIN
 #
 main "$@"

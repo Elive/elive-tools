@@ -311,6 +311,22 @@ update_scaling(){
 
 }
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Adjusts the desktop scaling/DPI for your screen.
+
+Options:
+  -a, --auto          Auto-detect DPI (no interactive selection)
+  -q, --quiet         Quiet mode (skip interactive guide)
+  --no-reload         Do not reload the desktop after changes
+  --no-chromium       Skip Chromium/Chrome zoom adjustments
+  --no-chrome         Same as --no-chromium
+  -h, --help          Show this help message and exit
+EOF
+}
+
 main(){
     # args {{{
 
@@ -337,6 +353,10 @@ main(){
                 --no-chromium|--no-chrome)
                     unset is_no_chrome=1
                     shift
+                    ;;
+                -h|--help)
+                    usage
+                    exit 0
                     ;;
             esac
         done

@@ -43,9 +43,33 @@ el_prettify_to_html(){
     echo ""
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  usage
+#   DESCRIPTION:  print usage information
+#    PARAMETERS:  none
+#       RETURNS:  none
+#===============================================================================
+usage() {
+    cat <<EOF
+Usage: prettify-to-html [OPTIONS] [message]
+
+Prettify a message or diff to html format.
+
+Options:
+  -h, --help    Show this help message and exit
+
+If no arguments are provided, reads input from stdin.
+EOF
+}
+
 # Main logic to handle arguments or pipe
 if [[ -t 0 ]]; then
     # Input from arguments
+    # Check for help flags
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+        usage
+        exit 0
+    fi
     input="$*"
 else
     # Input from pipe

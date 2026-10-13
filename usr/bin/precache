@@ -11,11 +11,37 @@ el_explain_plain(){
     fi
 }
 
+usage(){
+    cat <<EOF
+Usage: precache [OPTIONS] FILE [FILE...]
+
+Caches the given executables and their shared libraries into RAM.
+
+Options:
+  -h, --help      Show this help message and exit
+  --trace         Print the list of cached files to stdout
+  --nice          Use lowest IO priority (renice +20, ionice -c3)
+
+Arguments:
+  FILE            Path to an executable file (symlinks are resolved)
+
+Examples:
+  precache /usr/bin/firefox
+  precache --trace firefox
+  precache --nice firefox
+EOF
+}
+
 # this tool does caching "to ram" of application/executable and its required libs, can be also used for tracing
 
 main(){
     # pre {{{
     local arg lib sorted is_trace cached_arr
+
+    if [[ "${1}" = "-h" || "${1}" = "--help" ]] ; then
+        usage
+        exit 0
+    fi
 
     if [[ "${1}" = "--trace" ]] ; then
         is_trace=1

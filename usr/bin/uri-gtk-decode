@@ -3,6 +3,22 @@
 # small tool useful for convert uri's like "Vídeos" to "V%C3%ADdeos", good for .gtk-bookmarks for example
 
 use URI::Escape;
+use Getopt::Long;
+
+sub usage {
+    print "Usage: uri-gtk-decode [-h | --help]\n";
+    print "Decodes URI-encoded strings (e.g. V%C3%ADdeos -> Vídeos).\n";
+    print "Reads from stdin and writes to stdout.\n";
+    exit 0;
+}
+
+GetOptions(
+    'h|help' => \my $help,
+) or die "Invalid option. Use -h for help.\n";
+
+if ($help) {
+    usage();
+}
 
 # this version ignores the slashes:
 s{([^/]+)}{uri_unescape($1)}ge

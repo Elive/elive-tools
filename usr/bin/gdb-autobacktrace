@@ -12,6 +12,13 @@ main(){
     # pre {{{
     local logfile
 
+    # Help
+    if [[ "${1}" = "-h" ]] || [[ "${1}" = "--help" ]] ; then
+        echo -e "Usage: $(basename $BASH_SOURCE) debug-logfile.txt executable [or gdb args]"
+        echo -e "example: $(basename $BASH_SOURCE) /tmp/debug.txt /usr/bin/e16 --args something"
+        exit 0
+    fi
+
     # Usage
     if [[ -z "${1}" ]] ; then
         echo -e "Usage: $(basename $BASH_SOURCE) debug-logfile.txt executable [or gdb args]"

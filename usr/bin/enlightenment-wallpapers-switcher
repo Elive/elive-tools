@@ -4,6 +4,19 @@ source /usr/lib/elive-tools/functions
 EL_REPORTS="1"
 el_make_environment
 
+usage(){
+    cat <<EOF
+Usage: enlightenment-wallpapers-switcher [OPTIONS]
+
+Switches between available Enlightenment wallpapers in sequence.
+
+Options:
+  --delay=SECONDS       Time between wallpaper switches (default: 40)
+  --wait-start=SECONDS  Time to wait before starting (default: 40)
+  -h, --help            Show this help message and exit
+EOF
+}
+
 main(){
     # pre {{{
     local file
@@ -22,6 +35,10 @@ main(){
             --wait-start=*)
                 time_wait_startup="${arg##--wait-start=}"
                 shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
                 ;;
 
         esac

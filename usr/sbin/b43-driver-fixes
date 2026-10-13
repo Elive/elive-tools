@@ -15,6 +15,18 @@ if [[ "$PATH" != *"/usr/sbin"* ]] ; then
     export PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
 fi
 
+usage(){
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Fixes Broadcom B43 wireless driver issues.
+
+Options:
+  -h, --help    Show this help message and exit
+
+EOF
+}
+
 extra_fixes(){
     if dmidecode -s system-manufacturer | grep -qsi "LENOVO" ; then
         # https://wiki.archlinux.org/index.php/Talk:Broadcom_wireless
@@ -141,6 +153,17 @@ try_and_configure(){
 main(){
     # pre {{{
     #local  driver_good modules_list wifi_dev
+
+    # check for help
+    for arg in "$@"; do
+        case "$arg" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+        esac
+    done
+
     el_config_get
     # }}}
 

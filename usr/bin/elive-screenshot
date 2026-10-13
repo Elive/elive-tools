@@ -210,6 +210,14 @@ take_screenshot(){
 }
 
 main(){
+    # --help support
+    for arg in "$@"; do
+        if [[ "$arg" == "--help" ]]; then
+            usage
+            exit 0
+        fi
+    done
+
     # pre {{{
     local file
     tmpdir="/tmp/.$(basename $0)-${USER}"

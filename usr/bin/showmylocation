@@ -4,9 +4,31 @@ source /usr/lib/elive-tools/functions
 #EL_REPORTS="1"
 #el_make_environment
 
+usage() {
+    cat <<EOF
+Usage: showmylocation [IP_ADDRESS]
+
+Query geolocation data for an IP address.
+If no IP is given, uses the current public IP.
+
+Options:
+  -h, --help    Show this help message and exit
+
+Output format (key::value per line):
+  ip::, latitude::, longitude::, continent_code::, continent_name::,
+  country_code::, country_name::, region_name::, city_name::,
+  isp_provider_name::, zip_code::, timezone::
+EOF
+}
+
 main(){
     # pre {{{
     local data is_data_valid ip
+
+    if [[ "$1" == "-h" || "$1" == "--help" ]] ; then
+        usage
+        exit 0
+    fi
 
     if ! el_dependencies_check curl ; then
         if ! el_dependencies_install curl ; then

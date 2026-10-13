@@ -66,11 +66,20 @@ check_smaller(){
 
 usage(){
     echo "Reduces PDF filesize by lossy recompressing with Ghostscript."
-    #echo "Not guaranteed to succeed, but usually works."
-    echo "  Usage: $1 infile [outfile]"
+    echo "Not guaranteed to succeed, but usually works."
+    echo ""
+    echo "  Usage: $1 [options] infile [outfile]"
+    echo ""
+    echo "  Options:"
+    echo "    -h, --help    Show this help message and exit"
     exit
 }
 
+# Handle -h / --help flags
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+    usage "$0"
+    exit 0
+fi
 
 # Need an input file:
 if [ -z "$1" ]; then

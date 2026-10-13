@@ -4,6 +4,13 @@ source /usr/lib/elive-tools/functions
 #EL_REPORTS="1"
 #el_make_environment
 
+show_usage(){
+    echo -e "This tool searches a file from your actual directory recursively, if found only one match it directly edits it with your EDITOR variable, otherwise it will return an error showing you the possible matches"
+    echo -e "Usage: $(basename $BASH_SOURCE) filename"
+    echo -e "Options:"
+    echo -e "  -h, --help    Show this help message and exit"
+}
+
 main(){
     # pre {{{
     local filename match matches
@@ -12,10 +19,15 @@ main(){
     shift
     # }}}
 
+    # -h / --help
+    if [[ "${filename}" == "-h" || "${filename}" == "--help" ]] ; then
+        show_usage
+        exit 0
+    fi
+
     # Usage
     if [[ -z "${filename}" ]] ; then
-        echo -e "This tool searches a file from your actual directory recursively, if found only one match it directly edits it with your EDITOR variable, otherwise it will return an error showing you the possible matches"
-        echo -e "Usage: $(basename $BASH_SOURCE) filename"
+        show_usage
         exit 1
     fi
 

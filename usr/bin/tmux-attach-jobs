@@ -5,12 +5,22 @@ source /usr/lib/elive-tools/functions
 #el_make_environment
 set -e
 
-if [[ -z "$3" ]]; then
-    #echo "Specify session name as the first argument"
+usage() {
     echo -e "This tool runs commands in detached tmux sessions"
     echo -e "Usage: $(basename $0) group win-name \"commands\""
     echo -e "where, group is an identifier for a sort of specific tasks, win-name is the name that you will have on the 'window tab' of tmux, commands are the commands to run on it"
     echo -e "example: $(basename $0) sendfiles 'to myserver' \"scp hugefile.iso user@myserver:uploaded/\""
+    echo -e "Options:"
+    echo -e "  -h, --help    Show this help message and exit"
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ -z "$3" ]]; then
+    usage
     exit
 fi
 

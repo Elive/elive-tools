@@ -26,6 +26,35 @@ verify_version_at_least(){
         return 1
     fi
 }
+usage(){
+    cat <<EOF
+Usage: web-launcher [options] [url...]
+
+Open URLs in the best available web browser.
+
+Options:
+  -w, --wait              Wait for all browser processes to finish
+  --app=URL             Open URL in app mode (chrome/chromium)
+  --incognito           Open in incognito/private mode
+  --private-window      Open in private window (firefox)
+  --temp-profile        Use a temporary profile (chromium)
+  --delay=SECONDS       Delay opening by SECONDS seconds
+  -h, --help            Show this help message
+
+Browser preferences (added in order):
+  chrome, google-chrome, chromium, firefox, firefox-esr,
+  iceweasel, links2, lynx, w3m, netsurf, surf, palemoon
+
+URLs:
+  http://..., https://..., file://..., www...
+
+Examples:
+  web-launcher https://example.com
+  web-launcher --app=https://example.com
+  web-launcher --incognito --w https://example.com https://other.com
+EOF
+}
+
 main(){
     # pre {{{
     local url elive_version is_wheezy browsers arg
@@ -79,6 +108,10 @@ main(){
                 delayed_seconds="${arg#--delay=}"
                 is_delayed=1
                 el_debug "delayed ${delayed_seconds} seconds"
+                ;;
+            -h|--help)
+                usage
+                exit 0
                 ;;
             --*)
                 el_warning "ignoring unrecognized option $arg"

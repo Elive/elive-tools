@@ -28,18 +28,41 @@ get_baseurl(){
     fi
 }
 
+usage(){
+    echo -e "Usage: $(basename $BASH_SOURCE) [OPTIONS] weburl"
+    echo -e ""
+    echo -e "Convert a web page to various document formats (epub, html, pdf, docx, odt, txt)."
+    echo -e ""
+    echo -e "Options:"
+    echo -e "  -h, --help    Show this help message and exit"
+    echo -e ""
+    echo -e "Arguments:"
+    echo -e "  weburl        The URL of the web page to convert"
+    echo -e ""
+    echo -e "Examples:"
+    echo -e "  $(basename $BASH_SOURCE) http://example.com/article"
+    echo -e "  $(basename $BASH_SOURCE) https://example.com/page"
+    echo -e "  $(basename $BASH_SOURCE) --help"
+}
+
 main(){
     # pre {{{
     local url file http options
 
     # }}}
 
+    # Handle -h / --help
+    if [[ "${1}" = "-h" || "${1}" = "--help" ]] ; then
+        usage
+        exit 0
+    fi
+
     tmpdir="/tmp/pandoc-${USER}-$$"
     url="$1"
 
     # Usage
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) weburl"
+        usage
         exit 1
     fi
 

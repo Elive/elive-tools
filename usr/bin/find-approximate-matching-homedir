@@ -5,8 +5,14 @@ main(){
     # pre {{{
     local dir match
 
+    if [[ "${1}" == "-h" ]] || [[ "${1}" == "--help" ]] ; then
+        echo -e "Usage: find-approximate-matching-homedir [name]"
+        echo -e "  try's to search the location of a dir in your home hard to found due to XDG structure, try for example with 'dropbox'"
+        exit 0
+    fi
+
     if [[ -z "${1}" ]] ; then
-        echo -e "Usage: command [name]"
+        echo -e "Usage: find-approximate-matching-homedir [name]"
         echo -e "  try's to search the location of a dir in your home hard to found due to XDG structure, try for example with 'dropbox'"
         exit 1
     fi

@@ -1,15 +1,28 @@
 #!/bin/bash
 source /usr/lib/elive-tools/functions
 
+usage() {
+    echo -e "Usage: $(basename $BASH_SOURCE) mode keywords ignorefiles"
+    echo -e "modes: show|edit"
+    echo -e "ignorefiles: this is a regular expression of patterns to ignore into the find command, to not search inside these paths/files"
+    echo -e ""
+    echo -e "Options:"
+    echo -e "  -h, --help    Show this help message and exit"
+}
+
 main(){
     # pre {{{
     local file files line
 
+    # Handle -h and --help
+    if [[ "$1" = "-h" ]] || [[ "$1" = "--help" ]] ; then
+        usage
+        exit 0
+    fi
+
     # Usage
     if [[ -z "${2}" ]] ; then
-        echo -e "Usage: $(basename $BASH_SOURCE) mode keywords ignorefiles"
-        echo -e "modes: show|edit"
-        echo -e "ignorefiles: this is a regular expression of patterns to ignore into the find command, to not search inside these paths/files"
+        usage
         exit 1
     fi
 

@@ -443,7 +443,7 @@ do_diff(){
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
-    local diff_excludes=(--exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
+    local diff_excludes=(--no-dereference --exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
 
     #diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | strings | sed -e "s|--- ${src}.differ|--- a|g" -e "s|+++ ${dst}|+++ b|g" | colordiff
     # seems like "strings" eat words, but maybe we need it?
@@ -454,9 +454,9 @@ do_diff(){
         #diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" 2>/dev/null | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
-        diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
+        diff -Naur "${diff_excludes[@]}" "${src}.differ/" "${dst}/" 2>/dev/null | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
     do_sudo rm -rf "${src}.differ"
@@ -491,7 +491,7 @@ do_diff_reverse(){
         do_sudo rdiff-backup $rdiff_opts restore --at "$version" "${src}" "${src}.differ"
     fi
 
-    local diff_excludes=(--exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
+    local diff_excludes=(--no-dereference --exclude=".git*" --exclude=".aider*" --exclude=".cecli*")
 
     #echo -e "\n\n${el_c_y}###############################################################${el_c_n}\n"
 
@@ -502,9 +502,9 @@ do_diff_reverse(){
         #diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | lsdiff | sed 's|^.*rdiff\.differ/||g'
     #else
         local _different_files
-        _different_files="$( diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
+        _different_files="$( diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" 2>/dev/null | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | wc -l )"
         echo -e "\n ${el_c_y}Total different files:${el_c_n} $_different_files" 1>&2
-        diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
+        diff -Naur "${diff_excludes[@]}" "${dst}/" "${src}.differ/" 2>/dev/null | sed -r -e "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" -e "s/\x0f//g" | grep '^\-\-\-\s' | sed -r -e 's|^.*rdiff\.differ/||g' -e 's|([[:digit:]]{4})-([[:digit:]]{2})-([[:digit:]]{2}).*$||g' 1>&2
     #fi
 
     do_sudo rm -rf "${src}.differ"

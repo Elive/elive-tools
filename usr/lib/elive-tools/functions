@@ -22,6 +22,11 @@
 
 ##TEXTDOMAIN="elive-tools" # disabled on purpose for compatibility, do not enable
 
+if [[ -n "$ELIVE_TOOLS_LOADED" ]] ; then
+    return
+fi
+ELIVE_TOOLS_LOADED=1
+
 if [[ -n "$ZSH_VERSION" ]] ; then
     # Note: if you use ZSH, you must set the SOURCE var name from the main script
     if [[ -n "$SOURCE" ]]; then

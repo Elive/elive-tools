@@ -1346,14 +1346,20 @@ do_count_commits(){
 }
 
 #===  FUNCTION  ================================================================
-#          NAME:  do_cherry_pick_menu
-#   DESCRIPTION:  menu of options in cherry-pick state, useful when it fails
-#    PARAMETERS:  -
+#          NAME:  do_conflict_menu
+#   DESCRIPTION:  menu of options in cherry-pick/rebase conflict state, useful when it fails
+#    PARAMETERS:  $1 = kind ("cherry-pick" or "rebase")
 #       RETURNS:  -
 #===============================================================================
-do_cherry_pick_menu(){
+do_conflict_menu(){
     # pre {{{
     el_debug
+    local kind
+    # preserve $kind across recursive "$FUNCNAME" calls (which pass no argument)
+    if [[ -n "$1" ]] ; then
+        _do_conflict_kind="$1"
+    fi
+    kind="${1:-$_do_conflict_kind}"
 
     # }}}
 
@@ -1365,8 +1371,11 @@ do_cherry_pick_menu(){
     option_show "e" "Edit modified files"
     option_show "l" "Login Shell"
     option_show "f" "Finish - return to main menu in any state"
-    option_show "a" "Abort cherry-pick"
-    option_show "c" "Continue cherry-pick in progress / Next commit"
+    option_show "a" "Abort $kind"
+    option_show "c" "Continue $kind in progress / Next commit"
+    if [[ "$kind" = "rebase" ]] ; then
+        option_show "k" "Skip current commit (rebase --skip)"
+    fi
     echo -e "${el_c_b}----------------------------------------------------------------${el_c_n}"
 
     read -N 1 option
@@ -1479,18 +1488,25 @@ sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
         c)
             # TODO: improve this option, is not easy to find (far on the list, we need an option for "accepted merge" or similar, more intuitive)
             # TODO: check the options, we don't want to write a message probably, do we also want to use the option -x ?
-            if command git cherry-pick --continue --no-edit ; then
-                # fix possible whitespace issues
-                command git rebase --whitespace=fix HEAD~1
+            if [[ "$kind" = "cherry-pick" ]]; then
+                cont_ok=0; command git cherry-pick --continue --no-edit && cont_ok=1
+            else
+                cont_ok=0; GIT_EDITOR=true command git rebase --continue && cont_ok=1
+            fi
+            if (( cont_ok )); then
+                if [[ "$kind" = "cherry-pick" ]] ; then
+                    # fix possible whitespace issues
+                    command git rebase --whitespace=fix HEAD~1
 
-                # store actual position for future calls of this tool
-                position_save
+                    # store actual position for future calls of this tool
+                    position_save
 
-                # make a list of the commits that we have already imported
-                if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
-                    echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
-                    if ((is_shared)) ; then
-                        echo "$commit_id ${branch_working}" >> "${conf_imported_commits_list_shared_f}"
+                    # make a list of the commits that we have already imported
+                    if ! grep -qs "^${commit_id}$" "${conf_imported_commits_list_f}" ; then
+                        echo "$commit_id ${branch_working}" >> "$conf_imported_commits_list_f"
+                        if ((is_shared)) ; then
+                            echo "$commit_id ${branch_working}" >> "${conf_imported_commits_list_shared_f}"
+                        fi
                     fi
                 fi
 
@@ -1505,14 +1521,24 @@ sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
 
             ;;
 
+        k)
+            if [[ "$kind" = "rebase" ]] ; then
+                if command git rebase --skip ; then
+                    $FUNCNAME "$kind"
+                else
+                    el_error "git rebase --skip failed, staying in menu"
+                    $FUNCNAME "$kind"
+                fi
+            fi
+            ;;
         f)
             true
             ;;
 
         a|z) # shortcut to "a" too if we want to call it as "abort"
-            command git cherry-pick --abort
+            command git "$kind" --abort
 
-            el_explain 0 "Aborted cherry-pick..."
+            el_explain 0 "Aborted $kind..."
             LC_ALL=C sleep 1.2
 
             ;;
@@ -1533,6 +1559,17 @@ sed -i '/\[mergetool "meld-merge"\]/!b; /\[mergetool "meld-merge"\]/a \
     fi
 
 }
+
+#===  FUNCTION  ================================================================
+#          NAME:  do_cherry_pick_menu
+#   DESCRIPTION:  thin wrapper for cherry-pick conflicts
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+do_cherry_pick_menu(){
+    do_conflict_menu "cherry-pick"
+}
+
 #===  FUNCTION  ================================================================
 #          NAME:  do_cherry_pick
 #   DESCRIPTION:    run a cherry-pick to the commit_id variable, run helpers if something fails
@@ -2780,11 +2817,29 @@ options_main_interact(){
     esac
 }
 #===  FUNCTION  ================================================================
+#          NAME:  rebase_pending_notice
+#   DESCRIPTION:  show rebase state and stop before the normal commit-browsing loop
+#    PARAMETERS:  -
+#       RETURNS:  -
+#===============================================================================
+rebase_pending_notice(){
+    # pre {{{
+    el_debug
+
+    # }}}
+    el_explain 0 "Rebase in progress on branch: __$branch_working__"
+    command git status -sb
+    command git diff --name-only --diff-filter=U
+    el_explain 0 "Resolve the conflicts (edit the files, git add them) and run 'git rebase --continue', then re-run '$(basename $0)'."
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  usage_show
 #===============================================================================
 usage_show(){
     echo ""
     echo -e "$(basename $0) is an amazing GIT tool that gives you multiple features, being especially useful to maintain forks, track changes in source codes, backport features between branches, and investigate things in the history of changes" 1>&2
+    echo -e "Note: during a rebase, $(basename $0) opens the conflict menu directly" 1>&2
 
     #echo -e "Important notes: " 1>&2
     #echo -e " - watching states will be saved and can be shareable among collaborators, check the '${conf_d}' dir" 1>&2
@@ -2820,13 +2875,44 @@ main(){
     tool_arguments="$@"
     # pre {{{
 
+    # detect rebase state (HEAD is detached during rebase, so symbolic-ref fails)
+    is_rebase=0
+    rebase_git_dir="$( command git rev-parse --git-dir 2>/dev/null )"
+    if [[ -n "$rebase_git_dir" && -d "$rebase_git_dir/rebase-merge" ]]; then
+        is_rebase=1
+        head_name_file="$rebase_git_dir/rebase-merge/head-name"
+    elif [[ -n "$rebase_git_dir" && -d "$rebase_git_dir/rebase-apply" ]]; then
+        is_rebase=1
+        head_name_file="$rebase_git_dir/rebase-apply/head-name"
+    fi
+
     # get the working branch name
-    branch_working="$( command git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||' )"
+    if ((is_rebase)) ; then
+        if [[ -s "$head_name_file" ]] ; then
+            branch_working="$( cat "$head_name_file" | sed 's|refs/heads/||' )"
+        else
+            el_error "Rebase in progress but cannot determine the branch from: $head_name_file"
+            exit 1
+        fi
+    else
+        branch_working="$( command git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||' )"
+    fi
     working_directory_d="$( pwd )"
 
-    if [[ -z "$branch_working" ]] ; then
+    if [[ -z "$branch_working" ]] && ! ((is_rebase)) ; then
         el_error "You are not in a git repository, this tool is meant to be used from a git repo"
         exit 1
+    fi
+
+    # during a rebase the normal flow (checkout, count commits, etc.) is incompatible; show state and stop
+    if ((is_rebase)) ; then
+        working_directory_d="$( pwd )"
+        do_conflict_menu "rebase"
+        rebase_git_dir="$( command git rev-parse --git-dir 2>/dev/null )"
+        if [[ -d "$rebase_git_dir/rebase-merge" || -d "$rebase_git_dir/rebase-apply" ]] ; then
+            rebase_pending_notice
+        fi
+        exit 0
     fi
 
     tmpdir="/tmp/.$(basename $0)-$( basename $(pwd) )-${USER}"

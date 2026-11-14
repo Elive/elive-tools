@@ -144,8 +144,8 @@ main(){
             ;;
         lo_LA*)
             language="Lao"
-            package="fcitx5-m17n"
-            fcitx_engine="m17n"
+            package=""
+            fcitx_engine="keyboard-la-stea"
             suggest_emodule_flag_keyboard
             ;;
         si_LK*)
@@ -176,9 +176,9 @@ main(){
     if [[ -n "$language" ]] ; then
         # ensure base fcitx5 and frontends are included
         if ((is_bookworm)) ; then
-            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-qt5|fcitx5-config-qt|${package}"
+            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-qt5|fcitx5-config-qt${package:+|${package}}"
         else
-            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-gtk4|fcitx5-frontend-qt5|fcitx5-frontend-qt6|fcitx5-config-qt|${package}"
+            package="fcitx5|fcitx5-frontend-gtk2|fcitx5-frontend-gtk3|fcitx5-frontend-gtk4|fcitx5-frontend-qt5|fcitx5-frontend-qt6|fcitx5-config-qt${package:+|${package}}"
         fi
 
         # messages
@@ -199,6 +199,12 @@ main(){
             # install
             if [[ -n "$package" ]] ; then
                 el_dependencies_install "$package"
+            fi
+
+            # stop any existing fcitx5 instance so config/profile changes are not overwritten
+            if pgrep -x fcitx5 >/dev/null 2>&1 ; then
+                pkill -x fcitx5 || true
+                LC_ALL=C sleep 0.3
             fi
 
             # run the daemon and setup
@@ -226,19 +232,19 @@ main(){
             fi
 
             # Pre-configure the input engine
-            if [[ -n "$fcitx_engine" ]] && [[ ! -f "$HOME/.config/fcitx5/profile" ]] ; then
+            if [[ -n "$fcitx_engine" ]] && { [[ ! -f "$HOME/.config/fcitx5/profile" ]] || grep -qsE "^Name=(m17n|m17n_lo_kbd)$" "$HOME/.config/fcitx5/profile" ; } ; then
                 {
                     echo "[Groups/0]"
                     echo "Name=Default"
                     echo "Default Layout=us"
-                    echo "DefaultIM=keyboard-us"
+                    echo "DefaultIM=${fcitx_engine}"
                     echo ""
                     echo "[Groups/0/Items/0]"
-                    echo "Name=${fcitx_engine}"
+                    echo "Name=keyboard-us"
                     echo "Layout="
                     echo ""
                     echo "[Groups/0/Items/1]"
-                    echo "Name=keyboard-us"
+                    echo "Name=${fcitx_engine}"
                     echo "Layout="
                     echo ""
                     echo "[GroupOrder]"
@@ -247,8 +253,8 @@ main(){
             fi
 
             # run daemon
-            ( fcitx5 & )
-            LC_ALL=C  sleep 0.3
+            fcitx5 -d >/dev/null 2>&1
+            LC_ALL=C  sleep 1
             # config frontend
             # update: not needed anymore since we have it already working
             # fcitx5-configtool

@@ -5104,6 +5104,44 @@ else
     EL_LC_EN="C"
 fi
 
+# chroot?
+unset is_chroot _chroot_known _ischroot_rc _root_stat _init_stat
+if [[ -n "$FAKECHROOT" ]] || [[ ! -e "/proc/mounts" ]] || [[ ! -d "/proc/1" ]] ; then
+    is_chroot=1 # flag: OS runs inside a chroot environment
+    _chroot_known=1
+elif command -v ischroot >/dev/null 2>&1 ; then
+    _ischroot_rc=0
+    ischroot 2>/dev/null || _ischroot_rc=$?
+    case "$_ischroot_rc" in
+        0)
+            is_chroot=1
+            _chroot_known=1
+            ;;
+        1)
+            _chroot_known=1
+            ;;
+    esac
+fi
+if ! ((_chroot_known)) ; then
+    _root_stat="$( stat -Lc '%d:%i' / 2>/dev/null || true )"
+    _init_stat="$( stat -Lc '%d:%i' /proc/1/root 2>/dev/null || true )"
+    if [[ -n "$_root_stat" ]] && [[ -n "$_init_stat" ]] ; then
+        if [[ "$_root_stat" != "$_init_stat" ]] ; then
+            is_chroot=1
+        fi
+        _chroot_known=1
+    fi
+fi
+if ! ((_chroot_known)) ; then
+    if command -v systemd-detect-virt >/dev/null 2>&1 && systemd-detect-virt -r 2>/dev/null ; then
+        is_chroot=1
+    elif [[ -n "$debian_chroot" ]] || [[ -s "/etc/debian_chroot" ]] ; then
+        is_chroot=1
+    fi
+fi
+unset _chroot_known _ischroot_rc _root_stat _init_stat
+
+
 
 # systemd?
 if [[ -d /run/systemd/system ]] && pidof -cq systemd ; then
@@ -5121,7 +5159,7 @@ else
     elif [[ -f /run/runit.stopit ]] ; then
         is_runit=1
     fi
-    if ! ((is_systemd)) ; then
+    if ! ((is_systemd)) && ! ((is_chroot)) ; then
         is_sysvinit=1 # flag: OS runs on sysvinit
         el_warning "No init systems are found, are we using vanilla sysvinit ?  systemd=${is_systemd}, openrc=${is_openrc}, runit=${is_runit}, sysvinit=${is_sysvinit}"
     fi

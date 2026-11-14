@@ -95,11 +95,16 @@ main(){
             fcitx_engine="mozc"
             suggest_emodule_flag_keyboard
             ;;
-        zh_CN*|zh_TW*)
+        zh_CN*)
             language="Chinese"
-            local message_instructions_extra
-            message_instructions_extra="$( printf "$( eval_gettext "Use the Package Manager to install one of the suggested options supporting Chinese typing input in different ways:" )" " fcitx5-chinese-addons, fcitx5-chewing, fcitx5-pinyin, fcitx5-sunpinyin" )"
+            package="fcitx5-chinese-addons"
             fcitx_engine="pinyin"
+            suggest_emodule_flag_keyboard
+            ;;
+        zh_TW*)
+            language="Chinese"
+            package="fcitx5-chewing|fcitx5-chinese-addons"
+            fcitx_engine="chewing"
             suggest_emodule_flag_keyboard
             ;;
         vi_VN*)
@@ -110,36 +115,86 @@ main(){
             ;;
         th_TH*)
             language="Thai"
-            package="fcitx5-thai"
-            fcitx_engine="thai"
+            package=""
+            fcitx_engine="keyboard-th"
             suggest_emodule_flag_keyboard
             ;;
-        hi_IN*|bn_IN*|gu_IN*|kn_IN*|ml_IN*|mr_IN*|pa_IN*|ta_IN*|te_IN*)
+        hi_IN*)
             language="Indic"
             package="fcitx5-m17n"
-            fcitx_engine="m17n"
+            fcitx_engine="m17n_hi_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        bn_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_bn_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        gu_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_gu_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        kn_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_kn_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        ml_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_ml_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        mr_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_mr_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        pa_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_pa_inscript"
+            suggest_emodule_flag_keyboard
+            ;;
+        ta_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_ta_tamil99"
+            suggest_emodule_flag_keyboard
+            ;;
+        te_IN*)
+            language="Indic"
+            package="fcitx5-m17n"
+            fcitx_engine="m17n_te_inscript"
             suggest_emodule_flag_keyboard
             ;;
         ar_*)
             language="Arabic"
-            package="fcitx5-table-extra"
-            fcitx_engine="table"
+            package=""
+            fcitx_engine="keyboard-ara"
             suggest_emodule_flag_keyboard
             ;;
         he_IL*)
             language="Hebrew"
+            package=""
+            fcitx_engine="keyboard-il"
             suggest_emodule_flag_keyboard
             ;;
         fa_IR*)
             language="Persian"
-            package="fcitx5-table-extra|fcitx5-m17n"
-            fcitx_engine="table"
+            package=""
+            fcitx_engine="keyboard-ir"
             suggest_emodule_flag_keyboard
             ;;
         km_KH*)
             language="Khmer"
-            package="fcitx5-m17n"
-            fcitx_engine="m17n"
+            package=""
+            fcitx_engine="keyboard-kh"
             suggest_emodule_flag_keyboard
             ;;
         lo_LA*)
@@ -151,13 +206,13 @@ main(){
         si_LK*)
             language="Sinhala"
             package="fcitx5-m17n"
-            fcitx_engine="m17n"
+            fcitx_engine="m17n_si_wijesekera"
             suggest_emodule_flag_keyboard
             ;;
         am_ET*)
             language="Amharic"
             package="fcitx5-m17n"
-            fcitx_engine="m17n"
+            fcitx_engine="m17n_am_sera"
             suggest_emodule_flag_keyboard
             ;;
         *_CA*|*_CH*|*_CM*|*_MA*|*_CD*|*_GH*|*_GN*|*_RS*|*_SY*|*_TR*|*_ZA*|*_KE*|*_AF*|*_BR*|*_HR*|*_CZ*|*_IR*|*_FI*|*_FR*|*_GE*|*_DE*|*_HU*|*_KZ*|*_NO*|*_PL*|*_ES*|*_SE*|*_UK*|*_PK*|*_NG*|*_ML*|*_BE*|*_IT*|*_PT*|*_RO*|*_LU*|*_PH*|*_IE*|*_LV*|*_LT*|*_EE*)
@@ -232,7 +287,7 @@ main(){
             fi
 
             # Pre-configure the input engine
-            if [[ -n "$fcitx_engine" ]] && { [[ ! -f "$HOME/.config/fcitx5/profile" ]] || grep -qsE "^Name=(m17n|m17n_lo_kbd)$" "$HOME/.config/fcitx5/profile" ; } ; then
+            if [[ -n "$fcitx_engine" ]] && { [[ ! -f "$HOME/.config/fcitx5/profile" ]] || grep -qsE "^Name=(m17n|m17n_lo_kbd|table|thai)$" "$HOME/.config/fcitx5/profile" ; } ; then
                 {
                     echo "[Groups/0]"
                     echo "Name=Default"

@@ -4659,19 +4659,30 @@ el_apt_package_version_get(){
 #       EXAMPLE:  el_aptget install -y vim
 #===============================================================================
 el_aptget(){
-    local i j is_shown
+    local i j is_shown lock_files
     i=0
 
-    tput sc
-    # while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
-    while fuser /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
+    local lf
+    lock_files=()
+    for lf in "/var/lib/apt/lists/lock" ; do
+        [[ -e "$lf" ]] && lock_files+=("$lf")
+    done
+    # Avoid deadlocking if invoked from inside a dpkg maintainer script
+    if [[ -z "${DPKG_RUNNING_VERSION:-}" ]] ; then
+        for lf in "/var/lib/dpkg/lock" "/var/lib/dpkg/lock-frontend" "/var/cache/apt/archives/lock" ; do
+            [[ -e "$lf" ]] && lock_files+=("$lf")
+        done
+    fi
+
+    [[ -t 2 ]] && tput sc 2>/dev/null || true
+    while [[ "${#lock_files[@]}" -gt 0 ]] && command -v fuser >/dev/null 2>&1 && fuser "${lock_files[@]}" >/dev/null 2>&1 ; do
         case $(($i % 4)) in
             0 ) j="-" ;;
             1 ) j="\\" ;;
             2 ) j="|" ;;
             3 ) j="/" ;;
         esac
-        tput rc
+        [[ -t 2 ]] && tput rc 2>/dev/null || true
         if ((is_interactive)) ; then
             echo -en "\r\033[K[$j] Waiting for other software managers to finish..." 1>&2
         else

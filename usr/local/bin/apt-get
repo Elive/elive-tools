@@ -9,7 +9,7 @@ waiter(){
     local is_waiting i
     i=0
 
-    tput sc
+    [[ -t 1 ]] && tput sc 2>/dev/null || true
     # Update: do not enable a lock watcher for dpkg since it can conflict when installing for example "cursor" (dpkg -i cursor leads to using apt for its own instalaltion and then the lock gets stuck), use them independently
     # while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
     while fuser /var/lib/apt/lists/lock  >/dev/null 2>&1 ; do
@@ -19,8 +19,10 @@ waiter(){
             2 ) j="|" ;;
             3 ) j="/" ;;
         esac
-        tput rc
-        echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
+        [[ -t 1 ]] && tput rc 2>/dev/null || true
+        if [[ -t 1 ]] ; then
+            echo -en "\r\033[K[$j] Waiting for other software managers to finish..."
+        fi
         is_waiting=1
 
         LC_ALL=C  sleep 0.5

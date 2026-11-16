@@ -92,6 +92,10 @@ main(){
 
     # e17 {{{
     if [[ -n "$E_START" ]] ; then
+
+        # FIXME: this is incorrect, it triggers a wrong e17 dir detection in E28, move this logic to elive-tools as is_e17 with fallback tests
+        # you can only see this issue booting in "debug" mode
+
         if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
             E_HOME_DIR="$HOME/.e/e17"
         fi

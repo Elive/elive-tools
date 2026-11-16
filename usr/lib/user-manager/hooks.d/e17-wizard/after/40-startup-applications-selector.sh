@@ -13,6 +13,55 @@ if [[ -n "$E_ROOT" ]] ; then
 fi
 
 
+desktop_exec_is_valid(){
+    local desktop_file="$1"
+    local try_exec exec_cmd
+
+    [[ -s "$desktop_file" ]] || return 1
+
+    try_exec="$( LC_ALL=C grep -m1 "^TryExec=" "$desktop_file" | sed -e 's|^TryExec=||g' -e 's|\r$||' -e 's|^[[:space:]]*||' )"
+    if [[ -n "$try_exec" ]] ; then
+        if [[ "$try_exec" == \"* ]] ; then
+            try_exec="${try_exec#\"}"
+            try_exec="${try_exec%%\"*}"
+        elif [[ "$try_exec" == \'* ]] ; then
+            try_exec="${try_exec#\'}"
+            try_exec="${try_exec%%\'*}"
+        else
+            try_exec="${try_exec%%[[:space:]]*}"
+        fi
+        if [[ "$try_exec" == */* ]] ; then
+            [[ -f "$try_exec" && -x "$try_exec" ]] || return 1
+        else
+            type -P "$try_exec" >/dev/null 2>&1 || return 1
+        fi
+    fi
+
+    exec_cmd="$( LC_ALL=C grep -m1 "^Exec=" "$desktop_file" | sed -e 's|^Exec=||g' -e 's|\r$||' -e 's|^[[:space:]]*||' )"
+    [[ -n "$exec_cmd" ]] || return 1
+
+    if [[ "$exec_cmd" == \"* ]] ; then
+        exec_cmd="${exec_cmd#\"}"
+        exec_cmd="${exec_cmd%%\"*}"
+    elif [[ "$exec_cmd" == \'* ]] ; then
+        exec_cmd="${exec_cmd#\'}"
+        exec_cmd="${exec_cmd%%\'*}"
+    else
+        exec_cmd="${exec_cmd%%[[:space:]]*}"
+    fi
+
+    [[ -n "$exec_cmd" ]] || return 1
+
+    if [[ "$exec_cmd" == */* ]] ; then
+        [[ -f "$exec_cmd" && -x "$exec_cmd" ]] || return 1
+    else
+        type -P "$exec_cmd" >/dev/null 2>&1 || return 1
+    fi
+
+    return 0
+}
+
+
 main(){
     # pre {{{
     local file menu menu_auto menu_auto_live message_gui buf
@@ -90,6 +139,10 @@ main(){
 
         # checks {{{
         if [[ ! -s "$file" ]] ; then
+            continue
+        fi
+        if ! desktop_exec_is_valid "$file" ; then
+            el_debug "ignoring autolauncher with missing executable: $file"
             continue
         fi
 
@@ -342,7 +395,7 @@ main(){
     fi
 
     # include the legacy elxstrt always
-    if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] ; then
+    if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] && desktop_exec_is_valid "$HOME/.local/share/applications/elxstrt.desktop" ; then
         # update: not needed since E16 already runs it on every restart
         if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file_restart}" ; then
             echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file_restart}"
@@ -375,7 +428,14 @@ main(){
 
     if ! ((is_live)) ; then
         if ! ((is_polkit_auth_included)) ; then
-            if ls /etc/xdg/autostart/polkit-*authentication*desktop 1>/dev/null 2>/dev/null ; then
+            local polkit_desktop_valid=""
+            for file in /etc/xdg/autostart/polkit-*authentication*desktop ; do
+                if desktop_exec_is_valid "$file" ; then
+                    polkit_desktop_valid="$file"
+                    break
+                fi
+            done
+            if [[ -n "$polkit_desktop_valid" ]] ; then
                 if zenity --question --text="$( eval_gettext "The Polkit authentication agent is not included, needed for proper system function (e.g., using media devices or mounting hard disks). Elive can add a special config for disk use. Are you sure you want to disable it?" )" ; then
                     is_polkit_auth_disabled_wanted=1
                 else
@@ -418,7 +478,14 @@ EOF
 
     # gdu
     if ! ((is_live)) ; then
-        if ! ((is_gdu_notif_included)) && ls /etc/xdg/autostart/gdu-notification*desktop 1>/dev/null 2>/dev/null ; then
+        local gdu_desktop_valid=""
+        for file in /etc/xdg/autostart/gdu-notification*desktop ; do
+            if desktop_exec_is_valid "$file" ; then
+                gdu_desktop_valid="$file"
+                break
+            fi
+        done
+        if ! ((is_gdu_notif_included)) && [[ -n "$gdu_desktop_valid" ]] ; then
             if zenity --question --text="$( eval_gettext "GDU notifications are not included. These alert you to hard disk errors. Are you sure you want to disable them?" )" ; then
                 true
             else
@@ -458,7 +525,7 @@ EOF
         message_hexchat="$( printf "$( eval_gettext "IRC Chat: With the chat channel of Elive" )" "" )"
 
         # always enable notifications features (notify-send) by default:
-        if [[ -e "/usr/share/applications/notification-daemon.desktop" ]] && ! grep -qs "notification-daemon.desktop" "$order_file" ; then
+        if desktop_exec_is_valid "/usr/share/applications/notification-daemon.desktop" && ! grep -qs "notification-daemon.desktop" "$order_file" ; then
             echo "/usr/share/applications/notification-daemon.desktop" >> "$order_file"
         fi
 

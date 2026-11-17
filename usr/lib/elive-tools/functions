@@ -377,6 +377,35 @@ el_set_display_variables(){
 }
 
 #===  FUNCTION  ================================================================
+#          NAME:  el_audio_backend_get
+#   DESCRIPTION:  Detects the active or installed audio backend (PipeWire, PulseAudio, or ALSA)
+#    PARAMETERS:  -
+#       RETURNS:  Sets global is_pipewire, is_pulseaudio, or is_alsa flags
+#       EXAMPLE:  el_audio_backend_get
+#===============================================================================
+el_audio_backend_get(){
+    unset is_pipewire is_pulseaudio is_alsa
+
+    if pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 ; then
+        is_pipewire=1 # flag: OS uses PipeWire as audio backend
+    elif pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
+        is_pulseaudio=1 # flag: OS uses PulseAudio as audio backend
+    elif command -v pipewire-pulse >/dev/null 2>&1 \
+        || dpkg-query -W -f='${Status}' pipewire-pulse 2>/dev/null | grep -qs "install ok installed" ; then
+        is_pipewire=1
+    elif command -v pulseaudio >/dev/null 2>&1 \
+        || dpkg-query -W -f='${Status}' pulseaudio 2>/dev/null | grep -qs "install ok installed" ; then
+        is_pulseaudio=1
+    elif pgrep -u "$UID" -x pipewire >/dev/null 2>&1 \
+        || command -v pipewire >/dev/null 2>&1 \
+        || dpkg-query -W -f='${Status}' pipewire 2>/dev/null | grep -qs "install ok installed" ; then
+        is_pipewire=1
+    elif [[ -s "/proc/asound/cards" ]] && ! grep -Fqs "no soundcards" /proc/asound/cards ; then
+        is_alsa=1 # flag: OS uses ALSA as audio backend
+    fi
+}
+
+#===  FUNCTION  ================================================================
 #          NAME:  el_pulseaudio
 #   DESCRIPTION:  Manages the user audio daemon (PipeWire, PulseAudio, or ALSA)
 #    PARAMETERS:  $1 = mode (check|start|stop|restart)
@@ -384,7 +413,7 @@ el_set_display_variables(){
 #       EXAMPLE:  el_pulseaudio restart
 #===============================================================================
 el_pulseaudio(){
-    local mode is_pulseaudio is_pipewire is_alsa use_systemd_user i
+    local mode use_systemd_user i
 
     mode="$1"
     shift
@@ -405,25 +434,12 @@ el_pulseaudio(){
         use_systemd_user=1
     fi
 
-    if pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 \
-        || LC_ALL=C timeout 2 pactl info 2>/dev/null | grep -iqs "on PipeWire" ; then
-        is_pipewire=1
-    elif pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
-        is_pulseaudio=1
-    elif command -v pipewire-pulse >/dev/null 2>&1 \
-        || dpkg-query -W -f='${Status}' pipewire-pulse 2>/dev/null | grep -qs "install ok installed" ; then
-        is_pipewire=1
-    elif command -v pulseaudio >/dev/null 2>&1 \
-        || dpkg-query -W -f='${Status}' pulseaudio 2>/dev/null | grep -qs "install ok installed" ; then
-        is_pulseaudio=1
-    elif pgrep -u "$UID" -x pipewire >/dev/null 2>&1 \
-        || command -v pipewire >/dev/null 2>&1 \
-        || dpkg-query -W -f='${Status}' pipewire 2>/dev/null | grep -qs "install ok installed" ; then
-        is_pipewire=1
-    elif [[ -s "/proc/asound/cards" ]] && ! grep -Fqs "no soundcards" /proc/asound/cards ; then
-        is_alsa=1
-    else
-        el_debug "no audio backend (pipewire, pulseaudio, or alsa) detected"
+    if ! ((is_pipewire)) && ! ((is_pulseaudio)) && ! ((is_alsa)) ; then
+        el_audio_backend_get
+
+        if ! ((is_pipewire)) && ! ((is_pulseaudio)) && ! ((is_alsa)) ; then
+            el_debug "no audio backend (pipewire, pulseaudio, or alsa) detected"
+        fi
     fi
 
     case "$mode" in
@@ -454,6 +470,7 @@ el_pulseaudio(){
                     fi
                 fi
                 return 1
+
             elif ((is_alsa)) ; then
                 return 0
             else
@@ -5368,6 +5385,9 @@ else
     fi
 fi
 unset _init_count
+
+# always know the audio backend
+el_audio_backend_get
 
 
 

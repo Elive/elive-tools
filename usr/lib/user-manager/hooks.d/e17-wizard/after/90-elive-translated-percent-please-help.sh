@@ -29,8 +29,10 @@ main(){
     if [[ -z "$lang" ]] ; then
         exit
     fi
+    el_debug "lang detected: $lang (LANG=$LANG)"
 
     dir="/var/cache/elive-translations/statistics/$lang"
+    el_debug "translations dir: $dir"
 
     if [[ -n "$LANG" ]] && [[ "$LANG" != en* ]] ; then
         if [[ -d "$dir" ]] ; then
@@ -40,6 +42,7 @@ main(){
             percent="$(( $total / $amount ))"
             # percent is the inverse (no-translated message statistics)
             percent="$(( 100 - $percent ))"
+            el_debug "translation percent calculated: $percent% (amount=$amount, total=$total)"
 
             if echo "$percent" | grep -qs "[[:digit:]]" ; then
                 local message_translated

@@ -41,6 +41,7 @@ main(){
 
 
 
+            el_debug "showing design selection dialog using $guitool"
             # select a design
             result="$( $guitool --list \
                 --title="${message_title}" \
@@ -59,9 +60,11 @@ main(){
                 --height=280 \
                 --width=600 || echo cancel )"
 
+            el_debug "design selection result: $result"
             case "$result" in
                 "1")
                     # default E flat theme + light color palette
+                    el_debug "setting theme: default E flat theme + light color palette"
                     elementary_config -q -p "light"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
                         LC_ALL=C sleep 0.5
@@ -70,6 +73,7 @@ main(){
                     ;;
                 "2")
                     # default E flat theme + dark color palette
+                    el_debug "setting theme: default E flat theme + dark color palette"
                     elementary_config -q -p "default"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
                         LC_ALL=C sleep 0.5
@@ -78,6 +82,7 @@ main(){
                     ;;
                 "3")
                     # default E flat theme
+                    el_debug "setting theme: default E flat theme + mauve-sunset color palette"
                     elementary_config -q -p "mauve-sunset"
                     if ! enlightenment_remote -theme-get | grep -q "/default.edj$" ; then
                         LC_ALL=C sleep 0.5
@@ -86,6 +91,7 @@ main(){
                     ;;
                 "4")
                     # E17 Elive theme
+                    el_debug "setting theme: E17 Elive theme + light color palette"
                     elementary_config -q -p "light"
                     if ! enlightenment_remote -theme-get | grep -q "/Elive Light.edj$" ; then
                         LC_ALL=C sleep 0.5
@@ -94,6 +100,7 @@ main(){
                     ;;
                 *)
                     # cancel
+                    el_debug "design selection cancelled"
                     ;;
             esac
 

@@ -56,7 +56,7 @@ reconfigure_applications(){
                 fi
                 if ((_a)) ; then
                     if echo "$line" | grep -qsE "^\s*card " ; then
-                        mic="$( echo "$line" | grep -qsE "^\s*card " | sed -e 's|^.*card ||g' )"
+                        mic="$( echo "$line" | grep -sE "^\s*card " | sed -e 's|^.*card ||g' )"
                     fi
                 fi
                 if [[ -n "$mic" ]] ; then
@@ -137,41 +137,29 @@ select_card_multiple(){
 
     # remove extra leading blank chars
     read -r selection <<< "$selection"
+    if [[ "${selection}" = "cancel" ]] || [[ -z "${selection}" ]] ; then
+        return 1
+    fi
+
     # bullseye and up works with ID instead of name
     if ((is_buster)) || ((is_wheezy)) ; then
         selection="$selection"
     else
         selection="$( grep -E "\[\s*${selection}\s*\]" "$asound_cards" | sed -e '/^$/d' | awk '{print $1}' | head -1 )"
     fi
-
-    if [[ "${selection}" = "cancel" ]] ; then
-        return 1
-    fi
+    el_debug "selected card resolved to '$selection'"
 }
 
 main(){
     # pre {{{
-    local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode
+    local list_cards number_cards selection guitool line is_auto_mode is_quiet_mode is_audio_daemon_running
 
-    case "$( cat /etc/debian_version )" in
-        11.*|"bullseye"*)
-            is_bullseye=1
-            ;;
-        10.*|"buster"*)
-            is_buster=1
-            ;;
-        7.*|"wheezy"*)
-            is_wheezy=1
-            ;;
-        *)
-            # by default, normal mode:
-            true
-            ;;
-    esac
-
-    if el_pulseaudio check ; then
-        is_pulseaudio=1
+    if ((is_pipewire)) || ((is_pulseaudio)) ; then
+        if el_pulseaudio check ; then
+            is_audio_daemon_running=1
+        fi
     fi
+    el_debug "audio backend state: is_pipewire=${is_pipewire:-0}, is_pulseaudio=${is_pulseaudio:-0}, is_alsa=${is_alsa:-0}, is_audio_daemon_running=${is_audio_daemon_running:-0}"
 
     # }}}
 
@@ -271,8 +259,9 @@ main(){
         # more than one card found
         if ((is_auto_mode)) ; then
 
-            #always kill pulseaudio first, otherwise we cannot list the audio cards
-            if ((is_pulseaudio)) ; then
+            #always kill audio daemon first, otherwise we cannot list the audio cards
+            if ((is_audio_daemon_running)) ; then
+                el_debug "stopping audio daemon before probing audio cards"
                 el_pulseaudio stop
             fi
 
@@ -371,11 +360,13 @@ main(){
         if ((is_buster)) || ((is_wheezy)) ; then
             echo "defaults.ctl.card ${selection}" >> "${HOME}/.asoundrc"
             echo "defaults.pcm.card ${selection}" >> "${HOME}/.asoundrc"
+            el_debug "configured ${HOME}/.asoundrc with card name '${selection}'"
         else
             id="$( echo "$list_cards" | grep -Ew "$selection" | sed -e 's|\[.*$||g' )"
             read -r id <<< "$id"
             echo "defaults.ctl.card ${id}" >> "${HOME}/.asoundrc"
             echo "defaults.pcm.card ${id}" >> "${HOME}/.asoundrc"
+            el_debug "configured ${HOME}/.asoundrc with card id '${id}' (selection '${selection}')"
         fi
     fi
 
@@ -384,11 +375,13 @@ main(){
         if ((is_buster)) || ((is_wheezy)) ; then
             sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${selection}|g" /usr/share/alsa/alsa.conf
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${selection}|g" /usr/share/alsa/alsa.conf
+            el_debug "updated /usr/share/alsa/alsa.conf to card name '${selection}'"
         else
             id="$( echo "$list_cards" | grep -Ew "$selection" | sed -e 's|\[.*$||g' )"
             read -r id <<< "$id"
             sed -i "s|^defaults.ctl.card.*$|defaults.ctl.card ${id}|g" /usr/share/alsa/alsa.conf
             sed -i "s|^defaults.pcm.card.*$|defaults.pcm.card ${id}|g" /usr/share/alsa/alsa.conf
+            el_debug "updated /usr/share/alsa/alsa.conf to card id '${id}'"
         fi
     fi
 
@@ -399,7 +392,8 @@ main(){
         if ((is_auto_mode)) ; then
             if ((has_multiple_cards)) ; then
 
-                if ((is_pulseaudio)) ; then
+                if ((is_audio_daemon_running)) ; then
+                    el_debug "stopping audio daemon before probing microphone cards"
                     el_pulseaudio stop
                 fi
 
@@ -498,7 +492,8 @@ EOF
         # ALWAYS reconfigure audios (and mic capture and all) after to have configured a new card
         # we need to create the PCM channel! it doesn't exist until we do it
         timeout 5 aplay /dev/null 2>/dev/null
-        if ((is_pulseaudio)) ; then
+        if ((is_audio_daemon_running)) ; then
+            el_debug "restarting audio daemon"
             el_pulseaudio start
         fi
 

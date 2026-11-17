@@ -403,6 +403,7 @@ el_audio_backend_get(){
     elif [[ -s "/proc/asound/cards" ]] && ! grep -Fqs "no soundcards" /proc/asound/cards ; then
         is_alsa=1 # flag: OS uses ALSA as audio backend
     fi
+    el_debug "detected audio backend: is_pipewire=${is_pipewire:-0}, is_pulseaudio=${is_pulseaudio:-0}, is_alsa=${is_alsa:-0}"
 }
 
 #===  FUNCTION  ================================================================
@@ -479,6 +480,7 @@ el_pulseaudio(){
             ;;
 
         start)
+            el_debug "starting audio daemon (is_pipewire=${is_pipewire:-0}, is_pulseaudio=${is_pulseaudio:-0}, is_alsa=${is_alsa:-0}, use_systemd_user=${use_systemd_user:-0})"
             if ((is_pipewire)) ; then
                 if ((use_systemd_user)) ; then
                     systemctl --user cat pipewire.socket >/dev/null 2>&1 && systemctl --user start pipewire.socket 2>/dev/null || true
@@ -527,6 +529,7 @@ el_pulseaudio(){
             ;;
 
         stop)
+            el_debug "stopping audio daemon (use_systemd_user=${use_systemd_user:-0})"
             if pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
                 if ((use_systemd_user)) ; then
                     systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true

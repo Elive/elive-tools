@@ -26,32 +26,31 @@
 
 # colorscheme based in Elive terminal colorschemes (similar to molokai/monokai)
 if [ "$TERM" = "linux" ]; then
-    echo -en "\e]P0000000" # black
-    echo -en "\e]P1e50000" # red
-    echo -en "\e]P287cc00" # green
-    echo -en "\e]P3fc8700" # brown
-    echo -en "\e]P49b5fff" # blue
-    echo -en "\e]P5fa00cc" # magenta
-    echo -en "\e]P600c8fc" # cyan
-    echo -en "\e]P7d8d8d8" # white
+    printf '\033]P0000000' # black
+    printf '\033]P1e50000' # red
+    printf '\033]P287cc00' # green
+    printf '\033]P3fc8700' # brown
+    printf '\033]P49b5fff' # blue
+    printf '\033]P5fa00cc' # magenta
+    printf '\033]P600c8fc' # cyan
+    printf '\033]P7d8d8d8' # white
     # -----------------------------
-    echo -en "\e]P88a8a8a" # light black
-    echo -en "\e]P9ff4040" # light red
-    echo -en "\e]PAc2fc4c" # light green
-    echo -en "\e]PBffc342" # light brown
-    echo -en "\e]PCa876ff" # light blue
-    echo -en "\e]PDff58e0" # light magenta
-    echo -en "\e]PEa1efff" # light cyan
-    echo -en "\e]PFffffff" # light white
+    printf '\033]P88a8a8a' # light black
+    printf '\033]P9ff4040' # light red
+    printf '\033]PAc2fc4c' # light green
+    printf '\033]PBffc342' # light brown
+    printf '\033]PCa876ff' # light blue
+    printf '\033]PDff58e0' # light magenta
+    printf '\033]PEa1efff' # light cyan
+    printf '\033]PFffffff' # light white
     #clear #for background artifacting
 fi
 
 # dynamically use the same colorschemes that we have for our X terminals
 if [ "$TERM" = "linux" ]; then
     _SEDCMD='s/^[^\!].*\*color\([0-9]\{1,\}\).*#\([0-9a-fA-F]\{6\}\).*/\1 \2/p'
-    for i in $(sed -n "$_SEDCMD" "$HOME/.Xdefaults" 2>/dev/null | awk '$1 < 16 {printf "\\e]P%X%s", $1, $2}'); do
-
-        echo -en "$i"
+    for i in $(sed -n "$_SEDCMD" "$HOME/.Xdefaults" 2>/dev/null | awk '$1 < 16 {printf "\033]P%X%s", $1, $2}'); do
+        printf '%s' "$i"
     done
     #clear
 fi

@@ -5,11 +5,11 @@ log_progress_msg () {
     fi
 
     # show progress in plymouth if available or to console if not
-    if [ -x /bin/plymouth ] && plymouth --ping ; then
+    if command -v plymouth >/dev/null 2>&1 && plymouth --ping 2>/dev/null ; then
         if [ -n "$log_daemon_msg_last_v" ] ; then
-            plymouth message --text="${log_daemon_msg_last_v}: $@"
+            plymouth message --text="${log_daemon_msg_last_v}: $*"
         else
-            plymouth message --text="$@"
+            plymouth message --text="$*"
         fi
     else
         /bin/echo -n " $@" || true
@@ -24,7 +24,7 @@ log_daemon_msg () {
     log_daemon_msg_pre "$@"
 
     if [ -z "${2:-}" ]; then
-        if [ -x /bin/plymouth ] && plymouth --ping ; then
+        if command -v plymouth >/dev/null 2>&1 && plymouth --ping 2>/dev/null ; then
             plymouth message --text="$1:"
             log_daemon_msg_last_v="$1 "
         else
@@ -33,7 +33,7 @@ log_daemon_msg () {
         return 0
     fi
 
-    if [ -x /bin/plymouth ] && plymouth --ping ; then
+    if command -v plymouth >/dev/null 2>&1 && plymouth --ping 2>/dev/null ; then
         plymouth message --text="$1: $2"
         log_daemon_msg_last_v="$1 $2"
     else

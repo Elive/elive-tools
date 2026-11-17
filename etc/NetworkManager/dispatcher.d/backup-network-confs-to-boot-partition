@@ -58,8 +58,13 @@ main(){
 
     # }}}
 
-    if ! grep -qs "/boot" /etc/fstab || ! grep -qs "/boot" /proc/mounts ; then
+    if ! grep -qsE "[[:space:]]/boot[[:space:]]" /etc/fstab || ! mountpoint -q /boot ; then
         el_debug "ignoring backup of network confs in /boot since its not an extra partition"
+        exit 0
+    fi
+
+    if [[ ! -d "/etc/NetworkManager/system-connections" ]] ; then
+        el_debug "ignoring backup: /etc/NetworkManager/system-connections does not exist"
         exit 0
     fi
 
@@ -68,8 +73,9 @@ main(){
         exit 0
     fi
 
+    el_debug "Backing up /etc/NetworkManager/system-connections to /boot/etc/NetworkManager/system-connections"
     mkdir -p /boot/etc/NetworkManager/system-connections
-    if [[ -x "$( which rsync )" ]] ; then
+    if command -v rsync >/dev/null 2>&1 ; then
         rsync -av --delete /etc/NetworkManager/system-connections/ /boot/etc/NetworkManager/system-connections/
     else
         rm -rf /boot/etc/NetworkManager/system-connections

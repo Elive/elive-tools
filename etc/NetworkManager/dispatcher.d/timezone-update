@@ -21,19 +21,20 @@ update_conf_etc(){
 
     if [ -n "${timezone}" ] ; then
         _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
-        _ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
+        _ZONE="$(echo "${timezone}" | cut -f2- -d '/')"
     else
         _AREA="Etc"
         _ZONE="UTC"
     fi
 
     el_explain 0 "Configuring machine timezone to __${timezone}, $_AREA, $_ZONE __"
+    el_debug "update_conf_etc: timezone='${timezone}', _AREA='${_AREA}', _ZONE='${_ZONE}', bios_mode='${bios_mode}'"
     #log_progress_msg "Configuring machine timezone to ${timezone}, $_AREA, $_ZONE"
 
     # localtime file
-    rm -f /etc/localtime
-    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" "/etc/localtime"
+    ln -sf "/usr/share/zoneinfo/${_AREA}/${_ZONE}" "/etc/localtime"
     echo "$_AREA/$_ZONE" > "/etc/timezone"
+    el_debug "Updated /etc/localtime -> /usr/share/zoneinfo/${_AREA}/${_ZONE} and /etc/timezone"
 
     # call tzdata and update things
     # debconf set configurations
@@ -51,7 +52,7 @@ EOF
     fi
 
     # adjtime file
-    if [[ -n "$bios_mode" ]] ; then
+    if [[ -n "$bios_mode" ]] && [[ -f /etc/adjtime ]] && command -v ed >/dev/null 2>&1 ; then
         ed -s /etc/adjtime << EOF
 3d
 a
@@ -59,6 +60,7 @@ $bios_mode
 .
 w
 EOF
+        el_debug "Updated /etc/adjtime to bios_mode='${bios_mode}'"
     fi
 
 }
@@ -151,10 +153,9 @@ update_ntp_time_from_server(){
 
 has_windows(){
     if ! ((has_os_prober_run)) ; then
-
+        has_os_prober_run=1
         if [[ -n "$( partitions-list --show-all 2>/dev/null | awk -v FS="::" '{ if ($3 == "ntfs") print $1}' )" ]] ; then
             has_windows=1
-            has_os_prober_run=1
         fi
     fi
 
@@ -216,19 +217,36 @@ main(){
     fi
 
     case "$1" in
-        connectivity-change|none)
-            # whitelisted ignorings
-            exit
-            ;;
         -f|--force)
             is_force=1
             needs_update_conf=1
-            # this is an ugly hack, iface is the first paramter but if we call the tool from cli it is "-f" instead
-            #unset iface
+            shift
             ;;
         -c|--clean)
-            mode_clean=1
-            unset iface
+            rm -f "${conf}"
+            el_info "Conf file cleaned"
+            el_debug "Removed conf file '${conf}'"
+            exit
+            ;;
+    esac
+
+    if ((is_force)) && [[ -z "$1" ]] ; then
+        iface="$(ip route | awk '/^default/ {print $5; exit}')"
+        state="up"
+    else
+        iface="$1"
+        shift
+        state="$1"
+        shift
+    fi
+
+    read -r iface <<< "$iface"
+    read -r state <<< "$state"
+
+    case "$iface" in
+        connectivity-change|none|"")
+            # whitelisted ignorings
+            exit
             ;;
         wlan*|ath*|ra*|w*)
             is_wifi=1
@@ -241,21 +259,11 @@ main(){
             exit
             ;;
         *)
-            el_warning "unknown parameters (iface?) for $0: $@"
+            el_warning "unknown parameters (iface?) for $0: $iface $state"
             ;;
     esac
 
-    iface="$1"
-    shift
-    state="$1"
-    shift
-
-    read -r iface <<< "$iface"
-    read -r state <<< "$state"
-
-    # debug parameters:
-    #echo "D: $@ ($iface - $state) "
-
+    el_debug "main: iface='${iface}', state='${state}', is_force='${is_force:-0}', is_wifi='${is_wifi:-0}', is_lan='${is_lan:-0}'"
 
     # checks
     # set some variables for compatibility specially if we run it from commandline
@@ -278,15 +286,6 @@ main(){
             exit
             ;;
     esac
-
-
-
-    # pre hooks
-    if ((mode_clean)) ; then
-        rm -f "${conf}"
-        el_info "Conf file cleaned"
-        exit
-    fi
 
 
     # }}}
@@ -324,9 +323,16 @@ main(){
 
     # get the ssid identifier
     if ((is_wifi)) ; then
-        connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | grep "ESSID:" | sed -e 's|^.*ESSID:"||g' | sed -e 's|"\s*$||g' | head -1 )"
+        if command -v iwconfig >/dev/null 2>&1 ; then
+            connected_ssid="$( iwconfig 2>&1 | grep "^${iface}[[:blank:]]*" | grep "ESSID:" | sed -e 's|^.*ESSID:"||g' | sed -e 's|"\s*$||g' | head -1 )"
+        elif command -v iw >/dev/null 2>&1 ; then
+            connected_ssid="$( iw dev "${iface}" link 2>/dev/null | sed -n 's/^[[:space:]]*SSID: //p' | head -1 )"
+        elif command -v nmcli >/dev/null 2>&1 ; then
+            connected_ssid="$( nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1 == "yes" {print $2; exit}' )"
+        fi
     fi
 
+    el_debug "gateway='${connected_gateway}', mac='${connected_mac}', ssid='${connected_ssid}', bios_mode='${bios_mode}'"
 
     # }}}
 
@@ -336,26 +342,13 @@ main(){
     if [[ -n "$connected_mac" ]] ; then
 
         if ((is_wifi)) && [[ -n "$connected_ssid" ]] ; then
-            timezone_connected="$( grep -a "^${connected_mac}:::.*:::${connected_ssid}" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+            timezone_connected="$( awk -v FS=":::" -v mac="$connected_mac" -v ssid="$connected_ssid" '$1 == mac && $4 == ssid {print $2}' "${conf}" | tail -1 )"
         else
-            timezone_connected="$( grep -a "^${connected_mac}:::" "${conf}" | awk -v FS=":::" '{print $2}' | tail -1 )"
+            timezone_connected="$( awk -v FS=":::" -v mac="$connected_mac" '$1 == mac {print $2}' "${conf}" | tail -1 )"
         fi
     else
         el_error "MAC '${connected_mac}' of where we are connected is not found"
         exit
-    fi
-
-    # always update the conf if we changed the place
-    if [[ -n "$timezone_last" ]] ; then
-        if [[ "${timezone_last}" != "$timezone_connected" ]] ; then
-            needs_update_conf=1
-        fi
-        if [[ "${timezone_last}" != "$timezone" ]] ; then
-            needs_update_conf=1
-        fi
-        if [[ "${timezone}" != "$(cat /etc/timezone)" ]] ; then
-            needs_update_conf=1
-        fi
     fi
 
     # }}}
@@ -383,6 +376,17 @@ main(){
         el_error "We have not found a timezone '${timezone}', exiting..."
         exit
     fi
+
+    # always update the conf if we changed the place or system timezone differs
+    current_timezone="$(cat /etc/timezone 2>/dev/null || readlink /etc/localtime 2>/dev/null | sed 's|.*/zoneinfo/||')"
+    if [[ -n "$timezone_last" ]] && [[ "${timezone_last}" != "$timezone" ]] ; then
+        needs_update_conf=1
+    fi
+    if [[ "${timezone}" != "${current_timezone}" ]] ; then
+        needs_update_conf=1
+    fi
+
+    el_debug "timezone='${timezone}', timezone_last='${timezone_last}', current_timezone='${current_timezone}', needs_update_conf='${needs_update_conf:-0}'"
 
 
     #

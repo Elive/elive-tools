@@ -79,11 +79,11 @@ main(){
 
     on_exit rm -f "$script"
 
-    if ! el_dependencies_check "gksu|zenity|yad" ; then
-        el_dependencies_install "gksu|zenity|yad"
-        if ! el_dependencies_check gksu ; then
-            el_error "we depend on gksu but we cannot install gksu because requires gksu? hum..."
-        fi
+    if ! command -v gksu >/dev/null 2>&1 && ! command -v pkexec >/dev/null 2>&1 ; then
+        if apt-cache show gksu 2>/dev/null | grep -qs "^Package: gksu$" ; then
+            el_dependencies_install "gksu"
+        else
+            el_dependencies_install "pkexec"
     fi
 
     # }}}

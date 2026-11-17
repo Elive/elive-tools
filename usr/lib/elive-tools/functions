@@ -1259,7 +1259,7 @@ if ! apt-get install --reinstall -y $depends ; then
     fi
 fi
 if ((ret)) ; then
-    return \$ret
+    exit \$ret
 else
     echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
 fi
@@ -1282,7 +1282,7 @@ if ! apt-get install --reinstall -y $depends ; then
     fi
 fi
 if ((ret)) ; then
-    return \$ret
+    exit \$ret
 else
     echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
 fi
@@ -1404,7 +1404,7 @@ apt-get remove $depends
 ret=\$?
 
 if ((ret)) ; then
-    return \$ret
+    exit \$ret
 else
     echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
 fi
@@ -1422,7 +1422,7 @@ apt-get remove $depends
 ret=\$?
 
 if ((ret)) ; then
-    return \$ret
+    exit \$ret
 else
     echo ; echo ; echo ; echo ; echo 'All Done' ; sleep 2
 fi
@@ -5088,7 +5088,7 @@ if [[ -n "$ZSH_VERSION" ]] ; then
 fi
 
 # set defaults for guis
-[[ -z "$zenity" ]] && [[ -x "/usr/bin/zenity" ]] && zenity="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
+[[ -z "$zenity" ]] && [[ -x "/usr/bin/zenity" ]] && zenity="/usr/bin/zenity --icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 [[ -z "$yad" ]] && [[ -x "/usr/bin/yad" ]] && yad="/usr/bin/yad --borders=15 --center --image=logo-elive"
 # set a default guitool compatible with the scripts
 guitool="$zenity"  # default GUI tool (zenity, yad, etc)

@@ -80,6 +80,12 @@ main(){
 
     baseurl="$( get_baseurl "$url" )"
 
+    local convert_cmd="convert"
+    if ((is_trixie)) || command -v magick >/dev/null 2>&1 ; then
+        convert_cmd="magick"
+    fi
+    el_debug "Using image conversion command: $convert_cmd"
+
     rm -rf "${tmpdir}"
     mkdir -p "${tmpdir}"
     cd "${tmpdir}"
@@ -135,7 +141,7 @@ main(){
             if wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
                 _baseurl="$( get_baseurl "$line_clean" )"
             else
-                convert -size 32x32 xc:white "$filename"
+                "$convert_cmd" -size 32x32 xc:white "$filename"
             fi
         fi
 
@@ -160,19 +166,19 @@ main(){
                     if ! wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
                         # no way? create an empty image instead:
                         # NOTE: we need an image in any of the cases so the epub creation will not fail (pandoc in general)
-                        convert -size 32x32 xc:white "$filename"
+                        "$convert_cmd" -size 32x32 xc:white "$filename"
                     fi
                 fi
             fi
         else
             if ! wget -nc --timeout=320 -A Mozilla -q "$line_clean" ; then
-                convert -size 32x32 xc:white "$filename"
+                "$convert_cmd" -size 32x32 xc:white "$filename"
             fi
         fi
 
         # no file? create it
         if ! [[ -s "$filename" ]] ; then
-            convert -size 32x32 xc:white "$filename"
+            "$convert_cmd" -size 32x32 xc:white "$filename"
         fi
 
         mkdir -p "$dirfile"

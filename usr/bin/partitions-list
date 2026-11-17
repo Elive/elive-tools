@@ -243,16 +243,14 @@ main(){
         fi
     fi
 
-    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
-        is_wheezy=1
+    if ((is_wheezy)) ; then
         sfdisk_print_id="--print-id"
+    elif ((is_buster)) ; then
+        sfdisk_print_id="--part-id"
     else
-        if grep -qsE "(^10\.|buster)" /etc/debian_version ; then
-            sfdisk_print_id="--part-id"
-        else
-            sfdisk_print_id="--part-type"
-        fi
+        sfdisk_print_id="--part-type"
     fi
+    el_debug "Using sfdisk_print_id='$sfdisk_print_id'"
 
     # }}}
 
@@ -507,7 +505,7 @@ main(){
         if [[ -n "$item_filesystem" ]] ; then
             if [[ "$item_filesystem" = "vfat" ]] ; then
                 item_hd="$( get_disk_from_partition_complex "$item" )"
-                if LC_ALL=C fdisk -l "${item_hd}" 2>/dev/null | grep -qs "^${1}.*EFI " ; then
+                if LC_ALL=C fdisk -l "${item_hd}" 2>/dev/null | grep -qs "^${item}.*EFI " ; then
                     item_human_label="EFI"
                 fi
             fi

@@ -99,7 +99,7 @@ main(){
         "resetaudio")
             # note: same code exists in elive-audio-fixes tool
             el_debug "resetaudio: stopping audio daemon (is_pipewire=${is_pipewire:-0}, is_pulseaudio=${is_pulseaudio:-0}, is_alsa=${is_alsa:-0}, is_systemd=${is_systemd:-0})"
-            el_pulseaudio stop
+            el_audio_daemon stop
 
             rm -rf ~/.config/pulse/cookie ~/.pulse/* ~/.asoundrc ~/.local/state/wireplumber/* 2>/dev/null || true
 
@@ -107,7 +107,7 @@ main(){
             el_audio_backend_get
 
             el_debug "resetaudio: starting audio daemon (is_pipewire=${is_pipewire:-0}, is_pulseaudio=${is_pulseaudio:-0}, is_alsa=${is_alsa:-0})"
-            el_pulseaudio start
+            el_audio_daemon start
 
             # fix volumes
             rm -f "$HOME/.config/setvolume" 2>/dev/null 1>&2

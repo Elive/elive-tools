@@ -384,11 +384,12 @@ el_set_display_variables(){
 #       EXAMPLE:  el_audio_backend_get
 #===============================================================================
 el_audio_backend_get(){
+    local uid="${UID:-$(id -u)}"
     unset is_pipewire is_pulseaudio is_alsa
 
-    if pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 ; then
+    if pgrep -u "$uid" -x pipewire-pulse >/dev/null 2>&1 ; then
         is_pipewire=1 # flag: OS uses PipeWire as audio backend
-    elif pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
+    elif pgrep -u "$uid" -x pulseaudio >/dev/null 2>&1 ; then
         is_pulseaudio=1 # flag: OS uses PulseAudio as audio backend
     elif command -v pipewire-pulse >/dev/null 2>&1 \
         || dpkg-query -W -f='${Status}' pipewire-pulse 2>/dev/null | grep -qs "install ok installed" ; then
@@ -396,7 +397,7 @@ el_audio_backend_get(){
     elif command -v pulseaudio >/dev/null 2>&1 \
         || dpkg-query -W -f='${Status}' pulseaudio 2>/dev/null | grep -qs "install ok installed" ; then
         is_pulseaudio=1
-    elif pgrep -u "$UID" -x pipewire >/dev/null 2>&1 \
+    elif pgrep -u "$uid" -x pipewire >/dev/null 2>&1 \
         || command -v pipewire >/dev/null 2>&1 \
         || dpkg-query -W -f='${Status}' pipewire 2>/dev/null | grep -qs "install ok installed" ; then
         is_pipewire=1
@@ -407,28 +408,68 @@ el_audio_backend_get(){
 }
 
 #===  FUNCTION  ================================================================
-#          NAME:  el_pulseaudio
+#          NAME:  el_audio_subsystem_get
+#   DESCRIPTION:  Prints the active runtime audio subsystem (pipewire-pulse, pipewire, pulseaudio, alsa, or none)
+#    PARAMETERS:  -
+#       RETURNS:  Echoes subsystem name; 0 if usable, 1 if none
+#       EXAMPLE:  subsystem=$(el_audio_subsystem_get)
+#===============================================================================
+el_audio_subsystem_get(){
+    local uid="${UID:-$(id -u)}"
+
+    if pgrep -u "$uid" -x pipewire >/dev/null 2>&1 ; then
+        if pgrep -u "$uid" -x pipewire-pulse >/dev/null 2>&1 \
+            && ( ! command -v pactl >/dev/null 2>&1 || LC_ALL=C timeout 2 pactl info 2>/dev/null | grep -iqsE "Server Name:.*(pipewire|pulseaudio)" ) ; then
+            echo "pipewire-pulse"
+            return 0
+        elif ( command -v pw-cli >/dev/null 2>&1 && timeout 2 pw-cli info 0 >/dev/null 2>&1 ) \
+            || ( command -v wpctl >/dev/null 2>&1 && timeout 2 wpctl status >/dev/null 2>&1 ) ; then
+            echo "pipewire"
+            return 0
+        fi
+    fi
+
+    if pgrep -u "$uid" -x pulseaudio >/dev/null 2>&1 ; then
+        if ( command -v pulseaudio >/dev/null 2>&1 && pulseaudio --check 2>/dev/null 1>&2 ) \
+            || ( command -v pactl >/dev/null 2>&1 && LC_ALL=C timeout 2 pactl info 2>/dev/null | grep -iqs "Server Name:.*pulseaudio" ) ; then
+            echo "pulseaudio"
+            return 0
+        fi
+    fi
+
+    if [[ -s "/proc/asound/cards" ]] && ! grep -Fqs "no soundcards" /proc/asound/cards ; then
+        echo "alsa"
+        return 0
+    fi
+
+    echo "none"
+    return 1
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_audio_daemon
 #   DESCRIPTION:  Manages the user audio daemon (PipeWire, PulseAudio, or ALSA)
 #    PARAMETERS:  $1 = mode (check|start|stop|restart)
 #       RETURNS:  0 if running (check) or success, 1 if not running or failed
-#       EXAMPLE:  el_pulseaudio restart
+#       EXAMPLE:  el_audio_daemon restart
 #===============================================================================
-el_pulseaudio(){
-    local mode use_systemd_user i
+el_audio_daemon(){
+    local mode use_systemd_user i uid
 
     mode="$1"
     shift
+    uid="${UID:-$(id -u)}"
 
     if [[ -z "$XDG_RUNTIME_DIR" || ! -d "$XDG_RUNTIME_DIR" ]] ; then
-        if [[ -d "/run/user/$UID" && -O "/run/user/$UID" ]] ; then
-            export XDG_RUNTIME_DIR="/run/user/$UID"
-        elif [[ -n "$UID" ]] ; then
-            export XDG_RUNTIME_DIR="/tmp/xdg-runtime-$UID"
+        if [[ -d "/run/user/$uid" && -O "/run/user/$uid" ]] ; then
+            export XDG_RUNTIME_DIR="/run/user/$uid"
+        elif [[ -n "$uid" ]] ; then
+            export XDG_RUNTIME_DIR="/tmp/xdg-runtime-$uid"
             mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null && chmod 700 "$XDG_RUNTIME_DIR" 2>/dev/null || true
         fi
     fi
-    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" && -S "/run/user/$UID/bus" ]] ; then
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$UID/bus"
+    if [[ -z "$DBUS_SESSION_BUS_ADDRESS" && -S "/run/user/$uid/bus" ]] ; then
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus"
     fi
 
     if ((is_systemd)) && command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1 ; then
@@ -446,11 +487,11 @@ el_pulseaudio(){
     case "$mode" in
         check)
             if ((is_pipewire)) ; then
-                if ! pgrep -u "$UID" -x pipewire >/dev/null 2>&1 ; then
+                if ! pgrep -u "$uid" -x pipewire >/dev/null 2>&1 ; then
                     return 1
                 fi
                 if command -v pipewire-pulse >/dev/null 2>&1 ; then
-                    if pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 ; then
+                    if pgrep -u "$uid" -x pipewire-pulse >/dev/null 2>&1 ; then
                         if ! command -v pactl >/dev/null 2>&1 \
                             || LC_ALL=C timeout 2 pactl info 2>/dev/null | grep -iqsE "Server Name:.*(pipewire|pulseaudio)" ; then
                             return 0
@@ -458,20 +499,23 @@ el_pulseaudio(){
                     fi
                     return 1
                 else
-                    if ! command -v pw-cli >/dev/null 2>&1 || timeout 2 pw-cli info 0 >/dev/null 2>&1 ; then
-                        return 0
+                    if command -v pw-cli >/dev/null 2>&1 ; then
+                        timeout 2 pw-cli info 0 >/dev/null 2>&1 && return 0
+                        return 1
+                    elif command -v wpctl >/dev/null 2>&1 ; then
+                        timeout 2 wpctl status >/dev/null 2>&1 && return 0
+                        return 1
                     fi
-                    return 1
+                    return 0
                 fi
             elif ((is_pulseaudio)) ; then
-                if pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
+                if pgrep -u "$uid" -x pulseaudio >/dev/null 2>&1 ; then
                     if pulseaudio --check 2>/dev/null 1>&2 \
                         || LC_ALL=C timeout 2 pactl info 2>/dev/null | grep -iqs "Server Name:.*pulseaudio" ; then
                         return 0
                     fi
                 fi
                 return 1
-
             elif ((is_alsa)) ; then
                 return 0
             else
@@ -492,24 +536,24 @@ el_pulseaudio(){
                     fi
                     if command -v pipewire-pulse >/dev/null 2>&1 ; then
                         systemctl --user cat pipewire-pulse.socket >/dev/null 2>&1 && systemctl --user start pipewire-pulse.socket 2>/dev/null || true
-                        systemctl --user start pipewire-pulse.service
+                        systemctl --user start pipewire-pulse.service 2>/dev/null || true
                     fi
                 else
-                    if ! pgrep -u "$UID" -x pipewire >/dev/null 2>&1 ; then
+                    if ! pgrep -u "$uid" -x pipewire >/dev/null 2>&1 ; then
                         ( pipewire </dev/null >/dev/null 2>&1 & )
                         LC_ALL=C sleep 0.5
                     fi
                     if command -v wireplumber >/dev/null 2>&1 ; then
-                        if ! pgrep -u "$UID" -x wireplumber >/dev/null 2>&1 ; then
+                        if ! pgrep -u "$uid" -x wireplumber >/dev/null 2>&1 ; then
                             ( wireplumber </dev/null >/dev/null 2>&1 & )
                         fi
                     elif command -v pipewire-media-session >/dev/null 2>&1 ; then
-                        if ! pgrep -u "$UID" -f "^([^ ]*/)?pipewire-media-session( |$)" >/dev/null 2>&1 ; then
+                        if ! pgrep -u "$uid" -f "^([^ ]*/)?pipewire-media-session( |$)" >/dev/null 2>&1 ; then
                             ( pipewire-media-session </dev/null >/dev/null 2>&1 & )
                         fi
                     fi
                     if command -v pipewire-pulse >/dev/null 2>&1 ; then
-                        if ! pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 ; then
+                        if ! pgrep -u "$uid" -x pipewire-pulse >/dev/null 2>&1 ; then
                             ( pipewire-pulse </dev/null >/dev/null 2>&1 & )
                         fi
                     fi
@@ -517,7 +561,7 @@ el_pulseaudio(){
             elif ((is_pulseaudio)) ; then
                 if ((use_systemd_user)) ; then
                     systemctl --user cat pulseaudio.socket >/dev/null 2>&1 && systemctl --user start pulseaudio.socket 2>/dev/null || true
-                    systemctl --user start pulseaudio.service
+                    systemctl --user start pulseaudio.service 2>/dev/null || true
                 else
                     pulseaudio --start </dev/null 2>/dev/null || ( pulseaudio -D </dev/null 2>/dev/null 1>&2 & )
                 fi
@@ -526,55 +570,145 @@ el_pulseaudio(){
             else
                 return 1
             fi
+
+            for i in 1 2 3 4 ; do
+                el_audio_daemon check && return 0
+                LC_ALL=C sleep 0.5
+            done
+            el_audio_daemon check
             ;;
 
         stop)
             el_debug "stopping audio daemon (use_systemd_user=${use_systemd_user:-0})"
-            if pgrep -u "$UID" -x pulseaudio >/dev/null 2>&1 ; then
+            if pgrep -u "$uid" -x pulseaudio >/dev/null 2>&1 ; then
                 if ((use_systemd_user)) ; then
-                    systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+                    systemctl --user stop pulseaudio.socket pulseaudio.service 2>/dev/null || true
                 else
                     pulseaudio --kill 2>/dev/null || true
                 fi
                 LC_ALL=C sleep 0.3
-                pkill -u "$UID" -9 -x pulseaudio 2>/dev/null || true
+                pkill -u "$uid" -9 -x pulseaudio 2>/dev/null || true
             fi
-            if pgrep -u "$UID" -x pipewire-pulse >/dev/null 2>&1 \
-                || pgrep -u "$UID" -x wireplumber >/dev/null 2>&1 \
-                || pgrep -u "$UID" -f "^([^ ]*/)?pipewire-media-session( |$)" >/dev/null 2>&1 \
-                || pgrep -u "$UID" -x pipewire >/dev/null 2>&1 ; then
+            if pgrep -u "$uid" -x pipewire-pulse >/dev/null 2>&1 \
+                || pgrep -u "$uid" -x wireplumber >/dev/null 2>&1 \
+                || pgrep -u "$uid" -f "^([^ ]*/)?pipewire-media-session( |$)" >/dev/null 2>&1 \
+                || pgrep -u "$uid" -x pipewire >/dev/null 2>&1 ; then
                 if ((use_systemd_user)) ; then
-                    systemctl --user stop pipewire-pulse.service pipewire-pulse.socket wireplumber.service pipewire-media-session.service pipewire.service pipewire.socket 2>/dev/null || true
+                    systemctl --user stop pipewire-pulse.socket pipewire-pulse.service wireplumber.service pipewire-media-session.service pipewire.socket pipewire.service 2>/dev/null || true
                 else
-                    pkill -u "$UID" -TERM -x pipewire-pulse 2>/dev/null || true
-                    pkill -u "$UID" -TERM -x wireplumber 2>/dev/null || true
-                    pkill -u "$UID" -TERM -f "^([^ ]*/)?pipewire-media-session( |$)" 2>/dev/null || true
-                    pkill -u "$UID" -TERM -x pipewire 2>/dev/null || true
+                    pkill -u "$uid" -TERM -x pipewire-pulse 2>/dev/null || true
+                    pkill -u "$uid" -TERM -x wireplumber 2>/dev/null || true
+                    pkill -u "$uid" -TERM -f "^([^ ]*/)?pipewire-media-session( |$)" 2>/dev/null || true
+                    pkill -u "$uid" -TERM -x pipewire 2>/dev/null || true
                     LC_ALL=C sleep 0.5
-                    pkill -u "$UID" -KILL -x pipewire-pulse 2>/dev/null || true
-                    pkill -u "$UID" -KILL -x wireplumber 2>/dev/null || true
-                    pkill -u "$UID" -KILL -f "^([^ ]*/)?pipewire-media-session( |$)" 2>/dev/null || true
-                    pkill -u "$UID" -KILL -x pipewire 2>/dev/null || true
+                    pkill -u "$uid" -KILL -x pipewire-pulse 2>/dev/null || true
+                    pkill -u "$uid" -KILL -x wireplumber 2>/dev/null || true
+                    pkill -u "$uid" -KILL -f "^([^ ]*/)?pipewire-media-session( |$)" 2>/dev/null || true
+                    pkill -u "$uid" -KILL -x pipewire 2>/dev/null || true
                 fi
             fi
             ;;
 
         restart)
-            el_pulseaudio stop
-            el_pulseaudio start || return 1
-            for i in 1 2 3 4 ; do
-                el_pulseaudio check && return 0
-                LC_ALL=C sleep 0.5
-            done
-            el_pulseaudio check
+            el_audio_daemon stop
+            el_audio_daemon start
             ;;
 
         *)
-            el_error "Unknown mode '$mode' for el_pulseaudio (expected: check|start|stop|restart)"
+            el_error "Unknown mode '$mode' for el_audio_daemon (expected: check|start|stop|restart)"
             return 1
             ;;
     esac
+}
 
+#===  FUNCTION  ================================================================
+#          NAME:  el_pulseaudio
+#   DESCRIPTION:  Compatibility wrapper for el_audio_daemon
+#    PARAMETERS:  $1 = mode (check|start|stop|restart)
+#       RETURNS:  0 if running (check) or success, 1 if not running or failed
+#       EXAMPLE:  el_pulseaudio restart
+#===============================================================================
+el_pulseaudio(){
+    el_audio_daemon "$@"
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_audio_alsa_init
+#   DESCRIPTION:  Initializes the ALSA PCM channel if aplay is available
+#    PARAMETERS:  -
+#       RETURNS:  0
+#       EXAMPLE:  el_audio_alsa_init
+#===============================================================================
+el_audio_alsa_init(){
+    if command -v aplay >/dev/null 2>&1 ; then
+        timeout 5 aplay /dev/null 2>/dev/null || true
+    fi
+}
+
+#===  FUNCTION  ================================================================
+#          NAME:  el_audio_default_card_set
+#   DESCRIPTION:  Sets the default sink or source in PipeWire or PulseAudio by ALSA card index
+#    PARAMETERS:  $1 = ALSA card index, $2 = "sink" or "source" (default "sink")
+#       RETURNS:  0 on success or no-op, 1 on failure
+#       EXAMPLE:  el_audio_default_card_set 1 sink
+#===============================================================================
+el_audio_default_card_set(){
+    local card_id target_type subsystem dev_name node_id
+
+    card_id="$1"
+    target_type="${2:-sink}"
+
+    [[ -z "$card_id" ]] && return 1
+    subsystem="$( el_audio_subsystem_get )"
+
+    case "$subsystem" in
+        pipewire-pulse|pulseaudio)
+            if command -v pactl >/dev/null 2>&1 ; then
+                if [[ "$target_type" = "source" ]] ; then
+                    dev_name="$( LC_ALL=C pactl list sources 2>/dev/null | awk -v target="$card_id" '
+                        /^Source #/ { if (card == target && name != "" && name !~ /\.monitor$/) { print name; found=1; exit } name=""; card="" }
+                        /^[[:space:]]*Name:/ { name=$2 }
+                        /alsa\.card = / { gsub(/"/, "", $3); card=$3 }
+                        END { if (!found && card == target && name != "" && name !~ /\.monitor$/) print name }
+                    ' )"
+                    if [[ -n "$dev_name" ]] ; then
+                        el_debug "setting default $subsystem source to '$dev_name' (card $card_id)"
+                        pactl set-default-source "$dev_name" 2>/dev/null || true
+                    fi
+                else
+                    dev_name="$( LC_ALL=C pactl list sinks 2>/dev/null | awk -v target="$card_id" '
+                        /^Sink #/ { if (card == target && name != "") { print name; found=1; exit } name=""; card="" }
+                        /^[[:space:]]*Name:/ { name=$2 }
+                        /alsa\.card = / { gsub(/"/, "", $3); card=$3 }
+                        END { if (!found && card == target && name != "") print name }
+                    ' )"
+                    if [[ -n "$dev_name" ]] ; then
+                        el_debug "setting default $subsystem sink to '$dev_name' (card $card_id)"
+                        pactl set-default-sink "$dev_name" 2>/dev/null || true
+                    fi
+                fi
+            fi
+            ;;
+        pipewire)
+            if command -v pw-cli >/dev/null 2>&1 && command -v wpctl >/dev/null 2>&1 ; then
+                local media_class="Audio/Sink"
+                [[ "$target_type" = "source" ]] && media_class="Audio/Source"
+                node_id="$( LC_ALL=C pw-cli ls Node 2>/dev/null | awk -v target="$card_id" -v mclass="$media_class" '
+                    /^[[:space:]]*id [0-9]+,/ {
+                        if (card == target && cls == mclass && nid != "") { print nid; found=1; exit }
+                        nid=$2; gsub(/,/, "", nid); card=""; cls=""
+                    }
+                    /media\.class = / { gsub(/"/, "", $3); cls=$3 }
+                    /(api\.)?alsa\.card = / { gsub(/"/, "", $3); card=$3 }
+                    END { if (!found && card == target && cls == mclass && nid != "") print nid }
+                ' )"
+                if [[ -n "$node_id" ]] ; then
+                    el_debug "setting default pipewire $target_type node to '$node_id' (card $card_id)"
+                    wpctl set-default "$node_id" 2>/dev/null || true
+                fi
+            fi
+            ;;
+    esac
 }
 
 #===  FUNCTION  ================================================================

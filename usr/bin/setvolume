@@ -13,7 +13,7 @@ export TEXTDOMAIN
 conf_volume_set(){
     local volume_actual
 
-    if ((is_pulseaudio)) ; then
+    if [[ "$audio_subsystem" != "alsa" ]] ; then
         return 0
     fi
 
@@ -24,23 +24,14 @@ conf_volume_set(){
     fi
 
     if [[ -n "$volume_actual" ]] && [[ "$volume_actual" != 0 ]] ; then
-        #sed -i '/^volume:.*$/d' "$conf" 2>/dev/null
-        #echo -e "volume: $volume_actual" >> "$conf"
         echo -e "volume_before=\"$volume_actual\"" > "$conf"
     fi
 }
 conf_volume_get(){
-    if ((is_pulseaudio)) ; then
+    if [[ "$audio_subsystem" != "alsa" ]] ; then
         return 0
     fi
 
-    # get volume from conf
-    #if [[ -s "$conf" ]] ; then
-        #volume_before="$( LC_ALL=C grep "^volume:" "$conf" )"
-        #volume_before="${volume_before#volume:}"
-        ## remove extra leading blank chars
-        #read -r volume_before <<< "$volume_before"
-    #fi
     source "$conf" 2>/dev/null
 }
 
@@ -52,10 +43,18 @@ conf_volume_get(){
 #       RETURNS:  meter name in a string value
 #===============================================================================
 get_meter(){
-    if ((is_pulseaudio)) ; then
-        meter="PulseAudio"
-        return 0
-    fi
+    local candidate
+
+    case "$audio_subsystem" in
+        pipewire)
+            meter="PipeWire"
+            return 0
+            ;;
+        pipewire-pulse|pulseaudio)
+            meter="PulseAudio"
+            return 0
+            ;;
+    esac
 
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_check_variables "list"
@@ -66,157 +65,17 @@ get_meter(){
         unset meter
     fi
 
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'PCM'"* ]] ; then
-            meter=PCM
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Front'"* ]] ; then
-            meter=Front
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
+    # Master should stay at Max volume if possible to avoid distortions; DAC is for special cards like ice1712
+    for candidate in PCM Front Wave Center IEC958 Headphone Speaker PulseAudio Master DAC ; do
+        if [[ "$list" = *"'${candidate}'"* ]] ; then
+            meter="$candidate"
+            if set_volume_alsa "2%-" 2>/dev/null && set_volume_alsa "2%+" 2>/dev/null ; then
+                break
+            else
                 unset meter
             fi
         fi
-    fi
-
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Wave'"* ]] ; then
-            meter=Wave
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Center'"* ]] ; then
-            meter=Center
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'IEC958'"* ]] ; then
-            meter=IEC958
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Headphone'"* ]] ; then
-            meter=Headphone
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-    ##################
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Speaker'"* ]] ; then
-            meter=Speaker
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-
-
-
-
-    # this doesn't exist on this time but may make things working in the future
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'PulseAudio'"* ]] ; then
-            meter=PulseAudio
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-
-
-    ##################
-    # Master should be everytime on Max volume or you got distortions
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'Master'"* ]] ; then
-            meter=Master
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
-
-    ##################
-    # Special Cards, like ice1712/Terratec_ewx24/96
-    if [[ -z "$meter" ]] ; then
-        if [[ "$list" = *"'DAC'"* ]] ; then
-            meter=DAC
-
-            # verify that this meter really works or skip to the next one
-            if ! set_volume "2%-" 2>/dev/null ; then
-                unset meter
-            fi
-            if ! set_volume "2%+" 2>/dev/null ; then
-                unset meter
-            fi
-        fi
-    fi
+    done
 
     # checks
     if [[ -z "$meter" ]] ; then
@@ -229,15 +88,6 @@ get_meter(){
             if ! ((is_quiet_mode)) ; then
                 el_notify "normal" "mixer" "$( eval_gettext "Audio card unknown" )" "$( eval_gettext "There's no audio playback channel found in your volumes. You must reconfigure your audio card from your applications menu." )"
             fi
-
-            # TODO report / help debug TEMPORAL
-            # if zenity --question --text="$( eval_gettext "Your machine is a very rare case where Elive was not able to detect your audio card. It will be REALLY helpful for us if you message us via the IRC chat or the Forums to help us to fix this issue, because we don't have the hardware on which it fails like in your case. Would you like to help us to make Elive working with your hardware for every other user?" )" ; then
-            #     (
-            #         web-launcher "https://www.elivecd.org/live-chat" &
-            #         sleep 30
-            #         zenity --info --text="$( eval_gettext "Please contact Thanatermesis so he can help you." )" &
-            #     )
-            # fi
 
             # always show to the user configure his audio card because he needs it working!
             if grep -Fqs "boot=live" /proc/cmdline ; then
@@ -267,28 +117,37 @@ get_meter(){
 #       RETURNS:  volume percentage in a simple integer value
 #===============================================================================
 get_volume(){
-    # pre {{{
     local volume
-    #el_debug
-    #el_security_function_loop || return 0
-    if ((is_pulseaudio)) ; then
-        volume="$( pulsemixer --get-volume | awk '{print $1}' )"
-        if [[ -n "$volume" ]] ; then
-            echo "$volume"
-        else
-            el_warning "unable to get actual volume with pulseaudio: $( pulsemixer --get-volume 2>&1 )"
-        fi
-        return 0
-    fi
+
+    case "$audio_subsystem" in
+        pipewire)
+            volume="$( LC_ALL=C wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '/Volume:/ {printf "%.0f\n", $2 * 100}' )"
+            if [[ -n "$volume" ]] ; then
+                echo "$volume"
+            else
+                el_warning "unable to get actual volume with pipewire: $( wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>&1 )"
+            fi
+            return 0
+            ;;
+        pipewire-pulse|pulseaudio)
+            if command -v pulsemixer >/dev/null 2>&1 ; then
+                volume="$( pulsemixer --get-volume 2>/dev/null | awk '{print $1}' )"
+            elif command -v pactl >/dev/null 2>&1 ; then
+                volume="$( LC_ALL=C pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oE '[0-9]+%' | head -1 | tr -d '%' )"
+            fi
+            if [[ -n "$volume" ]] ; then
+                echo "$volume"
+            else
+                el_warning "unable to get actual volume with $audio_subsystem"
+            fi
+            return 0
+            ;;
+    esac
 
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_check_variables "meter|list"
     fi
 
-    # }}}
-
-    # show and return a value
-    #if echo "$list" | grep -q "'$meter',1" ; then
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
         volume="$( LC_ALL="$EL_LC_EN" amixer sget "${meter},0" 2>/dev/null | LC_ALL="$EL_LC_EN" grep -E "(Playback:|Right:|Mono:)" | psort -- -p "Playback:" -p "Right:" -p "Mono:" | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -F "%" | sed -e 's|\[||g' -e 's|\]||g' -e 's|%||g' | LC_ALL="$EL_LC_EN" grep -E "[[:digit:]]*" | head -1 )"
@@ -303,152 +162,163 @@ get_volume(){
         el_warning "unable to get actual volume with alsa: $( amixer get "$meter" 2>&1 )\namixer scontrols:\n$( amixer scontrols )"
     fi
 }
+
 #===  FUNCTION  ================================================================
-#          NAME:  set_volume
-#   DESCRIPTION:  set the volume
+#          NAME:  set_volume_alsa
+#   DESCRIPTION:  set the ALSA volume for the selected meter
 #    PARAMETERS:  $1 = volume (80%, 2%+, etc)
 #       RETURNS:  true or false if failed
 #===============================================================================
-set_volume(){
-    # pre {{{
-    local action
-    #el_debug
-    #el_security_function_loop || return 0
-
-    action="$1"
+set_volume_alsa(){
+    local action="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_check_variables "action|list|meter"
     fi
 
-    # }}}
-
     if [[ "$list" = *"'$meter',1"* ]] ; then
         # stereo
-        amixer -q set ${meter},0 $action 2>/dev/null
-        amixer -q set ${meter},1 $action 2>/dev/null
+        amixer -q set "${meter},0" "$action" 2>/dev/null
+        amixer -q set "${meter},1" "$action" 2>/dev/null
     else
         # mono
-        amixer -q set $meter $action 2>/dev/null
+        amixer -q set "$meter" "$action" 2>/dev/null
     fi
-
 }
+
 #===  FUNCTION  ================================================================
 #          NAME:  mute_modes_force
 #   DESCRIPTION:  force (hack) a mute mode for an unsupported card
-#    PARAMETERS:  $1 = mode: mute|unmute  (no toggle modes)
+#    PARAMETERS:  $1 = mode: muteset|unmute|mute
 #       RETURNS:  -
 #===============================================================================
 mute_modes_force(){
-    # pre {{{
     local mode volume_before volume_actual
-    #el_debug
-    #el_security_function_loop 8 || return 0
 
     mode="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_check_variables "mode"
     fi
 
-
-    # }}}
-
-    # get volume from conf
-    #volume_before="$( conf_volume_get )"
-    conf_volume_get
-
-    # get actual volume
-    volume_actual="$( get_volume )"
-    if [[ -z "$volume_actual" ]] ; then
-        #el_warning "unable to get actual volume"
-        exit
-    fi
-
-    # set mute modes
-    case "$mode" in
-        muteset)
-
-            if ((is_pulseaudio)) ; then
-                pulsemixer --mute
-            else
-                # save our last state of volume for next use
-                if [[ "$volume_actual" -gt 20 ]] ; then
-                    conf_volume_set
-                    el_debug "volume actual was $volume_actual"
-                else
-                    el_debug "no actual volume known"
-                fi
-
-                # set volume to 0
-                "$0" "0%"
-            fi
-
+    case "$audio_subsystem" in
+        pipewire)
+            case "$mode" in
+                muteset)            wpctl set-mute @DEFAULT_AUDIO_SINK@ 1 ;;
+                unmute|unmuteset)   wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 ;;
+                mute|toggle)        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+                *)                  el_error "Unknown $mode option for $FUNCNAME" ;;
+            esac
+            return 0
             ;;
-        unmute|unmuteset)
-
-            if ((is_pulseaudio)) ; then
-                pulsemixer --unmute
-            else
-                # set volume to our previous state
-                if [[ "$volume_actual" -lt 21 ]] ; then
-                    if [[ -n "$volume_before" ]] && [[ "$volume_before" -gt 20 ]] ; then
-                        "$0" "${volume_before}%"
-                    else
-                        "$0" "defaults"
-                    fi
-                fi
+        pipewire-pulse|pulseaudio)
+            if command -v pulsemixer >/dev/null 2>&1 ; then
+                case "$mode" in
+                    muteset)            pulsemixer --mute ;;
+                    unmute|unmuteset)   pulsemixer --unmute ;;
+                    mute|toggle)        pulsemixer --toggle-mute ;;
+                    *)                  el_error "Unknown $mode option for $FUNCNAME" ;;
+                esac
+            elif command -v pactl >/dev/null 2>&1 ; then
+                case "$mode" in
+                    muteset)            pactl set-sink-mute @DEFAULT_SINK@ 1 ;;
+                    unmute|unmuteset)   pactl set-sink-mute @DEFAULT_SINK@ 0 ;;
+                    mute|toggle)        pactl set-sink-mute @DEFAULT_SINK@ toggle ;;
+                    *)                  el_error "Unknown $mode option for $FUNCNAME" ;;
+                esac
             fi
-
-            ;;
-        mute|toggle)
-
-            if ((is_pulseaudio)) ; then
-                pulsemixer --toggle-mute
-            else
-                el_debug "volumes was originally at $volume_before and now $volume_actual"
-
-                if [[ "$volume_actual" -lt 21 ]] ; then
-                    $FUNCNAME unmute
-                else
-                    $FUNCNAME muteset
-                fi
-            fi
-
-            ;;
-        *)
-            el_error "Unkown $mode option for $FUNCNAME"
+            return 0
             ;;
     esac
 
+    # ALSA fallback: emulate mute by saving volume and setting to 0%
+    conf_volume_get
 
+    volume_actual="$( get_volume )"
+    if [[ -z "$volume_actual" ]] ; then
+        exit
+    fi
+
+    case "$mode" in
+        muteset)
+            if [[ "$volume_actual" -gt 20 ]] ; then
+                conf_volume_set "$volume_actual"
+                el_debug "volume actual was $volume_actual"
+            else
+                el_debug "no actual volume known"
+            fi
+            "$0" "0%"
+            ;;
+        unmute|unmuteset)
+            if [[ "$volume_actual" -lt 21 ]] ; then
+                if [[ -n "$volume_before" ]] && [[ "$volume_before" -gt 20 ]] ; then
+                    "$0" "${volume_before}%"
+                else
+                    "$0" "defaults"
+                fi
+            fi
+            ;;
+        mute|toggle)
+            el_debug "volumes was originally at $volume_before and now $volume_actual"
+            if [[ "$volume_actual" -lt 21 ]] ; then
+                $FUNCNAME unmute
+            else
+                $FUNCNAME muteset
+            fi
+            ;;
+        *)
+            el_error "Unknown $mode option for $FUNCNAME"
+            ;;
+    esac
 }
+
 #===  FUNCTION  ================================================================
 #          NAME:  get_mute_state
-#   DESCRIPTION:  get the state we are muted or not
+#   DESCRIPTION:  get whether audio output is muted or unmuted
 #    PARAMETERS:  -
-#       RETURNS:  on|off
+#       RETURNS:  muted|unmuted
 #===============================================================================
 get_mute_state(){
-    local state_before
+    local state_before raw
 
-    if ((is_pulseaudio)) ; then
-        case "$( pulsemixer --get-mute )" in
-            1) state_before="on" ; ;;
-            0) state_before="off" ; ;;
-            *) el_warning "uknown mute state: $( pulsemixer --get-mute 2>&1)"  ; ;;
-        esac
-    else
-        #state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep Right | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "(on|off)" | LC_ALL="$EL_LC_EN" grep "\[" | sed 's/\[//g' | sed 's/\]//g' )"
-        #state_before="$( LC_ALL="$EL_LC_EN" amixer get "$meter" | LC_ALL="$EL_LC_EN" grep -E "Right.*(on|off)" | tail -1 | tr ' ' '\n' | LC_ALL="$EL_LC_EN" grep -E "\[(on|off)\]" | sed -e 's/\[//g' -e 's/\]//g' )"
-        state_before="$( LC_ALL="C" amixer get "Master" 2>/dev/null | LC_ALL="C" LC_ALL="C" grep -Po ': .*\[\K(on|off)' )"
-    fi
+    case "$audio_subsystem" in
+        pipewire)
+            raw="$( LC_ALL=C wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null )"
+            if [[ "$raw" = *"[MUTED]"* ]] ; then
+                state_before="muted"
+            elif [[ -n "$raw" ]] ; then
+                state_before="unmuted"
+            fi
+            ;;
+        pipewire-pulse|pulseaudio)
+            if command -v pulsemixer >/dev/null 2>&1 ; then
+                case "$( pulsemixer --get-mute 2>/dev/null )" in
+                    1) state_before="muted" ;;
+                    0) state_before="unmuted" ;;
+                    *) el_warning "unknown mute state: $( pulsemixer --get-mute 2>&1)" ;;
+                esac
+            elif command -v pactl >/dev/null 2>&1 ; then
+                case "$( LC_ALL=C pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | awk '{print $2}' )" in
+                    yes) state_before="muted" ;;
+                    no)  state_before="unmuted" ;;
+                esac
+            fi
+            ;;
+        *)
+            raw="$( LC_ALL=C amixer get "Master" 2>/dev/null | grep -Po ': .*\[\K(on|off)' | head -1 )"
+            case "$raw" in
+                off) state_before="muted" ;;
+                on)  state_before="unmuted" ;;
+            esac
+            ;;
+    esac
 
     if [[ -n "$state_before" ]] ; then
         el_debug "mute state was $state_before"
-        echo $state_before
+        echo "$state_before"
     fi
 
     return 0
 }
+
 #===  FUNCTION  ================================================================
 #          NAME:  mute_modes
 #   DESCRIPTION:  set mute or unmute the audio card
@@ -456,159 +326,108 @@ get_mute_state(){
 #       RETURNS:  -
 #===============================================================================
 mute_modes(){
-    # pre {{{
     local state_before state_after mode
-    #el_debug
-    #el_security_function_loop 8 || return 0
 
     mode="$1"
     if [[ "$EL_DEBUG" -gt 2 ]] ; then
         el_check_variables "mode"
     fi
 
-    # }}}
-
-    if ! ((is_pulseaudio)) ; then
-        state_before="$( get_mute_state )"
+    if [[ "$audio_subsystem" != "alsa" ]] ; then
+        case "$mode" in
+            unmute|unmuteset) mute_modes_force unmute ;;
+            muteset)          mute_modes_force muteset ;;
+            mute|toggle)      mute_modes_force toggle ;;
+            *)                el_error "Unknown $mode option for $FUNCNAME" ;;
+        esac
+        return 0
     fi
+
+    state_before="$( get_mute_state )"
 
     case "$mode" in
         unmute|unmuteset)
-            # set talk
-            if ((is_pulseaudio)) ; then
-                mute_modes_force unmute
-            else
-                if [[ -n "$state_before" ]] ; then
-                    if amixer -q set "Master" unmute 2>/dev/null ; then
-                        el_debug "mute is now ON"
-                    else
-                        # failed to set, force
-                        mute_modes_force unmute
-                        return 0
-                    fi
+            if [[ -n "$state_before" ]] ; then
+                if amixer -q set "Master" unmute 2>/dev/null ; then
+                    el_debug "audio is now unmuted"
                 else
-                    # we dont know about mute values for this channel/card, force
                     mute_modes_force unmute
                     return 0
                 fi
-                # force detect {{{
-                state_after="$( get_mute_state 2>/dev/null )"
-
-                # unsuccessful mute, force
-                if [[ "$state_after" = "off" ]] ; then
-                    el_debug "mute has not changed, forcing it"
-                    mute_modes_force unmute
-                    return 0
-                fi
-
-                # - force detect }}}
+            else
+                mute_modes_force unmute
+                return 0
             fi
 
-
+            state_after="$( get_mute_state 2>/dev/null )"
+            if [[ "$state_after" = "muted" ]] ; then
+                el_debug "mute has not changed, forcing unmute"
+                mute_modes_force unmute
+                return 0
+            fi
             ;;
         muteset)
-            # set silent
-            if ((is_pulseaudio)) ; then
-                mute_modes_force muteset
-            else
-                if [[ -n "$state_before" ]] ; then
-                    if amixer -q set "Master" mute 2>/dev/null ; then
-                        el_debug "mute is now OFF"
-                    else
-                        # failed to set, force
-                        mute_modes_force muteset
-                        return 0
-                    fi
+            if [[ -n "$state_before" ]] ; then
+                if amixer -q set "Master" mute 2>/dev/null ; then
+                    el_debug "audio is now muted"
                 else
-                    # we dont know about mute values for this channel/card, force
                     mute_modes_force muteset
                     return 0
                 fi
-                # force detect {{{
-                state_after="$( get_mute_state 2>/dev/null )"
-
-                # unsuccessful mute, force
-                if [[ "$state_after" = "on" ]] ; then
-                    el_debug "mute has not changed, forcing it"
-                    mute_modes_force mute
-                    return 0
-                fi
-
-                # - force detect }}}
+            else
+                mute_modes_force muteset
+                return 0
             fi
 
-
+            state_after="$( get_mute_state 2>/dev/null )"
+            if [[ "$state_after" = "unmuted" ]] ; then
+                el_debug "mute has not changed, forcing muteset"
+                mute_modes_force muteset
+                return 0
+            fi
             ;;
         mute|toggle)
-            # Toggle mute modes
-            if ((is_pulseaudio)) ; then
-                mute_modes_force toggle
+            if [[ -n "$state_before" ]] ; then
+                if [[ "$state_before" = "muted" ]] ; then
+                    if amixer -q set "Master" unmute 2>/dev/null ; then
+                        el_debug "audio is now unmuted"
+                    else
+                        mute_modes_force unmute
+                        return 0
+                    fi
+                elif [[ "$state_before" = "unmuted" ]] ; then
+                    if amixer -q set "Master" mute 2>/dev/null ; then
+                        el_debug "audio is now muted"
+                    else
+                        mute_modes_force muteset
+                        return 0
+                    fi
+                fi
             else
-                if [[ -n "$state_before" ]] ; then
-
-                    if [[ "$state_before" = "off" ]] ; then
-                        if amixer -q set "Master" unmute 2>/dev/null ; then
-                            el_debug "mute is now ON"
-                        else
-                            # failed to set, force
-                            mute_modes_force unmute
-                            return 0
-                        fi
-                    fi
-
-                    if [[ "$state_before" = "on" ]] ; then
-                        if amixer -q set "Master" mute 2>/dev/null ; then
-                            el_debug "mute is now OFF"
-                        else
-                            # failed to set, force
-                            mute_modes_force muteset
-                            return 0
-                        fi
-                    fi
-                else
-                    # we dont know about mute values for this channel/card, force
-                    mute_modes_force toggle
-                    return 0
-                fi
-                # force detect {{{
-                state_after="$( get_mute_state 2>/dev/null )"
-
-                # unsuccessful mute, force
-                if [[ "$state_before" = "$state_after" ]] ; then
-                    el_debug "mute has not changed, forcing it"
-                    mute_modes_force toggle
-                    return 0
-                fi
-
-                # - force detect }}}
+                mute_modes_force toggle
+                return 0
             fi
 
-
+            state_after="$( get_mute_state 2>/dev/null )"
+            if [[ "$state_before" = "$state_after" ]] ; then
+                el_debug "mute has not changed, forcing toggle"
+                mute_modes_force toggle
+                return 0
+            fi
             ;;
         *)
             el_error "Unknown $mode option for $FUNCNAME"
             ;;
     esac
-
 }
+
 main(){
-    # pre {{{
-    local list action actualvalue is_failed
+    local list action audio_subsystem vol_op vol_val volume_mic volume_actual
 
-    if el_pulseaudio check ; then
-        is_pulseaudio=1
-
-        # checks and dependencies
-        if ! el_dependencies_check "pulsemixer" ; then
-            el_dependencies_install "pulsemixer"
-        fi
-    else
-        if ! el_dependencies_check "amixer|aplay" ; then
-            el_dependencies_install "alsa-utils"
-        fi
+    if [[ "$1" = "--quiet" ]] ; then
+        export is_quiet_mode=1
+        shift
     fi
-
-    # }}}
 
     # Usage
     if [[ -z "${1}" ]] ; then
@@ -626,251 +445,200 @@ main(){
         exit 1
     fi
 
+    audio_subsystem="$( el_audio_subsystem_get )"
+    [[ "$audio_subsystem" = "none" ]] && audio_subsystem="alsa"
+    el_debug "detected audio subsystem: $audio_subsystem"
 
-    list="$( amixer scontrols )"
-    action="$@"
+    case "$audio_subsystem" in
+        pipewire)
+            if ! el_dependencies_check "wpctl" ; then
+                el_dependencies_install "wireplumber"
+            fi
+            ;;
+        pipewire-pulse|pulseaudio)
+            if ! command -v pulsemixer >/dev/null 2>&1 && ! command -v pactl >/dev/null 2>&1 ; then
+                if ! el_dependencies_check "pulsemixer" ; then
+                    el_dependencies_install "pulsemixer"
+                fi
+            fi
+            ;;
+        alsa)
+            if ! el_dependencies_check "amixer|aplay" ; then
+                el_dependencies_install "alsa-utils"
+            fi
+            ;;
+    esac
 
     conf="$HOME/.config/setvolume"
-    #if ! [[ -d "$(dirname "$conf" )" ]] ; then
-        #mkdir -p "$( dirname "$conf" )"
-    #fi
+    action="$*"
 
-    if [[ -z "$meter" ]] ; then
-        get_meter
+    if [[ "$audio_subsystem" = "alsa" ]] ; then
+        list="$( amixer scontrols )"
+        if [[ -z "$meter" ]] ; then
+            get_meter
+        fi
+        if [[ -z "$meter" ]] ; then
+            # refresh controls in case audio-configurator updated .asoundrc
+            list="$( amixer scontrols )"
+            get_meter
+        fi
+        el_debug "selected meter: $meter"
     fi
-    if [[ -z "$meter" ]] ; then
-        # get it a second time (in case that not worked we have run the configurator to get again the correct meter value, if still not working show the error)
-        get_meter
-    fi
-    el_debug "selected meter: $meter"
-
-    if [[ "$1" = "--quiet" ]] ; then
-        export is_quiet_mode=1
-        shift
-    fi
-
 
     if [[ "${1}" = "defaults" ]] ; then
         volume_mic=60
-        # enable PCM channel first of all
-        timeout 5 aplay /dev/null 2>/dev/null
+        el_audio_alsa_init
 
-        # unmute channels
-        amixer -q set Master unmute 2>/dev/null
-        amixer -q set PCM    unmute 2>/dev/null
-        amixer -q set Front  unmute 2>/dev/null
-        amixer -q set Wave   unmute 2>/dev/null
-        amixer -q set DAC    unmute 2>/dev/null
-        # raise them
-        amixer -q set Headphone 50% 2>/dev/null
-        amixer -q set Speaker 50% 2>/dev/null
-        amixer -q set PCM 50% 2>/dev/null
-        amixer -q set Front 50% 2>/dev/null
-        amixer -q set Surround 50% 2>/dev/null
+        if command -v amixer >/dev/null 2>&1 ; then
+            # unmute channels
+            amixer -q set Master unmute 2>/dev/null
+            amixer -q set PCM    unmute 2>/dev/null
+            amixer -q set Front  unmute 2>/dev/null
+            amixer -q set Wave   unmute 2>/dev/null
+            amixer -q set DAC    unmute 2>/dev/null
+            # raise them
+            amixer -q set Headphone 50% 2>/dev/null
+            amixer -q set Speaker 50% 2>/dev/null
+            amixer -q set PCM 50% 2>/dev/null
+            amixer -q set Front 50% 2>/dev/null
+            amixer -q set Surround 50% 2>/dev/null
 
-        # Mic configurations
-        amixer -q set Capture unmute 2>/dev/null
-        amixer -q set Capture 100% 2>/dev/null
-        amixer -q set "Front Mic" unmute 2>/dev/null
-        amixer -q set "Front Mic" ${volume_mic}% 2>/dev/null
-        amixer -q set "Rear Mic" unmute 2>/dev/null
-        amixer -q set "Rear Mic" ${volume_mic}% 2>/dev/null
-        amixer -q set "Internal Mic" unmute 2>/dev/null
-        amixer -q set "Internal Mic" ${volume_mic}% 2>/dev/null
-        amixer -q set "Mic" unmute 2>/dev/null
-        amixer -q set "Mic" %${volume_mic} 2>/dev/null
-        # mute playback of mic, very annoying (before to raise their volumes) - note: after previous mic configurations since they resets this settings
-        amixer -q sset "Front Mic" Playback mute 2>/dev/null
-        amixer -q sset "Rear Mic" Playback mute 2>/dev/null
-        amixer -q sset "Internal Mic" Playback mute 2>/dev/null
-        amixer -q sset "Mic" Playback mute 2>/dev/null
-        # by default do not hear yourself in headphones
-        amixer -q set "Sidetone" 0% 2>/dev/null
-        #amixer -q set "Sidetone" mute 2>/dev/null
-        # capture mode
-        amixer -q sset "Front Mic" cap 2>/dev/null
-        amixer -q sset "Rear Mic" cap 2>/dev/null
-        amixer -q sset "Internal Mic" cap 2>/dev/null
-        amixer -q sset "Mic" cap 2>/dev/null
-        amixer -q sset Capture cap 2>/dev/null
-        amixer -q set Capture ${volume_mic}% 2>/dev/null
+            # Mic configurations
+            amixer -q set Capture unmute 2>/dev/null
+            amixer -q set Capture 100% 2>/dev/null
+            amixer -q set "Front Mic" unmute 2>/dev/null
+            amixer -q set "Front Mic" ${volume_mic}% 2>/dev/null
+            amixer -q set "Rear Mic" unmute 2>/dev/null
+            amixer -q set "Rear Mic" ${volume_mic}% 2>/dev/null
+            amixer -q set "Internal Mic" unmute 2>/dev/null
+            amixer -q set "Internal Mic" ${volume_mic}% 2>/dev/null
+            amixer -q set "Mic" unmute 2>/dev/null
+            amixer -q set "Mic" ${volume_mic}% 2>/dev/null
+            # mute playback of mic (after previous mic configurations since they reset these settings)
+            amixer -q sset "Front Mic" Playback mute 2>/dev/null
+            amixer -q sset "Rear Mic" Playback mute 2>/dev/null
+            amixer -q sset "Internal Mic" Playback mute 2>/dev/null
+            amixer -q sset "Mic" Playback mute 2>/dev/null
+            # by default do not hear yourself in headphones
+            amixer -q set "Sidetone" 0% 2>/dev/null
+            # capture mode
+            amixer -q sset "Front Mic" cap 2>/dev/null
+            amixer -q sset "Rear Mic" cap 2>/dev/null
+            amixer -q sset "Internal Mic" cap 2>/dev/null
+            amixer -q sset "Mic" cap 2>/dev/null
+            amixer -q sset Capture cap 2>/dev/null
+            amixer -q set Capture ${volume_mic}% 2>/dev/null
 
-        # volumes up, just in case
-        amixer -q set Headphone 100% 2>/dev/null
-        amixer -q set Speaker 100% 2>/dev/null
-        amixer -q set PCM 100% 2>/dev/null
-        amixer -q set Front 100% 2>/dev/null
-        amixer -q set Surround 100% 2>/dev/null
+            # volumes up, just in case
+            amixer -q set Headphone 100% 2>/dev/null
+            amixer -q set Speaker 100% 2>/dev/null
+            amixer -q set PCM 100% 2>/dev/null
+            amixer -q set Front 100% 2>/dev/null
+            amixer -q set Surround 100% 2>/dev/null
 
+            # Master should be always set to 100 % in order to avoid distortions
+            el_debug "Master set to 100%"
+            amixer -q set "Master Mono" 100%  2>/dev/null
+            amixer -q set Master,0 100%  2>/dev/null
+            amixer -q set Master,1 100%  2>/dev/null
+            amixer -q set Master 100%  2>/dev/null
+        fi
 
-        # Fix for skype when we dont have a "Mic" control
-        #if ! LC_ALL="$EL_LC_EN" amixer scontrols | sed -e 's|^.mixer control||g' | LC_ALL="$EL_LC_EN" grep -vi boost | LC_ALL="$EL_LC_EN" grep -q "Mic" ; then
-            #if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
-                #killall skype 2>/dev/null || killall -9 skype 2>/dev/null
-                #sync
-                #sed -i "s|<AGC>.</AGC>|<AGC>0</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
-
-                #el_debug "added a fix for your skype: to not modify your volumes, your audio-card model needs this"
-            #else
-                #if [[ "$TERM" != linux ]] ; then
-                    #el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
-                #fi
-            #fi
-        #else
-
-            #if [[ -d "$HOME/.config/skypeforlinux" ]] && grep -q "<AGC>.</AGC>" "$HOME/.config/skypeforlinux/shared.xml" ; then
-                #killall skype 2>/dev/null || killall -9 skype 2>/dev/null
-                #sync
-                #sed -i "s|<AGC>.</AGC>|<AGC>1</AGC>|g" "$HOME/.config/skypeforlinux/shared.xml"
-
-                #el_debug "added a fix for your skype: to allow it modify your volumes, because your audio-card model needs this"
-            #else
-                #el_info "If you use Skype you need to configure in the audio preferences to NOT modify your audio values"
-            #fi
-        #fi
-
-        # Master should be always set to 100 % in order to avoid distortions
-        el_debug "Master set to 100%"
-        amixer -q set "Master Mono" 100%  2>/dev/null
-        amixer -q set Master,0 100%  2>/dev/null
-        amixer -q set Master,1 100%  2>/dev/null
-        amixer -q set Master 100%  2>/dev/null
-
-        # then set a default generic volume
-        unset meter
-        # double conf, just in case not works
-        main 70% 1>/dev/null
-        # this is needed in order to make the track working, by some strange reason
-        main 2%+ 1>/dev/null
-        true
-
-        # save volumes conf
-        conf_volume_set
-
-        exit
-    fi
-
-
-    # fixes percent space
-    action="${action/ %/%}"
-
-    if ((is_pulseaudio)) ; then
-        case "$action" in
-            *"up"|*"+"*)
-                action="${action//%}"
-                action="${action//+}"
-                action="${action//up}"
-                action="+${action}"
-                ;;
-            *"down"|*"-"*)
-                action="${action//%}"
-                action="${action//-}"
-                action="${action//down}"
-                action="-${action}"
-                ;;
-            *"%")
-                action="${action//%}"
-                action="${action//+}"
-                action="${action//-}"
-                is_value_total_percent=1
-                ;;
-        esac
-    else
-        # e17 keybindings seems to segfault when using - char, so use words instead
-        action="${action/ up/+}"
-        action="${action/ down/-}"
-    fi
-
-
-    # MUTE modes
-    # silent
-    if [[ "$action" = "muteset" ]] ; then
-        mute_modes "muteset"
-        exit
-    fi
-    # speak
-    if [[ "$action" = "unmute" ]] ; then
-        mute_modes "unmute"
-        exit
-    fi
-    # toggle
-    # FIXME: if you run $0 toggle itself (which is not launched this way), amixer takes it correctly setting the mute mode too, we may want to use this method with our fallback probably
-    if [[ "$action" = "mute" ]] ; then
-        mute_modes "mute"
-        exit
-    fi
-    # show volume
-    if [[ "$action" = "showvolume" ]] ; then
-        get_volume
-        exit
-    fi
-
-    ##################
-
-    # normal actions, like setting the volume
-    #if echo "$list" | grep -q "'$meter',1" ; then
-
-    # update: let's change the volumes of all relevant tracks, sometimes PCM doesn't change the volume (where it was!) and we need to use Speaker instead
-    if ((is_pulseaudio)) ; then
-        if ((is_value_total_percent)) ; then
-            pulsemixer --set-volume $action
-            unset is_value_total_percent
+        if [[ "$audio_subsystem" = "alsa" ]] ; then
+            unset meter
+            main 70% 1>/dev/null
+            main 2%+ 1>/dev/null
+            conf_volume_set
         else
-            pulsemixer --change-volume $action
-        fi
-    else
-        amixer -q set $meter $action 2>/dev/null
-
-        if [[ "${meter}" != "Speaker" ]] ; then
-            amixer -q set Speaker $action 2>/dev/null
-        fi
-        if [[ "${meter}" != "Headphone" ]] ; then
-            amixer -q set Headphone $action 2>/dev/null
-        fi
-        if [[ "${meter}" != "DAC" ]] ; then
-            amixer -q set DAC $action 2>/dev/null
+            mute_modes "unmute"
+            main 70% 1>/dev/null
         fi
 
-        volume_actual="$( get_volume )"
-
-        # increase Master if we are already at maximum of the other volumes
-        if [[ "${action}" = *"+" ]] ; then
-            if [[ "${volume_actual}" = "100" ]] ; then
-                amixer -q set Master $action 2>/dev/null
-            fi
-        fi
-
-        # alsa special elive controls
-        conf_volume_set "$volume_actual"
-
+        exit 0
     fi
 
+    # fixes percent space and keybinding word aliases
+    action="${action/ %/%}"
+    action="${action/ up/+}"
+    action="${action/ down/-}"
+
+    # MUTE modes and status
+    case "$action" in
+        muteset)
+            mute_modes "muteset"
+            exit 0
+            ;;
+        unmute)
+            mute_modes "unmute"
+            exit 0
+            ;;
+        mute)
+            mute_modes "mute"
+            exit 0
+            ;;
+        showvolume)
+            get_volume
+            exit 0
+            ;;
+    esac
+
+    # Parse volume operation and value (e.g., 80%, 10%+, 10%-, +10, -10)
+    vol_val="${action//[^[:digit:]]/}"
+    if [[ -z "$vol_val" ]] ; then
+        el_error "Unknown volume argument '$action'"
+        exit 1
+    fi
+    case "$action" in
+        *"+"*) vol_op="inc" ;;
+        *"-"*) vol_op="dec" ;;
+        *)     vol_op="set" ;;
+    esac
+
+    case "$audio_subsystem" in
+        pipewire)
+            case "$vol_op" in
+                set) wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ "${vol_val}%" ;;
+                inc) wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ "${vol_val}%+" ;;
+                dec) wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ "${vol_val}%-" ;;
+            esac
+            ;;
+        pipewire-pulse|pulseaudio)
+            if command -v pulsemixer >/dev/null 2>&1 ; then
+                case "$vol_op" in
+                    set) pulsemixer --set-volume "$vol_val" ;;
+                    inc) pulsemixer --change-volume "+${vol_val}" ;;
+                    dec) pulsemixer --change-volume "-${vol_val}" ;;
+                esac
+            elif command -v pactl >/dev/null 2>&1 ; then
+                case "$vol_op" in
+                    set) pactl set-sink-volume @DEFAULT_SINK@ "${vol_val}%" ;;
+                    inc) pactl set-sink-volume @DEFAULT_SINK@ "+${vol_val}%" ;;
+                    dec) pactl set-sink-volume @DEFAULT_SINK@ "-${vol_val}%" ;;
+                esac
+            fi
+            ;;
+        alsa)
+            case "$vol_op" in
+                set) action="${vol_val}%" ;;
+                inc) action="${vol_val}%+" ;;
+                dec) action="${vol_val}%-" ;;
+            esac
+
+            amixer -q set "$meter" "$action" 2>/dev/null
+            [[ "${meter}" != "Speaker" ]]   && amixer -q set Speaker "$action" 2>/dev/null
+            [[ "${meter}" != "Headphone" ]] && amixer -q set Headphone "$action" 2>/dev/null
+            [[ "${meter}" != "DAC" ]]       && amixer -q set DAC "$action" 2>/dev/null
+
+            volume_actual="$( get_volume )"
+            if [[ "$vol_op" = "inc" ]] && [[ "${volume_actual}" = "100" ]] ; then
+                amixer -q set Master "$action" 2>/dev/null
+            fi
+
+            conf_volume_set "$volume_actual"
+            ;;
+    esac
 
     true
-
-
-    #if [[ "$list" = *"'$meter',1"* ]] ; then
-        ## stereo
-        #if ! amixer -q set ${meter},0 $action 2>/dev/null ; then
-            ##get_meter
-            #set_volume "$action"
-        #fi
-
-        #if ! amixer -q set ${meter},1 $action 2>/dev/null ; then
-            ##get_meter
-            #set_volume "$action"
-        #fi
-
-    #else
-        ## mono
-        #if ! amixer -q set $meter $action 2>/dev/null ; then
-            ##get_meter
-            #set_volume "$action"
-        #fi
-    #fi
-    ##################
-
-    # this is old and deprecated
 }
 
 #

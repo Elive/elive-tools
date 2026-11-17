@@ -77,10 +77,10 @@ main(){
 
     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
 
-    if test -n \"$1\" ; then
+    if test -n \"\$1\" ; then
         if yt-dlp \
             -f 'ba' -x --audio-quality 5 --audio-format mp3 --embed-metadata \
-            \"$@\" ; then
+            \"\$@\" ; then
             is_downloaded=1
         else
             sleep 1
@@ -88,13 +88,13 @@ main(){
             if yt-dlp \
                 -f 'ba' -x --audio-quality 5 --audio-format mp3 --embed-metadata \
                 -o \"%(id)s.%(ext)s\" \
-                \"$@\" ; then
+                \"\$@\" ; then
                 is_downloaded=1
             else
                 mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                 if yt-dlp \
                     -i -x --embed-metadata \
-                    \"$@\" ; then
+                    \"\$@\" ; then
                     is_downloaded=1
                 fi
             fi
@@ -123,7 +123,7 @@ main(){
     echo done
 
     sleep 8
-    " & )
+    " _ "$@" & )
 
 }
 

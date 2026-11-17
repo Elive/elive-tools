@@ -33,7 +33,8 @@ main(){
             help
             ;;
     esac
-    dmesg_result="$( dmesg 2>/dev/null | grep -vE "(,errors=|errors=remount)" | grep -qiE "(error|EHASHCOLLISION)" )"
+    dmesg_result="$( dmesg 2>/dev/null | grep -vE "(,errors=|errors=remount)" | grep -iE "(error|EHASHCOLLISION)" )"
+    el_debug "dmesg_result lines: $( echo -n "$dmesg_result" | grep -c '^' )"
 
     # enable if you want a demo content:
     # Note: segfaults can be found in kern.log, messages, syslog

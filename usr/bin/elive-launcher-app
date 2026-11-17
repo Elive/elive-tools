@@ -76,6 +76,8 @@ main(){
     ram_used="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $3}' )"
     ram_total="$( free -m | LC_ALL=C grep "^Mem: " | awk '{print $2}' )"
     ram_used_percent="$( echo "( $ram_used / $ram_total ) * 100" | bc -l | sed -e 's|\..*$||g' )"
+    [[ -z "$ram_used_percent" ]] && ram_used_percent=0
+    el_debug "ram_used_percent=${ram_used_percent}% (total=${ram_total}MB)"
 
 
     if [ "$ram_used_percent" -gt 85 ] ; then

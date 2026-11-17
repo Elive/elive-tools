@@ -166,7 +166,7 @@ take_screenshot(){
         size_orig_w="$( identify -format '%w' "$tmpimage" )"
         size_orig_h="$( identify -format '%h' "$tmpimage" )"
 
-        if [[ -n "$size_orig_w" ]] && [[ -n "$size_orig_h" ]] ; then
+        if [[ -n "$size_orig_w" ]] && [[ -n "$size_orig_h" ]] && [[ "$size_orig_w" -gt 2 ]] && [[ "$size_orig_h" -gt 2 ]] ; then
             size_orig_w="$(( $size_orig_w - 2 ))"
             size_orig_h="$(( $size_orig_h - 2 ))"
 
@@ -183,7 +183,8 @@ take_screenshot(){
 
     # convert to jpg if not wanted png
     if ! ((is_mode_png)) ; then
-        convert -quality 90 "$tmpimage" "${tmpimage%.*}.jpg"
+        el_debug "converting screenshot to jpg with quality '${quality}'"
+        convert -quality "${quality}" "$tmpimage" "${tmpimage%.*}.jpg"
         rm -f "$tmpimage"
         tmpimage="${tmpimage%.*}.jpg"
     fi

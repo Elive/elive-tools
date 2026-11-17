@@ -57,6 +57,7 @@ reconfigure_applications(){
                 if ((_a)) ; then
                     if echo "$line" | grep -qsE "^\s*card " ; then
                         mic="$( echo "$line" | grep -sE "^\s*card " | sed -e 's|^.*card ||g' )"
+                        el_debug "parsed mic card from .asoundrc: '$mic'"
                     fi
                 fi
                 if [[ -n "$mic" ]] ; then

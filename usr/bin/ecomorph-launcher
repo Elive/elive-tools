@@ -358,16 +358,6 @@ main(){
     local tempfile has_updated_donors
     tempfile="/tmp/.${USER}-donors.txt"
 
-    # disable this feature in low memory computers
-    local memory cpubogomips
-
-    memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
-    cpubogomips="$( grep bogomips /proc/cpuinfo | sed -e 's|^.*: ||g' -e 's|\..*$||g' | tr ' ' '\n' | grep "[[:digit:]]" | head -1 )"
-
-    if [[ "${memory}" -lt "800000" ]] || [[ "$cpubogomips" -lt 2800 ]] ; then
-        zenity --info --text="$( eval_gettext "Seems like you have a slow computer, if you feel your desktop gets slower with the special effects enabled, just disable the Ecomorph module." )"
-    fi
-
     for arg in "$@"
     do
         case "$arg" in
@@ -380,6 +370,16 @@ main(){
                 ;;
         esac
     done
+
+    # disable this feature in low memory computers
+    local memory cpubogomips
+
+    memory="$( cat /proc/meminfo | grep -i Memtotal | tail -1 | awk '{print $2}' )"
+    cpubogomips="$( grep bogomips /proc/cpuinfo | sed -e 's|^.*: ||g' -e 's|\..*$||g' | tr ' ' '\n' | grep "[[:digit:]]" | head -1 )"
+
+    if [[ "${memory}" -lt "800000" ]] || [[ "$cpubogomips" -lt 2800 ]] ; then
+        zenity --info --text="$( eval_gettext "Seems like you have a slow computer, if you feel your desktop gets slower with the special effects enabled, just disable the Ecomorph module." )"
+    fi
 
 
     # give a preview of the theme
@@ -444,7 +444,7 @@ main(){
         if zenity --question --text="$( eval_gettext "Activate experimental visual effects? Your desktop will have extra features, look nicer, and in some cases be faster. You can deactivate them later by disabling the Ecomorph module." )" ; then
             #Some slow computers can also have the desktop slower.
 
-            if ! grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
+            if ! ((is_wheezy)) ; then
                 if zenity --question --text="$( eval_gettext "This feature isn't ready on the new versions, we have an issue with library linking in the compilation. But you can help make it work if you know C programming or Makefiles compiling. Do you want to help us make it work?" )" ; then
                     web-launcher "https://forum.elivelinux.org/t/ecomorph-issue-to-include-it-in-newer-versions/1000"
                 fi

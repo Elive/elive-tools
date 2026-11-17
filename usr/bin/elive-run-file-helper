@@ -107,7 +107,7 @@ run_edje(){
         [[ "$line" = *"'e/modules/ibox/"* ]] && is_e_theme=1
         [[ "$line" = *"'elive-gadget-clock"* ]] && is_elive_gadget_clock=1
         [[ "$line" = *"'e/desktop/background'"* ]] && is_e_wallpaper=1
-        [[ "$line" = "^0 groups in file"* ]] && is_e_invalid=1
+        [[ "$line" = "0 groups in file"* ]] && is_e_invalid=1
         # generic edjes have 'main'
         [[ "$line" = *"'main'"* ]] && is_main=1
 
@@ -232,7 +232,7 @@ run_compiler(){
                     echo -e '\nPossible packages to satisfy dependencies:'
                     source \"$file\"
                     for package in \"\${depends[@]}\" ; do
-                        apt-cache search glew | awk '{print \$1}' | sort | psort -- -p \"^\${package}\$\" -p \"^lib\" -p \"\-dev\$\" | head -5 | tr '\n' ' ' ; echo
+                        apt-cache search \"\${package}\" | awk '{print \$1}' | sort | psort -- -p \"^\${package}\$\" -p \"^lib\" -p \"\-dev\$\" | head -5 | tr '\n' ' ' ; echo
                     done
 
                     printf \"\n%s\n\" \"$message_failed\"

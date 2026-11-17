@@ -25,11 +25,14 @@ main(){
     fi
 
     # }}}
-    input="$( sudo iptables -L -n -x -v | grep -F INPUT | awk '{print $7}')"
-    output="$( sudo iptables -L -n -x -v | grep -F OUTPUT | awk '{print $7}')"
+    input="$( sudo iptables -L -n -x -v | grep -F "Chain INPUT" | head -1 | awk '{print $7}')"
+    output="$( sudo iptables -L -n -x -v | grep -F "Chain OUTPUT" | head -1 | awk '{print $7}')"
+    el_debug "iptables bytes: input='$input' output='$output'"
 
-    Bi="$( expr $input / 1048576 )"
-    Bo="$( expr $output / 1048576 )"
+    if [[ -n "$input" ]] && [[ -n "$output" ]] ; then
+        Bi="$( expr $input / 1048576 )"
+        Bo="$( expr $output / 1048576 )"
+    fi
 
     if [[ -n "$Bi" ]] && [[ -n "$Bo" ]] ; then
         echo -e "Downloaded $Bi MB ($input bytes)"

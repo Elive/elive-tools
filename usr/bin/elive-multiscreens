@@ -340,7 +340,7 @@ configure_multiscreens(){
                 fi
             fi
         else
-            if ! (($is_mode_previous_desktop)) ; then
+            if ! ((is_mode_previous_desktop)) ; then
                 $guitool --warning --text="$( eval_gettext "Failed to load your screen configuration. Try reconfiguring your screens or using different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
             fi
         fi
@@ -432,7 +432,7 @@ load_multiscreens_configuration(){
                             conky &
                         fi
                     else
-                        if ! (($is_mode_previous_desktop)) ; then
+                        if ! ((is_mode_previous_desktop)) ; then
                             $guitool --warning --text="$( eval_gettext "Failed to load your screen configuration. Try reconfiguring your screens or using different options." )\n\nError message: $( . "$file" 2>&1 )\n\nFrom configuration: $file"
                         fi
                     fi
@@ -500,7 +500,7 @@ load_multiscreens_configuration(){
                             if [[ "$screens_connected_number" = 1 ]] ; then
                                 primary="$( echo $screens_connected_names )"
                             else
-                                primary="$( screens_connected_names_menu_gen | $guitool --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" || echo cancel )"
+                                primary="$( screens_connected_names_menu_gen | $guitool --list --text="$( eval_gettext "Select your primary screen" )" --column="Identifier" --column="Resolution" || echo cancel )"
                             fi
                         fi
                     done

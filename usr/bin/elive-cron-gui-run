@@ -155,10 +155,11 @@ main(){
                 shift
                 ;;
             *)
-                launcher="$arg $launcher"
+                launcher="${launcher:+$launcher }$arg"
                 ;;
         esac
     done
+    el_debug "launcher: '$launcher'"
 
     # needed: in order to be able to run things on your graphical system
     el_make_environment

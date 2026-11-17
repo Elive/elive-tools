@@ -74,10 +74,10 @@ main(){
 
     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
 
-    if echo \"$@\" | grep -qsE \"(youtu.be|youtube.com)\" ; then
+    if echo \"\$@\" | grep -qsE \"(youtu.be|youtube.com)\" ; then
         output_filename=\"%(title)s (%(id)s) [%(channel)s] - [%(duration>%Hh%Mm)s - %(view_count>%d)s views - %(upload_date>%Y-%m-%d)s] - [%(vcodec)s+%(acodec)s].%(ext)s\"
         # append playlist number if on a playlist
-        if echo \"$@\" | grep -qsE \"(list=)\" ; then
+        if echo \"\$@\" | grep -qsE \"(list=)\" ; then
             output_filename=\"%(playlist_index)02d - \$output_filename\"
         fi
     else
@@ -85,7 +85,7 @@ main(){
     fi
 
 
-    if test -n \"$1\" ; then
+    if test -n \"\$1\" ; then
         for try in \$(seq 6)
         do
             if yt-dlp \
@@ -93,7 +93,7 @@ main(){
                 --remux-video \"mp4/mkv/webm/mov\" --no-keep-video \
                 -o \"\$output_filename\" \
                 --embed-metadata --embed-chapters \
-                \"$@\" ; then
+                \"\$@\" ; then
                 is_downloaded=1
                 break
             else
@@ -105,13 +105,13 @@ main(){
                     -o \"\$output_filename\" \
                     --embed-metadata --embed-chapters \
                     -o \"%(id)s.%(ext)s\" \
-                    \"$@\" ; then
+                    \"\$@\" ; then
                     is_downloaded=1
                     break
                 else
                     mkdir -p \"${download_dir}/tmp-$$\" ; cd \"${download_dir}/tmp-$$\"
                     if yt-dlp \
-                        -i \"$@\" ; then
+                        -i \"\$@\" ; then
                         is_downloaded=1
                         break
                     fi
@@ -142,7 +142,7 @@ main(){
     echo done
 
     sleep 8
-    " & )
+    " _ "$@" & )
 
 }
 

@@ -44,8 +44,9 @@ main(){
 
     mode="$1"
     shift
-    value="$1"
-    shift
+    value="${1:-}"
+    shift 2>/dev/null || true
+    el_debug "mode='$mode' value='$value'"
 
     # dependencies
     if ! el_dependencies_check "brightnessctl" ; then
@@ -152,7 +153,11 @@ main(){
 
             ;;
         *)
-            el_sudo brightnessctl -d "${device}" "${mode}" "${value}"
+            if [[ -n "$value" ]] ; then
+                el_sudo brightnessctl -d "${device}" "${mode}" "${value}"
+            else
+                el_sudo brightnessctl -d "${device}" "${mode}"
+            fi
     esac
 
 }

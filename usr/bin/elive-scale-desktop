@@ -302,10 +302,11 @@ update_scaling(){
                 sync ; sleep 2
             fi
             # update confs
-            perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
-            perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
-
-            el_debug "setting Chromium / Chrome Zoom value to ${chrome_zoom_percent} % to avoid websites to look huge and cramped"
+            if [[ -n "$chrome_zoom_value" ]] ; then
+                perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/google-chrome/Default/Preferences" 1>/dev/null 2>&1 || true
+                perl -p -i -e "s|{\"default_zoom_level\":\{\"x\":(-?)([[:digit:]].*?},)|{\"default_zoom_level\":{\"x\":${chrome_zoom_value}},|" "$HOME/.config/chromium/Default/Preferences" 1>/dev/null 2>&1 || true
+                el_debug "setting Chromium / Chrome Zoom value to ${chrome_zoom_percent} % (${chrome_zoom_value}) to avoid websites to look huge and cramped"
+            fi
         fi
     fi
 
@@ -351,7 +352,7 @@ main(){
                     shift
                     ;;
                 --no-chromium|--no-chrome)
-                    unset is_no_chrome=1
+                    is_no_chrome=1
                     shift
                     ;;
                 -h|--help)

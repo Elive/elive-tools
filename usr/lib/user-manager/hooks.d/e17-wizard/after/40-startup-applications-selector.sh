@@ -101,30 +101,33 @@ main(){
 
     # }}}
 
-    if [[ -n "$EROOT" ]] ; then
-        # e16
-        order_file="$HOME/.e16/startup-applications.list"
-        is_e16=1
-    else
-        if [[ -x "$(which enlightenment)" ]] ; then
-            if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
-                E_HOME_DIR="$HOME/.e/e17"
+    case "$( el_user_desktop_active_get desktop )" in
+        E16)
+            # e16
+            order_file="$HOME/.e16/startup-applications.list"
+            is_e16=1
+            ;;
+        *)
+            if [[ -x "$(which enlightenment)" ]] ; then
+                if [ -n "$E_START" ] && [ -z "$E_HOME_DIR" ] ; then
+                    E_HOME_DIR="$HOME/.e/e17"
+                fi
+                order_file="$E_HOME_DIR/applications/startup/.order"
+                order_file_restart="$E_HOME_DIR/applications/restart/.order"
+                is_enlightenment=1
+                # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
+                # case "$E_VERSION" in
+                #     0.17.*)
+                #         order_file="$HOME/.e/e17/applications/startup/.order"
+                #         ;;
+                #     *)
+                #         el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
+                #         exit
+                #         ;;
+                # esac
             fi
-            order_file="$E_HOME_DIR/applications/startup/.order"
-            order_file_restart="$E_HOME_DIR/applications/restart/.order"
-            is_enlightenment=1
-            # E_VERSION="$( enlightenment --version | grep "^Version: " | sed -e 's|^Version: ||g' | tail -1 )"
-            # case "$E_VERSION" in
-            #     0.17.*)
-            #         order_file="$HOME/.e/e17/applications/startup/.order"
-            #         ;;
-            #     *)
-            #         el_error "unknown version of Enlightenment, ignoring selection of startup applications: '$E_VERSION' "
-            #         exit
-            #         ;;
-            # esac
-        fi
-    fi
+            ;;
+    esac
 
     # create a default dir
     mkdir -p "$(dirname "$order_file" )"
@@ -397,7 +400,8 @@ main(){
     # include the legacy elxstrt always
     if [[ -r "$HOME/.local/share/applications/elxstrt.desktop" ]] && desktop_exec_is_valid "$HOME/.local/share/applications/elxstrt.desktop" ; then
         # update: not needed since E16 already runs it on every restart
-        if ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file_restart}" ; then
+        if ((is_enlightenment)) && ! LC_ALL=C grep -Fqs "elxstrt.desktop" "${order_file_restart}" 2>/dev/null ; then
+            mkdir -p "$( dirname "${order_file_restart}" )"
             echo "$HOME/.local/share/applications/elxstrt.desktop" >> "${order_file_restart}"
         fi
     fi

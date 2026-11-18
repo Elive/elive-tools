@@ -46,7 +46,7 @@ fi
 #       EXAMPLE:  el_set_display_variables debug
 #===============================================================================
 el_set_display_variables(){
-    local display e_ipc_socket e_ipc_file pid file is_debug buf is_enlightenment is_pong all_displays session d
+    local display e_ipc_socket e_ipc_file pid file is_debug buf is_enlightenment is_pong all_displays session d dbus_sock candidate_pids uid p_disp disp_num1 disp_num2 client
 
     if [[ "$1" = "debug" ]] ; then
         is_debug=1
@@ -243,14 +243,23 @@ el_set_display_variables(){
 
     # verify enlightenment already set / default dbus value
     if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
-        if ((is_enlightenment)) ; then
-            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-                is_pong=1
-            else
+        if [[ "$DBUS_SESSION_BUS_ADDRESS" = unix:path=* ]] ; then
+            dbus_sock="${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
+            dbus_sock="${dbus_sock%%[,;]*}"
+            if [[ ! -S "$dbus_sock" ]] ; then
                 unset DBUS_SESSION_BUS_ADDRESS
             fi
-        else
-            is_pong=1
+        fi
+        if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+            if ((is_enlightenment)) ; then
+                if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                    is_pong=1
+                else
+                    unset DBUS_SESSION_BUS_ADDRESS
+                fi
+            else
+                is_pong=1
+            fi
         fi
     fi
 
@@ -279,15 +288,77 @@ el_set_display_variables(){
     fi
     # test or invalidate
     if ! ((is_pong)) && [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
-        if ((is_enlightenment)) ; then
-            if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
-                is_pong=1
-            else
+        if [[ "$DBUS_SESSION_BUS_ADDRESS" = unix:path=* ]] ; then
+            dbus_sock="${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
+            dbus_sock="${dbus_sock%%[,;]*}"
+            if [[ ! -S "$dbus_sock" ]] ; then
                 unset DBUS_SESSION_BUS_ADDRESS
             fi
-        else
-            is_pong=1
         fi
+        if [[ -n "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+            if ((is_enlightenment)) ; then
+                if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                    is_pong=1
+                else
+                    unset DBUS_SESSION_BUS_ADDRESS
+                fi
+            else
+                is_pong=1
+            fi
+        fi
+    fi
+
+    # inspect running window manager / session processes (e.g. dbus-run-session)
+    if ! ((is_pong)) && [[ -z "$DBUS_SESSION_BUS_ADDRESS" ]] ; then
+        candidate_pids=""
+        if [[ -n "$E_IPC_SOCKET" ]] ; then
+            pid="$( basename "$E_IPC_SOCKET" )"
+            pid="${pid%|*}"
+            pid="${pid%-*}"
+            [[ "$pid" =~ ^[0-9]+$ ]] && candidate_pids="$pid"
+        fi
+        uid="${UID:-$(id -u)}"
+        for client in e16 enlightenment enlightenment_start x-session-manager ; do
+            for pid in $( pgrep -u "$uid" -x "$client" 2>/dev/null ) ; do
+                candidate_pids="$candidate_pids $pid"
+            done
+        done
+        for pid in $candidate_pids ; do
+            if [[ -n "$pid" && -r "/proc/$pid/environ" ]] ; then
+                if [[ -n "$DISPLAY" ]] ; then
+                    p_disp="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DISPLAY=' | sed -e 's/^DISPLAY=//' | head -1)"
+                    if [[ -n "$p_disp" ]] ; then
+                        disp_num1="${DISPLAY#*:}" ; disp_num1="${disp_num1%%.*}"
+                        disp_num2="${p_disp#*:}" ; disp_num2="${disp_num2%%.*}"
+                        if [[ -n "$disp_num1" && -n "$disp_num2" && "$disp_num1" != "$disp_num2" ]] ; then
+                            continue
+                        fi
+                    fi
+                fi
+                buf="$(cat "/proc/$pid/environ" 2>/dev/null | tr '\0' '\n' | grep -a '^DBUS_SESSION_BUS_ADDRESS=' | sed -e 's/^DBUS_SESSION_BUS_ADDRESS=//' | head -1)"
+                if [[ -n "$buf" ]] ; then
+                    if [[ "$buf" = unix:path=* ]] ; then
+                        dbus_sock="${buf#unix:path=}"
+                        dbus_sock="${dbus_sock%%[,;]*}"
+                        if [[ ! -S "$dbus_sock" ]] ; then
+                            continue
+                        fi
+                    fi
+                    export DBUS_SESSION_BUS_ADDRESS="$buf"
+                    if ((is_enlightenment)) ; then
+                        if enlightenment_remote -version 2>/dev/null | LC_ALL=C grep -qs "^[[:digit:]].*\.[[:digit:]]" ; then
+                            is_pong=1
+                            break
+                        else
+                            unset DBUS_SESSION_BUS_ADDRESS
+                        fi
+                    else
+                        is_pong=1
+                        break
+                    fi
+                fi
+            fi
+        done
     fi
 
     # Loop through all dbus socket files in /tmp and test them
@@ -320,7 +391,13 @@ el_set_display_variables(){
     # elive cache'd usable one
     if ! ((is_pong)) && [[ -e "$HOME/.cache/dbus-session-address-last.txt" ]] ; then
         buf="$( cat "$HOME/.cache/dbus-session-address-last.txt" )"
-        if ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
+        if [[ "$buf" = unix:path=* ]] ; then
+            dbus_sock="${buf#unix:path=}"
+            dbus_sock="${dbus_sock%%[,;]*}"
+            if [[ ! -S "$dbus_sock" ]] ; then
+                unset buf
+            fi
+        elif ! test -e "$( echo "$buf" | sed -e 's|^.*path=||g' )" ; then
             unset buf
         fi
         [[ -n "$buf" ]] && export DBUS_SESSION_BUS_ADDRESS="$buf"

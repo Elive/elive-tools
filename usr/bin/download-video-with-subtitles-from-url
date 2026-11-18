@@ -54,6 +54,7 @@ main(){
     fi
 
     download_dir="$( xdg-user-dir DOWNLOAD )/Videos"
+    el_debug "download_dir='$download_dir' lang_local='$lang_local'"
     mkdir -p "$download_dir"
     cd "$download_dir"
 

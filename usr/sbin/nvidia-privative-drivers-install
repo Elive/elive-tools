@@ -1021,6 +1021,7 @@ install_driver(){
     # nvidia xorg conf {{{
     # create conf first
     if ((is_xorg_template_wanted)) ; then
+        el_debug "writing /etc/X11/xorg.conf.d/20-nvidia.conf for _NVIDIA_VERSION='$_NVIDIA_VERSION'"
         # clean it first
         : > /etc/X11/xorg.conf.d/20-nvidia.conf
         cat > "/etc/X11/xorg.conf.d/20-nvidia.conf" << EOF
@@ -1711,7 +1712,8 @@ uninstall_driver(){
 
 
     # just in case, reinstall the nouveau driver
-    if ! COLUMNS=1000 dpkg -l | awk '{print $2}' | grep -qs "^ii.*xserver-xorg-video-nouveau" ; then
+    if ! COLUMNS=1000 dpkg -l | awk '$1 == "ii" {print $2}' | grep -qs "^xserver-xorg-video-nouveau" ; then
+        el_debug "reinstalling xserver-xorg-video-nouveau"
         TERM=screen-256color DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical DEBCONF_NONINTERACTIVE_SEEN=true DEBCONF_NOWARNINGS=true \
             apt-get install -y xserver-xorg-video-nouveau
     fi
@@ -1805,10 +1807,6 @@ main(){
     fi
 
     el_dependencies_check "dialog|apt-cache"
-
-    if cat /etc/debian_version | grep -qsE "^(7|wheezy)" ; then
-        is_wheezy=1
-    fi
 
     # always require the template, important
     is_xorg_template_wanted=1
@@ -1930,6 +1928,7 @@ main(){
         fi
         sed -i "/^nvidia-privative:/d" /etc/elive-version
         echo "nvidia-privative: $_NVIDIA_VERSION" >> /etc/elive-version
+        el_debug "recorded nvidia-privative: $_NVIDIA_VERSION in /etc/elive-version"
     fi
 
     report_kernel_nvidia_status

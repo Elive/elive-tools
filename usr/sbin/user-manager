@@ -53,13 +53,8 @@ fi
 guitool="/usr/bin/zenity --window-icon=/usr/share/icons/gnome/256x256/apps/logo-elive.png"
 temp_error="/tmp/$(basename $0)-${USER}-$$"
 
-el_dependencies_check "zenity|yad|chpasswd|debconf-get-selections|grep|groupadd|elive-skel|chown|su|${USERADD}|${ADDUSER}|useradd|${USERDEL}"
-
-if [[ -e "/var/lib/dpkg/info/systemd.list" ]] && [[ -e "/var/lib/dpkg/info/live-config-systemd.list" ]] ; then
-    is_systemd=1
-else
-    is_sysvinit=1
-fi
+el_dependencies_check "zenity|yad|chpasswd|debconf-get-selections|grep|groupadd|elive-skel|chown|su|${ADDUSER}|useradd|${USERDEL}"
+el_debug "init system flags: is_systemd=${is_systemd:-0} is_openrc=${is_openrc:-0} is_sysvinit=${is_sysvinit:-0}"
 
 
 ###########################################################################
@@ -509,7 +504,8 @@ user_add(){
     # cleanup
     rm -f "${temp_error}"
 
-    if ! useradd -c "$username_real" -m -s "/bin/zsh" "$username" 2>"$temp_error"  ; then
+    el_debug "creating user '$username' with shell '$user_shell'"
+    if ! useradd -c "$username_real" -m -s "$user_shell" "$username" 2>"$temp_error"  ; then
         $USERDEL -r "$username" 2>/dev/null 1>&2 || true
         $guitool --error --text="$( eval_gettext "Unable to create your user. Try using English characters only" ). $(cat "$temp_error" | sed -e 's|useradd: ||g' )"
         el_warning "Unable to create user: $(cat "$temp_error" )"
@@ -543,7 +539,8 @@ user_add(){
     # sudo configuration
     # always apply these generic ones
     sudoers_user_generic "add" "$username"
-    if ((is_sysvinit)) ; then
+    if ((is_sysvinit)) || ((is_openrc)) ; then
+        el_debug "adding power sudoers for non-systemd init user='$username'"
         sudoers_user_power "add" "$username"
     fi
 
@@ -867,7 +864,8 @@ main(){
             ;;
         --user-sudo-generic-add)
             sudoers_user_generic "add" "$username"
-            if ((is_sysvinit)) ; then
+            if ((is_sysvinit)) || ((is_openrc)) ; then
+                el_debug "adding power sudoers for non-systemd init user='$username'"
                 sudoers_user_power "add" "$username"
             fi
             ;;

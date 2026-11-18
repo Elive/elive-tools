@@ -159,6 +159,7 @@ setupcon --force
 
 EOF
 
+                el_debug "applying locale configuration LANG='$LANG'"
                 chmod +x "$script"
                 gksu "$script" || exit
                 rm -f "$script"
@@ -320,6 +321,7 @@ sed -i "s|^XKBOPTIONS.*$|XKBOPTIONS=\"${k_options}\"|g" /etc/default/keyboard
 dpkg-reconfigure -f noninteractive -p critical keyboard-configuration
 dpkg-reconfigure -f noninteractive -p critical xserver-xorg
 EOF
+    el_debug "applying keyboard configuration layout='${k_layout%%,*}' variant='${k_variant%%,*}' options='${k_options}'"
     chmod +x "$script"
     gksu "$script" || exit
     rm -f "$script"

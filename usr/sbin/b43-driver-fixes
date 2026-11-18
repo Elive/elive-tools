@@ -145,7 +145,8 @@ try_and_configure(){
         fi
 
         is_wifi_working=1
-        service network-manager restart 1>/dev/null 2>&1 || true
+        el_debug "configured driver '$driver_good' for '$wifi_dev', restarting NetworkManager"
+        service NetworkManager restart 1>/dev/null 2>&1 || service network-manager restart 1>/dev/null 2>&1 || true
     fi
 }
 

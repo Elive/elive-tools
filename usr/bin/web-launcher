@@ -57,12 +57,9 @@ EOF
 
 main(){
     # pre {{{
-    local url elive_version is_wheezy browsers arg
+    local url elive_version browsers arg
 
-    # wheezy
-    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
-        is_wheezy=1
-    fi
+    el_debug "distro check: is_wheezy='${is_wheezy:-0}'"
 
     # }}}
     # smart arguments parser

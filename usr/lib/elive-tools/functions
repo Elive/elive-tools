@@ -5149,36 +5149,36 @@ el_check_dependencies(){
 #       RETURNS:  is_distro' variables
 #===============================================================================
 el_debian_version_get(){
-    case "$( cat /etc/debian_version )" in
-        15.*|"duke"*)
+    case "$(</etc/debian_version)" in
+        15|15.*|"duke"*)
             is_duke=1
             ;;
-        14.*|"forky"*)
+        14|14.*|"forky"*)
             is_forky=1
             ;;
-        13.*|"trixie"*)
+        13|13.*|"trixie"*)
             is_trixie=1
             ;;
-        12.*|"bookworm"*)
+        12|12.*|"bookworm"*)
             is_bookworm=1
             ;;
-        11.*|"bullseye"*)
+        11|11.*|"bullseye"*)
             is_bullseye=1
             is_old_rdiff=1
             ;;
-        10.*|"buster"*)
+        10|10.*|"buster"*)
             is_buster=1
             is_old_rdiff=1
             ;;
-        9.*|"stretch"*)
+        9|9.*|"stretch"*)
             is_stretch=1
             is_old_rdiff=1
             ;;
-        8.*|"jessie"*)
+        8|8.*|"jessie"*)
             is_jessie=1
             is_old_rdiff=1
             ;;
-        7.*|"wheezy"*)
+        7|7.*|"wheezy"*)
             is_wheezy=1
             is_old_rdiff=1
             ;;

@@ -46,39 +46,44 @@ check_udisks_service(){
 #===============================================================================
 restart_daemons(){
     # pre {{{
+    local prefix bin
     el_debug
     el_security_function_loop 20 || return 0
 
     # }}}
     # restart daemons {{{
-    if [[ "$UID" = 0 ]] ; then
-        killall udisks-daemon 2>/dev/null || killall -9 udisks-daemon 2>/dev/null || true
-        killall udisksd 2>/dev/null || killall -9 udisksd 2>/dev/null || true
-        killall polkitd 2>/dev/null || killall -9 polkitd 2>/dev/null || true
+    if [[ "$UID" = 0 ]] || el_check_sudo_automated ; then
+        [[ "$UID" != 0 ]] && prefix="sudo"
+        $prefix killall udisks-daemon 2>/dev/null || $prefix killall -9 udisks-daemon 2>/dev/null || true
+        $prefix killall udisksd 2>/dev/null || $prefix killall -9 udisksd 2>/dev/null || true
+        $prefix killall polkitd 2>/dev/null || $prefix killall -9 polkitd 2>/dev/null || true
 
+        el_debug "restarting udisks2 and polkit services (is_systemd=${is_systemd:-0}, is_openrc=${is_openrc:-0}, is_sysvinit=${is_sysvinit:-0})"
         if ((is_systemd)) ; then
-            systemctl restart udisks2.service polkit.service  2>/dev/null || true
+            $prefix service udisks2 restart 2>/dev/null || $prefix systemctl restart udisks2.service 2>/dev/null || true
+            $prefix service polkit restart 2>/dev/null || $prefix systemctl restart polkit.service 2>/dev/null || true
         else
-            { /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-            { /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-            { /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+            $prefix service udisks2 restart 2>/dev/null || true
+            $prefix service polkit restart 2>/dev/null || true
+            if ! pgrep -x udisksd >/dev/null 2>&1 ; then
+                for bin in /usr/libexec/udisks2/udisksd /usr/lib/udisks2/udisksd /usr/lib/udisks/udisks-daemon ; do
+                    if [[ -x "$bin" ]] ; then
+                        { $prefix "$bin" 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+                        break
+                    fi
+                done
+            fi
+            if ! pgrep -x polkitd >/dev/null 2>&1 ; then
+                for bin in /usr/libexec/polkitd /usr/lib/polkit-1/polkitd /usr/lib/policykit-1/polkitd ; do
+                    if [[ -x "$bin" ]] ; then
+                        { $prefix "$bin" 2>/dev/null 1>&2 & disown ; } 2>/dev/null
+                        break
+                    fi
+                done
+            fi
         fi
     else
-        if el_check_sudo_automated ; then
-            sudo killall udisks-daemon 2>/dev/null || sudo killall -9 udisks-daemon 2>/dev/null || true
-            sudo killall udisksd 2>/dev/null || sudo killall -9 udisksd 2>/dev/null || true
-            sudo killall polkitd 2>/dev/null || sudo killall -9 polkitd 2>/dev/null || true
-
-            if ((is_systemd)) ; then
-                sudo systemctl restart udisks2.service polkit.service  2>/dev/null || true
-            else
-                { sudo /usr/lib/udisks/udisks-daemon 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-                { sudo /usr/lib/udisks2/udisksd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-                { sudo /usr/lib/policykit-1/polkitd 2>/dev/null 1>&2 & disown ; } 2>/dev/null
-            fi
-        else
-            el_info "Is needed to restart some polkitd services, run again this tool from root"
-        fi
+        el_info "Is needed to restart some polkitd services, run again this tool from root"
     fi
 
     # we need to wait a bit, seems like udisks dont read anything if we don't
@@ -333,7 +338,9 @@ chroot_layers_mount(){
     fi
 
     # machine-id for pulseaudio
-    cp -f /etc/machine-id "$dir/etc/"
+    if [[ -s /etc/machine-id ]] ; then
+        cp -f /etc/machine-id "$dir/etc/"
+    fi
 
     el_explain 2 "Layers for chroot ready"
 
@@ -885,14 +892,14 @@ el_umount(){
                 return 1
             fi
             # redirect to the correct device if we found it easly
-            if file -s "$dev" | grep -Fqs "sticky LUKS encrypted" ; then
-                dev="${dev##*/}"
+            if file -s "$device" | grep -Fqs "sticky LUKS encrypted" ; then
+                device="${device##*/}"
 
-                if [[ -b "/dev/mapper/${dev}" ]] ; then
-                    dev="/dev/mapper/${dev}"
+                if [[ -b "/dev/mapper/${device}" ]] ; then
+                    device="/dev/mapper/${device}"
                 else
-                    if [[ -b "/dev/mapper/${dev}_crypt" ]] ; then
-                        dev="/dev/mapper/${dev}_crypt"
+                    if [[ -b "/dev/mapper/${device}_crypt" ]] ; then
+                        device="/dev/mapper/${device}_crypt"
                     fi
                 fi
             fi
@@ -961,7 +968,7 @@ el_umount(){
         gvfs_umount "$mountpoint"
 
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+            el_debug "unable to umount (gvfs-mount) $device for ${mountpoint}, trying with udisks..."
         else
             # special dir created by this own tool, we don't need it anymore
             for dir in  /mnt/*_elive
@@ -989,7 +996,7 @@ el_umount(){
 
 
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
+            el_debug "unable to umount (udisks*) $device for ${mountpoint}, trying with umount..."
         else
             # special dir created by this own tool, we don't need it anymore
             for dir in  /mnt/*_elive
@@ -1011,7 +1018,7 @@ el_umount(){
         fi
 
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_debug "unable to umount (umount) $dev for ${mountpoint}, so hum... let me think"
+            el_debug "unable to umount (umount) $device for ${mountpoint}, so hum... let me think"
         else
             # special dir created by this own tool, we don't need it anymore
             for dir in  /mnt/*_elive
@@ -1038,7 +1045,7 @@ el_umount(){
             gvfs_umount "$mountpoint"
 
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (gvfs-mount) $dev for ${mountpoint}, trying with udisks..."
+                el_debug "unable to umount (gvfs-mount) $device for ${mountpoint}, trying with udisks..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -1060,7 +1067,7 @@ el_umount(){
             fi
 
             if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-                el_debug "unable to umount (udisks*) $dev for ${mountpoint}, trying with umount..."
+                el_debug "unable to umount (udisks*) $device for ${mountpoint}, trying with umount..."
             else
                 # special dir created by this own tool, we don't need it anymore
                 for dir in  /mnt/*_elive
@@ -1095,7 +1102,7 @@ el_umount(){
         fi
 
         if check_is_mounted "$mountpoint" 2>/dev/null 1>&2 ; then
-            el_debug "unable to umount $dev for ${mountpoint}, I'm upset now"
+            el_debug "unable to umount $device for ${mountpoint}, I'm upset now"
             return 1
         else
             el_debug "Umounted (forced): $*"
@@ -1120,13 +1127,15 @@ el_umount(){
 #===============================================================================
 el_mount(){
     # pre {{{
-    local dev uuid filesystem mountpoint
+    local dev mode target uuid filesystem mountpoint
     el_security_function_loop 10 || return 0
 
     dev="$1"
     shift
-    mode="$2"
-    shift
+    if [[ "$1" = "recursive" ]] ; then
+        mode="$1"
+        shift
+    fi
 
     el_check_variables "dev"
 
@@ -1455,16 +1464,17 @@ main(){
     fi
 
     # checks {{{
-    # wheezy uses udisks, but newer (buster?) uses udisks2 which is different
-    if grep -qsE "(^7\.|wheezy)" /etc/debian_version ; then
-        if [[ -x "$(which udisks)" ]] ; then
-            is_wheezy=1
+    # wheezy uses udisks, but newer versions use udisks2 (udisksctl)
+    if ((is_wheezy)) ; then
+        if ! command -v udisks >/dev/null 2>&1 ; then
+            unset is_wheezy
         fi
     else
-        if ! [[ -x "$(which udisksctl)" ]] && [[ -x "$(which udisks)" ]] ; then
+        if ! command -v udisksctl >/dev/null 2>&1 && command -v udisks >/dev/null 2>&1 ; then
             is_wheezy=1
         fi
     fi
+    el_debug "mounts-manager using is_wheezy=${is_wheezy:-0}"
 
     if LC_ALL="$EL_LC_EN" udisks_dump 2>&1 | grep -Fqs "Couldn't enumerate devices" ; then
         restart_daemons

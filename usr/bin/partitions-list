@@ -706,7 +706,7 @@ get_filesystem_lsblk(){
 #}
 
 get_filesystem_file(){
-    local ret part
+    local ret part item_hd
     part="$1"
 
     ret="$(file -Ls "$part" )"
@@ -749,8 +749,8 @@ get_filesystem_file(){
             echo "btrfs"
             ;;
         *)
-            if [[ -x "$(which fdisk)" ]] ; then
-                item_hd="$( get_disk_from_partition_complex "$item" )"
+            if command -v fdisk >/dev/null 2>&1 ; then
+                item_hd="$( get_disk_from_partition_complex "$part" )"
 
                 if LC_ALL=C fdisk -l "${item_hd}" 2>/dev/null | grep -qs "^${part}.*BIOS boot" ; then
                     echo "BIOS"
